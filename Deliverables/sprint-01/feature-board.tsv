@@ -1,0 +1,12 @@
+Title	URL	Assignees	Status
+Get familiar with CAN-Bus, Aurix IDE, MCU programming	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/3	AndreasFreund, ibexq, MikeFAU, Nahrain1, PaulRoy1, sebas-rodri, wiklam, wlklsn	In Progress
+Create Logo	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/1	AndreasFreund	In Progress
+Align on a GUI framework	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/4	MikeFAU, sebas-rodri	Sprint Backlog
+Implement a function for file browsing, selecting, and simple processing	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/5		Product Backlog
+Create *.s19 to Binary converter	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/6		Product Backlog
+Implement "Updating in progress" indicator	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/7		Product Backlog
+Implement last flash date and time display	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/8		Product Backlog
+[MCU] LED driver	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/9		Product Backlog
+[MCU] CAN driver	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/10		Product Backlog
+[MCU] Flash driver	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/11		Product Backlog
+[Win] CAN Wrapper	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/12		Product Backlog
