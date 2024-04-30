@@ -15,6 +15,7 @@
 #endif
 
 #include <stdio.h>
+#include "can_wrapper.hpp"
 
 //============================================================================
 // global variables
@@ -53,6 +54,8 @@ int main() {
 	// Print help at startup
 	help();
 
+	CAN_Wrapper can = CAN_Wrapper(500000);
+
 	while (stop == 0){
 
 		unsigned long n;
@@ -64,17 +67,17 @@ int main() {
 			c = ir.Event.KeyEvent.uChar.AsciiChar;
 			switch (c) {
 				case 't': // transmit a message
-					printf(">> Transmitting message\n");
+					can.txCAN(new byte[0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8], 8);
 					break;
 
 				case '+': // Increase id
 					txID++;
-					printf(">> Id is set to 0x%08X\n", txID);
+					can.setID(txID);
 					break;
 
-				case '-': // Increase id
+				case '-': // Decrease id
 					txID--;
-					printf(">> Id is set to 0x%08X\n", txID);
+					can.setID(txID);
 					break;
 
 				case 'v': // toggle logging mode
