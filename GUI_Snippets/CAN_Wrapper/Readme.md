@@ -8,9 +8,9 @@ For development the following steps need to be done to do the correct linking of
 
 Using Eclipse:
 1. Go into Project Properties --> C/C++ Build/Settings
-2. Under MinGW C++ Linker / Libraries --> Library Search Path (-L): Add the directory to where the .dll files are located for XL driver lib
+2. Under MinGW C++ Linker / Libraries --> Library Search Path (-L): Add the directory to where the .lib files are located for XL driver lib
    - Use the following path: "${workspace_loc:/${ProjName}/src/lib}"
-3. Under MinGW C++ Linker / Libraries --> Libraries (-l): List all the dll files (do not include the .dll ending)
+3. Under MinGW C++ Linker / Libraries --> Libraries (-l): List all the dll files (do not include the .dll/.lib ending)
    - vxlapi
    - vxlapi64
 4. Do Project --> Clean
@@ -19,5 +19,5 @@ Using Eclipse:
 ### Application
 
 To start the application:
-1. Include the dll files next to the application executable
+1. Put the dll files in the same folder as the application executable
 
