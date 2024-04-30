@@ -34,6 +34,7 @@ void help(void){
 	printf("- 't'      Transmit a message                            -\n");
 	printf("- '+'      Select transmit Id  (up)                      -\n");
 	printf("- '-'      Select transmit Id  (down)                    -\n");
+	printf("- '.'      Select TX channel                             -\n");
 	printf("- 'v'      Toggle logging to screen                      -\n");
 	printf("- 'h'      Help                                          -\n");
 	printf("- 'ESC'    Exit                                          -\n");
@@ -50,6 +51,7 @@ int main() {
 	int stop = 0;
 	int c;
 	unsigned int txID = 0x01;
+	byte data[]={1,2,3,4,5,6,7,8};
 
 	// Print help at startup
 	help();
@@ -67,7 +69,7 @@ int main() {
 			c = ir.Event.KeyEvent.uChar.AsciiChar;
 			switch (c) {
 				case 't': // transmit a message
-					can.txCAN(new byte[0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8], 8);
+					can.txCAN(data, 8);
 					break;
 
 				case '+': // Increase id
@@ -78,6 +80,10 @@ int main() {
 				case '-': // Decrease id
 					txID--;
 					can.setID(txID);
+					break;
+
+				case '.': // change channel
+					can.increaseChannel();
 					break;
 
 				case 'v': // toggle logging mode

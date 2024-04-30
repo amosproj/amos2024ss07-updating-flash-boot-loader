@@ -39,6 +39,8 @@ class CAN_Wrapper {
 		unsigned int baudrate 				= 500000;						// Default baudrate
 
 		unsigned int txID 					= 0;
+		unsigned int channelID				= 0;
+		XLevent event;
 
 
 	// Methods
@@ -47,6 +49,7 @@ class CAN_Wrapper {
 		~CAN_Wrapper();
 
 		void setID(unsigned int id);
+		void increaseChannel();
 
 		boolean txCAN(byte data[], unsigned int no_bytes);
 		void rxCANHandle(HANDLE h);
@@ -60,6 +63,7 @@ class CAN_Wrapper {
 		XLstatus closePort();
 
 		XLstatus setBaudrate(unsigned int baudrate);
+		XLstatus actChannels();
 
 		// debugging methods
 		void _printConfig();
