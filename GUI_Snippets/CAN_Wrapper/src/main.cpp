@@ -35,7 +35,6 @@ void help(void){
 	printf("- '+'      Select transmit Id  (up)                      -\n");
 	printf("- '-'      Select transmit Id  (down)                    -\n");
 	printf("- '.'      Select TX channel                             -\n");
-	printf("- 'v'      Toggle logging to screen                      -\n");
 	printf("- 'h'      Help                                          -\n");
 	printf("- 'ESC'    Exit                                          -\n");
 	printf("----------------------------------------------------------\n\n");
@@ -46,6 +45,20 @@ void help(void){
 // main
 //============================================================================
 
+class EventHandler : public CAN_Wrapper_Event {
+public:
+	void handleEvent(unsigned int id, unsigned short dlc, unsigned char data[]){
+		if (id == 0)
+			return;
+
+		printf("Main: Received id=%d, dlc=%d, data=", id, dlc);
+		for(auto i = 0; i < dlc; i++){
+			printf("%d ", data[i]);
+		}
+		printf("\n");
+	}
+};
+
 int main() {
 
 	int stop = 0;
@@ -53,10 +66,15 @@ int main() {
 	unsigned int txID = 0x01;
 	byte data[]={1,2,3,4,5,6,7,8};
 
-	// Print help at startup
-	help();
-
 	CAN_Wrapper can = CAN_Wrapper(500000);
+	can.setID(txID);
+
+	EventHandler eh = EventHandler();
+	can.setRXCANHandle(&eh);
+	can.startRXThread();
+
+	// Print help after startup
+	help();
 
 	while (stop == 0){
 
@@ -84,14 +102,6 @@ int main() {
 
 				case '.': // change channel
 					can.increaseChannel();
-					break;
-
-				case 'v': // toggle logging mode
-					g_silent = !g_silent;
-					if (g_silent)
-						printf(">> Logging off\n");
-					else
-						printf(">> Logging on\n");
 					break;
 
 				case 'h': // show help

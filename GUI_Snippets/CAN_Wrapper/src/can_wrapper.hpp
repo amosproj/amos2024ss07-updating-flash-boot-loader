@@ -21,26 +21,32 @@
 
 #define RECEIVE_EVENT_SIZE 		1 		// do not edit! Currently 1 is supported only
 #define RX_QUEUE_SIZE			4096 	// internal driver queue size in CAN events
+#define ERROR_INVALID_INSTANCE	-1
 
 #include <stdio.h>
 
+#include "can_wrapper_event.hpp"
 #include "lib/vxlapi.h"
-
 
 class CAN_Wrapper {
 
 	// Variables
 	private:
-		char appName[XL_MAX_APPNAME+1] 		= "AMOSApp";
-		XLportHandle portHandle 			= XL_INVALID_PORTHANDLE;
-		XLdriverConfig drvConfig;
-		XLaccess channelMask 				= 0;
-		XLaccess permissionMask 			= 0;
+		char appName[XL_MAX_APPNAME+1] 		= "AMOSApp";					// AppName, currently not registered
+		XLportHandle portHandle 			= XL_INVALID_PORTHANDLE;		// Holds the port handle for communication
+		XLdriverConfig drvConfig;											// Holds the driver configuration
+		XLaccess channelMask 				= 0;							// Chosen channel mask
+		XLaccess permissionMask 			= 0;							// Possible channel mask (permitted)
 		unsigned int baudrate 				= 500000;						// Default baudrate
 
-		unsigned int txID 					= 0;
-		unsigned int channelID				= 0;
-		XLevent event;
+		unsigned int txID 					= 0;							// TX ID for sending CAN messages
+		unsigned int channelID				= 0;							// Used channel for TX
+		XLevent event;														// Template variable for TX Event
+
+		int RXThreadRunning;												// Flag for controlling RX thread
+		HANDLE RXThread;													// Handle for the RX Thread
+		XLhandle msgEvent;													// Message event for SetNotification
+		CAN_Wrapper_Event* clientHandle		= nullptr;						// Handle for the client to inform about
 
 
 	// Methods
@@ -52,7 +58,8 @@ class CAN_Wrapper {
 		void increaseChannel();
 
 		boolean txCAN(byte data[], unsigned int no_bytes);
-		void rxCANHandle(HANDLE h);
+		void setRXCANHandle(CAN_Wrapper_Event* h);
+		HANDLE startRXThread();
 
 
 	private:
@@ -64,6 +71,10 @@ class CAN_Wrapper {
 
 		XLstatus setBaudrate(unsigned int baudrate);
 		XLstatus actChannels();
+		XLstatus setNotification();
+
+		// RX handling
+		static DWORD WINAPI RXThreadHandling(LPVOID);
 
 		// debugging methods
 		void _printConfig();
