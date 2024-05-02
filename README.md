@@ -32,4 +32,7 @@ Further details can be found under [Documentation](./Documentation)
 * TBD
 
 ## Contributors
-<img src="https://contrib.rocks/image?repo=amosproj/amos2024ss07-updating-flash-boot-loader"/>
+<a href="https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=amosproj/amos2024ss07-updating-flash-boot-loader"/>
+</a>
+
