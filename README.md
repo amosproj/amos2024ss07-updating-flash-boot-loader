@@ -2,7 +2,7 @@
   <img src="./Deliverables/sprint-01/team-logo.png" alt="Flash Boot Loader Teamlogo" height="200"/>
 </h1>
 
-# Updating Flash Boot Loader (AMOS SS 2024)
+# Updating Flash Bootloader
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![GitHub language count](https://img.shields.io/github/languages/count/amosproj/amos2024ss07-updating-flash-boot-loader)
 ![GitHub last commit](https://img.shields.io/github/last-commit/amosproj/amos2024ss07-updating-flash-boot-loader)
@@ -25,7 +25,7 @@ The AURIX&trade; TC375 lite kit was used for development. It is equipped with a 
 ### Documentation
 Further details can be found under [Documentation](./Documentation)
 
-## Using Flash Boot Loader Tool
+## Using Flash Bootloader Tool
 * TBD
 
 ## FAQ
