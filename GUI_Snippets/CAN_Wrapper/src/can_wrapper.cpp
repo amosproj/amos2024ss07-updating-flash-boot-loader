@@ -23,8 +23,6 @@
  */
 CAN_Wrapper::CAN_Wrapper(unsigned int baudrate /* = 500000 */){
 	this->baudrate = baudrate;
-	channelID = 0;	// Init TX Channel ID
-	initDriver();	// Init the driver
 }
 
 
@@ -42,6 +40,114 @@ CAN_Wrapper::~CAN_Wrapper(){
 }
 
 /**
+ * Method to init the driver.
+ *
+ * @return boolean True if init was successful, false if there was an error
+ */
+boolean CAN_Wrapper::initDriver(){
+
+	XLstatus status;
+	unsigned int i;
+	boolean found = false;
+
+	// default values for registry
+	unsigned int hwType = 0;
+	unsigned int hwIndex = 0;
+	unsigned int hwChannel = 0;
+	unsigned int appChannel = 0;
+	unsigned int busType = XL_BUS_TYPE_CAN;
+
+	// Open the driver
+	status = xlOpenDriver();
+
+	// Get hardware configuration
+	status = xlGetDriverConfig(&drvConfig);
+
+	// Check if application is registered
+	status = xlGetApplConfig(appName, CHAN01, &hwType, &hwIndex, &hwChannel, busType);
+
+	if (status == XL_SUCCESS) {
+		_printConfig();
+
+		if (DEBUGGING) printf("----------------------------------------------------------------------------------------------\n");
+
+		channelMask = 0;
+
+		// Check application configuration for the relevant channel
+		channelMask = xlGetChannelMask(hwType, hwIndex, hwChannel);
+
+		for (i = 0; i < drvConfig.channelCount; i++){
+
+			// Check if CAN is assigned in Vector Hardware Config
+			if(	(drvConfig.channel[i].channelMask == channelMask) &&
+				(drvConfig.channel[i].channelBusCapabilities & XL_BUS_ACTIVE_CAP_CAN)){
+				found = true;
+			}
+		}
+
+		// State Error if no assignment is given
+		if(!found){
+			printf("Please assign %d channel(s) in Vector Hardware Config or Vector Hardware Manager and restart the application\n", MAX_USED_CHANNEL);
+			status = XL_ERROR;
+		}
+
+		// Open one port including all channels
+		if (status == XL_SUCCESS){
+			status = openPort();
+		}
+
+		// Set the defined BaudRate
+		if ((status == XL_SUCCESS) && (portHandle != XL_INVALID_PORTHANDLE)){
+			status = setBaudrate(baudrate);
+		}
+		else {
+			xlClosePort(portHandle);
+			portHandle = XL_INVALID_PORTHANDLE;
+			status = XL_ERROR;
+		}
+
+		// Activate all channel on the bus
+		if (status == XL_SUCCESS){
+			status = actChannels();
+		}
+
+		// Get an event for every message
+		if (status == XL_SUCCESS){
+			status = setNotification();
+		}
+
+		if (status != XL_SUCCESS)
+				printf("\nCAN_Wrapper: Error during initialization of the driver! Info: %s\n", xlGetErrorString(status));
+
+		if (DEBUGGING) printf("----------------------------------------------------------------------------------------------\n");
+
+	}
+
+	else { // Application not registered yet, put some default parameters into the registry
+		for(i = 0; (i < drvConfig.channelCount) && (appChannel < MAX_USED_CHANNEL); i++){
+			if(drvConfig.channel[i].channelBusCapabilities & XL_BUS_ACTIVE_CAP_CAN){
+				hwType = drvConfig.channel[i].hwType;
+				hwIndex = drvConfig.channel[i].hwIndex;
+				hwChannel = drvConfig.channel[i].hwChannel;
+
+				status = xlSetApplConfig(	// Register the App with default settings
+						appName,			// Defined Application Name
+						appChannel,			// Application channel starting from 0
+						hwType,				// Hardware Type
+						hwIndex,			// Index of Hardware slot (0, 1, ...)
+						hwChannel,			// Index of channel (=connector) (0, 1, ...)
+						busType);			// Bus type need to be CAN
+				appChannel++;
+			}
+		}
+		printf("CAN_Wrapper: No HW defined\n");
+		printf("\tPlease assign %d channel(s) in Vector Hardware Config or Vector Hardware Manager and restart the application\n\n", MAX_USED_CHANNEL);
+	}
+
+	return status == XL_SUCCESS;
+}
+
+/**
  * Method to set the TX ID for the transmission of CAN messages. The ID will be used directly after it is set
  *
  * @param unsigned int id: ID for the TX
@@ -49,19 +155,6 @@ CAN_Wrapper::~CAN_Wrapper(){
 void CAN_Wrapper::setID(unsigned int id){
 	txID = id;
 	printf("CAN_Wrapper: TX ID is set to 0x%08X\n", txID);
-}
-
-/**
- * Switches the available channels of the configured hardware by rotating through them (increasingly)
- */
-void CAN_Wrapper::increaseChannel(){
-	// Using temp variable since compiler complains about that var may be undefined
-	unsigned int tempChannel = (channelID + 1) % drvConfig.channelCount;
-	printf("CAN_Wrapper: Setting TX Channel to %02d, %s CM(0x%I64x)\n",
-			drvConfig.channel[tempChannel].channelIndex,
-			drvConfig.channel[tempChannel].name,
-			drvConfig.channel[tempChannel].channelMask);
-	channelID = tempChannel;
 }
 
 /**
@@ -74,7 +167,7 @@ void CAN_Wrapper::increaseChannel(){
 boolean CAN_Wrapper::txCAN(byte data[], unsigned int no_bytes){
 
 	XLstatus status;
-	XLaccess chanMaskTx = drvConfig.channel[channelID].channelMask;
+	XLaccess chanMaskTx = channelMask;
 	unsigned int msgCount = 1;
 
 	// Error Handling
@@ -124,69 +217,6 @@ HANDLE CAN_Wrapper::startRXThread(){
 //============================================================================
 // Private
 //============================================================================
-
-void CAN_Wrapper::initDriver(){
-
-	XLstatus status;
-	unsigned int i;
-
-	// Open the driver
-	status = xlOpenDriver();
-
-	// Get hardware configuration
-	status = xlGetDriverConfig(&drvConfig);
-
-	if (status == XL_SUCCESS) {
-		_printConfig();
-
-		channelMask = 0;
-
-		// Check the HW for supported channels
-		for (i = 0; i < drvConfig.channelCount; i++){
-			// HW supports CAN
-			if(drvConfig.channel[i].channelBusCapabilities & XL_BUS_ACTIVE_CAP_CAN){
-				channelMask |= drvConfig.channel[i].channelMask;
-			}
-		}
-
-		// Channel mask is set if support is given
-		if(!channelMask){
-			status = XL_ERROR;
-		}
-
-		if (DEBUGGING) printf("----------------------------------------------------------------------------------------------\n");
-
-		// Open one port including all channels
-		if (status == XL_SUCCESS){
-			status = openPort();
-		}
-
-		// Set the defined BaudRate
-		if ((status == XL_SUCCESS) && (portHandle != XL_INVALID_PORTHANDLE)){
-			status = setBaudrate(baudrate);
-		}
-		else {
-			xlClosePort(portHandle);
-			portHandle = XL_INVALID_PORTHANDLE;
-			status = XL_ERROR;
-		}
-
-		// Activate all channel on the bus
-		if (status == XL_SUCCESS){
-			status = actChannels();
-		}
-
-		// Get an event for every message
-		if (status == XL_SUCCESS){
-			status = setNotification();
-		}
-
-		if (DEBUGGING) printf("----------------------------------------------------------------------------------------------\n");
-	}
-
-	if (status != XL_SUCCESS)
-		printf("\nCAN_Wrapper: Error during initialization of the driver! Info: %s\n", xlGetErrorString(status));
-}
 
 XLstatus CAN_Wrapper::openPort(){
 

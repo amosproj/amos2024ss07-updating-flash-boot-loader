@@ -34,7 +34,6 @@ void help(void){
 	printf("- 't'      Transmit a message                            -\n");
 	printf("- '+'      Select transmit Id  (up)                      -\n");
 	printf("- '-'      Select transmit Id  (down)                    -\n");
-	printf("- '.'      Select TX channel                             -\n");
 	printf("- 'h'      Help                                          -\n");
 	printf("- 'ESC'    Exit                                          -\n");
 	printf("----------------------------------------------------------\n\n");
@@ -63,10 +62,19 @@ int main() {
 
 	int stop = 0;
 	int c;
+	boolean init;
 	unsigned int txID = 0x01;
 	byte data[]={1,2,3,4,5,6,7,8};
 
 	CAN_Wrapper can = CAN_Wrapper(500000);
+	init = can.initDriver();
+
+	if (!init){
+		Sleep(10000);
+		return 0;
+	}
+
+
 	can.setID(txID);
 
 	EventHandler eh = EventHandler();
@@ -100,9 +108,6 @@ int main() {
 					can.setID(txID);
 					break;
 
-				case '.': // change channel
-					can.increaseChannel();
-					break;
 
 				case 'h': // show help
 					help();

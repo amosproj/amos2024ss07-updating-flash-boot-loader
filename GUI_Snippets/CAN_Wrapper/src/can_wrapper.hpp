@@ -23,6 +23,9 @@
 #define RX_QUEUE_SIZE			4096 	// internal driver queue size in CAN events
 #define ERROR_INVALID_INSTANCE	-1
 
+#define CHAN01 					0		// Index of Channel 1
+#define MAX_USED_CHANNEL		1		// do not edit! Currently 1 is supported only
+
 #include <stdio.h>
 
 #include "can_wrapper_event.hpp"
@@ -32,15 +35,15 @@ class CAN_Wrapper {
 
 	// Variables
 	private:
-		char appName[XL_MAX_APPNAME+1] 		= "AMOSApp";					// AppName, currently not registered
+		char appName[XL_MAX_APPNAME+1] 		= "AMOS Bootloader GUI";		// AppName, currently not registered
 		XLportHandle portHandle 			= XL_INVALID_PORTHANDLE;		// Holds the port handle for communication
 		XLdriverConfig drvConfig;											// Holds the driver configuration
 		XLaccess channelMask 				= 0;							// Chosen channel mask
+		int channelIndex					= 0;							// Chosen channel index
 		XLaccess permissionMask 			= 0;							// Possible channel mask (permitted)
 		unsigned int baudrate 				= 500000;						// Default baudrate
 
 		unsigned int txID 					= 0;							// TX ID for sending CAN messages
-		unsigned int channelID				= 0;							// Used channel for TX
 		XLevent event;														// Template variable for TX Event
 
 		int RXThreadRunning;												// Flag for controlling RX thread
@@ -54,8 +57,9 @@ class CAN_Wrapper {
 		CAN_Wrapper(unsigned int baudrate);
 		~CAN_Wrapper();
 
+		boolean initDriver();
+
 		void setID(unsigned int id);
-		void increaseChannel();
 
 		boolean txCAN(byte data[], unsigned int no_bytes);
 		void setRXCANHandle(CAN_Wrapper_Event* h);
@@ -63,9 +67,6 @@ class CAN_Wrapper {
 
 
 	private:
-
-		void initDriver();
-
 		XLstatus openPort();
 		XLstatus closePort();
 
