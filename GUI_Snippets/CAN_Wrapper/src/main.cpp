@@ -78,8 +78,7 @@ int main() {
 	can.setID(txID);
 
 	EventHandler eh = EventHandler();
-	can.setRXCANHandle(&eh);
-	can.startRXThread();
+	can.startRXThread(&eh);
 
 	// Print help after startup
 	help();

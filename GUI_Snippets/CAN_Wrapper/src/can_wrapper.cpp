@@ -87,7 +87,7 @@ boolean CAN_Wrapper::initDriver(){
 
 		// State Error if no assignment is given
 		if(!found){
-			printf("Please assign %d channel(s) in Vector Hardware Config or Vector Hardware Manager and restart the application\n", MAX_USED_CHANNEL);
+			printf("Please assign %d CAN channel(s) in Vector Hardware Config or Vector Hardware Manager and restart the application\n", MAX_USED_CHANNEL);
 			status = XL_ERROR;
 		}
 
@@ -141,7 +141,7 @@ boolean CAN_Wrapper::initDriver(){
 			}
 		}
 		printf("CAN_Wrapper: No HW defined\n");
-		printf("\tPlease assign %d channel(s) in Vector Hardware Config or Vector Hardware Manager and restart the application\n\n", MAX_USED_CHANNEL);
+		printf("\tPlease assign %d CAN channel(s) in Vector Hardware Config or Vector Hardware Manager and restart the application\n\n", MAX_USED_CHANNEL);
 	}
 
 	return status == XL_SUCCESS;
@@ -198,19 +198,14 @@ boolean CAN_Wrapper::txCAN(byte data[], unsigned int no_bytes){
 }
 
 /**
- * Method to give a reference to a user defined handle that is informed about new CAN messages
+ * Method to start a RX Thread that uses the CAN_Wrapper_Event Handle to inform about new messages
  *
  * @param CAN_Wrapper_Event h: Defined handle to be used by the CAN_Wrapper
  */
-void CAN_Wrapper::setRXCANHandle(CAN_Wrapper_Event* h){
+HANDLE CAN_Wrapper::startRXThread(CAN_Wrapper_Event* h){
 	if (h != nullptr)
-		clientHandle = h;
-}
+			clientHandle = h;
 
-/**
- * Method to start a RX Thread that uses the RX CAN Handle to inform about new messages
- */
-HANDLE CAN_Wrapper::startRXThread(){
 	return CreateThread(0, 0, RXThreadHandling, this, 0, 0);
 }
 
@@ -305,7 +300,6 @@ DWORD WINAPI CAN_Wrapper::RXThreadHandling(LPVOID param){
 			while(!status){
 
 				msgrx = RECEIVE_EVENT_SIZE;
-
 				status = xlReceive(instance->portHandle, &msgrx, &event);
 
 				if(status != XL_ERR_QUEUE_IS_EMPTY){
@@ -314,7 +308,8 @@ DWORD WINAPI CAN_Wrapper::RXThreadHandling(LPVOID param){
 						(*instance->clientHandle).handleEvent(event.tagData.msg.id, event.tagData.msg.dlc, event.tagData.msg.data);
 					}
 					else {
-						printf("CAN_Wrapper: No handler defined...\n");
+						printf("CAN_Wrapper: No handler defined... Stopping Thread\n");
+						instance->RXThreadRunning = 0;
 					}
 				}
 			}

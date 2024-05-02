@@ -58,12 +58,10 @@ class CAN_Wrapper {
 		~CAN_Wrapper();
 
 		boolean initDriver();
-
 		void setID(unsigned int id);
 
 		boolean txCAN(byte data[], unsigned int no_bytes);
-		void setRXCANHandle(CAN_Wrapper_Event* h);
-		HANDLE startRXThread();
+		HANDLE startRXThread(CAN_Wrapper_Event* h);
 
 
 	private:
