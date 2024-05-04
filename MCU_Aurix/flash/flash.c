@@ -35,15 +35,17 @@
 #define ERASEPFLASH_ADDR            (WRITEPAGE_ADDR + WRITEPAGE_LEN)
 #define WRITEPFLASH_ADDR            (ERASEPFLASH_ADDR + ERASEPFLASH_LEN)
 
+#define DUMMY_DATA_TO_WRITE               0x07738135                  /* Dummy data to be written into the Flash memories */
+
 typedef struct
 {
     void (*eraseSectors)(uint32 sectorAddr, uint32 numSector);
-    uint8 (*waitUnbusy)(uint32 flash, IfxFlash_FlashType flashType);
+    uint8 (*waitUnbusy)(uint32 flash, IfxFlash_FlashType flashModule);
     uint8 (*enterPageMode)(uint32 pageAddr);
     void (*load2X32bits)(uint32 pageAddr, uint32 wordL, uint32 wordU);
     void (*writePage)(uint32 pageAddr);
-    void (*erasePFlash)(IfxFlash_FlashType flashType, uint32 sectorAddr, uint32 numSectors);
-    void (*writePFlash)(IfxFlash_FlashType flashType, uint32 startingAddr);
+    void (*erasePFlash)(IfxFlash_FlashType flashModule, uint32 sectorAddr, uint32 numSectors);
+    void (*writePFlash)(IfxFlash_FlashType flashModule, uint32 startingAddr, uint32 numPages);
 } Function;
 
 Function g_functionsFromPSPR;
@@ -73,7 +75,7 @@ void init_leds(void)
  * copyFunctionsToPSPR(). Because of this, inside the function, only routines from the PSPR or inline functions
  * can be called, otherwise a Context Type (CTYP) trap can be triggered.
  */
-void erasePFlash(IfxFlash_FlashType flashType, uint32 sectorAddr, uint32 numSectors)
+void erasePFlash(IfxFlash_FlashType flashModule, uint32 sectorAddr, uint32 numSectors)
 {
     /* Get the current password of the Safety WatchDog module */
     uint16 endInitSafetyPassword = IfxScuWdt_getSafetyWatchdogPasswordInline();
@@ -84,16 +86,46 @@ void erasePFlash(IfxFlash_FlashType flashType, uint32 sectorAddr, uint32 numSect
     IfxScuWdt_setSafetyEndinitInline(endInitSafetyPassword);        /* Enable EndInit protection                    */
 
     /* Wait until the sector is erased */
-    g_functionsFromPSPR.waitUnbusy(PMU_FLASH_MODULE, flashType);
+    g_functionsFromPSPR.waitUnbusy(PMU_FLASH_MODULE, flashModule);
 }
 
 /* This function writes the Program Flash memory. The function is copied in the PSPR through copyFunctionsToPSPR().
  * Because of this, inside the function, only routines from the PSPR or inline functions can be called,
  * otherwise a Context Type (CTYP) trap can be triggered.
  */
-void writePFlash(IfxFlash_FlashType flashType, uint32 startingAddr)
+void writePFlash(IfxFlash_FlashType flashModule, uint32 startingAddr, uint32 numPages)
 {
+    uint32 page;                                                /* Variable to cycle over all the pages             */
+    uint32 offset;                                              /* Variable to cycle over all the words in a page   */
 
+    /* Get the current password of the Safety WatchDog module */
+    uint16 endInitSafetyPassword = IfxScuWdt_getSafetyWatchdogPasswordInline();
+
+    /* Write all the pages */
+    for(page = 0; page < numPages; page++)              /* Loop over all the pages                  */
+    {
+        uint32 pageAddr = startingAddr + (page * PFLASH_PAGE_LENGTH);   /* Get the address of the page              */
+
+        /* Enter in page mode */
+        g_functionsFromPSPR.enterPageMode(pageAddr);
+
+        /* Wait until page mode is entered */
+        g_functionsFromPSPR.waitUnbusy(PMU_FLASH_MODULE, PROGRAM_FLASH_0);
+
+        /* Write 32 bytes (8 double words) into the assembly buffer */
+        for(offset = 0; offset < PFLASH_PAGE_LENGTH; offset += 0x8)     /* Loop over the page length                */
+        {
+            g_functionsFromPSPR.load2X32bits(pageAddr, DUMMY_DATA_TO_WRITE, DUMMY_DATA_TO_WRITE); /* Load 2 words of 32 bits each */
+        }
+
+        /* Write the page */
+        IfxScuWdt_clearSafetyEndinitInline(endInitSafetyPassword);      /* Disable EndInit protection               */
+        g_functionsFromPSPR.writePage(pageAddr);                          /* Write the page                           */
+        IfxScuWdt_setSafetyEndinitInline(endInitSafetyPassword);        /* Enable EndInit protection                */
+
+        /* Wait until the page is written in the Program Flash memory */
+        g_functionsFromPSPR.waitUnbusy(PMU_FLASH_MODULE, PROGRAM_FLASH_0);
+    }
 }
 
 /* This function copies the erase and program routines to the Program Scratch-Pad SRAM (PSPR) of the CPU0 and assigns
@@ -131,13 +163,14 @@ static void copyFunctionsToPSPR()
 }
 
 /* This function flashes the Program Flash memory calling the routines from the PSPR */
-void writeProgramFlash(IfxFlash_FlashType flashType)
+void writeProgramFlash(IfxFlash_FlashType flashModule)
 {
     // TODO select which P0/P1, which sectors etc., which data
 
     // TODO values from programming example
     uint32 PFLASH_NUM_SECTORS = 1;                              /* Number of PFLASH sectors to be erased            */
     uint32 PFLASH_STARTING_ADDRESS = 0xA00E0000;                /* Address of the PFLASH where the data is written  */
+    uint32 PFLASH_NUM_PAGE_TO_FLASH = 2;                        /* Number of pages to flash in the PFLASH           */
 
     boolean interruptState = IfxCpu_disableInterrupts(); /* Get the current state of the interrupts and disable them*/
 
@@ -145,10 +178,10 @@ void writeProgramFlash(IfxFlash_FlashType flashType)
     copyFunctionsToPSPR();
 
     /* Erase the Program Flash sector before writing */
-    g_functionsFromPSPR.erasePFlash(flashType, PFLASH_STARTING_ADDRESS, PFLASH_NUM_SECTORS);
+    g_functionsFromPSPR.erasePFlash(flashModule, PFLASH_STARTING_ADDRESS, PFLASH_NUM_SECTORS);
 
     /* Write the Program Flash */
-    g_functionsFromPSPR.writePFlash(flashType, PFLASH_STARTING_ADDRESS);
+    g_functionsFromPSPR.writePFlash(flashModule, PFLASH_STARTING_ADDRESS, PFLASH_NUM_PAGE_TO_FLASH);
 
     IfxCpu_restoreInterrupts(interruptState);            /* Restore the interrupts state                            */
 }

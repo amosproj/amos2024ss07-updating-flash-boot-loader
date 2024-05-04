@@ -45,6 +45,6 @@ void init_leds(void);
 void turn_led_on(Ifx_P *port, uint8 pinIndex);
 void turn_led_off(Ifx_P *port, uint8 pinIndex);
 
-void writeProgramFlash(IfxFlash_FlashType flashType);
+void writeProgramFlash(IfxFlash_FlashType flashModule);
 
 #endif /* FLASH_H_ */
