@@ -33,7 +33,6 @@
 
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
-
 void core0_main(void)
 {
     IfxCpu_enableInterrupts();
@@ -48,7 +47,11 @@ void core0_main(void)
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
 
-    set_led();
+    init_leds();
+
+    writeProgramFlash(PROGRAM_FLASH_0);
+
+    turn_led_on(LED2);
 
     while(1)
     {

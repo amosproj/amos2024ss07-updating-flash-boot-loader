@@ -20,6 +20,22 @@
 /*------------------------------------------------------Macros-------------------------------------------------------*/
 /*********************************************************************************************************************/
 
+/* Definition of the LEDs port pins */
+#define LED1                        &MODULE_P00,5               /* LED connected to Port 00, Pin 5                  */
+#define LED2                        &MODULE_P00,6               /* LED connected to Port 00, Pin 6                  */
+
+/* Define the Program Flash Bank to be used.*/
+#define PROGRAM_FLASH_0             IfxFlash_FlashType_P0
+#define PROGRAM_FLASH_1             IfxFlash_FlashType_P1
+/* Define the Data Flash Bank to be used.*/
+#define DATA_FLASH_0                IfxFlash_FlashType_D0
+#define DATA_FLASH_1                IfxFlash_FlashType_D1
+
+/* Relocation address for the erase and program routines: Program Scratch-Pad SRAM (PSPR) of CPU0 */
+#define RELOCATION_START_ADDR       (0x70100000U) // TODO rename maybe PSPR_START_ADDR
+
+#define DFLASH_STARTING_ADDRESS     0xAF000000                  /* Address of the DFLASH where the data is written  */
+
 /*********************************************************************************************************************/
 /*-------------------------------------------------Global variables--------------------------------------------------*/
 /*********************************************************************************************************************/
