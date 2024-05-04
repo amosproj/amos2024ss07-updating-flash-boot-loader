@@ -34,6 +34,8 @@ void core0_main(void)
 {
     IfxCpu_enableInterrupts();
     
+    /* testing */
+
     /* !!WATCHDOG0 AND SAFETY WATCHDOG ARE DISABLED HERE!!
      * Enable the watchdogs and service them periodically if it is required
      */
