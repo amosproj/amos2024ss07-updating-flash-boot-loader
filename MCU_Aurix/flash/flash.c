@@ -35,7 +35,9 @@
 #define ERASEPFLASH_ADDR            (WRITEPAGE_ADDR + WRITEPAGE_LEN)
 #define WRITEPFLASH_ADDR            (ERASEPFLASH_ADDR + ERASEPFLASH_LEN)
 
-#define DUMMY_DATA_TO_WRITE               0x07738135                  /* Dummy data to be written into the Flash memories */
+#define DUMMY_DATA_TO_WRITE         0x07738135                  /* Dummy data to be written into the Flash memories */
+
+#define MEM(address)                *((uint32 *)(address))      /* Macro to simplify the access to a memory address */
 
 typedef struct
 {
@@ -120,7 +122,7 @@ void writePFlash(IfxFlash_FlashType flashModule, uint32 startingAddr, uint32 num
 
         /* Write the page */
         IfxScuWdt_clearSafetyEndinitInline(endInitSafetyPassword);      /* Disable EndInit protection               */
-        g_functionsFromPSPR.writePage(pageAddr);                          /* Write the page                           */
+        g_functionsFromPSPR.writePage(pageAddr);                        /* Write the page                           */
         IfxScuWdt_setSafetyEndinitInline(endInitSafetyPassword);        /* Enable EndInit protection                */
 
         /* Wait until the page is written in the Program Flash memory */
@@ -131,7 +133,7 @@ void writePFlash(IfxFlash_FlashType flashModule, uint32 startingAddr, uint32 num
 /* This function copies the erase and program routines to the Program Scratch-Pad SRAM (PSPR) of the CPU0 and assigns
  * function pointers to them.
  */
-static void copyFunctionsToPSPR()
+static void copyFunctionsToPSPR(void)
 {
     /* Copy the IfxFlash_eraseMultipleSectors() routine and assign it to a function pointer */
     memcpy((void *)ERASESECTOR_ADDR, (const void *)IfxFlash_eraseMultipleSectors, ERASESECTOR_LEN);
@@ -186,3 +188,32 @@ void writeProgramFlash(IfxFlash_FlashType flashModule)
     IfxCpu_restoreInterrupts(interruptState);            /* Restore the interrupts state                            */
 }
 
+/* This function verifies if the data has been correctly written in the Program Flash */
+uint32 verifyProgramFlash(void)
+{
+    // TODO values from programming example
+    uint32 PFLASH_STARTING_ADDRESS = 0xA00E0000;                /* Address of the PFLASH where the data is written  */
+    uint32 PFLASH_NUM_PAGE_TO_FLASH = 2;                        /* Number of pages to flash in the PFLASH           */
+
+    uint32 page;                                                /* Variable to cycle over all the pages             */
+    uint32 offset;                                              /* Variable to cycle over all the words in a page   */
+    uint32 errors = 0;                                          /* Variable to keep record of the errors            */
+
+    /* Verify the written data */
+    for(page = 0; page < PFLASH_NUM_PAGE_TO_FLASH; page++)                          /* Loop over all the pages      */
+    {
+        uint32 pageAddr = PFLASH_STARTING_ADDRESS + (page * PFLASH_PAGE_LENGTH);    /* Get the address of the page  */
+
+        for(offset = 0; offset < PFLASH_PAGE_LENGTH; offset += 0x4)                 /* Loop over the page length    */
+        {
+            /* Check if the data in the Program Flash is correct */
+            if(MEM(pageAddr + offset) != DUMMY_DATA_TO_WRITE)
+            {
+                /* If not, count the found errors */
+                errors++;
+            }
+        }
+    }
+
+    return errors;
+}

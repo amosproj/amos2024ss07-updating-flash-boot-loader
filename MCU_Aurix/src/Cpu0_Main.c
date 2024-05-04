@@ -51,7 +51,11 @@ void core0_main(void)
 
     writeProgramFlash(PROGRAM_FLASH_0);
 
-    turn_led_on(LED2);
+    uint32 errors = verifyProgramFlash();
+    if(errors == 0)
+    {
+        turn_led_on(LED2);
+    }
 
     while(1)
     {
