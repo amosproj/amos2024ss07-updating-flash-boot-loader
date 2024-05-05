@@ -1,6 +1,12 @@
-# IDE
+# Aurix IDE
 .metadata
 .settings
+
+#Code::BLocks IDE
+obj/
+bin/
+*.cbp
+*.depend
 
 # Temp Files
 Blinky_LED_1_KIT_TC375_LK/
