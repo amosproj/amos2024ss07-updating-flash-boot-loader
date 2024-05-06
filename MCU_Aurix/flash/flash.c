@@ -214,6 +214,82 @@ uint32 verifyProgramFlash(void)
             }
         }
     }
+    return errors;
+}
 
+/* This function flashes the Data Flash memory.
+ * It is not needed to run this function from the PSPR, thus functions from the Program Flash memory can be called
+ * inside.
+ */
+void writeDataFlash(IfxFlash_FlashType flashModule)
+{
+    // TODO parameter which data flash, data and size
+    uint32 DFLASH_NUM_SECTORS = 1;
+    uint32 DFLASH_NUM_PAGE_TO_FLASH = 8;
+    uint32 DFLASH_STARTING_ADDRESS = 0xAF000000;                /* Address of the DFLASH where the data is written  */
+
+    uint32 page;                                                /* Variable to cycle over all the pages             */
+
+    /* --------------- ERASE PROCESS --------------- */
+    /* Get the current password of the Safety WatchDog module */
+    uint16 endInitSafetyPassword = IfxScuWdt_getSafetyWatchdogPassword();
+
+    /* Erase the sector */
+    IfxScuWdt_clearSafetyEndinit(endInitSafetyPassword);        /* Disable EndInit protection                       */
+    IfxFlash_eraseMultipleSectors(DFLASH_STARTING_ADDRESS, DFLASH_NUM_SECTORS); /* Erase the given sector           */
+    IfxScuWdt_setSafetyEndinit(endInitSafetyPassword);          /* Enable EndInit protection                        */
+
+    /* Wait until the sector is erased */
+    IfxFlash_waitUnbusy(flashModule, DATA_FLASH_0);
+
+    /* --------------- WRITE PROCESS --------------- */
+    for(page = 0; page < DFLASH_NUM_PAGE_TO_FLASH; page++)      /* Loop over all the pages                          */
+    {
+        uint32 pageAddr = DFLASH_STARTING_ADDRESS + (page * DFLASH_PAGE_LENGTH); /* Get the address of the page     */
+
+        /* Enter in page mode */
+        IfxFlash_enterPageMode(pageAddr);
+
+        /* Wait until page mode is entered */
+        IfxFlash_waitUnbusy(flashModule, DATA_FLASH_0);
+
+        /* Load data to be written in the page */
+        IfxFlash_loadPage2X32(pageAddr, DUMMY_DATA_TO_WRITE, DUMMY_DATA_TO_WRITE); /* Load two words of 32 bits each            */
+
+        /* Write the loaded page */
+        IfxScuWdt_clearSafetyEndinit(endInitSafetyPassword);    /* Disable EndInit protection                       */
+        IfxFlash_writePage(pageAddr);                           /* Write the page                                   */
+        IfxScuWdt_setSafetyEndinit(endInitSafetyPassword);      /* Enable EndInit protection                        */
+
+        /* Wait until the data is written in the Data Flash memory */
+        IfxFlash_waitUnbusy(flashModule, DATA_FLASH_0);
+    }
+}
+
+/* This function verifies if the data has been correctly written in the Data Flash */
+uint32 verifyDataFlash(void)
+{
+    uint32 DFLASH_NUM_PAGE_TO_FLASH = 8;
+    uint32 DFLASH_STARTING_ADDRESS = 0xAF000000;                /* Address of the DFLASH where the data is written  */
+
+    uint32 page;                                                /* Variable to cycle over all the pages             */
+    uint32 offset;                                              /* Variable to cycle over all the words in a page   */
+    uint32 errors = 0;                                          /* Variable to keep record of the errors            */
+
+    /* Verify the written data */
+    for(page = 0; page < DFLASH_NUM_PAGE_TO_FLASH; page++)                          /* Loop over all the pages      */
+    {
+        uint32 pageAddr = DFLASH_STARTING_ADDRESS + (page * DFLASH_PAGE_LENGTH);    /* Get the address of the page  */
+
+        for(offset = 0; offset < DFLASH_PAGE_LENGTH; offset += 0x4)                 /* Loop over the page length    */
+        {
+            /* Check if the data in the Data Flash is correct */
+            if(MEM(pageAddr + offset) != DUMMY_DATA_TO_WRITE)
+            {
+                /* If not, count the found errors */
+                errors++;
+            }
+        }
+    }
     return errors;
 }
