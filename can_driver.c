@@ -13,6 +13,7 @@
 
 void (*processDataFunction)(void*);
 
+
 canType g_can //Global control struct
 /*Interrupts*/
 IFX_INTERRUPT(canIsrTxHandler, 0, INTERRUPT_PRIO_TX);
@@ -29,10 +30,10 @@ void canIsrTxHandler(void){
 */
 void canIsrRxHandler(){
     IfxCan_Node_clearInterruptFlag(g_can.canDstNode.node, IfxCan_Interrupt_messageStoredToDedicatedRxBuffer); /*Clear Message Stored Flag*/
-    IfxCan_Can_readMessage(&g_mcmcan.canDstNode, &g_mcmcan.rxMsg, g_mcmcan.rxData); //Read Message
+    IfxCan_Can_readMessage(&g_can.canDstNode, &g_can.rxMsg, g_can.rxData); //Read Message
     if (processDataFunction != NULL)
     {
-        //Call Function
+        //Callback
     }
 
     
@@ -77,12 +78,13 @@ void initDstNode(){
 /**
  * Initialize CAN Module and Node
 */
-void initCanDriver(void){
+void canInitDriver(void){
     IfxCan_Can_initModuleConfig(&g_can.canConfig, &MODULE_CAN0) /*LoadsDefault Config*/
     IfxCan_Can_initModule(&g_can.canModule, &g_can.canConfig) /*Init with default config*/
 
     initSrcNode();
     initDstNode();
+    IfxCan_Can_initMessage(&g_can.rxMsg); /*Init for RX Message*/
 }
 
 /**
@@ -91,8 +93,16 @@ void initCanDriver(void){
  * @param TXLowDataWord First 4 Bytes in TX CAN Message
  * @param TXHighDataWord Last 4 Bytes in TX CAN Message
 */
-void transmitCanMessage(uint32 canMessageID, uint32 TXLowDataWord, uint32 TXHighDataWord){
-    
+void canTransmitMessage(uint32 canMessageID, uint64_t data, uint64_t len){
+    IfxCan_Can_initMessage(&g_can.txMsg);
+    g_can.txData[0] = data; /*To transmit data*/
+    g_can.txMsg.messageId = canMessageID;
+
+    /*Sends CAN Message, only if BUS is empty*/
+    while( IfxCan_Status_notSentBusy ==
+           IfxCan_Can_sendMessage(&g_can.canSrcNode, &g_can.txMsg, &g_can.txData[0]))
+    {
+    }
 }
 
 
