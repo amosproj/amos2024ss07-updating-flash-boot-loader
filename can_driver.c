@@ -20,16 +20,11 @@ IFX_INTERRUPT(canIsrRxHandler, 0, INTERRUP_PRIO_RX);
  * Calls function to execute on Data Read in CAN Message
  * @param processDataFunction Pointer to function that processes Data read in CAN Message
 */
-void canIsrRxHandler(void (*processDataFunction)(void*));
+void canIsrRxHandler(void (*processDataFunction)(void*)){
 
-/**
- * Initialize CAN Module and Node
-*/
-void initCanDriver(void){
-    IfxCan_Can_initModuleConfig(&g_can.canConfig, &MODULE_CAN0) /*LoadsDefault Config*/
-    IfxCan_Can_initModule(&g_can.canModule, &g_can.canConfig) /*Init with default config*/
+}
 
-
+void initSrcNode(){
     //TODO: Change Loopback mode 
     IfxCan_Can_initNodeConfig(&g_can.canNodeConfig, &g_can.canModule);
 
@@ -44,8 +39,9 @@ void initCanDriver(void){
     g_can.canNodeConfig.interruptConfig.traco.typeOfService = IfxSrc_Tos_cpu0;       /*On CPU0*/
 
     IfxCan_Can_initNode(&g_can.canSrcNode, &g_can.canNodeConfig);             /*INIT Node with this Config*/
+}
 
-
+void initDstNode(){
     //TODO: Change Loopback mode when PINS are used
     IfxCan_Can_initNodeConfig(&g_can.canNodeConfig, &g_can.canModule);                  /*Default Config*/
 
@@ -60,6 +56,17 @@ void initCanDriver(void){
     g_can.canNodeConfig.interruptConfig.reint.typeOfService = IfxSrc_Tos_cpu0;          /*On CPU 0*/
 
     IfxCan_Can_initNode(&g_can.canDstNode, &g_can.canNodeConfig);                        /*INIT Node with this Config*/
+}
+
+/**
+ * Initialize CAN Module and Node
+*/
+void initCanDriver(void){
+    IfxCan_Can_initModuleConfig(&g_can.canConfig, &MODULE_CAN0) /*LoadsDefault Config*/
+    IfxCan_Can_initModule(&g_can.canModule, &g_can.canConfig) /*Init with default config*/
+
+    initSrcNode();
+    initDstNode();
 }
 
 /**
