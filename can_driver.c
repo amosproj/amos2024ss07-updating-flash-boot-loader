@@ -11,17 +11,31 @@
 
 #include "can_driver.h"
 
+void (*processDataFunction)(void*);
+
 canType g_can //Global control struct
 /*Interrupts*/
+IFX_INTERRUPT(canIsrTxHandler, 0, INTERRUPT_PRIO_TX);
 IFX_INTERRUPT(canIsrRxHandler, 0, INTERRUP_PRIO_RX);
+
+void canIsrTxHandler(void){
+    IfxCan_Node_clearInterruptFlag(g_can.canSrcNode.node, IfxCan_Interrupt_transmissionCompleted); //Just clears the Interrupt 
+}
 
 /**
  * Interrupt Service Routine (ISR) is called when RX Interrupt is generated
  * Calls function to execute on Data Read in CAN Message
  * @param processDataFunction Pointer to function that processes Data read in CAN Message
 */
-void canIsrRxHandler(void (*processDataFunction)(void*)){
+void canIsrRxHandler(){
+    IfxCan_Node_clearInterruptFlag(g_can.canDstNode.node, IfxCan_Interrupt_messageStoredToDedicatedRxBuffer); /*Clear Message Stored Flag*/
+    IfxCan_Can_readMessage(&g_mcmcan.canDstNode, &g_mcmcan.rxMsg, g_mcmcan.rxData); //Read Message
+    if (processDataFunction != NULL)
+    {
+        //Call Function
+    }
 
+    
 }
 
 void initSrcNode(){
@@ -56,6 +70,8 @@ void initDstNode(){
     g_can.canNodeConfig.interruptConfig.reint.typeOfService = IfxSrc_Tos_cpu0;          /*On CPU 0*/
 
     IfxCan_Can_initNode(&g_can.canDstNode, &g_can.canNodeConfig);                        /*INIT Node with this Config*/
+
+    //TODO:Check if we need CAN Filter here
 }
 
 /**
@@ -76,7 +92,7 @@ void initCanDriver(void){
  * @param TXHighDataWord Last 4 Bytes in TX CAN Message
 */
 void transmitCanMessage(uint32 canMessageID, uint32 TXLowDataWord, uint32 TXHighDataWord){
-
+    
 }
 
 
