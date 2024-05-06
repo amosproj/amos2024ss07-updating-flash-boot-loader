@@ -29,6 +29,8 @@
 /*********/
 #define DEBUGGING                   1 //Debug Prints
 #define MAXIMUM_CAN_DATA_PAYLOAD    2 /*8Byte CAN-MESSAGE*/
+#define INTERRUPT_PRIO_RX           1 /*Priority for RX Interrupt*/
+#define INTERRUPT_PRIO_TX           2 /*Prio for TX Interrupt*/
 
 /*canType struct contains Data Structures needed for config and processing of CAN Messages*/
 typedef struct canType
@@ -45,9 +47,15 @@ typedef struct canType
     uint32 rxData[MAXIMUM_CAN_DATA_PAYLOAD];                /* Received CAN data array                              */
 }canType;
 
-void initCanDriver(void);
-void transmitCanMessage(uint32 canMessageID, uint32 TXLowDataWord, uint32 TXHighDataWord);
-void canIsrRxHandler(void (*processData)(void*));
+typedef struct msg
+{
+    IfxCan_Message Msg;
+    uint32 Data[MAXIMUM_CAN_DATA_PAYLOAD];
+}msg;
+
+void canInitDriver(void);
+void canTransmitMessage(uint32 canMessageID, uint64_t data, uint64_t len); //oder uint8_t*
+void canIsrRxHandler();
 
 
 #endif /*CAN_DRIVER_H*/
