@@ -164,15 +164,91 @@ static void copyFunctionsToPSPR(void)
     g_functionsFromPSPR.writePFlash = (void *)WRITEPFLASH_ADDR;
 }
 
-/* This function flashes the Program Flash memory calling the routines from the PSPR */
-void writeProgramFlash(IfxFlash_FlashType flashModule)
+static uint32 getNumPerSize(size_t sectionLength, size_t dataSize)
 {
-    // TODO select which P0/P1, which sectors etc., which data
+    uint32 num_pages = dataSize / sectionLength;
+    if (dataSize % sectionLength) // we need a page more because there is data left that does not fill a full page
+    {
+        num_pages++;
+    }
+    return num_pages;
+}
 
-    // TODO values from programming example
-    uint32 PFLASH_NUM_SECTORS = 1;                              /* Number of PFLASH sectors to be erased            */
-    uint32 PFLASH_STARTING_ADDRESS = 0xA00E0000;                /* Address of the PFLASH where the data is written  */
-    uint32 PFLASH_NUM_PAGE_TO_FLASH = 2;                        /* Number of pages to flash in the PFLASH           */
+static uint32 getDFlashNumPages(size_t dataSize)
+{
+    return getNumPerSize(DFLASH_PAGE_LENGTH, dataSize);
+}
+
+static uint32 getDFlashNumSectors(size_t dataSize)
+{
+    return getNumPerSize(DFLASH_SECTOR_LENGTH, dataSize);
+}
+
+static uint32 getPFlashNumPages(size_t dataSize)
+{
+    return getNumPerSize(PFLASH_PAGE_LENGTH, dataSize);
+}
+
+static uint32 getPFlashNumSectors(size_t dataSize)
+{
+    return getNumPerSize(PFLASH_SECTOR_LENGTH, dataSize);
+}
+
+static int checkAddrInFlashModule(IfxFlash_FlashType flashModule, uint32 addr)
+{
+    if(flashModule == DATA_FLASH_0)
+    {
+        if (addr >= DATA_FLASH_0_BASE_ADDR && addr < DATA_FLASH_0_END_ADDR)
+        {
+            return 0;
+        }
+    }
+    else if(flashModule == DATA_FLASH_1)
+    {
+        if (addr >= DATA_FLASH_1_BASE_ADDR && addr < DATA_FLASH_1_END_ADDR)
+        {
+            return 0;
+        }
+    }
+    else if(flashModule == PROGRAM_FLASH_0)
+    {
+        if (addr >= PROGRAM_FLASH_0_BASE_ADDR && addr < PROGRAM_FLASH_0_END_ADDR)
+        {
+            return 0;
+        }
+    }
+    else if(flashModule == PROGRAM_FLASH_1)
+    {
+        if (addr >= PROGRAM_FLASH_1_BASE_ADDR && addr < PROGRAM_FLASH_1_END_ADDR)
+        {
+            return 0;
+        }
+    }
+    return -1;
+}
+
+/* This function flashes the Program Flash memory calling the routines from the PSPR */
+int writeProgramFlash(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32 data[], size_t dataSize)
+{
+    if (flashModule != PROGRAM_FLASH_0 && flashModule != PROGRAM_FLASH_1)
+    {
+        return -1;
+    }
+
+    // check if address matches flashModule
+    if (checkAddrInFlashModule(flashModule, flashStartAddr))
+    {
+        return -1;
+    }
+
+    // check if address range can be in flash
+    if (checkAddrInFlashModule(flashModule, flashStartAddr + dataSize))
+    {
+        return -1;
+    }
+
+    uint32 num_sectors = getPFlashNumSectors(dataSize);
+    uint32 num_pages = getPFlashNumPages(dataSize);
 
     boolean interruptState = IfxCpu_disableInterrupts(); /* Get the current state of the interrupts and disable them*/
 
@@ -180,12 +256,13 @@ void writeProgramFlash(IfxFlash_FlashType flashModule)
     copyFunctionsToPSPR();
 
     /* Erase the Program Flash sector before writing */
-    g_functionsFromPSPR.erasePFlash(flashModule, PFLASH_STARTING_ADDRESS, PFLASH_NUM_SECTORS);
+    g_functionsFromPSPR.erasePFlash(flashModule, flashStartAddr, num_sectors);
 
     /* Write the Program Flash */
-    g_functionsFromPSPR.writePFlash(flashModule, PFLASH_STARTING_ADDRESS, PFLASH_NUM_PAGE_TO_FLASH);
+    g_functionsFromPSPR.writePFlash(flashModule, flashStartAddr, num_pages);
 
     IfxCpu_restoreInterrupts(interruptState);            /* Restore the interrupts state                            */
+    return 0;
 }
 
 /* This function verifies if the data has been correctly written in the Program Flash */
@@ -217,73 +294,25 @@ uint32 verifyProgramFlash(void)
     return errors;
 }
 
-static uint32 getNumPerSize(size_t sectionLength, size_t dataSize)
-{
-    uint32 num_pages = dataSize / sectionLength;
-    if (dataSize % sectionLength) // we need a page more because there is data left that does not fill a full page
-    {
-        num_pages++;
-    }
-    return num_pages;
-}
-
-static uint32 getDFlashNumPages(size_t dataSize)
-{
-    return getNumPerSize(DFLASH_PAGE_LENGTH, dataSize);
-}
-
-static uint32 getDFlashNumSectors(size_t dataSize)
-{
-    return getNumPerSize(DFLASH_SECTOR_LENGTH, dataSize);
-}
-
-static int checkAddrInRange(uint32 baseRange, uint32 endRange, uint32 addr, uint32 length)
-{
-    if (!(addr >= baseRange && addr < endRange))
-    {
-        return -1;
-    }
-
-    if (!((addr + length) >= baseRange && (addr + length) < endRange))
-    {
-        return -1;
-    }
-    return 0;
-}
-
-static int checkAddrFlashModule(IfxFlash_FlashType flashModule, uint32 addr)
-{
-    if(flashModule == DATA_FLASH_0)
-    {
-        if (addr >= DATA_FLASH_0_BASE_ADDR && addr < DATA_FLASH_0_END_ADDR)
-        {
-            return 0;
-        }
-    }
-    else if(flashModule == DATA_FLASH_1)
-    {
-        if (addr >= DATA_FLASH_1_BASE_ADDR && addr < DATA_FLASH_1_END_ADDR)
-        {
-            return 0;
-        }
-    }
-    return -1;
-}
-
 /* This function flashes the Data Flash memory.
  * It is not needed to run this function from the PSPR, thus functions from the Program Flash memory can be called
  * inside.
  */
 int writeDataFlash(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32 data[], size_t dataSize)
 {
-    // check if address is in flash
-    if (checkAddrInRange(DATA_FLASH_0_BASE_ADDR, DATA_FLASH_0_END_ADDR, (uint32) data, dataSize))
+    if (flashModule != DATA_FLASH_0 && flashModule != DATA_FLASH_1)
     {
         return -1;
     }
 
-    // TODO check if address matches flashModule
-    if (checkAddrFlashModule(flashModule, flashStartAddr))
+    // check if address matches flashModule
+    if (checkAddrInFlashModule(flashModule, flashStartAddr))
+    {
+        return -1;
+    }
+
+    // check if address range can be in flash
+    if (checkAddrInFlashModule(flashModule, flashStartAddr + dataSize))
     {
         return -1;
     }

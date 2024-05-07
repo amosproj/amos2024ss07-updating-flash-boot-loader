@@ -40,6 +40,13 @@
 #define DATA_FLASH_1_BASE_ADDR      0xAFC00000
 #define DATA_FLASH_1_END_ADDR       0xAFC1FFFF
 
+// TODO are these the correct addresses for PF?
+#define PROGRAM_FLASH_0_BASE_ADDR   0xA00E0000 // TODO eig 0xA0000000
+#define PROGRAM_FLASH_0_END_ADDR    0xA02FFFFF
+
+#define PROGRAM_FLASH_1_BASE_ADDR   0xA0300000
+#define PROGRAM_FLASH_1_END_ADDR    0xA05FFFFF
+
 // not sure if page size is uC specific
 #define PFLASH_PAGE_LENGTH          IFXFLASH_PFLASH_PAGE_LENGTH /* 0x20 = 32 Bytes (smallest unit that can be
                                                                  * programmed in the Program Flash memory (PFLASH)) */
