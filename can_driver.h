@@ -12,6 +12,8 @@
 #ifndef CAN_DRIVER_H
 #define CAN_DRIVER_H
 
+#define CAN_DEBUG_ID    (uint32)0x777
+#define CAN_DEBUG_DATA  (uint64_t)0xBABAB055
 
 /**********/
 /*INCLUDES*/

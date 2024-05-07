@@ -10,8 +10,11 @@
 //============================================================================
 
 #include "can_driver.h"
+#include "can_init.h"
 
 void (*processDataFunction)(void*);
+
+//TODO: Implement the processDataFunction we want to use
 
 
 canType g_can //Global control struct
@@ -35,6 +38,23 @@ void canIsrRxHandler(){
     {
         //Callback
     }
+
+    if (DEBUGGING)
+    {
+        //LED 1 If Message ID TX and RX is same
+        if (g_can.rxMsg.messageId == g_can.txMsg.messageId)
+        {
+            IfxPort_setPinLow(g_led1.port, g_led1.pinIndex);
+        }
+        //LED 2 if data TX and RX is the same
+        if (g_can.rxData[0] == g_can.txData[0])
+        {
+            IfxPort_setPinLow(g_led2.port, g_led2.pinIndex);
+        }
+        
+        
+    }
+    
 
     
 }
@@ -88,10 +108,10 @@ void canInitDriver(void){
 }
 
 /**
- * Transmits a CAN Message: Initialize new TX and RX message, TX is transmitted
+ * Transmits a CAN Message: Initialize new TX message, TX is transmitted
  * @param canMessageID ID of CAN Message for Prio in BUS
- * @param TXLowDataWord First 4 Bytes in TX CAN Message
- * @param TXHighDataWord Last 4 Bytes in TX CAN Message
+ * @param data data of CAN Message
+ * @param len of CAN Message
 */
 void canTransmitMessage(uint32 canMessageID, uint64_t data, uint64_t len){
     IfxCan_Can_initMessage(&g_can.txMsg);

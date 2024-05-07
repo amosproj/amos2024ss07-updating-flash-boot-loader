@@ -19,7 +19,7 @@
 /**MACROS*/
 /*********/
 #define DEBUGGING                   1 //Debug Prints
-#define MAXIMUM_CAN_DATA_PAYLOAD    2 /*8Byte CAN-MESSAGE*/
+#define MAXIMUM_CAN_DATA_PAYLOAD    1 /*8Byte CAN-MESSAGE*/
 #define INTERRUPT_PRIO_RX           1 /*Priority for RX Interrupt*/
 #define INTERRUPT_PRIO_TX           2 /*Prio for TX Interrupt*/
 
@@ -34,8 +34,8 @@ typedef struct canType
     IfxCan_Filter canFilter;                                /* CAN filter configuration structure                   */
     IfxCan_Message txMsg;                                   /* Transmitted CAN message structure                    */
     IfxCan_Message rxMsg;                                   /* Received CAN message structure                       */
-    uint32 txData[MAXIMUM_CAN_DATA_PAYLOAD];                /* Transmitted CAN data array                           */
-    uint32 rxData[MAXIMUM_CAN_DATA_PAYLOAD];                /* Received CAN data array                              */
+    uint64_t txData[MAXIMUM_CAN_DATA_PAYLOAD];                /* Transmitted CAN data array                           */
+    uint64_t rxData[MAXIMUM_CAN_DATA_PAYLOAD];                /* Received CAN data array                              */
 }canType;
 
 typedef struct msg

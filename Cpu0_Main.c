@@ -16,7 +16,7 @@ void core0_main(void)
     
     canInitDriver();
     initLeds();
-    canTransmitMessage();
+    canTransmitMessage(CAN_DEBUG_ID,CAN_DEBUG_DATA, 1);
 
     while(1)
     {
