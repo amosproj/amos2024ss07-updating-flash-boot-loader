@@ -2,7 +2,7 @@
 
 This is a simple c Programm, just use the IDE of your choice, build and execute the files.
 
-##ATTENTION: possible issues
+## ATTENTION: possible issues
 
 On my end I had to link the IDE to the "comdlg32" library in the project settings. I wasn't able to do this in VSC, because I couldn't find the option for that.
 
