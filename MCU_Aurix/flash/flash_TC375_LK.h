@@ -34,11 +34,16 @@
 /* Relocation address for the erase and program routines: Program Scratch-Pad SRAM (PSPR) of CPU0 */
 #define RELOCATION_START_ADDR       (0x70100000U) // TODO rename maybe PSPR_START_ADDR
 
+// not sure if page size is uC specific
 #define PFLASH_PAGE_LENGTH          IFXFLASH_PFLASH_PAGE_LENGTH /* 0x20 = 32 Bytes (smallest unit that can be
                                                                  * programmed in the Program Flash memory (PFLASH)) */
 #define DFLASH_PAGE_LENGTH          IFXFLASH_DFLASH_PAGE_LENGTH /* 0x8 = 8 Bytes (smallest unit that can be
                                                                  * programmed in the Data Flash memory (DFLASH))    */
 
+// TODO kilo or kibi Byte
+#define PFLASH_SECTOR_LENGTH        16000                       /* logical sector length */
+
+#define DFLASH_SECTOR_LENGTH        4000                        /* default sector length in single ended mode */
 /*********************************************************************************************************************/
 /*-------------------------------------------------Global variables--------------------------------------------------*/
 /*********************************************************************************************************************/
