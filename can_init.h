@@ -14,6 +14,7 @@
 #include "IfxCan.h"
 #include "IfxCpu_Irq.h"
 #include "IfxPort.h"
+#include <stdint.h>
 
 /*********/
 /**MACROS*/
@@ -22,7 +23,8 @@
 #define MAXIMUM_CAN_DATA_PAYLOAD    1 /*8Byte CAN-MESSAGE*/
 #define INTERRUPT_PRIO_RX           1 /*Priority for RX Interrupt*/
 #define INTERRUPT_PRIO_TX           2 /*Prio for TX Interrupt*/
-
+#define PIN5                        5
+#define PIN6                        6
 /*canType struct contains Data Structures needed for config and processing of CAN Messages*/
 typedef struct canType
 {
