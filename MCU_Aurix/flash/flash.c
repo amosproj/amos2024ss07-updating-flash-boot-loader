@@ -106,8 +106,7 @@ void writePFlash(IfxFlash_FlashType flashModule, uint32 startingAddr, uint32 num
     for(page = 0; page < numPages; page++)              /* Loop over all the pages                  */
     {
         uint32 pageAddr = startingAddr + (page * PFLASH_PAGE_LENGTH);   /* Get the address of the page              */
-//        uint32* data_for_page = (uint32*) (((uint8*) data) + (page * DFLASH_PAGE_LENGTH));
-        uint32* data_for_page = data + (page * DFLASH_PAGE_LENGTH);
+        uint32* data_for_page = (uint32*) (((uint8*) data) + (page * PFLASH_PAGE_LENGTH));
 
         /* Enter in page mode */
         g_functionsFromPSPR.enterPageMode(pageAddr);
@@ -296,6 +295,7 @@ uint32 verifyProgramFlash(uint32 flashStartAddr, uint32 data[], size_t dataSize)
                 /* If not, count the found errors */
                 errors++;
             }
+            index++;
             if (index >= dataSize)
             {
                 return errors;
