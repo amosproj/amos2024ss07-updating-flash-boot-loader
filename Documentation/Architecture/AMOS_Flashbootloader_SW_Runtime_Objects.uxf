@@ -420,4 +420,55 @@ Windows
 bg=#d3d3d3</panel_attributes>
     <additional_attributes/>
   </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>696</x>
+      <y>152</y>
+      <w>96</w>
+      <h>24</h>
+    </coordinates>
+    <panel_attributes>Platform Agnostic
+bg=#90EE90
+group=group-0</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>800</x>
+      <y>152</y>
+      <w>96</w>
+      <h>24</h>
+    </coordinates>
+    <panel_attributes>MCU / Aurix
+bg=#FFFF33
+group=group-0</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>904</x>
+      <y>152</y>
+      <w>96</w>
+      <h>24</h>
+    </coordinates>
+    <panel_attributes>Windows
+bg=#ADD8E6
+group=group-0</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>688</x>
+      <y>128</y>
+      <w>328</w>
+      <h>56</h>
+    </coordinates>
+    <panel_attributes>Legend - Runtime Objects
+group=group-0</panel_attributes>
+    <additional_attributes/>
+  </element>
 </diagram>
