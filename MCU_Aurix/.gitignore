@@ -9,6 +9,12 @@ bin/
 *.depend
 *.layout
 
-# Temp Files
+# Testing Imports Files
 Blinky_LED_1_KIT_TC375_LK/
 MCMCAN_1_KIT_TC375_LK/
+
+#other
+.ads/
+.settings/
+Configurations/
+Libraries/
