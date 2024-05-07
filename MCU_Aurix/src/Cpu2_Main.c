@@ -1,5 +1,5 @@
 /**********************************************************************************************************************
- * \file Cpu1_Main.c
+ * \file Cpu2_Main.c
  * \copyright Copyright (C) Infineon Technologies AG 2019
  * 
  * Use of this file is subject to the terms of use agreed between (i) you or the company in which ordinary course of 
@@ -34,7 +34,7 @@ void core2_main(void)
 {
     IfxCpu_enableInterrupts();
     
-    /* !!WATCHDOG1 IS DISABLED HERE!!
+    /* !!WATCHDOG2 IS DISABLED HERE!!
      * Enable the watchdog and service it periodically if it is required
      */
     IfxScuWdt_disableCpuWatchdog(IfxScuWdt_getCpuWatchdogPassword());

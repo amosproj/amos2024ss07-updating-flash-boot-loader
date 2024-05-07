@@ -20,10 +20,6 @@
 /*------------------------------------------------------Macros-------------------------------------------------------*/
 /*********************************************************************************************************************/
 
-/* Definition of the LEDs port pins */
-#define LED1                        &MODULE_P00,5               /* LED connected to Port 00, Pin 5                  */
-#define LED2                        &MODULE_P00,6               /* LED connected to Port 00, Pin 6                  */
-
 /* Define the Program Flash Bank to be used.*/
 #define PROGRAM_FLASH_0             IfxFlash_FlashType_P0
 #define PROGRAM_FLASH_1             IfxFlash_FlashType_P1

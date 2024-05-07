@@ -30,6 +30,9 @@
 #include "IfxScuWdt.h"
 
 #include "flash/flash.h"
+#include "LED/led_driver.h"
+#include "can_init.h"
+#include "can_driver.h"
 
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
@@ -47,8 +50,15 @@ void core0_main(void)
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
 
-    init_leds();
 
+    init_led_driver();
+
+    // CAN driver main
+    canInitDriver();
+    canTransmitMessage(CAN_DEBUG_ID,CAN_DEBUG_DATA, 1);
+
+
+    // Flash main
     size_t data_size = 64;
     uint32 data[data_size];
     for(size_t i = 0; i < data_size; i++)
@@ -61,7 +71,7 @@ void core0_main(void)
     uint32 errors_p = verifyProgramFlash(PROGRAM_FLASH_0_BASE_ADDR, data, data_size);
     if(errors_p == 0 && ret_p == 0)
     {
-        turn_led_on(LED2);
+        led_on(LED2);
     }
 
     int ret_d = writeDataFlash(DATA_FLASH_0, DATA_FLASH_0_BASE_ADDR, data, data_size);
@@ -69,7 +79,7 @@ void core0_main(void)
     uint32 errors_d = verifyDataFlash(DATA_FLASH_0_BASE_ADDR, data, data_size);
     if(errors_d == 0 && ret_d == 0)
     {
-        turn_led_on(LED1);
+        led_on(LED1);
     }
 
     while(1)

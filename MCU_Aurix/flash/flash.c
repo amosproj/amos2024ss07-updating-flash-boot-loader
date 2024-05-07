@@ -50,27 +50,6 @@ typedef struct
 
 Function g_functionsFromPSPR;
 
-/* Function to control LEDs to signal successful flashing.*/
-void turn_led_on(Ifx_P *port, uint8 pinIndex)
-{
-    IfxPort_setPinLow(port, pinIndex);
-}
-
-void turn_led_off(Ifx_P *port, uint8 pinIndex)
-{
-    IfxPort_setPinHigh(port, pinIndex);
-}
-
-void init_leds(void)
-{
-    /* Configure LED1 and LED2 port pins */
-    IfxPort_setPinMode(LED1, IfxPort_Mode_outputPushPullGeneral);
-    IfxPort_setPinMode(LED2, IfxPort_Mode_outputPushPullGeneral);
-
-    turn_led_off(LED2);
-    turn_led_off(LED1);
-}
-
 /* This function erases a given sector of the Program Flash memory. The function is copied in the PSPR through
  * copyFunctionsToPSPR(). Because of this, inside the function, only routines from the PSPR or inline functions
  * can be called, otherwise a Context Type (CTYP) trap can be triggered.
