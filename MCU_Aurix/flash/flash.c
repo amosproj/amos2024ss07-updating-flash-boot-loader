@@ -15,7 +15,7 @@
 
 #include "flash/flash.h"
 
-#define PMU_FLASH_MODULE                0                           /* Macro to select the flash (PMU) module           */
+#define PMU_FLASH_MODULE                0               /* Macro to select the flash (PMU) module           */
 
 /* Reserved space for erase and program routines in bytes */
 #define ERASESECTOR_LEN             (100)
@@ -27,7 +27,7 @@
 #define WRITEPFLASH_LEN             (0x200)
 
 /* Definition of the addresses where to relocate the erase and program routines, given their reserved space */
-#define ERASESECTOR_ADDR            (RELOCATION_START_ADDR)
+#define ERASESECTOR_ADDR            (PSPR_START_ADDR)
 #define WAITUNBUSY_ADDR             (ERASESECTOR_ADDR + ERASESECTOR_LEN)
 #define ENTERPAGEMODE_ADDR          (WAITUNBUSY_ADDR + WAITUNBUSY_LEN)
 #define LOAD2X32_ADDR               (ENTERPAGEMODE_ADDR + ENTERPAGEMODE_LEN)
@@ -80,9 +80,8 @@ void erasePFlash(IfxFlash_FlashType flashModule, uint32 sectorAddr, uint32 numSe
     /* Get the current password of the Safety WatchDog module */
     uint16 endInitSafetyPassword = IfxScuWdt_getSafetyWatchdogPasswordInline();
 
-    /* Erase the sector */
     IfxScuWdt_clearSafetyEndinitInline(endInitSafetyPassword);      /* Disable EndInit protection                   */
-    g_functionsFromPSPR.eraseSectors(sectorAddr, numSectors);       /* Erase the given sector                       */
+    g_functionsFromPSPR.eraseSectors(sectorAddr, numSectors);
     IfxScuWdt_setSafetyEndinitInline(endInitSafetyPassword);        /* Enable EndInit protection                    */
 
     /* Wait until the sector is erased */
@@ -95,27 +94,25 @@ void erasePFlash(IfxFlash_FlashType flashModule, uint32 sectorAddr, uint32 numSe
  */
 void writePFlash(IfxFlash_FlashType flashModule, uint32 startingAddr, uint32 numPages, uint32 data[], size_t dataSize)
 {
-    uint32 page;                                                /* Variable to cycle over all the pages             */
-    uint32 offset;                                              /* Variable to cycle over all the words in a page   */
+    uint32 page;
+    uint32 offset;
 
     /* Get the current password of the Safety WatchDog module */
     uint16 endInitSafetyPassword = IfxScuWdt_getSafetyWatchdogPasswordInline();
     uint32 index = 0;
 
-    /* Write all the pages */
-    for(page = 0; page < numPages; page++)              /* Loop over all the pages                  */
+    for(page = 0; page < numPages; page++)
     {
-        uint32 pageAddr = startingAddr + (page * PFLASH_PAGE_LENGTH);   /* Get the address of the page              */
+        uint32 pageAddr = startingAddr + (page * PFLASH_PAGE_LENGTH);
         uint32* data_for_page = (uint32*) (((uint8*) data) + (page * PFLASH_PAGE_LENGTH));
 
-        /* Enter in page mode */
-        g_functionsFromPSPR.enterPageMode(pageAddr);
+        g_functionsFromPSPR.enterPageMode(pageAddr); // enter page mode to be able to write in page
 
         /* Wait until page mode is entered */
         g_functionsFromPSPR.waitUnbusy(PMU_FLASH_MODULE, PROGRAM_FLASH_0);
 
         /* Write 32 bytes (8 double words) into the assembly buffer */
-        for(offset = 0; (offset * sizeof(uint32)) < PFLASH_PAGE_LENGTH; offset += 2)     /* Loop over the page length                */
+        for(offset = 0; (offset * sizeof(uint32)) < PFLASH_PAGE_LENGTH; offset += 2)
         {
             g_functionsFromPSPR.load2X32bits(pageAddr, data_for_page[offset], data_for_page[offset + 1]); /* Load 2 words of 32 bits each */
             index += 2;
@@ -127,7 +124,7 @@ void writePFlash(IfxFlash_FlashType flashModule, uint32 startingAddr, uint32 num
 
         /* Write the page */
         IfxScuWdt_clearSafetyEndinitInline(endInitSafetyPassword);      /* Disable EndInit protection               */
-        g_functionsFromPSPR.writePage(pageAddr);                        /* Write the page                           */
+        g_functionsFromPSPR.writePage(pageAddr);
         IfxScuWdt_setSafetyEndinitInline(endInitSafetyPassword);        /* Enable EndInit protection                */
 
         /* Wait until the page is written in the Program Flash memory */
@@ -140,39 +137,32 @@ void writePFlash(IfxFlash_FlashType flashModule, uint32 startingAddr, uint32 num
  */
 static void copyFunctionsToPSPR(void)
 {
-    /* Copy the IfxFlash_eraseMultipleSectors() routine and assign it to a function pointer */
+    /* Copy multiple needed routines and assign it to function pointers */
     memcpy((void *)ERASESECTOR_ADDR, (const void *)IfxFlash_eraseMultipleSectors, ERASESECTOR_LEN);
     g_functionsFromPSPR.eraseSectors = (void *)ERASESECTOR_ADDR;
 
-    /* Copy the IfxFlash_waitUnbusy() routine and assign it to a function pointer */
     memcpy((void *)WAITUNBUSY_ADDR, (const void *)IfxFlash_waitUnbusy, WAITUNBUSY_LEN);
     g_functionsFromPSPR.waitUnbusy = (void *)WAITUNBUSY_ADDR;
 
-    /* Copy the IfxFlash_enterPageMode() routine and assign it to a function pointer */
     memcpy((void *)ENTERPAGEMODE_ADDR, (const void *)IfxFlash_enterPageMode, ENTERPAGEMODE_LEN);
     g_functionsFromPSPR.enterPageMode = (void *)ENTERPAGEMODE_ADDR;
 
-    /* Copy the IfxFlash_loadPage2X32() routine and assign it to a function pointer */
     memcpy((void *)LOAD2X32_ADDR, (const void *)IfxFlash_loadPage2X32, LOADPAGE2X32_LEN);
     g_functionsFromPSPR.load2X32bits = (void *)LOAD2X32_ADDR;
 
-    /* Copy the IfxFlash_writePage() routine and assign it to a function pointer */
     memcpy((void *)WRITEPAGE_ADDR, (const void *)IfxFlash_writePage, WRITEPAGE_LEN);
     g_functionsFromPSPR.writePage = (void *)WRITEPAGE_ADDR;
 
-    /* Copy the erasePFLASH() routine and assign it to a function pointer */
     memcpy((void *)ERASEPFLASH_ADDR, (const void *)erasePFlash, ERASEPFLASH_LEN);
     g_functionsFromPSPR.erasePFlash = (void *)ERASEPFLASH_ADDR;
 
-    /* Copy the erasePFLASH() routine and assign it to a function pointer */
     memcpy((void *)WRITEPFLASH_ADDR, (const void *)writePFlash, WRITEPFLASH_LEN);
     g_functionsFromPSPR.writePFlash = (void *)WRITEPFLASH_ADDR;
 }
 
 static uint32 getNumPerSize(size_t sectionLength, size_t dataSize)
 {
-    // dataSize is in uint32 values, but bytes needed
-    dataSize *= sizeof(uint32);
+    dataSize *= sizeof(uint32); // dataSize is in uint32 values, but bytes needed
     uint32 num_pages = dataSize / sectionLength;
     if (dataSize % sectionLength) // we need a page more because there is data left that does not fill a full page
     {
@@ -257,18 +247,15 @@ int writeProgramFlash(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uin
     uint32 num_sectors = getPFlashNumSectors(dataSize);
     uint32 num_pages = getPFlashNumPages(dataSize);
 
-    boolean interruptState = IfxCpu_disableInterrupts(); /* Get the current state of the interrupts and disable them*/
+    boolean interruptState = IfxCpu_disableInterrupts();
 
-    /* Copy all the needed functions to the PSPR memory to avoid overwriting them during the flash execution */
-    copyFunctionsToPSPR();
+    copyFunctionsToPSPR(); // avoid overwriting functions while writing flash by copying them into PSPR
 
-    /* Erase the Program Flash sector before writing */
     g_functionsFromPSPR.erasePFlash(flashModule, flashStartAddr, num_sectors);
 
-    /* Write the Program Flash */
     g_functionsFromPSPR.writePFlash(flashModule, flashStartAddr, num_pages, data, dataSize);
 
-    IfxCpu_restoreInterrupts(interruptState);            /* Restore the interrupts state                            */
+    IfxCpu_restoreInterrupts(interruptState);
     return 0;
 }
 
@@ -277,26 +264,23 @@ uint32 verifyProgramFlash(uint32 flashStartAddr, uint32 data[], size_t dataSize)
 {
     uint32 num_pages = getPFlashNumPages(dataSize);
 
-    uint32 page;                                                /* Variable to cycle over all the pages             */
-    uint32 offset;                                              /* Variable to cycle over all the words in a page   */
-    uint32 errors = 0;                                          /* Variable to keep record of the errors            */
+    uint32 page;
+    uint32 offset;
+    uint32 errors = 0;
     uint32 index = 0;
 
-    /* Verify the written data */
-    for(page = 0; page < num_pages; page++)                          /* Loop over all the pages      */
+    for(page = 0; page < num_pages; page++)
     {
-        uint32 pageAddr = flashStartAddr + (page * PFLASH_PAGE_LENGTH);    /* Get the address of the page  */
+        uint32 pageAddr = flashStartAddr + (page * PFLASH_PAGE_LENGTH);
 
-        for(offset = 0; offset < PFLASH_PAGE_LENGTH; offset += sizeof(uint32))                 /* Loop over the page length    */
+        for(offset = 0; offset < PFLASH_PAGE_LENGTH; offset += sizeof(uint32))
         {
-            /* Check if the data in the Program Flash is correct */
-            if(MEM(pageAddr + offset) != data[index])
+            if(MEM(pageAddr + offset) != data[index]) // check if each value is correct
             {
-                /* If not, count the found errors */
                 errors++;
             }
             index++;
-            if (index >= dataSize)
+            if (index >= dataSize) // do not check the whole page, just the size of the data
             {
                 return errors;
             }
@@ -331,38 +315,36 @@ int writeDataFlash(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32
     uint32 num_sectors = getDFlashNumSectors(dataSize);
     uint32 num_pages = getDFlashNumPages(dataSize);
 
-    uint32 page;                                                /* Variable to cycle over all the pages             */
+    uint32 page;
 
     /* --------------- ERASE PROCESS --------------- */
-    /* Get the current password of the Safety WatchDog module */
-    uint16 endInitSafetyPassword = IfxScuWdt_getSafetyWatchdogPassword();
+    uint16 endInitSafetyPassword = IfxScuWdt_getSafetyWatchdogPassword(); /* Get the current password of the Safety WatchDog module */
 
     /* Erase the sector */
     IfxScuWdt_clearSafetyEndinit(endInitSafetyPassword);        /* Disable EndInit protection                       */
-    IfxFlash_eraseMultipleSectors(flashStartAddr, num_sectors); /* Erase the given sector           */
+    IfxFlash_eraseMultipleSectors(flashStartAddr, num_sectors);
     IfxScuWdt_setSafetyEndinit(endInitSafetyPassword);          /* Enable EndInit protection                        */
 
     /* Wait until the sector is erased */
     IfxFlash_waitUnbusy(flashModule, DATA_FLASH_0);
 
     /* --------------- WRITE PROCESS --------------- */
-    for(page = 0; page < num_pages; page++)      /* Loop over all the pages                          */
+    for(page = 0; page < num_pages; page++)
     {
-        uint32 page_addr = flashStartAddr + (page * DFLASH_PAGE_LENGTH); /* Get the address of the page     */
+        uint32 page_addr = flashStartAddr + (page * DFLASH_PAGE_LENGTH);
         uint32* data_for_page = (uint32*) (((uint8*) data) + (page * DFLASH_PAGE_LENGTH));
 
-        /* Enter in page mode */
-        IfxFlash_enterPageMode(page_addr);
+        IfxFlash_enterPageMode(page_addr);  // enter page mode to be able to write in page
 
         /* Wait until page mode is entered */
         IfxFlash_waitUnbusy(flashModule, DATA_FLASH_0);
 
-        /* Load data to be written in the page */
-        IfxFlash_loadPage2X32(page_addr, data_for_page[0], data_for_page[1]); /* Load two words of 32 bits each            */
+
+        IfxFlash_loadPage2X32(page_addr, data_for_page[0], data_for_page[1]); /* Load two words of 32 bits each */
 
         /* Write the loaded page */
         IfxScuWdt_clearSafetyEndinit(endInitSafetyPassword);    /* Disable EndInit protection                       */
-        IfxFlash_writePage(page_addr);                           /* Write the page                                   */
+        IfxFlash_writePage(page_addr);
         IfxScuWdt_setSafetyEndinit(endInitSafetyPassword);      /* Enable EndInit protection                        */
 
         /* Wait until the data is written in the Data Flash memory */
@@ -376,26 +358,23 @@ uint32 verifyDataFlash(uint32 flashStartAddress, uint32 data[], size_t dataSize)
 {
     uint32 num_pages = getDFlashNumPages(dataSize);
 
-    uint32 page;                                                /* Variable to cycle over all the pages             */
-    uint32 offset;                                              /* Variable to cycle over all the words in a page   */
-    uint32 errors = 0;                                          /* Variable to keep record of the errors            */
+    uint32 page;
+    uint32 offset;
+    uint32 errors = 0;
     uint32 index = 0;
 
-    /* Verify the written data */
-    for(page = 0; page < num_pages; page++)                          /* Loop over all the pages      */
+    for(page = 0; page < num_pages; page++)
     {
-        uint32 page_addr = flashStartAddress + (page * DFLASH_PAGE_LENGTH);    /* Get the address of the page  */
+        uint32 page_addr = flashStartAddress + (page * DFLASH_PAGE_LENGTH);
 
-        for(offset = 0; offset < DFLASH_PAGE_LENGTH; offset += sizeof(uint32))            /* Loop over the page length    */
+        for(offset = 0; offset < DFLASH_PAGE_LENGTH; offset += sizeof(uint32))
         {
-            /* Check if the data in the Data Flash is correct */
             if(MEM(page_addr + offset) != data[index])
             {
-                /* If not, count the found errors */
                 errors++;
             }
             index++;
-            if (index >= dataSize)
+            if (index >= dataSize) // only check page with data, not whole page
             {
                 return errors;
             }

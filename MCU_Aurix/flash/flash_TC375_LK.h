@@ -32,7 +32,7 @@
 #define DATA_FLASH_1                IfxFlash_FlashType_D1
 
 /* Relocation address for the erase and program routines: Program Scratch-Pad SRAM (PSPR) of CPU0 */
-#define RELOCATION_START_ADDR       (0x70100000U) // TODO rename maybe PSPR_START_ADDR
+#define PSPR_START_ADDR             (0x70100000U)
 
 #define DATA_FLASH_0_BASE_ADDR      0xAF000000
 #define DATA_FLASH_0_END_ADDR       0xAF0FFFFF
@@ -40,20 +40,18 @@
 #define DATA_FLASH_1_BASE_ADDR      0xAFC00000
 #define DATA_FLASH_1_END_ADDR       0xAFC1FFFF
 
-// TODO are these the correct addresses for PF?
+// TODO are these the correct addresses for PF? Depending on segments there are multiple possible addr listed in manual
 #define PROGRAM_FLASH_0_BASE_ADDR   0xA00E0000 // TODO eig 0xA0000000
 #define PROGRAM_FLASH_0_END_ADDR    0xA02FFFFF
 
 #define PROGRAM_FLASH_1_BASE_ADDR   0xA0300000
 #define PROGRAM_FLASH_1_END_ADDR    0xA05FFFFF
 
-// not sure if page size is uC specific
 #define PFLASH_PAGE_LENGTH          IFXFLASH_PFLASH_PAGE_LENGTH /* 0x20 = 32 Bytes (smallest unit that can be
                                                                  * programmed in the Program Flash memory (PFLASH)) */
 #define DFLASH_PAGE_LENGTH          IFXFLASH_DFLASH_PAGE_LENGTH /* 0x8 = 8 Bytes (smallest unit that can be
                                                                  * programmed in the Data Flash memory (DFLASH))    */
 
-// TODO kilo or kibi Byte
 #define PFLASH_SECTOR_LENGTH        16000                       /* logical sector length */
 
 #define DFLASH_SECTOR_LENGTH        4000                        /* default sector length in single ended mode */
