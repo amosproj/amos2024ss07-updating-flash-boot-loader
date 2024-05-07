@@ -57,7 +57,6 @@ void core0_main(void)
         turn_led_on(LED2);
     }
 
-    uint32 DFLASH_STARTING_ADDRESS = 0xAF000000;                /* Address of the DFLASH where the data is written  */
     size_t data_size = 64;
     uint32 data[data_size];
     for(size_t i = 0; i < data_size; i++)
@@ -65,10 +64,10 @@ void core0_main(void)
         data[i] = 0x07738135;
     }
 
-    writeDataFlash(DATA_FLASH_0, DFLASH_STARTING_ADDRESS, data, data_size);
+    int ret = writeDataFlash(DATA_FLASH_0, DATA_FLASH_0_BASE_ADDR, data, data_size);
 
-    uint32 errors_d = verifyDataFlash(DFLASH_STARTING_ADDRESS, data, data_size);
-    if(errors_d == 0)
+    uint32 errors_d = verifyDataFlash(DATA_FLASH_0_BASE_ADDR, data, data_size);
+    if(errors_d == 0 || ret != 0)
     {
         turn_led_on(LED1);
     }

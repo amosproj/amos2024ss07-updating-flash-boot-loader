@@ -237,18 +237,56 @@ static uint32 getDFlashNumSectors(size_t dataSize)
     return getNumPerSize(DFLASH_SECTOR_LENGTH, dataSize);
 }
 
+static int checkAddrInRange(uint32 baseRange, uint32 endRange, uint32 addr, uint32 length)
+{
+    if (!(addr >= baseRange && addr < endRange))
+    {
+        return -1;
+    }
+
+    if (!((addr + length) >= baseRange && (addr + length) < endRange))
+    {
+        return -1;
+    }
+    return 0;
+}
+
+static int checkAddrFlashModule(IfxFlash_FlashType flashModule, uint32 addr)
+{
+    if(flashModule == DATA_FLASH_0)
+    {
+        if (addr >= DATA_FLASH_0_BASE_ADDR && addr < DATA_FLASH_0_END_ADDR)
+        {
+            return 0;
+        }
+    }
+    else if(flashModule == DATA_FLASH_1)
+    {
+        if (addr >= DATA_FLASH_1_BASE_ADDR && addr < DATA_FLASH_1_END_ADDR)
+        {
+            return 0;
+        }
+    }
+    return -1;
+}
 
 /* This function flashes the Data Flash memory.
  * It is not needed to run this function from the PSPR, thus functions from the Program Flash memory can be called
  * inside.
  */
-void writeDataFlash(IfxFlash_FlashType flashModule, uint32 flashStartAddress, uint32 data[], size_t dataSize)
+int writeDataFlash(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32 data[], size_t dataSize)
 {
-    // TODO check if address is in flash
-
-    // TODO check if address + size is in flash
+    // check if address is in flash
+    if (checkAddrInRange(DATA_FLASH_0_BASE_ADDR, DATA_FLASH_0_END_ADDR, (uint32) data, dataSize))
+    {
+        return -1;
+    }
 
     // TODO check if address matches flashModule
+    if (checkAddrFlashModule(flashModule, flashStartAddr))
+    {
+        return -1;
+    }
 
     uint32 num_sectors = getDFlashNumSectors(dataSize);
     uint32 num_pages = getDFlashNumPages(dataSize);
@@ -261,7 +299,7 @@ void writeDataFlash(IfxFlash_FlashType flashModule, uint32 flashStartAddress, ui
 
     /* Erase the sector */
     IfxScuWdt_clearSafetyEndinit(endInitSafetyPassword);        /* Disable EndInit protection                       */
-    IfxFlash_eraseMultipleSectors(flashStartAddress, num_sectors); /* Erase the given sector           */
+    IfxFlash_eraseMultipleSectors(flashStartAddr, num_sectors); /* Erase the given sector           */
     IfxScuWdt_setSafetyEndinit(endInitSafetyPassword);          /* Enable EndInit protection                        */
 
     /* Wait until the sector is erased */
@@ -270,7 +308,7 @@ void writeDataFlash(IfxFlash_FlashType flashModule, uint32 flashStartAddress, ui
     /* --------------- WRITE PROCESS --------------- */
     for(page = 0; page < num_pages; page++)      /* Loop over all the pages                          */
     {
-        uint32 page_addr = flashStartAddress + (page * DFLASH_PAGE_LENGTH); /* Get the address of the page     */
+        uint32 page_addr = flashStartAddr + (page * DFLASH_PAGE_LENGTH); /* Get the address of the page     */
         uint32* data_for_page = data + (page * DFLASH_PAGE_LENGTH);
 
         /* Enter in page mode */
@@ -290,6 +328,7 @@ void writeDataFlash(IfxFlash_FlashType flashModule, uint32 flashStartAddress, ui
         /* Wait until the data is written in the Data Flash memory */
         IfxFlash_waitUnbusy(flashModule, DATA_FLASH_0);
     }
+    return 0;
 }
 
 /* This function verifies if the data has been correctly written in the Data Flash */
@@ -307,7 +346,7 @@ uint32 verifyDataFlash(uint32 flashStartAddress, uint32 data[], size_t dataSize)
     {
         uint32 page_addr = flashStartAddress + (page * DFLASH_PAGE_LENGTH);    /* Get the address of the page  */
 
-        for(offset = 0; offset < DFLASH_PAGE_LENGTH; offset += 0x4)                 /* Loop over the page length    */
+        for(offset = 0; offset < DFLASH_PAGE_LENGTH; offset += 0x4)            /* Loop over the page length    */
         {
             /* Check if the data in the Data Flash is correct */
             if(MEM(page_addr + offset) != data[0])

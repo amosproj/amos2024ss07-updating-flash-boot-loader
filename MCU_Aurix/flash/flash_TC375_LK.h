@@ -34,6 +34,12 @@
 /* Relocation address for the erase and program routines: Program Scratch-Pad SRAM (PSPR) of CPU0 */
 #define RELOCATION_START_ADDR       (0x70100000U) // TODO rename maybe PSPR_START_ADDR
 
+#define DATA_FLASH_0_BASE_ADDR      0xAF000000
+#define DATA_FLASH_0_END_ADDR       0xAF0FFFFF
+
+#define DATA_FLASH_1_BASE_ADDR      0xAFC00000
+#define DATA_FLASH_1_END_ADDR       0xAFC1FFFF
+
 // not sure if page size is uC specific
 #define PFLASH_PAGE_LENGTH          IFXFLASH_PFLASH_PAGE_LENGTH /* 0x20 = 32 Bytes (smallest unit that can be
                                                                  * programmed in the Program Flash memory (PFLASH)) */
