@@ -8,37 +8,23 @@
 
 #include "led_driver.h"
 
+/* This function initializes the 2 usable LEDs so they can be turned on and off */
 void init_led_driver(void) 
 {
+    /* Initializing LED1 */
     IfxPort_setPinModeOutput(LED1, IfxPort_OutputMode_pushPull, IfxPort_OutputIdx_general);
     IfxPort_setPinHigh(LED1);
-    led1_mode = CONTINUOUS;
 
+    /* Initializing LED2 */
     IfxPort_setPinModeOutput(LED2, IfxPort_OutputMode_pushPull, IfxPort_OutputIdx_general);
     IfxPort_setPinHigh(LED2);
-    led2_mode = CONTINUOUS;
 }
 
-void set_led_mode(Ifx_P *port, uint8 pinIndex, LED_MODE mode) 
-{
-    if (pinIndex == 5) 
-    {
-        led1_mode = mode;
-    } 
-    else 
-    {
-        led2_mode = mode;
-    }
-}
-
+/* This function toggles the activity of one specific LED, described by the combination of port and pinIndex.
+ * LED on -> LED off
+ * LED off -> LED on */
 void toggle_led_activity(Ifx_P *port, uint8 pinIndex) 
 {
-    if ((pinIndex == 5 && led1_mode == CONTINUOUS) || (pinIndex == 6 && led2_mode == CONTINUOUS)) 
-    {
-        IfxPort_togglePin(*port, pinIndex);
-    }
-    else 
-    {
-        
-    }
+    /* Function call to toggle LED activity */
+    IfxPort_togglePin(port, pinIndex);
 }
