@@ -28,3 +28,13 @@ void toggle_led_activity(Ifx_P *port, uint8 pinIndex)
     /* Function call to toggle LED activity */
     IfxPort_togglePin(port, pinIndex);
 }
+
+void led_off(Ifx_P *port, uint8 pinIndex)
+{
+    IfxPort_setPinHigh(port, pinIndex);
+}
+
+void led_on(Ifx_P *port, uint8 pinIndex)
+{
+    IfxPort_setPinHigh(port, pinIndex);
+}

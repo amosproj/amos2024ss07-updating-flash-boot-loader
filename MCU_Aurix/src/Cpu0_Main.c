@@ -1,5 +1,5 @@
 /**********************************************************************************************************************
- * \file Cpu1_Main.c
+ * \file Cpu0_Main.c
  * \copyright Copyright (C) Infineon Technologies AG 2019
  * 
  * Use of this file is subject to the terms of use agreed between (i) you or the company in which ordinary course of 
@@ -24,26 +24,66 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
  * IN THE SOFTWARE.
  *********************************************************************************************************************/
+
 #include "Ifx_Types.h"
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
 
-extern IfxCpu_syncEvent g_cpuSyncEvent;
+#include "flash/flash.h"
+#include "LED/led_driver.h"
+#include "can_init.h"
+#include "can_driver.h"
 
-void core1_main(void)
+IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
+
+void core0_main(void)
 {
     IfxCpu_enableInterrupts();
     
-    /* !!WATCHDOG1 IS DISABLED HERE!!
-     * Enable the watchdog and service it periodically if it is required
+    /* !!WATCHDOG0 AND SAFETY WATCHDOG ARE DISABLED HERE!!
+     * Enable the watchdogs and service them periodically if it is required
      */
     IfxScuWdt_disableCpuWatchdog(IfxScuWdt_getCpuWatchdogPassword());
+    IfxScuWdt_disableSafetyWatchdog(IfxScuWdt_getSafetyWatchdogPassword());
     
     /* Wait for CPU sync event */
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
-    
+
+
+    init_led_driver();
+
+    // CAN driver main
+    canInitDriver();
+    canTransmitMessage(CAN_DEBUG_ID,CAN_DEBUG_DATA, 1);
+
+
+    // Flash main
+    size_t data_size = 64;
+    uint32 data[data_size];
+    for(size_t i = 0; i < data_size; i++)
+    {
+        data[i] = i;
+    }
+
+    int ret_p = writeProgramFlash(PROGRAM_FLASH_0, PROGRAM_FLASH_0_BASE_ADDR, data, data_size);
+
+    uint32 errors_p = verifyProgramFlash(PROGRAM_FLASH_0_BASE_ADDR, data, data_size);
+    if(errors_p == 0 && ret_p == 0)
+    {
+        led_on(LED2);
+    }
+
+    int ret_d = writeDataFlash(DATA_FLASH_0, DATA_FLASH_0_BASE_ADDR, data, data_size);
+
+    uint32 errors_d = verifyDataFlash(DATA_FLASH_0_BASE_ADDR, data, data_size);
+    if(errors_d == 0 && ret_d == 0)
+    {
+        led_on(LED1);
+    }
+
     while(1)
     {
+
     }
 }

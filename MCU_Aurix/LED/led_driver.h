@@ -23,4 +23,7 @@
 
 void toggle_led_activity(Ifx_P *, uint8);
 
+void led_off(Ifx_P *port, uint8 pinIndex);
+void led_on(Ifx_P *port, uint8 pinIndex);
+
 #endif
