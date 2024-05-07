@@ -24,7 +24,7 @@
 
 void canTransmitMessage(uint32_t canMessageID, uint64_t data, uint64_t len); //oder uint8_t*
 void canIsrRxHandler();
-
+void initLeds(void);
 
 #endif /*CAN_DRIVER_H*/
 

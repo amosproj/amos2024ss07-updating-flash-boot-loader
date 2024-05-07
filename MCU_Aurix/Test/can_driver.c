@@ -11,7 +11,7 @@
 
 #include "can_driver.h"
 #include "can_init.h"
-#include "leds.h"
+
 
 
 
@@ -21,6 +21,8 @@ void (*processDataFunction)(void*);
 
 
 canType g_can; //Global control struct
+IfxPort_Pin_Config          g_led1;                         /* Global LED1 configuration and control structure      */
+IfxPort_Pin_Config          g_led2;
 
 
 /*Interrupts*/
@@ -54,7 +56,7 @@ void canIsrRxHandler(){
         //LED 2 if data TX and RX is the same
         if (g_can.rxData[0] == g_can.txData[0])
         {
-            IfxPort_setPinLow(g_led2.port, g_led2.pinIndex);
+            //IfxPort_setPinLow(g_led2.port, g_led2.pinIndex);
         }
         
         
@@ -128,6 +130,40 @@ void canTransmitMessage(uint32_t canMessageID, uint64_t data, uint64_t len){
            IfxCan_Can_sendMessage(&g_can.canSrcNode, &g_can.txMsg, &g_can.txData[0]))
     {
     }
+}
+
+void initLeds(void)
+{
+    /* ======================================================================
+     * Configuration of the pins connected to the LEDs:
+     * ======================================================================
+     *  - define the GPIO port
+     *  - define the GPIO pin that is connected to the LED
+     *  - define the general GPIO pin usage (no alternate function used)
+     *  - define the pad driver strength
+     * ======================================================================
+     */
+    g_led1.port      = &MODULE_P00;
+    g_led1.pinIndex  = PIN5;
+    g_led1.mode      = IfxPort_OutputIdx_general;
+    g_led1.padDriver = IfxPort_PadDriver_cmosAutomotiveSpeed1;
+
+    g_led2.port      = &MODULE_P00;
+    g_led2.pinIndex  = PIN6;
+    g_led2.mode      = IfxPort_OutputIdx_general;
+    g_led2.padDriver = IfxPort_PadDriver_cmosAutomotiveSpeed1;
+
+    /* Initialize the pins connected to LEDs to level "HIGH", which keep the LEDs turned off as default state */
+    IfxPort_setPinHigh(g_led1.port, g_led1.pinIndex);
+    IfxPort_setPinHigh(g_led2.port, g_led2.pinIndex);
+
+    /* Set the pin input/output mode for both pins connected to the LEDs */
+    IfxPort_setPinModeOutput(g_led1.port, g_led1.pinIndex, IfxPort_OutputMode_pushPull, g_led1.mode);
+    IfxPort_setPinModeOutput(g_led2.port, g_led2.pinIndex, IfxPort_OutputMode_pushPull, g_led2.mode);
+
+    /* Set the pad driver mode for both pins connected to the LEDs */
+    IfxPort_setPinPadDriver(g_led1.port, g_led1.pinIndex, g_led1.padDriver);
+    IfxPort_setPinPadDriver(g_led2.port, g_led2.pinIndex, g_led2.padDriver);
 }
 
 
