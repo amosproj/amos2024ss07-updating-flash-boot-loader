@@ -46,7 +46,7 @@ void turn_led_on(Ifx_P *port, uint8 pinIndex);
 void turn_led_off(Ifx_P *port, uint8 pinIndex);
 
 int writeProgramFlash(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32 data[], size_t dataSize);
-uint32 verifyProgramFlash(void);
+uint32 verifyProgramFlash(uint32 flashStartAddr, uint32 data[], size_t dataSize);
 
 int writeDataFlash(IfxFlash_FlashType flashModule, uint32 address, uint32 data[], size_t data_size);
 uint32 verifyDataFlash(uint32 flashStartAddress, uint32 data[], size_t dataSize);

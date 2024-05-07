@@ -53,16 +53,16 @@ void core0_main(void)
     uint32 data[data_size];
     for(size_t i = 0; i < data_size; i++)
     {
-        data[i] = 0x07738135;
+        data[i] = i;
     }
 
-    int ret_p = writeProgramFlash(PROGRAM_FLASH_0, PROGRAM_FLASH_0_BASE_ADDR, data, data_size);
-
-    uint32 errors_p = verifyProgramFlash();
-    if(errors_p == 0 && ret_p == 0)
-    {
-        turn_led_on(LED2);
-    }
+//    int ret_p = writeProgramFlash(PROGRAM_FLASH_0, PROGRAM_FLASH_0_BASE_ADDR, data, data_size);
+//
+//    uint32 errors_p = verifyProgramFlash();
+//    if(errors_p == 0 && ret_p == 0)
+//    {
+//        turn_led_on(LED2);
+//    }
 
     int ret_d = writeDataFlash(DATA_FLASH_0, DATA_FLASH_0_BASE_ADDR, data, data_size);
 
