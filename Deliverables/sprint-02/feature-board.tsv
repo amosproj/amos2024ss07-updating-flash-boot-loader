@@ -1,0 +1,27 @@
+Title	URL	Assignees	Status
+Create Logo	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/1	AndreasFreund	Feature Archive
+Get familiar with CAN-Bus, Aurix IDE, MCU programming	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/3	AndreasFreund, ibexq, MikeFAU, Nahrain1, PaulRoy1, sebas-rodri, wiklam, wlklsn	Feature Archive
+Create *.s19 to Binary converter	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/6	wlklsn	Awaiting Review
+[Win] CAN Wrapper	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/12	MikeFAU	Awaiting Review
+Initialize Readme file	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/15	MikeFAU	Awaiting Review
+Align on a GUI framework	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/4	MikeFAU, sebas-rodri, wiklam	Awaiting Review
+Implement a function for file browsing, selecting, and simple processing	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/5	wiklam	Awaiting Review
+Initialize software bill of materials	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/13	ibexq, MikeFAU, PaulRoy1, sebas-rodri, wiklam, wlklsn	Awaiting Review
+Create the description of the planned software architecture	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/14	ibexq, MikeFAU, PaulRoy1, sebas-rodri, wiklam, wlklsn	Awaiting Review
+[MCU] Flash driver	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/11	ibexq	Feature Archive
+[MCU] LED driver	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/9	PaulRoy1	In Progress
+[MCU] CAN driver	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/10	sebas-rodri	Feature Archive
+Integrate CAN Wrapper with GUI	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/19		Product Backlog
+Document / obtain documentation for relevant part of UDS	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/21		Product Backlog
+Implement functionality to restart the ECU (soft reset) over GUI	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/18		Product Backlog
+[MCU] Create / modify existing project to demonstrate module functionality	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/25		Product Backlog
+Implement a function to select CAN-HW	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/17		Product Backlog
+Document the build process of the Windows application	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/22		Product Backlog
+Start Flashing Process	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/20		Product Backlog
+Manage Flash file selection in the FlashFile UI	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/24		Product Backlog
+Implement last flash date and time display	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/8		Product Backlog
+Implement "Updating in progress" indicator	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/7		Product Backlog
+Packaging of Windows Aplication - .zip / Installer	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/23		Product Backlog
+Design a Mockup for ECU Listing UI	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/27		Product Backlog
+Design a Mockup for FlashProcessing UI	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/28		Product Backlog
+Design a Mockup for FlashFile UI	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/29		Product Backlog
