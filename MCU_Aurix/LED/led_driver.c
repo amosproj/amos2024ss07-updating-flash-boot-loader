@@ -31,10 +31,10 @@ void toggle_led_activity(Ifx_P *port, uint8 pinIndex)
 
 void led_off(Ifx_P *port, uint8 pinIndex)
 {
-    IfxPort_setPinHigh(port, pinIndex);
+    IfxPort_setPinLow(port, pinIndex);
 }
 
 void led_on(Ifx_P *port, uint8 pinIndex)
 {
-    IfxPort_setPinHigh(port, pinIndex);
+    IfxPort_setPinLow(port, pinIndex);
 }
