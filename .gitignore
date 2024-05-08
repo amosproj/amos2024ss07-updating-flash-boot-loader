@@ -30,7 +30,7 @@ out/
 
 # Eclipse IDE
 .project
-bin/
+# bin/
 
 # MacOS
 .DS_Store
