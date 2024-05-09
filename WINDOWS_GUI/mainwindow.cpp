@@ -4,11 +4,11 @@
 #include "./ui_mainwindow.h"
 
 static inline void dummy_function(QByteArray data) {
-    qDebug() << "Received" << data;
+    qDebug() << "Received " << data;
 }
 
 static inline void dummy_flash(QString dev) {
-    qDebug() << "Flash" << dev;
+    qDebug() << "Flash " << dev;
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -37,14 +37,17 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
-    connect(ui->comboBox, QOverload<const QString &>::of(&QComboBox::currentTextChanged), this,
-            [=](const QString &text) {
-                if(ui->textBrowser->toPlainText() == "")
-                    ui->comboBox->removeItem(0);
-                ui->textBrowser->setText("Specification for " + text);
-                dummy_flash(text);
-            }
-    );
+    ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->tableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    connect(ui->tableWidget, &QTableWidget::itemSelectionChanged, this, [=]() {
+        QTableWidgetItem *item = ui->tableWidget->selectedItems().at(0);
+            ui->label_2->setText("Selected: " + item->text());
+    });
+    connect(ui->pushButton, &QPushButton::clicked, this, [=]() {
+        if(ui->label_2->text() != "")
+            dummy_flash(ui->tableWidget->selectedItems().at(0)->text());
+    });
 }
 
 MainWindow::~MainWindow()
