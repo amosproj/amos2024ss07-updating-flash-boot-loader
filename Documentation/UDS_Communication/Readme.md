@@ -399,7 +399,7 @@ To fully activate the programming session without any restrictions the following
 ---
 
 ### Write Data By Identifier (SID 0x2E)
-> - General Request: [PCI][<span style="color:red">\$SID</span>]\[UDS DID 1]\[UDS DID 0] -> PCI = Single Frame (Code = 0)
+> - General Request: [PCI][<span style="color:red">\$SID</span>]\[UDS DID 1]\[UDS DID 0][payload byte X].. -> PCI = Depending on payload size
 > - For available DID see section [Read Data By Identifier (0x22)](#read-data-by-identifier-(sid-0x22))
 
 ##### Default Session
