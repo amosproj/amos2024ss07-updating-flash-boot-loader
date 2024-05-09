@@ -25,9 +25,9 @@
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout_1">
+      <layout class="QVBoxLayout" name="verticalLayout_file">
        <item>
-        <widget class="QPushButton" name="button_choose">
+        <widget class="QPushButton" name="button_file">
          <property name="text">
           <string>Choose file:</string>
          </property>
@@ -76,7 +76,7 @@
       </layout>
      </item>
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <layout class="QVBoxLayout" name="verticalLayout_ECU">
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
@@ -85,7 +85,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QTableWidget" name="tableWidget">
+        <widget class="QTableWidget" name="table_ECU">
          <row>
           <property name="text">
            <string/>
@@ -108,7 +108,7 @@
          </column>
          <column>
           <property name="text">
-           <string>Firmware version</string>
+           <string>Version</string>
           </property>
          </column>
          <column>
@@ -134,14 +134,14 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_2">
+        <widget class="QLabel" name="label_selected_ECU">
          <property name="text">
           <string/>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton">
+        <widget class="QPushButton" name="button_flash">
          <property name="text">
           <string>Flash</string>
          </property>
