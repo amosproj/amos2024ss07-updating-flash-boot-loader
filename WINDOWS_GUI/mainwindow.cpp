@@ -7,6 +7,10 @@ static inline void dummy_function(QByteArray data) {
     qDebug() << "Received" << data;
 }
 
+static inline void dummy_flash(QString dev) {
+    qDebug() << "Flash" << dev;
+}
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -17,7 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
     this->setWindowIcon(QIcon::fromTheme("FlashBootloader",
                                          QIcon(qApp->applicationDirPath() + "/../../icon.png")));
 
-    connect(ui->button_choose, &QPushButton::clicked, [&]() {
+    connect(ui->button_choose, &QPushButton::clicked, this, [=]() {
         QString path = QFileDialog::getOpenFileName(nullptr, "Choose File");
         if(!path.isEmpty()) {
             QFile file(path);
@@ -32,6 +36,15 @@ MainWindow::MainWindow(QWidget *parent)
             file.close();
         }
     });
+
+    connect(ui->comboBox, QOverload<const QString &>::of(&QComboBox::currentTextChanged), this,
+            [=](const QString &text) {
+                if(ui->textBrowser->toPlainText() == "")
+                    ui->comboBox->removeItem(0);
+                ui->textBrowser->setText("Specification for " + text);
+                dummy_flash(text);
+            }
+    );
 }
 
 MainWindow::~MainWindow()
