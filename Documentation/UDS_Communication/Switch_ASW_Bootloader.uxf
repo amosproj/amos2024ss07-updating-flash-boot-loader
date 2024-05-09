@@ -5,7 +5,7 @@
   <element>
     <id>UMLGeneric</id>
     <coordinates>
-      <x>387</x>
+      <x>306</x>
       <y>234</y>
       <w>90</w>
       <h>36</h>
@@ -18,7 +18,7 @@ bg=blue</panel_attributes>
   <element>
     <id>UMLGeneric</id>
     <coordinates>
-      <x>639</x>
+      <x>558</x>
       <y>243</y>
       <w>90</w>
       <h>27</h>
@@ -30,7 +30,7 @@ bg=yellow</panel_attributes>
   <element>
     <id>UMLGeneric</id>
     <coordinates>
-      <x>423</x>
+      <x>342</x>
       <y>297</y>
       <w>18</w>
       <h>126</h>
@@ -42,7 +42,7 @@ bg=gray</panel_attributes>
   <element>
     <id>UMLGeneric</id>
     <coordinates>
-      <x>675</x>
+      <x>594</x>
       <y>315</y>
       <w>18</w>
       <h>216</h>
@@ -54,7 +54,7 @@ bg=gray</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>423</x>
+      <x>342</x>
       <y>261</y>
       <w>27</w>
       <h>54</h>
@@ -65,7 +65,7 @@ bg=gray</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>675</x>
+      <x>594</x>
       <y>261</y>
       <w>27</w>
       <h>72</h>
@@ -76,7 +76,7 @@ bg=gray</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>432</x>
+      <x>351</x>
       <y>297</y>
       <w>261</w>
       <h>45</h>
@@ -89,7 +89,7 @@ sendingResetRequest() - FBL Mode
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>288</x>
+      <x>207</x>
       <y>306</y>
       <w>153</w>
       <h>54</h>
@@ -101,7 +101,7 @@ setFBLKeyInvalid()</panel_attributes>
   <element>
     <id>UMLGeneric</id>
     <coordinates>
-      <x>225</x>
+      <x>144</x>
       <y>234</y>
       <w>90</w>
       <h>36</h>
@@ -114,7 +114,7 @@ bg=green</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>261</x>
+      <x>180</x>
       <y>261</y>
       <w>27</w>
       <h>216</h>
@@ -125,7 +125,7 @@ bg=green</panel_attributes>
   <element>
     <id>UMLGeneric</id>
     <coordinates>
-      <x>261</x>
+      <x>180</x>
       <y>459</y>
       <w>18</w>
       <h>72</h>
@@ -137,7 +137,7 @@ bg=gray</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>270</x>
+      <x>189</x>
       <y>450</y>
       <w>423</w>
       <h>36</h>
@@ -149,7 +149,7 @@ testerPresent() - Broadcast</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>270</x>
+      <x>189</x>
       <y>477</y>
       <w>423</w>
       <h>36</h>
@@ -161,7 +161,7 @@ testerPresent() - Without Response</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>288</x>
+      <x>207</x>
       <y>360</y>
       <w>153</w>
       <h>54</h>
