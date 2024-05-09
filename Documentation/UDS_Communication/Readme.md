@@ -202,7 +202,7 @@ To fully activate the programming session without any restrictions the following
 --- 
 
 ### Security Access (SID 0x27)
-> General Request: [PCI][<span style="color:red">\$SID</span>][Request Type]([KEY]) -> PCI = Single Frame (Code = 0)
+> General Request: [PCI][<span style="color:red">\$SID</span>]\[Request Type\](\[KEY\]) -> PCI = Single Frame (Code = 0)
 
 
 #### Default Session
