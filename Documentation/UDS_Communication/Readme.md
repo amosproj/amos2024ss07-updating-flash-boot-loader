@@ -130,6 +130,12 @@ The main logic for the UDS communication is located in the UDS Layer of the Wind
 | 7F  | Service not supported in active session         |
 
 --- 
+
+## Switch to Flashbootloader Handling
+> The application software need to have an interface to trigger a reset of the ECU. The Bootloder Key need to be set to 0x00000000 when the switch to bootloader mode is triggered.
+
+![Switch from Application Software to Flashbootloader](./Switch_ASW_Bootloader.png)
+
 ## Session Handling
 
 ![Session Handling](./Session_Handling.png)
