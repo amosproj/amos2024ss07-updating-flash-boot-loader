@@ -139,6 +139,9 @@ The main logic for the UDS communication is located in the UDS Layer of the Wind
 
 To fully activate the programming session without any restrictions the following procedure need to be done:
 ![Session Handling](./Security_Access.png)
+> 1. The GUI requests for a seed - Need to be a random value that must be use in order to compute the key
+> 2. The GUI computes a key based on the seed using an algorithm that is defined for the AMOS Bootloader and known to GUI and ECU
+> 3. The GUI sends the key to the ECU, the ECU verifies it and, if it matches the ECU's value, the programming session is fully unlocked
 
 
 ## Specification for Diagnostic and Communication Management
@@ -169,8 +172,9 @@ To fully activate the programming session without any restrictions the following
 ---
 
 ### ECU Reset (SID 0x11)
-- General Request: [PCI][<span style="color:red">\$SID</span>][Reset Type] -> PCI = Single Frame (Code = 0)
-- The supported reset types need to be defined -> TODO
+> General Request: [PCI][<span style="color:red">\$SID</span>][Reset Type] -> PCI = Single Frame (Code = 0)
+
+> The supported reset types need to be defined -> TODO
 
 #### PowerOn Reset
 | Type | Bytes |
@@ -195,10 +199,12 @@ To fully activate the programming session without any restrictions the following
 | Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x00][<span style="color:red">0x11</span>][0x04] |
 | Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x00][0x7F][0x11][0x31] |
 
-
 --- 
 
 ### Security Access (SID 0x27)
+> General Request: [PCI][<span style="color:red">\$SID</span>][Request Type]([KEY]) -> PCI = Single Frame (Code = 0)
+
+
 #### Default Session
 | Type | Bytes |
 |---|---|
