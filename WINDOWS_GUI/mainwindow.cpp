@@ -45,12 +45,48 @@ MainWindow::MainWindow(QWidget *parent)
             ui->label_selected_ECU->setText("Selected: " + item->text());
     });
     connect(ui->button_flash, &QPushButton::clicked, this, [=]() {
-        if(ui->label_selected_ECU->text() != "")
-            dummy_flash(ui->table_ECU->selectedItems().at(0)->text());
+        if(ui->label_selected_ECU->text() != "") {
+            dummy_flash(ui->label_selected_ECU->text());
+            // Just for demonstration purposes
+            updateStatus(RESET, "");
+            updateStatus(UPDATE, "Flashing started for " + ui->label_selected_ECU->text());
+            updateStatus(INFO, "It may take a while");
+            updateStatus(UPDATE, "Already did X");
+        }
     });
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::updateStatus(MainWindow::status s, QString str) {
+    QString status;
+    int val;
+    switch(s) {
+        case UPDATE:
+            status = "[UPDATE] ";
+            qDebug() << this->ui->progressBar_flash->value();
+            val = this->ui->progressBar_flash->value() + 10;
+            this->ui->progressBar_flash->setValue(val);
+            break;
+        case INFO:
+            status = "[INFO] ";
+            break;
+        case ERROR:
+            status = "[ERROR] ";
+            break;
+        case RESET:
+            status = "";
+            this->ui->progressBar_flash->setValue(0);
+            this->ui->textBrowser_flash_status->setText("");
+            break;
+        default:
+            qDebug() << "Error wrong status for updateStatus " + QString::number(val);
+            break;
+    }
+    QString rest = this->ui->textBrowser_flash_status->toPlainText();
+    this->ui->textBrowser_flash_status->setText(status + str + "\n" + rest);
+
 }

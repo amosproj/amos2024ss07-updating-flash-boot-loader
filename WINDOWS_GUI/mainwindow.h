@@ -17,6 +17,15 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    enum status {
+        UPDATE,
+        INFO,
+        ERROR,
+        RESET
+    };
+
+    void updateStatus(MainWindow::status s, QString str);
+
 private:
     Ui::MainWindow *ui;
 };
