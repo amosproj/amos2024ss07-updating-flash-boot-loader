@@ -20,7 +20,7 @@ The AURIX&trade; TC375 lite kit was used for development. It is equipped with a 
 * Installation of [Aurix Development Studio](https://www.infineon.com/cms/en/product/promopages/aurix-development-studio/)
 
 ### Flash GUI
-* Installation of [QT 6.8.0](https://www.qt.io/download-qt-installer-oss) with MSVC2019 64 and cmake.
+* Installation of [QT 6.8.0 Open Source](https://www.qt.io/download-qt-installer-oss) with MSVC2019 64 and cmake. Under LGPLv3 license which content can be accessed in the LGPLv3 file.
 * Install MSVC2022 using e.g. [Visual Studio](https://visualstudio.microsoft.com/) (remember to add the compile to the system variable PATH)
 
 ### Documentation
