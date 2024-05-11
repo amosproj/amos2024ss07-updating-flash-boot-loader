@@ -63,7 +63,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::updateStatus(MainWindow::status s, QString str) {
     QString status;
-    int val;
+    int val = 0;
     switch(s) {
         case UPDATE:
             status = "[UPDATE] ";
