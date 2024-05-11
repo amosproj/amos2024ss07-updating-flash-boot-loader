@@ -16,6 +16,15 @@
 #include "flash.h"
 #include "led_driver.h"
 
+void show_led(void)
+{
+    toggle_led_activity(LED1);
+    toggle_led_activity(LED1);
+
+    led_on(LED2);
+    led_off(LED2);
+}
+
 void show_can(void)
 {
     init_led_driver();
