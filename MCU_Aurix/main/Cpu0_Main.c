@@ -29,8 +29,8 @@
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
 
-#include "flash/flash.h"
-#include "LED/led_driver.h"
+#include "flash.h"
+#include "led_driver.h"
 #include "can_init.h"
 #include "can_driver.h"
 

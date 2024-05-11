@@ -13,7 +13,7 @@
 
 #include "IfxCpu.h"
 
-#include "flash/flash.h"
+#include "flash.h"
 
 #define PMU_FLASH_MODULE                0               /* Macro to select the flash (PMU) module           */
 
