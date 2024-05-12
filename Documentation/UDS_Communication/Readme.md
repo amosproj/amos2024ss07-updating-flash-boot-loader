@@ -446,6 +446,7 @@ To fully activate the programming session without any restrictions the following
 | Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x30][0x00][0x00]  |
 | Req2  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x21][0x53][0x20][0x46][0x42][0x4C][0x20][0x32] |
 | Req3  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x22][0x34][0x00] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x00][<span style="color:red">0x6E</span>][0xF1][0x97] |
 
 #### DID Number 0xF199 - Programming Date ID
 | Type | Bytes |
@@ -534,26 +535,26 @@ To fully activate the programming session without any restrictions the following
 
 ## Specification for Upload | Download
 
-> The upload of new firmware is only possible when the ECU is in a valid programming session (including security access)
-> General Request: [PCI][<span style="color:red">\$SID</span>][Address Byte 3][Address Byte 2][Address Byte 1][Address Byte 0][Size Byte 3][Size Byte 2][Size Byte 1][Size Byte 0]
+> - The upload of new firmware is only possible when the ECU is in a valid programming session (including security access)
+> - General Request Download/Upload: [PCI][<span style="color:red">\$SID</span>][Address Byte 3][Address Byte 2][Address Byte 1][Address Byte 0][Size Byte 3][Size Byte 2][Size Byte 1][Size Byte 0]
 
 
 ### Request Download (0x34)
 
 | Type | Bytes |
 |---|---|
-| Req1  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x10][0x06][<span style="color:red">0x34</span>][0xA0][0x09][0x00][0x00][0x00] |
+| Req1  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x10][0x09][<span style="color:red">0x34</span>][0xA0][0x09][0x00][0x00][0x00] |
 | Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x30][0x00][0x00]  |
-| Req2  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x21][0x00][0x05] |
+| Req2  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x21][0x00][0x00][0x05] |
 | Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x05][0x74][0xA0][0x09][0x00][0x00]  |
 ---
 
 ### Request Upload (0x35)
 | Type | Bytes |
 |---|---|
-| Req1  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x10][0x06][<span style="color:red">0x35</span>][0xA0][0x09][0x00][0x00][0x00] |
+| Req1  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x10][0x09][<span style="color:red">0x35</span>][0xA0][0x09][0x00][0x00][0x00] |
 | Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x30][0x00][0x00]  |
-| Req2  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x21][0x00][0x05] |
+| Req2  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x21][0x00][0x00][0x05] |
 | Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x05][0x75][0xA0][0x09][0x00][0x00]  |
 ---
 
