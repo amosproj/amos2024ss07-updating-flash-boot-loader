@@ -33,7 +33,16 @@ IFX_INTERRUPT(canIsrTxHandler, 0, INTERRUPT_PRIO_TX);
 IFX_INTERRUPT(canIsrRxHandler, 0, INTERRUPT_PRIO_RX);
 
 void canIsrTxHandler(void){
-    IfxCan_Node_clearInterruptFlag(g_can.canSrcNode.node, IfxCan_Interrupt_transmissionCompleted); //Just clears the Interrupt 
+    if (DEBUGGING)
+    {
+        IfxCan_Node_clearInterruptFlag(g_can.canSrcNode.node, IfxCan_Interrupt_transmissionCompleted); //Just clears the Interrupt 
+    }
+    else
+    {
+        IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_transmissionCompleted);
+    }
+    
+    
 }
 
 /**
@@ -42,15 +51,17 @@ void canIsrTxHandler(void){
  * @param processDataFunction Pointer to function that processes Data read in CAN Message
 */
 void canIsrRxHandler(){
-    IfxCan_Node_clearInterruptFlag(g_can.canDstNode.node, IfxCan_Interrupt_messageStoredToDedicatedRxBuffer); /*Clear Message Stored Flag*/
-    IfxCan_Can_readMessage(&g_can.canDstNode, &g_can.rxMsg, g_can.rxData); //Read Message
+    
+     //Read Message
     if (processDataFunction != NULL)
     {
         //Callback
     }
-
+    
     if (DEBUGGING)
     {
+        IfxCan_Node_clearInterruptFlag(g_can.canDstNode.node, IfxCan_Interrupt_messageStoredToDedicatedRxBuffer); /*Clear Message Stored Flag*/
+        IfxCan_Can_readMessage(&g_can.canDstNode, &g_can.rxMsg, g_can.rxData);
         //LED 1 If Message ID TX and RX is same
         if (g_can.rxMsg.messageId == g_can.txMsg.messageId)
         {
@@ -63,6 +74,12 @@ void canIsrRxHandler(){
         }
         
         
+    }
+    else
+    {
+        IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode, IfxCan_Interrupt_messageStoredToDedicatedRxBuffer); /*Clear Message Stored Flag*/
+        IfxCan_Can_readMessage(&g_can.canTXandRXNode, &g_can.rxMsg, g_can.rxData);
+        led_on(LED1);
     }
     
 
@@ -118,10 +135,20 @@ void initTXandRXNode(void){
     g_can.canNodeConfig.frame.type = IfxCan_FrameType_transmitAndReceive;
 
     /*PIN Definition*/
-    g_can.canNodeConfig.pins->rxPin = CAN_RX_PIN;
-    g_can.canNodeConfig.pins->rxPinMode = 
+    g_can.canNodeConfig.pins = canPins;
 
     /*Interrupt Config*/
+    g_can.canNodeConfig.interruptConfig.messageStoredToDedicatedRxBufferEnabled = TRUE; /*Raise Interrupt when msg is stored in RX Buffer*/
+    g_can.canNodeConfig.interruptConfig.reint.priority = INTERRUPT_PRIO_RX;           /*Prio*/
+    g_can.canNodeConfig.interruptConfig.reint.interruptLine = IfxCan_InterruptLine_1;   /*Interrupt Line 1*/
+    g_can.canNodeConfig.interruptConfig.reint.typeOfService = IfxSrc_Tos_cpu0;          /*On CPU 0*/
+
+    g_can.canNodeConfig.interruptConfig.transmissionCompletedEnabled = TRUE;     /*Raises Interrupt when transmition is done*/
+    g_can.canNodeConfig.interruptConfig.traco.priority = INTERRUPT_PRIO_TX;    /*Prio*/
+    g_can.canNodeConfig.interruptConfig.traco.interruptLine = IfxCan_InterruptLine_0; /*Interrupt line 0*/
+    g_can.canNodeConfig.interruptConfig.traco.typeOfService = IfxSrc_Tos_cpu0;       /*On CPU0*/
+
+    IfxCan_Can_initNode(&g_can.canTXandRXNode, &g_can.canNodeConfig); //Init Node with CAN Pin Config and Standard Baud Rate 500k
 
 }
 
@@ -152,15 +179,26 @@ void canInitDriver(void){
  * @param data data of CAN Message
  * @param len of CAN Message
 */
-void canTransmitMessage(uint32_t canMessageID, uint32_t low_word, uint32_t high_word){
+void canTransmitMessage(uint32_t canMessageID, uint32_t lowWord, uint32_t highWord){
     IfxCan_Can_initMessage(&g_can.txMsg);
-    g_can.txData[0] = low_word; /*To transmit data*/
-    g_can.txData[1] = high_word;
+    g_can.txData[0] = lowWord; /*To transmit data*/
+    g_can.txData[1] = highWord;
     g_can.txMsg.messageId = canMessageID;
 
     /*Sends CAN Message, only if BUS is empty*/
-    while( IfxCan_Status_notSentBusy ==
+    if (DEBUGGING)
+    {
+        while( IfxCan_Status_notSentBusy ==
            IfxCan_Can_sendMessage(&g_can.canSrcNode, &g_can.txMsg, &g_can.txData[0]))
     {
     }
+    }
+    else
+    {
+        while( IfxCan_Status_notSentBusy ==
+           IfxCan_Can_sendMessage(&g_can.canTXandRXNode, &g_can.txMsg, &g_can.txData[0]))
+    }
+    
+    
+    
 }
