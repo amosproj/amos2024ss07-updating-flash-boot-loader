@@ -2,10 +2,14 @@
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "../GUI_Snippets/CAN_Wrapper/src/can_wrapper.hpp"
+#include "../GUI_Snippets/CAN_Wrapper/src/can_wrapper_event.hpp"
 
 static inline void dummy_function(QByteArray data) {
     qDebug() << "Received" << data;
 }
+
+static CAN_Wrapper can = CAN_Wrapper(500000);
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -32,9 +36,26 @@ MainWindow::MainWindow(QWidget *parent)
             file.close();
         }
     });
+
+    boolean init = can.initDriver();
+
+    if (!init)
+    {
+        return;
+    }
+
+    unsigned int txID = 1;
+    can.setID(txID);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
+
+void MainWindow::on_button_can_message_clicked()
+{
+    byte data[] = {0,1,0,1};
+    can.txCAN(data, 4);
+}
+
