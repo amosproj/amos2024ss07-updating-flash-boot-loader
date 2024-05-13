@@ -57,22 +57,20 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
 
-    // Create the second QComboBox
-    secondComboBox = new EditableComboBox(this);
+    // Create both QComboBoxes for later
+    editComboBox_speed = new EditableComboBox(this);
+    comboBox_speedUnit = new QComboBox(this);
 
-    // Call comboBoxIndexChanged to set up secondComboBox initially
+    // Call comboBoxIndexChanged to set up editComboBox_speed initially
     comboBoxIndexChanged(ui->comboBox_channel->currentIndex());
 
-    // Initially hide the second QComboBox
-    secondComboBox->hide();
+    // Initially hide the other QComboBoxes
+    editComboBox_speed->hide();
+    comboBox_speedUnit->hide();
 
     // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
     connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
             &MainWindow::comboBoxIndexChanged);
-
-    //Connect the clicked signal of label_test_channel to the slot updateStatusLabel
-    connect(ui->button_test_channel, &QPushButton::clicked, this,
-            &MainWindow::updateButtonLabel);
 
 }
 
@@ -110,10 +108,13 @@ void MainWindow::updateStatus(MainWindow::status s, QString str) {
     this->ui->textBrowser_flash_status->setText(status + str + "\n" + rest);
 
 }
+
+//Will show/hide the new ComboBoxes below the ComboBox for the protocol
 void MainWindow::comboBoxIndexChanged(int index)
 {
     // Clear the items of the second QComboBox
-    secondComboBox->clear();
+    editComboBox_speed->clear();
+    comboBox_speedUnit->clear();
 
     // Check if the index corresponds to the desired options
     if (index == 1 || index == 2 || index == 3)
@@ -121,38 +122,51 @@ void MainWindow::comboBoxIndexChanged(int index)
         // Populate the second QComboBox based on the selected index of the first QComboBox
         if (index == 1) // Example condition, replace with your own logic
         {
-            secondComboBox->addItem("Option A");
-            secondComboBox->addItem("Option B");
-            secondComboBox->addItem("Option C");
+            editComboBox_speed->addItem("33.3");
+            editComboBox_speed->addItem("50");
+            editComboBox_speed->addItem("83.3");
+            editComboBox_speed->addItem("83.3");
+            editComboBox_speed->addItem("100");
+            editComboBox_speed->addItem("125");
+            editComboBox_speed->addItem("250");
+            editComboBox_speed->addItem("500");
+            editComboBox_speed->addItem("1000");
         }
         else if (index == 2) // Example condition, replace with your own logic
         {
-            secondComboBox->addItem("Option D");
-            secondComboBox->addItem("Option E");
-            secondComboBox->addItem("Option F");
+            editComboBox_speed->addItem("1000");
+            editComboBox_speed->addItem("2000");
+            editComboBox_speed->addItem("3000");
+            editComboBox_speed->addItem("4000");
+            editComboBox_speed->addItem("5000");
+            editComboBox_speed->addItem("6000");
+            editComboBox_speed->addItem("7000");
+            editComboBox_speed->addItem("8000");
+
         }
         else if (index == 3) // Example condition, replace with your own logic
         {
-            secondComboBox->addItem("Option X");
-            secondComboBox->addItem("Option Y");
-            secondComboBox->addItem("Option Z");
+            editComboBox_speed->addItem("Option A");
+            editComboBox_speed->addItem("Option B");
+            editComboBox_speed->addItem("Option C");
         }
 
+        comboBox_speedUnit->addItem("kBit/s");
+        comboBox_speedUnit->addItem("MBit/s");
+
         // Show the second QComboBox
-        secondComboBox->show();
+        editComboBox_speed->show();
+        comboBox_speedUnit->show();
 
         // Add the second QComboBox to the layout or widget where you want it to appear
         // For example:
-        ui->verticalLayout_channel->insertWidget(2, secondComboBox);
+        ui->horizontalLayout_channel->addWidget(editComboBox_speed);
+        ui->horizontalLayout_channel->addWidget(comboBox_speedUnit);
     }
     else
     {
         // If index doesn't correspond to desired options, hide the second QComboBox
-        secondComboBox->hide();
+        editComboBox_speed->hide();
+        comboBox_speedUnit->hide();
     }
-}
-
-void MainWindow::updateButtonLabel()
-{
-    ui->button_test_channel->setText(QString("Edit Mode: %1").arg(secondComboBox->editMode ? "ON" : "OFF"));
 }

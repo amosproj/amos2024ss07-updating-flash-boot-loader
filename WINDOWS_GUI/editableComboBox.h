@@ -13,20 +13,13 @@ class EditableComboBox : public QComboBox
 
 public:
     EditableComboBox(QWidget *parent = nullptr);
-    bool editMode;
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
-    bool eventFilter(QObject *obj, QEvent *event) override;
-
-private slots:
-    void updateComboBoxText(const QString &text);
 
 private:
     QLineEdit *lineEdit;
-
-    QLabel *statusLabel;
 };
 
 #endif // EDITABLECOMBOBOX_H

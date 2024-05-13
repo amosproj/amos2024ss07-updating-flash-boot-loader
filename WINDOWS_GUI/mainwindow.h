@@ -25,8 +25,6 @@ public:
         RESET
     };
 
-    void updateButtonLabel();
-
     void updateStatus(MainWindow::status s, QString str);
 
 private slots:
@@ -34,6 +32,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    EditableComboBox *secondComboBox;
+    EditableComboBox *editComboBox_speed;
+    QComboBox *comboBox_speedUnit;
 };
 #endif // MAINWINDOW_H
