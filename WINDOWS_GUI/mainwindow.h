@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QComboBox>
+#include "editableComboBox.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -25,6 +25,8 @@ public:
         RESET
     };
 
+    void updateButtonLabel();
+
     void updateStatus(MainWindow::status s, QString str);
 
 private slots:
@@ -32,6 +34,6 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    QComboBox *secondComboBox;
+    EditableComboBox *secondComboBox;
 };
 #endif // MAINWINDOW_H

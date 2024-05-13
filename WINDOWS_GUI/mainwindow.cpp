@@ -2,6 +2,7 @@
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "editableComboBox.h"
 
 static inline void dummy_function(QByteArray data) {
     qDebug() << "Received " << data;
@@ -42,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->table_ECU->setEditTriggers(QAbstractItemView::NoEditTriggers);
     connect(ui->table_ECU, &QTableWidget::itemSelectionChanged, this, [=]() {
         QTableWidgetItem *item = ui->table_ECU->selectedItems().at(0);
-            ui->label_selected_ECU->setText("Selected: " + item->text());
+        ui->label_selected_ECU->setText("Selected: " + item->text());
     });
     connect(ui->button_flash, &QPushButton::clicked, this, [=]() {
         if(ui->label_selected_ECU->text() != "") {
@@ -57,10 +58,22 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     // Create the second QComboBox
-    secondComboBox = new QComboBox(this);
+    secondComboBox = new EditableComboBox(this);
+
+    // Call comboBoxIndexChanged to set up secondComboBox initially
+    comboBoxIndexChanged(ui->comboBox_channel->currentIndex());
+
+    // Initially hide the second QComboBox
+    secondComboBox->hide();
 
     // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
-    connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::comboBoxIndexChanged);
+    connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            &MainWindow::comboBoxIndexChanged);
+
+    //Connect the clicked signal of label_test_channel to the slot updateStatusLabel
+    connect(ui->button_test_channel, &QPushButton::clicked, this,
+            &MainWindow::updateButtonLabel);
+
 }
 
 MainWindow::~MainWindow()
@@ -72,26 +85,26 @@ void MainWindow::updateStatus(MainWindow::status s, QString str) {
     QString status;
     int val = 0;
     switch(s) {
-        case UPDATE:
-            status = "[UPDATE] ";
-            qDebug() << this->ui->progressBar_flash->value();
-            val = this->ui->progressBar_flash->value() + 10;
-            this->ui->progressBar_flash->setValue(val);
-            break;
-        case INFO:
-            status = "[INFO] ";
-            break;
-        case ERROR:
-            status = "[ERROR] ";
-            break;
-        case RESET:
-            status = "";
-            this->ui->progressBar_flash->setValue(0);
-            this->ui->textBrowser_flash_status->setText("");
-            break;
-        default:
-            qDebug() << "Error wrong status for updateStatus " + QString::number(val);
-            break;
+    case UPDATE:
+        status = "[UPDATE] ";
+        qDebug() << this->ui->progressBar_flash->value();
+        val = this->ui->progressBar_flash->value() + 10;
+        this->ui->progressBar_flash->setValue(val);
+        break;
+    case INFO:
+        status = "[INFO] ";
+        break;
+    case ERROR:
+        status = "[ERROR] ";
+        break;
+    case RESET:
+        status = "";
+        this->ui->progressBar_flash->setValue(0);
+        this->ui->textBrowser_flash_status->setText("");
+        break;
+    default:
+        qDebug() << "Error wrong status for updateStatus " + QString::number(val);
+        break;
     }
     QString rest = this->ui->textBrowser_flash_status->toPlainText();
     this->ui->textBrowser_flash_status->setText(status + str + "\n" + rest);
@@ -102,29 +115,44 @@ void MainWindow::comboBoxIndexChanged(int index)
     // Clear the items of the second QComboBox
     secondComboBox->clear();
 
-    // Populate the second QComboBox based on the selected index of the first QComboBox
-    if (index == 0) // Example condition, replace with your own logic
+    // Check if the index corresponds to the desired options
+    if (index == 1 || index == 2 || index == 3)
     {
-        secondComboBox->addItem("Option A");
-        secondComboBox->addItem("Option B");
-        secondComboBox->addItem("Option C");
-    }
-    else if (index == 1)
-    {
-        secondComboBox->addItem("Option X");
-        secondComboBox->addItem("Option Y");
-        secondComboBox->addItem("Option Z");
-    }
-
-
-    for (int i = 0; i < ui->verticalLayout_channel->count(); ++i)
-    {
-        QLayoutItem *item = ui->verticalLayout_channel->itemAt(i);
-        if (item->spacerItem())
+        // Populate the second QComboBox based on the selected index of the first QComboBox
+        if (index == 1) // Example condition, replace with your own logic
         {
-            // Insert the second QComboBox before the spacer item
-            ui->verticalLayout_channel->insertWidget(i, secondComboBox);
-            break;
+            secondComboBox->addItem("Option A");
+            secondComboBox->addItem("Option B");
+            secondComboBox->addItem("Option C");
         }
+        else if (index == 2) // Example condition, replace with your own logic
+        {
+            secondComboBox->addItem("Option D");
+            secondComboBox->addItem("Option E");
+            secondComboBox->addItem("Option F");
+        }
+        else if (index == 3) // Example condition, replace with your own logic
+        {
+            secondComboBox->addItem("Option X");
+            secondComboBox->addItem("Option Y");
+            secondComboBox->addItem("Option Z");
+        }
+
+        // Show the second QComboBox
+        secondComboBox->show();
+
+        // Add the second QComboBox to the layout or widget where you want it to appear
+        // For example:
+        ui->verticalLayout_channel->insertWidget(2, secondComboBox);
     }
+    else
+    {
+        // If index doesn't correspond to desired options, hide the second QComboBox
+        secondComboBox->hide();
+    }
+}
+
+void MainWindow::updateButtonLabel()
+{
+    ui->button_test_channel->setText(QString("Edit Mode: %1").arg(secondComboBox->editMode ? "ON" : "OFF"));
 }
