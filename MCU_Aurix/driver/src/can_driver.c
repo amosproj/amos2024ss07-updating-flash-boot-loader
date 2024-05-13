@@ -51,9 +51,9 @@ void canIsrRxHandler(){
             led_on(LED1);
         }
         //LED 2 if data TX and RX is the same
-        if (g_can.rxData[0] == g_can.txData[0])
+        if (g_can.rxData[0] == g_can.txData[0] )
         {
-            //IfxPort_setPinLow(g_led2.port, g_led2.pinIndex);
+            //led_on(LED2);
         }
         
         
@@ -117,9 +117,10 @@ void canInitDriver(void){
  * @param data data of CAN Message
  * @param len of CAN Message
 */
-void canTransmitMessage(uint32_t canMessageID, uint64_t data, uint64_t len){
+void canTransmitMessage(uint32_t canMessageID, uint32_t low_word, uint32_t high_word){
     IfxCan_Can_initMessage(&g_can.txMsg);
-    g_can.txData[0] = data; /*To transmit data*/
+    g_can.txData[0] = low_word; /*To transmit data*/
+    g_can.txData[1] = high_word;
     g_can.txMsg.messageId = canMessageID;
 
     /*Sends CAN Message, only if BUS is empty*/

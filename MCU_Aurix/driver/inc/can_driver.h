@@ -12,8 +12,10 @@
 #ifndef CAN_DRIVER_H
 #define CAN_DRIVER_H
 
-#define CAN_DEBUG_ID    (uint32)0x777
+#define CAN_DEBUG_ID    (uint32_t)0x777
 #define CAN_DEBUG_DATA  (uint64_t)0xBABAB055
+#define TX_DATA_LOW_WORD            (uint32_t)0xC0CAC01A      /* Define CAN data lower word to be transmitted         */
+#define TX_DATA_HIGH_WORD           (uint32_t)0xBA5EBA11      /* Define CAN data higher word to be transmitted        */
 
 /**********/
 /*INCLUDES*/
@@ -22,7 +24,7 @@
 #include <string.h>
 #include <stdint.h>
 
-void canTransmitMessage(uint32_t canMessageID, uint64_t data, uint64_t len); //oder uint8_t*
+void canTransmitMessage(uint32_t canMessageID, uint32_t low_word, uint32_t high_word); //oder uint8_t*
 void canIsrRxHandler();
 
 #endif /*CAN_DRIVER_H*/
