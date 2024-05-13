@@ -99,15 +99,31 @@ void initDstNode(){
     //TODO:Check if we need CAN Filter here
 }
 
+void initTXandRXNode(void){
+    IfxCan_Can_initNodeConfig(&g_can.canNodeConfig, &g_can.canModule);                  /*Default Config*/
+
+    g_can.canNodeConfig.busLoopbackEnabled = FALSE;                                      /*Loopbackmode*/
+    g_can.canNodeConfig.nodeId = IfxCan_NodeId_0;                                         /*Node ID 0 -> is must*/
+}
+
 /**
  * Initialize CAN Module and Node
 */
 void canInitDriver(void){
     IfxCan_Can_initModuleConfig(&g_can.canConfig, &MODULE_CAN0); /*LoadsDefault Config*/
     IfxCan_Can_initModule(&g_can.canModule, &g_can.canConfig); /*Init with default config*/
-
-    initSrcNode();
-    initDstNode();
+    if (DEBUGGING)
+    {
+        initSrcNode();
+        initDstNode();
+    }
+    else
+    {
+        initTXandRXNode();
+    }
+    
+    
+    
     IfxCan_Can_initMessage(&g_can.rxMsg); /*Init for RX Message*/
 }
 
