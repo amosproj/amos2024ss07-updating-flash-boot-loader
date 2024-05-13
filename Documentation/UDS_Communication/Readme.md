@@ -93,7 +93,7 @@ The main logic for the UDS communication is located in the UDS Layer of the Wind
 | <span style="color:red">$SID</span> | Available in Default Session | Has Sub-Function | Service Name               | 
 |-------------------------------------|------------------------------|------------------|----------------------------|
 | $22                                 | &#9745;                      |                  | Read Data By Identifier    |
-| $23                                 |                              |                  | Read Memory By Address     |
+| $23                                 |                              | &#9745;          | Read Memory By Address     |
 | $2E                                 |                              | &#9745;          | Write Data By Identifier   |
 
 ### Upload | Download
@@ -130,6 +130,18 @@ The main logic for the UDS communication is located in the UDS Layer of the Wind
 | 7F  | Service not supported in active session         |
 
 --- 
+
+## Switch to Flashbootloader Sequence
+> The application software need to have an interface to trigger a reset of the ECU. The Bootloder Key need to be set to 0x00000000 when the switch to bootloader mode is triggered.
+
+![Switch from Application Software to Flashbootloader](./Switch_ASW_Bootloader.png)
+
+## Switch to Application Software Sequence
+> - The flashbootloader remains in bootloader mode for 10 seconds if the bootloader key is valid. After that it switches to application software.
+> - If no valid key is found, the bootloader stays in bootloader mode
+
+![Switch from Flashbootloader to Application Software](./Switch_Bootloader_ASW.png)
+
 ## Session Handling
 
 ![Session Handling](./Session_Handling.png)
@@ -143,10 +155,9 @@ To fully activate the programming session without any restrictions the following
 > 2. The GUI computes a key based on the seed using an algorithm that is defined for the AMOS Bootloader and known to GUI and ECU
 > 3. The GUI sends the key to the ECU, the ECU verifies it and, if it matches the ECU's value, the programming session is fully unlocked
 
+---
 
 ## Specification for Diagnostic and Communication Management
-
----
 
 ### Diagnostic Session Control (SID 0x10)
 > General Request: [PCI][<span style="color:red">\$SID</span>][Session] -> PCI = Single Frame (Code = 0)
@@ -154,20 +165,20 @@ To fully activate the programming session without any restrictions the following
 #### Default Session
 | Type | Bytes |
 |---|---|
-| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x00][<span style="color:red">0x10</span>][0x01] |
-| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x00][<span style="color:red">0x50</span>][0x01] |
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x02][<span style="color:red">0x10</span>][0x01] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x02][<span style="color:red">0x50</span>][0x01] |
 
 #### Programming Session
 | Type | Bytes |
 |---|---|
-| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x00][<span style="color:red">0x10</span>][0x02] |
-| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x00][<span style="color:red">0x50</span>][0x02] |
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x02][<span style="color:red">0x10</span>][0x02] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x02][<span style="color:red">0x50</span>][0x02] |
 
 #### Wrong/Unavailable Session
 | Type | Bytes |
 |---|---|
-| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x00][<span style="color:red">0x10</span>][0x04] |
-| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x00][0x7F][0x10][0x31] |
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x02][<span style="color:red">0x10</span>][0x04] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][0x7F][0x10][0x31] |
 
 ---
 
@@ -179,25 +190,25 @@ To fully activate the programming session without any restrictions the following
 #### PowerOn Reset
 | Type | Bytes |
 |---|---|
-| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x00][<span style="color:red">0x11</span>][0x01] |
-| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x00][<span style="color:red">0x51</span>][0x01] |
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x02][<span style="color:red">0x11</span>][0x01] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x02][<span style="color:red">0x51</span>][0x01] |
 
 #### Cold PowerOn Reset
 | Type | Bytes |
 |---|---|
-| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x00][<span style="color:red">0x11</span>][0x02] |
-| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x00][<span style="color:red">0x51</span>][0x02] |
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x02][<span style="color:red">0x11</span>][0x02] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x02][<span style="color:red">0x51</span>][0x02] |
 
 #### Warm PowerOn Reset
 | Type | Bytes |
 |---|---|
-| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x00][<span style="color:red">0x11</span>][0x03] |
-| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x00][<span style="color:red">0x51</span>][0x03] |
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x02][<span style="color:red">0x11</span>][0x03] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x02][<span style="color:red">0x51</span>][0x03] |
 
 | Type | Bytes |
 |---|---|
-| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x00][<span style="color:red">0x11</span>][0x04] |
-| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x00][0x7F][0x11][0x31] |
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x02][<span style="color:red">0x11</span>][0x04] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][0x7F][0x11][0x31] |
 
 --- 
 
@@ -208,43 +219,375 @@ To fully activate the programming session without any restrictions the following
 #### Default Session
 | Type | Bytes |
 |---|---|
-| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x00][<span style="color:red">0x27</span>][0x01] |
-| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x00][0x7F][0x27][0x7F] |
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x02][<span style="color:red">0x27</span>][0x01] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][0x7F][0x27][0x7F] |
 
 #### Programming Session
-##### Request SEED
+##### Request SEED 
+> SEED data is only placeholder
+
 | Type | Bytes |
 |---|---|
-| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x00][<span style="color:red">0x27</span>][0x01] |
-| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x00][<span style="color:red">0x67</span>][0x01][0x..][0x..].. |
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x02][<span style="color:red">0x27</span>][0x01] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x07][<span style="color:red">0x67</span>][0x01][0x33][0x33][0x33][0x33][0x33] |
 
 ##### Verify Key + Access Granted
+> Key data is only placeholder
+>
 | Type | Bytes |
 |---|---|
-| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x00][<span style="color:red">0x27</span>][0x02][0x..][0x..].. |
-| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x00][<span style="color:red">0x67</span>][0x02] |
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x07][<span style="color:red">0x27</span>][0x02][0x33][0x33][0x33][0x33][0x33] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x02][<span style="color:red">0x67</span>][0x02] |
 
 ##### Verify Key + Access Denied -> Invalid Key
 | Type | Bytes |
 |---|---|
-| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x00][<span style="color:red">0x27</span>][0x02][0x..][0x..].. |
-| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x00][0x7F][0x27][0x35] |
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x07][<span style="color:red">0x27</span>][0x02][0x33][0x33][0x33][0x33][0x33] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][0x7F][0x27][0x35] |
 
 --- 
 
 ### Tester Present (0x3E)
+> General Request: [PCI][<span style="color:red">\$SID</span>]\[Response Type\] -> PCI = Single Frame (Code = 0)
+
 
 #### Request with Response
 | Type | Bytes |
 |---|---|
-| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x00][<span style="color:red">0x3E</span>][0x01] |
-| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x00][<span style="color:red">0x7E</span>][0x01] |
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x02][<span style="color:red">0x3E</span>][0x01] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x02][<span style="color:red">0x7E</span>][0x01] |
 
 #### Request without Response
 | Type | Bytes |
 |---|---|
-| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x00][<span style="color:red">0x3E</span>][0x02] |
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x02][<span style="color:red">0x3E</span>][0x02] |
 
 ---
 
+## Specification for Data Transmission
 
+### Read Data By Identifier (SID 0x22)
+> - General Request: [PCI][<span style="color:red">\$SID</span>]\[UDS DID 1\]\[UDS DID 0\] -> PCI = Single Frame (Code = 0)
+> - This service uses a Data Identifier (DID), which is a 2 byte value between 0x0000 and 0xFFFF (65535)
+> - The DID serves for both - request and response
+> - DID of UDS Protocol have been used according to ISO 14229 (when possible) - [Data Identifier List](https://piembsystech.com/data-identifiers-did-of-uds-protocol-iso-14229/)
+
+| DID Number        | DID Name                                          | DID Value Description                       |
+|-------------------|---------------------------------------------------|---------------------------------------------|
+| 0xF197            | System Name                                       | E.g. AMOS FBL 24                            |
+| 0xF199            | Programming Date ID                               | BCD Format - YYMMDD                         |
+| **0xFD00-0xFEFF** | System Supplier Specific                          | Range for storing specific values           |
+| 0xFD00            | Bootloader Key Address                            | Address for the Bootloader key              |
+| 0xFD01            | Booloader Key Good Value                          | Value to store for ASW                      |
+| 0xFD02            | CAN Base Mask                                     | First 11 bits of CAN ID - 0x0F24            |
+| 0xFD03            | CAN ECU ID                                        | Next 12 bits of CAN ID - 0x001              |
+| 0xFD10            | Bootloader Writeable App Start Address - Core 0   | First Byte of addresss for Storing ASW      |
+| 0xFD11            | Bootloader Writeable App End Address - Core 0     | Last Byte of address for Storing ASW        |
+| 0xFD12            | Bootloader Writeable App Start Address - Core 1   | First Byte of addresss for Storing ASW      |
+| 0xFD13            | Bootloader Writeable App End Address - Core 1     | Last Byte of address for Storing ASW        |
+| 0xFD14            | Bootloader Writeable App Start Address - Core 2   | First Byte of addresss for Storing ASW      |
+| 0xFD15            | Bootloader Writeable App End Address - Core 2     | Last Byte of address for Storing ASW        |
+
+
+
+#### DID Number 0xF197 - System Name
+> "AMOS FBL 24" = 0x41 0x4D 0x4F 0x53 0x20 0x46 0x42 0x4C 0x20 0x32 0x34 0x00
+
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x03][<span style="color:red">0x22</span>][0xF1][0x97]  |
+| Resp1 - ID: <span style="color:green">"0x0F24 0010"</span> | [0x10][0x0F][<span style="color:red">0x62</span>][0xF1][0x97][0x41][0x4D][0x4F] |
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x30][0x00][0x00]  |
+| Resp2 - ID: <span style="color:green">"0x0F24 0010"</span> | [0x21][0x53][0x20][0x46][0x42][0x4C][0x20][0x32] |
+| Resp3 - ID: <span style="color:green">"0x0F24 0010"</span> | [0x22][0x34][0x00] |
+
+#### DID Number 0xF199 - Programming Date ID
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x03][<span style="color:red">0x22</span>][0xF1][0x99]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x06][<span style="color:red">0x62</span>][0xF1][0x99][0x24][0x05][0x09] |
+---
+
+#### DID Number 0xFD00 - Booloader Key Address
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x03][<span style="color:red">0x22</span>][0xFD][0x00]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x07][<span style="color:red">0x62</span>][0xFD][0x00][0xA0][0x4F][0x80][0x00] |
+---
+
+#### DID Number 0xFD01 - Booloader Key Good Value
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x03][<span style="color:red">0x22</span>][0xFD][0x01]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x07][<span style="color:red">0x62</span>][0xFD][0x01][0x93][0x86][0xC3][0xA5] |
+---
+
+#### DID Number 0xFD02 - CAN Base Mask
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x03][<span style="color:red">0x22</span>][0xFD][0x02]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x05][<span style="color:red">0x62</span>][0xFD][0x02][0x0F][0x24] |
+---
+
+#### DID Number 0xFD03 - CAN ECU ID
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x03][<span style="color:red">0x22</span>][0xFD][0x03]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x05][<span style="color:red">0x62</span>][0xFD][0x03][0x00][0x01] |
+---
+
+#### DID Number 0xFD03 - CAN ECU ID
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x03][<span style="color:red">0x22</span>][0xFD][0x03]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x05][<span style="color:red">0x62</span>][0xFD][0x03][0x00][0x01] |
+---
+
+#### DID Number 0xFD10 - Bootloader Writable App Start Address - Core 0
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x03][<span style="color:red">0x22</span>][0xFD][0x10]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x07][<span style="color:red">0x62</span>][0xFD][0x10][0xA0][0x09][0x00][0x00] |
+---
+
+#### DID Number 0xFD11 - Bootloader Writeable App End Address - Core 0
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x03][<span style="color:red">0x22</span>][0xFD][0x11]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x07][<span style="color:red">0x62</span>][0xFD][0x11][0xA0][0x1F][0xFF][0xFF] |
+---
+
+#### DID Number 0xFD12 - Bootloader Writable App Start Address - Core 1
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x03][<span style="color:red">0x22</span>][0xFD][0x12]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x07][<span style="color:red">0x62</span>][0xFD][0x12][0xA0][0x30][0x40][0x00] |
+---
+
+#### DID Number 0xFD13 - Bootloader Writeable App End Address - Core 1
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x03][<span style="color:red">0x22</span>][0xFD][0x13]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x07][<span style="color:red">0x62</span>][0xFD][0x13][0xA0][0x4F][0xF7][0xFF] |
+---
+
+#### DID Number 0xFD144 - Bootloader Writable App Start Address - Core 2
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x03][<span style="color:red">0x22</span>][0xFD][0x14]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x07][<span style="color:red">0x62</span>][0xFD][0x14][0x##][0x##][0x##][0x##] |
+---
+
+#### DID Number 0xFD15 - Bootloader Writeable App End Address - Core 2
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x03][<span style="color:red">0x22</span>][0xFD][0x15]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x07][<span style="color:red">0x62</span>][0xFD][0x15][0x##][0x##][0x##][0x##] |
+---
+
+
+### Read Memory By Address (SID 0x23)
+> General Request: [PCI][<span style="color:red">\$SID</span>][ADD Byte 3][ADD Byte 2][ADD Byte 1][ADD Byte 0][Number of Bytes - Byte 1][Number of Bytes - Byte 0] -> PCI = Single Frame (Code = 0)
+
+#### Default Session
+> No reading of memory by address available, Service not supported in active session
+
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x07][<span style="color:red">0x23</span>][0xA0][0x09][0x00][0x00][0xFF][0xFF]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][0x7F][0x23][0x7F] |
+---
+
+#### Programming Session without Security Access
+> No reading of memory by address available, security access denied
+
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x07][<span style="color:red">0x23</span>][0xA0][0x09][0x00][0x00][0xFF][0xFF]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][0x7F][0x23][0x33] |
+---
+
+#### Programming Session with valid Security Access
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x07][<span style="color:red">0x23</span>][0xA0][0x09][0x00][0x00][0x00][0x01]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x06][<span style="color:red">0x63</span>][0xA0][0x09][0x00][0x00][0xAB] |
+---
+
+### Write Data By Identifier (SID 0x2E)
+> - General Request: [PCI][<span style="color:red">\$SID</span>]\[UDS DID 1]\[UDS DID 0][payload byte X].. -> PCI = Depending on payload size
+> - For available DID see section [Read Data By Identifier (0x22)](#read-data-by-identifier-(sid-0x22))
+
+##### Default Session
+> No reading of memory by address available, Service not supported in active session
+
+| Type | Bytes |
+|---|---|
+| Req1  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x10][0x0F][<span style="color:red">0x2E</span>][0xF1][0x97][0x41][0x4D][0x4F] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][0x7F][0x2E][0x7F] |
+---
+
+##### Programming Session without Security Access
+> No reading of memory by address available, security access denied
+
+| Type | Bytes |
+|---|---|
+| Req1  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x10][0x0F][<span style="color:red">0x2E</span>][0xF1][0x97][0x41][0x4D][0x4F] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][0x7F][0x2E][0x33] |
+---
+
+
+#### DID Number 0xF197 - System Name
+> "AMOS FBL 24" = 0x41 0x4D 0x4F 0x53 0x20 0x46 0x42 0x4C 0x20 0x32 0x34 0x00
+
+| Type | Bytes |
+|---|---|
+| Req1  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x10][0x0F][<span style="color:red">0x2E</span>][0xF1][0x97][0x41][0x4D][0x4F] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x30][0x00][0x00]  |
+| Req2  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x21][0x53][0x20][0x46][0x42][0x4C][0x20][0x32] |
+| Req3  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x22][0x34][0x00] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x00][<span style="color:red">0x6E</span>][0xF1][0x97] |
+
+#### DID Number 0xF199 - Programming Date ID
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x06][<span style="color:red">0x2E</span>][0xF1][0x99][0x24][0x05][0x09]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][<span style="color:red">0x6E</span>][0xF1][0x99] |
+---
+
+#### DID Number 0xFD00 - Booloader Key Address
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x07][<span style="color:red">0x2E</span>][0xFD][0x00][0xA0][0x4F][0x80][0x00]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][<span style="color:red">0x6E</span>][0xFD][0x00] |
+---
+
+#### DID Number 0xFD01 - Booloader Key Good Value
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x07][<span style="color:red">0x2E</span>][0xFD][0x01][0x93][0x86][0xC3][0xA5]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][<span style="color:red">0x6E</span>][0xFD][0x01] |
+---
+
+#### DID Number 0xFD02 - CAN Base Mask
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x05][<span style="color:red">0x2E</span>][0xFD][0x02][0x0F][0x24]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][<span style="color:red">0x6E</span>][0xFD][0x02] |
+---
+
+#### DID Number 0xFD03 - CAN ECU ID
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x05][<span style="color:red">0x2E</span>][0xFD][0x03][0x00][0x01]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][<span style="color:red">0x6E</span>][0xFD][0x03] |
+---
+
+#### DID Number 0xFD03 - CAN ECU ID
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x05][<span style="color:red">0x2E</span>][0xFD][0x03][0x00][0x01]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][<span style="color:red">0x6E</span>][0xFD][0x03] |
+---
+
+#### DID Number 0xFD10 - Bootloader Writable App Start Address - Core 0
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x03][<span style="color:red">0x2E</span>][0xFD][0x10][0xA0][0x09][0x00][0x00]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x07][<span style="color:red">0x6E</span>][0xFD][0x10] |
+---
+
+#### DID Number 0xFD11 - Bootloader Writeable App End Address - Core 0
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x07][<span style="color:red">0x2E</span>][0xFD][0x11][0xA0][0x1F][0xFF][0xFF]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][<span style="color:red">0x6E</span>][0xFD][0x11] |
+---
+
+#### DID Number 0xFD12 - Bootloader Writable App Start Address - Core 1
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x07][<span style="color:red">0x2E</span>][0xFD][0x12][0xA0][0x30][0x40][0x00]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][<span style="color:red">0x6E</span>][0xFD][0x12] |
+---
+
+#### DID Number 0xFD13 - Bootloader Writeable App End Address - Core 1
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x07][<span style="color:red">0x2E</span>][0xFD][0x13][0xA0][0x4F][0xF7][0xFF]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][<span style="color:red">0x6E</span>][0xFD][0x13] |
+---
+
+#### DID Number 0xFD144 - Bootloader Writable App Start Address - Core 2
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x07][<span style="color:red">0x2E</span>][0xFD][0x14][0x##][0x##][0x##][0x##]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x03][<span style="color:red">0x6E</span>][0xFD][0x14] |
+---
+
+#### DID Number 0xFD15 - Bootloader Writeable App End Address - Core 2
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x07][<span style="color:red">0x2E</span>][0xFD][0x15][0x##][0x##][0x##][0x##]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x06][<span style="color:red">0x6E</span>][0xFD][0x15] |
+---
+
+
+## Specification for Upload | Download
+
+> - The upload of new firmware is only possible when the ECU is in a valid programming session (including security access)
+> - General Request Download/Upload: [PCI][<span style="color:red">\$SID</span>][Address Byte 3][Address Byte 2][Address Byte 1][Address Byte 0][Size Byte 3][Size Byte 2][Size Byte 1][Size Byte 0]
+
+
+### Request Download (0x34)
+
+| Type | Bytes |
+|---|---|
+| Req1  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x10][0x09][<span style="color:red">0x34</span>][0xA0][0x09][0x00][0x00][0x00] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x30][0x00][0x00]  |
+| Req2  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x21][0x00][0x00][0x05] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x05][0x74][0xA0][0x09][0x00][0x00]  |
+---
+
+### Request Upload (0x35)
+| Type | Bytes |
+|---|---|
+| Req1  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x10][0x09][<span style="color:red">0x35</span>][0xA0][0x09][0x00][0x00][0x00] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x30][0x00][0x00]  |
+| Req2  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x21][0x00][0x00][0x05] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x05][0x75][0xA0][0x09][0x00][0x00]  |
+---
+
+### Transfer Data (0x36)
+
+#### Case Request Download initiated
+| Type | Bytes |
+|---|---|
+| Req1  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x1F][0xFF][<span style="color:red">0x36</span>][0xA0][0x09][0x00][0x00][0x##] |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x30][0x00][0x00]  |
+| Req2  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x21][0x##][0x##][0x##][0x##][0x##][0x##][0x##] |
+| ReqX  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x2#][0x##][0x##][0x##][0x##][0x##][0x##][0x##] |
+| ... | ... |
+---
+
+
+#### Case Request Upload initiated
+| Type | Bytes |
+|---|---|
+| Resp1  - ID: <span style="color:green">"0x0F24 0010"</span>| [0x1F][0xFF][<span style="color:red">0x36</span>][0xA0][0x09][0x00][0x00][0x##] |
+| Req - ID: <span style="color:yellow">"0x0F24 0011"</span> | [0x30][0x00][0x00]  |
+| Resp2  - ID: <span style="color:green">"0x0F24 0010"</span>| [0x21][0x##][0x##][0x##][0x##][0x##][0x##][0x##] |
+| RespX  - ID: <span style="color:green">"0x0F24 0010"</span>| [0x2#][0x##][0x##][0x##][0x##][0x##][0x##][0x##] |
+| ... | ... |
+---
+---
+
+### Request Transfer Exit (0x37)
+> - General Request: [PCI][<span style="color:red">\$SID</span>][Address Byte 3][Address Byte 2][Address Byte 1][Address Byte 0]
+> - General Response: [PCI][<span style="color:red">\$SID+0x40</span>][Last Written Address Byte 3][Last Written Address Byte 2][Last Written Address Byte 1][Last Written Address Byte 0]
+
+| Type | Bytes |
+|---|---|
+| Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x05][<span style="color:red">0x37</span>][0xA0][0x09][0x00][0x00]  |
+| Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x05][<span style="color:red">0x77</span>][0xA0][0x1F][0xFF][0xFF]  |
+---
