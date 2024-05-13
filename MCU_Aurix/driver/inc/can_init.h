@@ -30,6 +30,7 @@ typedef struct canType
     IfxCan_Can canModule;                                   /* CAN module handle                                    */
     IfxCan_Can_Node canSrcNode;                             /* CAN source node handle data structure                */
     IfxCan_Can_Node canDstNode;                             /* CAN destination node handle data structure           */
+    IfxCan_Can_Node canTXandRXNode                          /*Handle Data struct for TX and RX*/
     IfxCan_Can_NodeConfig canNodeConfig;                    /* CAN node configuration structure                     */
     IfxCan_Filter canFilter;                                /* CAN filter configuration structure                   */
     IfxCan_Message txMsg;                                   /* Transmitted CAN message structure                    */

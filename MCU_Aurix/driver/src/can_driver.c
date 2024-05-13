@@ -20,7 +20,13 @@ void (*processDataFunction)(void*);
 
 
 canType g_can; //Global control struct
-
+IfxCan_Can_Pins canPins = {
+    .padDriver = IfxPort_PadDriver_cmosAutomotiveSpeed2,
+    .rxPin = CAN_RX_PIN,
+    .rxPinMode = IfxPort_InputMode_noPullDevice,
+    .txPin = CAN_TX_PIN,
+    .txPinMode = IfxPort_OutputMode_pushPull
+};
 
 /*Interrupts*/
 IFX_INTERRUPT(canIsrTxHandler, 0, INTERRUPT_PRIO_TX);
@@ -99,11 +105,24 @@ void initDstNode(){
     //TODO:Check if we need CAN Filter here
 }
 
+ 
+
+
 void initTXandRXNode(void){
     IfxCan_Can_initNodeConfig(&g_can.canNodeConfig, &g_can.canModule);                  /*Default Config*/
 
     g_can.canNodeConfig.busLoopbackEnabled = FALSE;                                      /*Loopbackmode*/
     g_can.canNodeConfig.nodeId = IfxCan_NodeId_0;                                         /*Node ID 0 -> is must*/
+    
+    /*FRAME TYPE RX AND TX*/
+    g_can.canNodeConfig.frame.type = IfxCan_FrameType_transmitAndReceive;
+
+    /*PIN Definition*/
+    g_can.canNodeConfig.pins->rxPin = CAN_RX_PIN;
+    g_can.canNodeConfig.pins->rxPinMode = 
+
+    /*Interrupt Config*/
+
 }
 
 /**
