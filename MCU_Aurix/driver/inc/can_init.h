@@ -19,7 +19,7 @@
 /*********/
 /**MACROS*/
 /*********/
-#define DEBUGGING                   1 //Debug Prints
+#define DEBUGGING                   0 //Debug Prints
 #define MAXIMUM_CAN_DATA_PAYLOAD    2 /*8Byte CAN-MESSAGE*/
 #define INTERRUPT_PRIO_RX           1 /*Priority for RX Interrupt*/
 #define INTERRUPT_PRIO_TX           2 /*Prio for TX Interrupt*/

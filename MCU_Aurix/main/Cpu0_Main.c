@@ -31,6 +31,8 @@
 
 #include "loader.h"
 #include "led_driver.h"
+#include "can_init.h"
+#include "can_driver.h"
 
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
@@ -50,13 +52,14 @@ void core0_main(void)
 
     //show_led();
 
-    show_flash();
+    //show_flash();
 
-    led_off(LED1);
-    led_off(LED2);
+    //led_off(LED1);
+    //led_off(LED2);
 
-    show_can();
-
+    //show_can();
+    canInitDriver();
+    
     while(1)
     {
 

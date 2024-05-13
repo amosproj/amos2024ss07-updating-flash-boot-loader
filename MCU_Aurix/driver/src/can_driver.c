@@ -79,7 +79,7 @@ void canIsrRxHandler(){
     {
         IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode, IfxCan_Interrupt_messageStoredToDedicatedRxBuffer); /*Clear Message Stored Flag*/
         IfxCan_Can_readMessage(&g_can.canTXandRXNode, &g_can.rxMsg, g_can.rxData);
-        led_on(LED1);
+        toggle_led_activity(LED1);
     }
     
 
