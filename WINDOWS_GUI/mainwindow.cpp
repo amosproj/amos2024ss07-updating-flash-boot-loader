@@ -16,10 +16,9 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    qDebug() << qApp->applicationDirPath();
 
     this->setWindowIcon(QIcon::fromTheme("FlashBootloader",
-                                         QIcon(qApp->applicationDirPath() + "/../../icon.png")));
+                                         QIcon("../../icon.png")));
 
     connect(ui->button_file, &QPushButton::clicked, this, [=]() {
         QString path = QFileDialog::getOpenFileName(nullptr, "Choose File");
