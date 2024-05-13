@@ -54,6 +54,13 @@ MainWindow::MainWindow(QWidget *parent)
             updateStatus(UPDATE, "Already did X");
         }
     });
+
+
+    // Create the second QComboBox
+    secondComboBox = new QComboBox(this);
+
+    // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
+    connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::comboBoxIndexChanged);
 }
 
 MainWindow::~MainWindow()
@@ -89,4 +96,35 @@ void MainWindow::updateStatus(MainWindow::status s, QString str) {
     QString rest = this->ui->textBrowser_flash_status->toPlainText();
     this->ui->textBrowser_flash_status->setText(status + str + "\n" + rest);
 
+}
+void MainWindow::comboBoxIndexChanged(int index)
+{
+    // Clear the items of the second QComboBox
+    secondComboBox->clear();
+
+    // Populate the second QComboBox based on the selected index of the first QComboBox
+    if (index == 0) // Example condition, replace with your own logic
+    {
+        secondComboBox->addItem("Option A");
+        secondComboBox->addItem("Option B");
+        secondComboBox->addItem("Option C");
+    }
+    else if (index == 1)
+    {
+        secondComboBox->addItem("Option X");
+        secondComboBox->addItem("Option Y");
+        secondComboBox->addItem("Option Z");
+    }
+
+
+    for (int i = 0; i < ui->verticalLayout_channel->count(); ++i)
+    {
+        QLayoutItem *item = ui->verticalLayout_channel->itemAt(i);
+        if (item->spacerItem())
+        {
+            // Insert the second QComboBox before the spacer item
+            ui->verticalLayout_channel->insertWidget(i, secondComboBox);
+            break;
+        }
+    }
 }

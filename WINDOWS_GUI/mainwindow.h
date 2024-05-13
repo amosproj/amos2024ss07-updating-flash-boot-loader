@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QComboBox>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -26,7 +27,11 @@ public:
 
     void updateStatus(MainWindow::status s, QString str);
 
+private slots:
+    void comboBoxIndexChanged(int index);
+
 private:
     Ui::MainWindow *ui;
+    QComboBox *secondComboBox;
 };
 #endif // MAINWINDOW_H
