@@ -18,14 +18,14 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        editableComboBox.h
+        editablecombobox.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(WINDOWS_GUI
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        editableComboBox.h
-        editablecombobox.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET WINDOWS_GUI APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

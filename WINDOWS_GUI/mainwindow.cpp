@@ -82,26 +82,26 @@ void MainWindow::updateStatus(MainWindow::status s, QString str) {
     QString status;
     int val = 0;
     switch(s) {
-    case UPDATE:
-        status = "[UPDATE] ";
-        qDebug() << this->ui->progressBar_flash->value();
-        val = this->ui->progressBar_flash->value() + 10;
-        this->ui->progressBar_flash->setValue(val);
-        break;
-    case INFO:
-        status = "[INFO] ";
-        break;
-    case ERROR:
-        status = "[ERROR] ";
-        break;
-    case RESET:
-        status = "";
-        this->ui->progressBar_flash->setValue(0);
-        this->ui->textBrowser_flash_status->setText("");
-        break;
-    default:
-        qDebug() << "Error wrong status for updateStatus " + QString::number(val);
-        break;
+        case UPDATE:
+            status = "[UPDATE] ";
+            qDebug() << this->ui->progressBar_flash->value();
+            val = this->ui->progressBar_flash->value() + 10;
+            this->ui->progressBar_flash->setValue(val);
+            break;
+        case INFO:
+            status = "[INFO] ";
+            break;
+        case ERROR:
+            status = "[ERROR] ";
+            break;
+        case RESET:
+            status = "";
+            this->ui->progressBar_flash->setValue(0);
+            this->ui->textBrowser_flash_status->setText("");
+            break;
+        default:
+            qDebug() << "Error wrong status for updateStatus " + QString::number(val);
+            break;
     }
     QString rest = this->ui->textBrowser_flash_status->toPlainText();
     this->ui->textBrowser_flash_status->setText(status + str + "\n" + rest);

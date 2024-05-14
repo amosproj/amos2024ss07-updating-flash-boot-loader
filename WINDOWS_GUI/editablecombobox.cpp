@@ -14,7 +14,6 @@ void EditableComboBox::keyPressEvent(QKeyEvent *event)
     //qDebug() << "KEY:" << event->key();
     //qDebug() << " ";
 
-
     // Check if the event key corresponds to a number input key
     if ((event->key() >= 48 && event->key() <= 57) ||
         event->key() == Qt::Key_Comma || event->key() == Qt::Key_Period ||
@@ -49,6 +48,5 @@ void EditableComboBox::keyPressEvent(QKeyEvent *event)
 // Handles mouse press to the arrow to the right
 void EditableComboBox::mousePressEvent(QMouseEvent *event)
 {
-
     QComboBox::mousePressEvent(event);
 }
