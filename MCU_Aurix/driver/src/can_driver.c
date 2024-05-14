@@ -200,10 +200,10 @@ void canTransmitMessage(uint32_t canMessageID, uint32_t lowWord, uint32_t highWo
            IfxCan_Can_sendMessage(&g_can.canTXandRXNode, &g_can.txMsg, &g_can.txData[0])){}
     }
     
+
+}
+
 void canDummyMessagePeriodicly(void){
     canTransmitMessage(0x123, 0x12345678, 0x87654321);
     waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 500)); 
-}
-    
-    
 }

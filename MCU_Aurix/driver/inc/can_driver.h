@@ -25,7 +25,7 @@
 #include <stdint.h>
 
 void canTransmitMessage(uint32_t canMessageID, uint32_t lowWord, uint32_t highWord); //oder uint8_t*
-void canDummyMessagePeriodicly(void){};
+void canDummyMessagePeriodicly(void);
 void canIsrRxHandler();
 
 #endif /*CAN_DRIVER_H*/

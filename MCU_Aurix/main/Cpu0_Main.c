@@ -34,6 +34,7 @@
 #include "can_init.h"
 #include "can_driver.h"
 
+
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
 void core0_main(void)
