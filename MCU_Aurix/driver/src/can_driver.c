@@ -77,7 +77,7 @@ void canIsrRxHandler(){
     }
     else
     {
-        IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode, IfxCan_Interrupt_messageStoredToDedicatedRxBuffer); /*Clear Message Stored Flag*/
+        IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_messageStoredToDedicatedRxBuffer); /*Clear Message Stored Flag*/
         IfxCan_Can_readMessage(&g_can.canTXandRXNode, &g_can.rxMsg, g_can.rxData);
         toggle_led_activity(LED1);
     }
@@ -135,7 +135,7 @@ void initTXandRXNode(void){
     g_can.canNodeConfig.frame.type = IfxCan_FrameType_transmitAndReceive;
 
     /*PIN Definition*/
-    g_can.canNodeConfig.pins = canPins;
+    g_can.canNodeConfig.pins = &canPins;
 
     /*Interrupt Config*/
     g_can.canNodeConfig.interruptConfig.messageStoredToDedicatedRxBufferEnabled = TRUE; /*Raise Interrupt when msg is stored in RX Buffer*/
@@ -196,7 +196,7 @@ void canTransmitMessage(uint32_t canMessageID, uint32_t lowWord, uint32_t highWo
     else
     {
         while( IfxCan_Status_notSentBusy ==
-           IfxCan_Can_sendMessage(&g_can.canTXandRXNode, &g_can.txMsg, &g_can.txData[0]))
+           IfxCan_Can_sendMessage(&g_can.canTXandRXNode, &g_can.txMsg, &g_can.txData[0])){}
     }
     
     

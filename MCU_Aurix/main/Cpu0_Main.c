@@ -58,6 +58,7 @@ void core0_main(void)
     //led_off(LED2);
 
     //show_can();
+    init_led_driver();
     canInitDriver();
     
     while(1)
