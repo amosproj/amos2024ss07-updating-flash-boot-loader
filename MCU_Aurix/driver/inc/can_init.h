@@ -25,7 +25,7 @@
 #define INTERRUPT_PRIO_TX           2 /*Prio for TX Interrupt*/
 #define CAN_TX_PIN                  IfxCan_TXD00_P20_8_OUT /*From User Manual 2.5*/
 #define CAN_RX_PIN                  IfxCan_RXD00B_P20_7_IN /*From User Manual 2.5*/
-#define CAN_STB                     I   
+#define CAN_STB                     &MODULE_P20, 6   
 /*canType struct contains Data Structures needed for config and processing of CAN Messages*/
 typedef struct canType
 {
