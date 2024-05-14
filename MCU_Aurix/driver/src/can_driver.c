@@ -12,7 +12,7 @@
 #include "can_driver.h"
 #include "can_init.h"
 #include "led_driver.h"
-
+#include "led_driver_TC375_LK.h"
 
 void (*processDataFunction)(void*);
 
@@ -40,6 +40,7 @@ void canIsrTxHandler(void){
     else
     {
         IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_transmissionCompleted);
+        toggle_led_activity(LED2);
     }
     
     
@@ -199,6 +200,10 @@ void canTransmitMessage(uint32_t canMessageID, uint32_t lowWord, uint32_t highWo
            IfxCan_Can_sendMessage(&g_can.canTXandRXNode, &g_can.txMsg, &g_can.txData[0])){}
     }
     
+void canDummyMessagePeriodicly(void){
+    canTransmitMessage(0x123, 0x12345678, 0x87654321);
+    waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 500)); 
+}
     
     
 }
