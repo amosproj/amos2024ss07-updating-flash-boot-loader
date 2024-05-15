@@ -7,7 +7,7 @@ set my_path=%CD%
 cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build . --config Release
 call "C:\Qt\6.8.0\msvc2019_64\bin\qtenv2.bat"
-cd %my_path%
+cd /D %my_path%
 cd Release
 windeployqt.exe --quick .
 call WINDOWS_GUI.exe
