@@ -124,7 +124,11 @@ void initDstNode(){
 }
 
  
-
+void canAcceptAllMessagesFilter(void){
+    IfxCan_Can_initFilterConfig(&g_can.canFilter, &g_can.canModule); /*Default Config*/
+    g_can.canFilter.filterMode = IfxCan_FilterMode_acceptAll;       /*Accept all Messages*/
+    IfxCan_Can_initFilter(&g_can.canModule, &g_can.canFilter);      /*Init Filter*/
+}
 
 void initTXandRXNode(void){
     IfxCan_Can_initNodeConfig(&g_can.canNodeConfig, &g_can.canModule);                  /*Default Config*/
@@ -151,7 +155,7 @@ void initTXandRXNode(void){
     IfxPort_setPinModeOutput(CAN_STB, IfxPort_OutputMode_pushPull, IfxPort_OutputIdx_general);
     IfxPort_setPinLow(CAN_STB);
     IfxCan_Can_initNode(&g_can.canTXandRXNode, &g_can.canNodeConfig); //Init Node with CAN Pin Config and Standard Baud Rate 500k
-
+    
 }
 
 /**
@@ -168,6 +172,7 @@ void canInitDriver(void){
     else
     {
         initTXandRXNode();
+        canAcceptAllMessagesFilter();
     }
     
     
