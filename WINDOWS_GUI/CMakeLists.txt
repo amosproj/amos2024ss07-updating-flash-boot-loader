@@ -17,7 +17,16 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        can_wrapper.hpp
+        can_wrapper.cpp
+        can_wrapper_event.hpp
 )
+
+file(GLOB VECTOR_LIB "C:/Users/Public/Documents/Vector/XL\ Driver\ Library\ */bin")
+find_library(VXLAPI vxlapi64.lib PATHS ${VECTOR_LIB})
+find_path(VXLAPI_HEADER vxlapi.h PATHS ${VECTOR_LIB})
+
+include_directories(${VXLAPI_HEADER})
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(WINDOWS_GUI
@@ -42,7 +51,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(WINDOWS_GUI PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(WINDOWS_GUI PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ${VXLAPI})
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

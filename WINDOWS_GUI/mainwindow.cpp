@@ -2,8 +2,8 @@
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
-#include "../GUI_Snippets/CAN_Wrapper/src/can_wrapper.hpp"
-#include "../GUI_Snippets/CAN_Wrapper/src/can_wrapper_event.hpp"
+#include "can_wrapper.hpp"
+#include "can_wrapper_event.hpp"
 
 static inline void dummy_function(QByteArray data) {
     qDebug() << "Received" << data;
