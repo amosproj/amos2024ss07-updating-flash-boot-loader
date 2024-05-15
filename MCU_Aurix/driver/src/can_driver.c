@@ -125,9 +125,13 @@ void initDstNode(){
 
  
 void canAcceptAllMessagesFilter(void){
-    IfxCan_Can_initFilterConfig(&g_can.canFilter, &g_can.canModule); /*Default Config*/
-    g_can.canFilter.filterMode = IfxCan_FilterMode_acceptAll;       /*Accept all Messages*/
-    IfxCan_Can_initFilter(&g_can.canModule, &g_can.canFilter);      /*Init Filter*/
+    g_can.canFilter.number = 0;
+    g_can.canFilter.elementConfiguration = IfxCan_FilterElementConfiguration_storeInRxBuffer;
+    g_can.canFilter.type = IfxCan_FilterType_classic;
+    g_can.canFilter.id1 = 0x000;
+    g_can.canFilter.id2 = 0x7FF;
+    g_can.canFilter.rxBufferOffset = IfxCan_RxBufferId_0;
+    IfxCan_Can_setStandardFilter(&g_can.canTXandRXNode, &g_can.canFilter);
 }
 
 void initTXandRXNode(void){
