@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
 
 //============================================================================
-// Name        : uds_comm_spec.c
+// Name        : uds_comm.c
 // Author      : Michael Bauer
 // Version     : 0.1
 // Copyright   : MIT

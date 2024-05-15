@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
 
 //============================================================================
-// Name        : uds_comm_spec.h
+// Name        : uds_comm.h
 // Author      : Michael Bauer
 // Version     : 0.1
 // Copyright   : MIT
@@ -19,6 +19,8 @@ extern "C" {
 #include "stdint.h"
 
 #define MAX_FRAME_LEN_CAN											(0x08)
+#define FBLCAN_IDENTIFIER_MASK								  		(0x0F24FFFF)
+#define FBLCAN_BASE_ADDRESS											(FBLCAN_IDENTIFIER_MASK & 0xFFFF0000)
 
 //////////////////////////////////////////////////////////////////////////////
 // Supported Service Overview (SID)
