@@ -4,7 +4,7 @@
 //============================================================================
 // Name        : can_wrapper.cpp
 // Author      : Michael Bauer
-// Version     : 0.1
+// Version     : 0.2
 // Copyright   : MIT
 // Description : CAN Wrapper for Vector XL-Driver Library 20.30.14
 //============================================================================
@@ -200,7 +200,7 @@ uint8_t CAN_Wrapper::txData(uint8_t *data, uint8_t no_bytes) {
 
 	// Transmit the message
 	status = xlCanTransmit(portHandle, chanMaskTx, &msgCount, &event);
-	printf("CAN_Wrapper: Transmitting CAN message with CM(0x%I64x), %s\n", chanMaskTx, xlGetErrorString(status));
+	printf("<< CAN_Wrapper: Transmitting %d byte CAN message with CM(0x%I64x), %s\n", no_bytes, chanMaskTx, xlGetErrorString(status));
 
 	return (status == XL_SUCCESS);
 }

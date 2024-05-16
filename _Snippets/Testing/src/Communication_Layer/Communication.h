@@ -20,6 +20,10 @@
 
 #include "../Communication/VirtualDriver.h"
 
+#define COMM_INTERFACE_VIRTUAL				(0x0)
+#define COMM_INTERFACE_CAN					(0x1)
+
+
 class Communication : public CAN_Wrapper_Event {
 
 private:
@@ -27,6 +31,14 @@ private:
 
 	VirtualDriver virtualDriver;
 	CAN_Wrapper canDriver;
+
+	uint32_t curr_id;
+	uint8_t *curr_uds_msg;
+	int curr_uds_msg_len;
+	uint32_t curr_uds_msg_idx; // Used for consecutive frames
+
+	int next_msg_available;
+	uint8_t still_receiving;
 
 public:
 	Communication();

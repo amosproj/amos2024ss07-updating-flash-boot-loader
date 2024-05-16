@@ -21,7 +21,7 @@
 #include "Communication_Layer/Communication.h"
 #include "Communication_Layer/CommInterface.h"
 #include "Communication/Can_Wrapper.hpp"
-
+#include "UDS_Spec/uds_comm_spec.h"
 
 int main() {
 
@@ -37,6 +37,9 @@ int main() {
 
 	printf("Main: Sending out some UDS Messages\n");
 	uds.diagnosticSessionControl(ecu_id, 0x01);
+
+	uint8_t write_data[] = "AMOS Flashbootloader rocks!";
+	uds.writeDataByIdentifier(ecu_id, FBL_DID_SYSTEM_NAME, write_data, sizeof(write_data));
 
 	while(1){};
 	return 0;

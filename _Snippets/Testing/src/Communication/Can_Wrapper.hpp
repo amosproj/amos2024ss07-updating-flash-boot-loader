@@ -4,7 +4,7 @@
 //============================================================================
 // Name        : can_wrapper.hpp
 // Author      : Michael Bauer
-// Version     : 0.1
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Header for CAN Wrapper for Vector XL-Driver Library 20.30.14
 //============================================================================
