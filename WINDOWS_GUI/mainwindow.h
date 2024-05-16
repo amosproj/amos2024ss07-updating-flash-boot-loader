@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "editableComboBox.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -17,10 +18,22 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-private slots:
+    enum status {
+        UPDATE,
+        INFO,
+        ERROR,
+        RESET
+    };
+
     void on_button_can_message_clicked();
+    void updateStatus(MainWindow::status s, QString str);
+
+private slots:
+    void comboBoxIndexChanged(int index);
 
 private:
     Ui::MainWindow *ui;
+    EditableComboBox *editComboBox_speed;
+    QComboBox *comboBox_speedUnit;
 };
 #endif // MAINWINDOW_H

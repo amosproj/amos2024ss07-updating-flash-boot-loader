@@ -29,7 +29,7 @@ dist/
 out/
 
 # Eclipse IDE
-.project
+# .project
 # bin/
 
 # MacOS

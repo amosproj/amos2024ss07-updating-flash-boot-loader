@@ -9,6 +9,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_PREFIX_PATH "C:/Qt/6.8.0/msvc2019_64/lib/cmake")
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
@@ -20,6 +21,8 @@ set(PROJECT_SOURCES
         can_wrapper.hpp
         can_wrapper.cpp
         can_wrapper_event.hpp
+        editableComboBox.h
+        editablecombobox.cpp
 )
 
 file(GLOB VECTOR_LIB "C:/Users/Public/Documents/Vector/XL\ Driver\ Library\ */bin")
