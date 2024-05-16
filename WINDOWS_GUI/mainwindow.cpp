@@ -6,6 +6,13 @@
 #include "can_wrapper_event.hpp"
 #include "editableComboBox.h"
 
+class EventHandler : public CAN_Wrapper_Event {
+public:
+    void handleEvent(unsigned int id, unsigned short dlc, unsigned char data[]){
+
+    }
+};
+
 static inline void dummy_function(QByteArray data) {
     qDebug() << "Received " << data;
 }
@@ -50,6 +57,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     unsigned int txID = 1;
     can.setID(txID);
+
+    EventHandler eh = EventHandler();
+    can.startRXThread(&eh);
+
     ui->table_ECU->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->table_ECU->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->table_ECU->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -66,6 +77,12 @@ MainWindow::MainWindow(QWidget *parent)
             updateStatus(INFO, "It may take a while");
             updateStatus(UPDATE, "Already did X");
         }
+    });
+
+    connect(ui->button_can_message, &QPushButton::clicked, this, [=]{
+        byte data[] = {0,1,0,1};
+        can.txCAN(data, 4);
+        this->ui->can_message_rcvd->setText("CAN-message sent");
     });
 
     // Create both QComboBoxes for later
@@ -93,6 +110,18 @@ void MainWindow::on_button_can_message_clicked()
 {
     byte data[] = {0,1,0,1};
     can.txCAN(data, 4);
+    this->ui->can_message_rcvd->setText("CAN-message sent");
+}
+
+void MainWindow::display_rcvd_can_message(unsigned int id, unsigned short dlc, unsigned char data[])
+{
+    QString str = "Received id=";
+    str.append(QString::number(id) + ", dlc=" + QString::number(dlc) + ", data=");
+    str.append(QString::fromUtf8((char *)data));
+    /*for (int i = 0; i < strlen(data)) {
+        str.append(QString::number(data[i]) + ", ");
+    }*/
+    this->ui->textBrowser_flash_status->setText(str);
 }
 
 void MainWindow::updateStatus(MainWindow::status s, QString str) {

@@ -35,8 +35,8 @@ class CAN_Wrapper {
 
 	// Variables
 	private:
-		char appName[XL_MAX_APPNAME+1] 		= "AMOS Bootloader GUI";		// AppName, currently not registered
-		XLportHandle portHandle 			= XL_INVALID_PORTHANDLE;		// Holds the port handle for communication
+        char appName[XL_MAX_APPNAME+1] 		= "AMOS fbl GUI";		// AppName, currently not registered
+        XLportHandle portHandle 			= XL_INVALID_PORTHANDLE;		// Holds the port handle for communication
 		XLdriverConfig drvConfig;											// Holds the driver configuration
 		XLaccess channelMask 				= 0;							// Chosen channel mask
 		int channelIndex					= 0;							// Chosen channel index
