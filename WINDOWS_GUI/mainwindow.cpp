@@ -2,16 +2,9 @@
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
-#include "can_wrapper.hpp"
-#include "can_wrapper_event.hpp"
+//#include "can_wrapper.hpp"
+//#include "can_wrapper_event.hpp"
 #include "editableComboBox.h"
-
-class EventHandler : public CAN_Wrapper_Event {
-public:
-    void handleEvent(unsigned int id, unsigned short dlc, unsigned char data[]){
-
-    }
-};
 
 static inline void dummy_function(QByteArray data) {
     qDebug() << "Received " << data;
@@ -20,8 +13,6 @@ static inline void dummy_function(QByteArray data) {
 static inline void dummy_flash(QString dev) {
     qDebug() << "Flash " << dev;
 }
-
-static CAN_Wrapper can = CAN_Wrapper(500000);
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -48,19 +39,6 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
-    boolean init = can.initDriver();
-
-    if (!init)
-    {
-        return;
-    }
-
-    unsigned int txID = 1;
-    can.setID(txID);
-
-    EventHandler eh = EventHandler();
-    can.startRXThread(&eh);
-
     ui->table_ECU->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->table_ECU->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->table_ECU->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -80,8 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     connect(ui->button_can_message, &QPushButton::clicked, this, [=]{
-        byte data[] = {0,1,0,1};
-        can.txCAN(data, 4);
+        //byte data[] = {0,1,0,1};
         this->ui->can_message_rcvd->setText("CAN-message sent");
     });
 
@@ -108,8 +85,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_button_can_message_clicked()
 {
-    byte data[] = {0,1,0,1};
-    can.txCAN(data, 4);
+    //byte data[] = {0,1,0,1};
     this->ui->can_message_rcvd->setText("CAN-message sent");
 }
 

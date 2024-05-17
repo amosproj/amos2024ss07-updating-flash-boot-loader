@@ -4,25 +4,31 @@
 //============================================================================
 // Name        : can_wrapper.cpp
 // Author      : Michael Bauer
-// Version     : 0.1
+// Version     : 0.2
 // Copyright   : MIT
 // Description : CAN Wrapper for Vector XL-Driver Library 20.30.14
 //============================================================================
 
-#include "can_wrapper.hpp"
+#include "Can_Wrapper.hpp"
+
 #include <string>
 
 //============================================================================
 // Public
 //============================================================================
 
+CAN_Wrapper::CAN_Wrapper(){
+	this->type = 1; // CAN
+}
+
 /**
  * Constructor for CAN_Wrapper. The wrapper is initialized with a given baudrate and the port is opened for communication.
  *
  * @param unsigned int baudrate Given baudrate to be initialized.
  */
-CAN_Wrapper::CAN_Wrapper(unsigned int baudrate /* = 500000 */){
+CAN_Wrapper::CAN_Wrapper(unsigned int baudrate /*= 500000*/){
 	this->baudrate = baudrate;
+	this->type = 1; // CAN
 }
 
 
@@ -39,12 +45,13 @@ CAN_Wrapper::~CAN_Wrapper(){
 	xlCloseDriver();
 }
 
+
 /**
  * Method to init the driver.
  *
- * @return boolean True if init was successful, false if there was an error
+ * @return uint8_t 1 if init was successful, 0 if there was an error
  */
-boolean CAN_Wrapper::initDriver(){
+uint8_t CAN_Wrapper::initDriver(){
 
 	XLstatus status;
 	unsigned int i;
@@ -142,9 +149,10 @@ boolean CAN_Wrapper::initDriver(){
 		}
 		printf("CAN_Wrapper: No HW defined\n");
 		printf("\tPlease assign %d CAN channel(s) in Vector Hardware Config or Vector Hardware Manager and restart the application\n\n", MAX_USED_CHANNEL);
+		return XL_ERR_INIT_ACCESS_MISSING;
 	}
 
-	return status == XL_SUCCESS;
+	return XL_SUCCESS;
 }
 
 /**
@@ -152,7 +160,7 @@ boolean CAN_Wrapper::initDriver(){
  *
  * @param unsigned int id: ID for the TX
  */
-void CAN_Wrapper::setID(unsigned int id){
+void CAN_Wrapper::setID(uint32_t id){
 	txID = id;
 	printf("CAN_Wrapper: TX ID is set to 0x%08X\n", txID);
 }
@@ -164,7 +172,7 @@ void CAN_Wrapper::setID(unsigned int id){
  * @param unsigned int no_bytes Set the number of bytes to be transmitted (Maximum of 8 byte is possible)
  * @return boolean True if message could be transmitted
  */
-boolean CAN_Wrapper::txCAN(byte data[], unsigned int no_bytes){
+uint8_t CAN_Wrapper::txData(uint8_t *data, uint8_t no_bytes) {
 
 	XLstatus status;
 	XLaccess chanMaskTx = channelMask;
@@ -183,7 +191,7 @@ boolean CAN_Wrapper::txCAN(byte data[], unsigned int no_bytes){
 
 	// Fill in the data
 	event.tag 				= XL_TRANSMIT_MSG;
-	event.tagData.msg.id 	= txID;
+	event.tagData.msg.id 	= (XL_CAN_EXT_MSG_ID | txID); // Setting Extended ID Msg
 	event.tagData.msg.dlc 	= no_bytes;
 	event.tagData.msg.flags = 0;
 	for (unsigned int i = 0; i < no_bytes; i++){
@@ -192,7 +200,7 @@ boolean CAN_Wrapper::txCAN(byte data[], unsigned int no_bytes){
 
 	// Transmit the message
 	status = xlCanTransmit(portHandle, chanMaskTx, &msgCount, &event);
-	printf("CAN_Wrapper: Transmitting CAN message with CM(0x%I64x), %s\n", chanMaskTx, xlGetErrorString(status));
+	printf("<< CAN_Wrapper: Transmitting %d byte CAN message with CM(0x%I64x), %s\n", no_bytes, chanMaskTx, xlGetErrorString(status));
 
 	return (status == XL_SUCCESS);
 }
@@ -305,7 +313,7 @@ DWORD WINAPI CAN_Wrapper::RXThreadHandling(LPVOID param){
 				if(status != XL_ERR_QUEUE_IS_EMPTY){
 
 					if (instance->clientHandle != nullptr){
-						(*instance->clientHandle).handleEvent(event.tagData.msg.id, event.tagData.msg.dlc, event.tagData.msg.data);
+						(*instance->clientHandle).handleCANEvent(event.tagData.msg.id, event.tagData.msg.dlc, event.tagData.msg.data);
 					}
 					else {
 						printf("CAN_Wrapper: No handler defined... Stopping Thread\n");

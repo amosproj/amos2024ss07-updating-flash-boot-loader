@@ -4,7 +4,7 @@
 //============================================================================
 // Name        : can_wrapper.hpp
 // Author      : Michael Bauer
-// Version     : 0.1
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Header for CAN Wrapper for Vector XL-Driver Library 20.30.14
 //============================================================================
@@ -17,7 +17,7 @@
  #include <windows.h>
 #endif
 
-#define DEBUGGING				1 		// switch for debugging prints
+#define DEBUGGING				0 		// switch for debugging prints
 
 #define RECEIVE_EVENT_SIZE 		1 		// do not edit! Currently 1 is supported only
 #define RX_QUEUE_SIZE			4096 	// internal driver queue size in CAN events
@@ -28,15 +28,16 @@
 
 #include <stdio.h>
 
+#include "../Communication_Layer/CommInterface.h"
 #include "can_wrapper_event.hpp"
 #include "vxlapi.h"
 
-class CAN_Wrapper {
+class CAN_Wrapper : public CommInterface {
 
 	// Variables
 	private:
-        char appName[XL_MAX_APPNAME+1] 		= "AMOS fbl GUI";		// AppName, currently not registered
-        XLportHandle portHandle 			= XL_INVALID_PORTHANDLE;		// Holds the port handle for communication
+		char appName[XL_MAX_APPNAME+1] 		= "AMOS FBL GUI";				// AppName, will be registered
+		XLportHandle portHandle 			= XL_INVALID_PORTHANDLE;		// Holds the port handle for communication
 		XLdriverConfig drvConfig;											// Holds the driver configuration
 		XLaccess channelMask 				= 0;							// Chosen channel mask
 		int channelIndex					= 0;							// Chosen channel index
@@ -54,13 +55,14 @@ class CAN_Wrapper {
 
 	// Methods
 	public:
+		CAN_Wrapper();
 		CAN_Wrapper(unsigned int baudrate);
 		~CAN_Wrapper();
 
-		boolean initDriver();
-		void setID(unsigned int id);
+		uint8_t initDriver() override;
+		void setID(uint32_t id) override;
 
-		boolean txCAN(byte data[], unsigned int no_bytes);
+		uint8_t txData(uint8_t *data, uint8_t no_bytes) override;
 		HANDLE startRXThread(CAN_Wrapper_Event* h);
 
 

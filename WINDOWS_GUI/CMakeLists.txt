@@ -18,12 +18,24 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
-        can_wrapper.hpp
-        can_wrapper.cpp
-        can_wrapper_event.hpp
         editableComboBox.h
         editablecombobox.cpp
-)
+        Communication/can_wrapper_event.hpp
+        Communication/Can_Wrapper.cpp
+        Communication/Can_Wrapper.hpp
+        Communication/VirtualDriver.cpp
+        Communication/VirtualDriver.h
+        Communication_Layer/CommInterface.cpp
+        Communication_Layer/CommInterface.h
+        Communication_Layer/Communication.cpp
+        Communication_Layer/Communication.h
+        UDS_Layer/UDS.cpp
+        UDS_Layer/UDS.h
+        UDS_Layer/UDSMsg.cpp
+        UDS_Layer/UDSMsg.h
+        UDS_Spec/uds_comm_spec.c
+        UDS_Spec/uds_comm_spec.h
+        )
 
 file(GLOB VECTOR_LIB "C:/Users/Public/Documents/Vector/XL\ Driver\ Library\ */bin")
 find_library(VXLAPI vxlapi64.lib PATHS ${VECTOR_LIB})

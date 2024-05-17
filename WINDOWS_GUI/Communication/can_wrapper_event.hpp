@@ -16,7 +16,7 @@ class CAN_Wrapper_Event {
 
 public:
 	virtual ~CAN_Wrapper_Event() = default;
-	virtual void handleEvent(unsigned int id, unsigned short dlc, unsigned char data[]) = 0;
+	virtual void handleCANEvent(unsigned int id, unsigned short dlc, unsigned char data[]) = 0;
 };
 
 #endif /* CAN_WRAPPER_EVENT_HPP_ */
