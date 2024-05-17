@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
     printf("Main: Create UDS Layer and connect Communcation Layer to it\n");
     UDS uds = UDS(0x001, &comm);
-    comm.setUDSInterpreter(&uds);
+    //comm.setUDSInterpreter(&uds);
 
     MainWindow w;
     w.setUDS(uds);
