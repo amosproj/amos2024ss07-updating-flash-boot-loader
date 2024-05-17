@@ -25,6 +25,8 @@ public:
         RESET
     };
 
+    void display_rcvd_can_message(unsigned int id, unsigned short dlc, unsigned char data[]);
+    void on_button_can_message_clicked();
     void updateStatus(MainWindow::status s, QString str);
 
 private slots:
