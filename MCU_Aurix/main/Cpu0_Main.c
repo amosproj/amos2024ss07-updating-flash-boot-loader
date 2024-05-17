@@ -29,7 +29,7 @@
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
 
-#include "loader.h"
+#include "bootloader.h"
 #include "led_driver.h"
 #include "can_driver.h"
 #include "can_init.h"
