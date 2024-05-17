@@ -25,7 +25,8 @@ extern "C" {
 //////////////////////////////////////////////////////////////////////////////
 
 uint8_t *tx_starting_frame(int *data_out_len, int *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr){
-	uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
+    // Caller need to free the memory after processing
+    uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
 
 	if (data_in_len == 0){
 		*data_out_len = 0;
@@ -90,7 +91,8 @@ uint8_t *tx_starting_frame(int *data_out_len, int *has_next, uint8_t max_len_per
 }
 
 uint8_t *tx_consecutive_frame(int *data_out_len, int *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr, uint8_t* frame_idx){
-	uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
+    // Caller need to free the memory after processing
+    uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
 
 	if (data_in_len == 0){
 		*data_out_len = 0;
@@ -134,7 +136,8 @@ uint8_t *tx_consecutive_frame(int *data_out_len, int *has_next, uint8_t max_len_
 }
 
 uint8_t *tx_flow_control_frame(int *data_out_len, uint8_t flag, uint8_t blocksize, uint8_t sep_time_millis, uint8_t sep_time_multi_millis){
-	*data_out_len = 3;
+    // Caller need to free the memory after processing
+    *data_out_len = 3;
 	uint8_t *msg = (uint8_t*)calloc(*data_out_len, sizeof(uint8_t));
 
 	if (msg == NULL){
@@ -195,7 +198,8 @@ uint8_t rx_is_consecutive_frame(uint8_t* data_in, uint32_t data_in_len, uint8_t 
 }
 
 uint8_t *rx_starting_frame(int *data_out_len, int *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len){
-	uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
+    // Caller need to free the memory after processing
+    uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
 
 	if (data_in_len == 0){
 		*data_out_len = 0;
@@ -253,6 +257,11 @@ uint8_t *rx_starting_frame(int *data_out_len, int *has_next, uint8_t max_len_per
 }
 
 uint8_t rx_consecutive_frame(int *data_out_len, uint8_t *data_out, int *has_next, uint32_t data_in_len, uint8_t* data_in, uint32_t *idx){
+
+    if (data_in_len == 0){
+        *has_next = 0;
+        return 0;
+    }
 
 	if ((*idx + (data_in_len - 1)) > *data_out_len){
 		*has_next = 0;

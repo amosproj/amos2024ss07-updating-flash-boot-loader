@@ -16,11 +16,10 @@
  #include <windows.h>
 #endif
 
-UDS_Msg::UDS_Msg(uint8_t *data, uint32_t len) {
-	this->sid = sid;
-	this->data = data;
+UDS_Msg::UDS_Msg(uint32_t id, uint8_t *data, uint32_t len) {
+    this->id = id;
+    this->data = data;
 	this->len = len;
-
 }
 
 UDS_Msg::~UDS_Msg() {
@@ -38,6 +37,10 @@ uint8_t UDS_Msg::getSID(){
 uint8_t* UDS_Msg::getData(uint32_t *len){
 	*len = this->len;
 	return data;
+}
+
+uint32_t UDS_Msg::getID(){
+    return this->id;
 }
 
 

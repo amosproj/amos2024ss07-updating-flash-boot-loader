@@ -33,7 +33,9 @@ set(PROJECT_SOURCES
         UDS_Layer/UDS.h
         UDS_Layer/UDSMsg.cpp
         UDS_Layer/UDSMsg.h
-        UDS_Spec/uds_comm_spec.c
+        UDS_Layer/UDS_Event.h
+        UDS_Layer/UDS_Event.cpp
+        UDS_Spec/uds_comm_spec.cpp
         UDS_Spec/uds_comm_spec.h
         )
 

@@ -15,9 +15,14 @@
 
 #include "../UDS_Spec/uds_comm_spec.h"
 
+UDS::UDS(){
+    this->init = 0;
+}
+
 UDS::UDS(uint8_t gui_id, Communication *comm_connection) {
 	this->gui_id = gui_id;
 	this->comm = comm_connection;
+    this->init = 1;
 }
 
 UDS::~UDS() {
@@ -27,9 +32,17 @@ UDS::~UDS() {
 //////////////////////////////////////////////////////////////////////////////
 // Public - Receiving UDS Messages
 //////////////////////////////////////////////////////////////////////////////
-void UDS::messageInterpreter(uint8_t* data, uint8_t data_len){
+void UDS::messageInterpreter(UDS_Msg msg){
 
+    printf(">> UDS: Received Msg from 0x%08X. Need to interpret: ", msg.getID());
+    uint32_t len = 0;
+    uint8_t* data = msg.getData(&len);
+    for(auto i = 0; i < len; i++){
+        printf("0x%02X ", data[i]);
+    }
+    printf("\n");
 
+    // TODO: Implement UDS Message Interpreter
 }
 
 
@@ -40,6 +53,9 @@ void UDS::messageInterpreter(uint8_t* data, uint8_t data_len){
 
 void UDS::reqIdentification() // Sending out broadcast for tester present
 {
+    if(!init){
+        return;
+    }
 	printf("UDS: Sending out Request for Identification to all ECUs\n");
 
 	uint32_t id = (uint32_t)(FBLCAN_BASE_ADDRESS | this->gui_id);
@@ -57,6 +73,10 @@ void UDS::reqIdentification() // Sending out broadcast for tester present
 
 // Specification for Diagnostic and Communication Management
 void UDS::diagnosticSessionControl(uint32_t id, uint8_t session){
+    if(!init){
+        return;
+    }
+
 	printf("UDS: Sending out Diagnostic Session Control\n");
 
 	// First create the common ID
@@ -74,6 +94,10 @@ void UDS::diagnosticSessionControl(uint32_t id, uint8_t session){
 }
 
 void UDS::ecuReset(uint32_t id, uint8_t reset_type){
+    if(!init){
+        return;
+    }
+
 	printf("UDS: Sending out for ECU Reset\n");
 
 	// First create the common ID
@@ -91,6 +115,10 @@ void UDS::ecuReset(uint32_t id, uint8_t reset_type){
 }
 
 void UDS::securityAccessRequestSEED(uint32_t id){
+    if(!init){
+        return;
+    }
+
 	printf("UDS: Sending out Security Access for Seed\n");
 
 	// First create the common ID
@@ -109,6 +137,10 @@ void UDS::securityAccessRequestSEED(uint32_t id){
 
 
 void UDS::securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_len){
+    if(!init){
+        return;
+    }
+
 	printf("UDS: Sending out Security Access for Verify Key\n");
 
 	// First create the common ID
@@ -127,7 +159,11 @@ void UDS::securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_len){
 
 
 void UDS::testerPresent(uint32_t id){
-	printf("UDS: Sending out Test Present\n");
+    if(!init){
+        return;
+    }
+
+    printf("UDS: Sending out Test Present\n");
 
 	// First create the common ID
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
@@ -145,7 +181,11 @@ void UDS::testerPresent(uint32_t id){
 
 // Specification for Data Transmission
 void UDS::readDataByIdentifier(uint32_t id, uint16_t identifier){
-	printf("UDS: Sending out Read Data By Identifier\n");
+    if(!init){
+        return;
+    }
+
+    printf("UDS: Sending out Read Data By Identifier\n");
 
 	// First create the common ID
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
@@ -161,7 +201,11 @@ void UDS::readDataByIdentifier(uint32_t id, uint16_t identifier){
 	(*comm).txData(msg, len);
 }
 void UDS::readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_bytes){
-	printf("UDS: Sending out Read Memory By Address\n");
+    if(!init){
+        return;
+    }
+
+    printf("UDS: Sending out Read Memory By Address\n");
 
 	// First create the common ID
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
@@ -178,7 +222,11 @@ void UDS::readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_bytes){
 }
 
 void UDS::writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* data, uint8_t data_len){
-	printf("UDS: Sending out Write Data By Identifier\n");
+    if(!init){
+        return;
+    }
+
+    printf("UDS: Sending out Write Data By Identifier\n");
 
 	// First create the common ID
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
@@ -196,7 +244,11 @@ void UDS::writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* data,
 
 // Specification for Upload | Download
 void UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes){
-	printf("UDS: Sending out Request Download\n");
+    if(!init){
+        return;
+    }
+
+    printf("UDS: Sending out Request Download\n");
 
 	// First create the common ID
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
@@ -213,7 +265,11 @@ void UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes){
 }
 
 void UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes){
-	printf("UDS: Sending Request Upload \n");
+    if(!init){
+        return;
+    }
+
+    printf("UDS: Sending Request Upload \n");
 
 	// First create the common ID
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
@@ -230,7 +286,11 @@ void UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes){
 }
 
 void UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_t data_len){
-	printf("UDS: Sending out Transfer Data\n");
+    if(!init){
+        return;
+    }
+
+    printf("UDS: Sending out Transfer Data\n");
 
 	// First create the common ID
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
@@ -247,7 +307,11 @@ void UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_t dat
 }
 
 void UDS::requestTransferExit(uint32_t id, uint32_t address){
-	printf("UDS: Sending out Request Transfer Exit\n");
+    if(!init){
+        return;
+    }
+
+    printf("UDS: Sending out Request Transfer Exit\n");
 
 	// First create the common ID
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
@@ -265,7 +329,11 @@ void UDS::requestTransferExit(uint32_t id, uint32_t address){
 
 // Supported Common Response Codes
 void UDS::negativeResponse(uint32_t id, uint8_t reg_sid, uint8_t neg_resp_code){
-	printf("UDS: Sending out Negative Response\n");
+    if(!init){
+        return;
+    }
+
+    printf("UDS: Sending out Negative Response\n");
 
 	// First create the common ID
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);

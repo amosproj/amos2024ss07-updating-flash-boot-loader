@@ -5,6 +5,7 @@
 //#include "can_wrapper.hpp"
 //#include "can_wrapper_event.hpp"
 #include "editableComboBox.h"
+#include "UDS_Spec/uds_comm_spec.h"
 
 static inline void dummy_function(QByteArray data) {
     qDebug() << "Received " << data;
@@ -19,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    uds = UDS();
 
     this->setWindowIcon(QIcon::fromTheme("FlashBootloader",
                                          QIcon("../../icon.png")));
@@ -58,7 +60,12 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     connect(ui->button_can_message, &QPushButton::clicked, this, [=]{
-        //byte data[] = {0,1,0,1};
+        uint32_t ecu_id = 0x001;
+        uds.diagnosticSessionControl(ecu_id, FBL_DIAG_SESSION_DEFAULT);
+
+        uint8_t write_data[] = "AMOS Flashbootloader rocks!";
+        uds.writeDataByIdentifier(ecu_id, FBL_DID_SYSTEM_NAME, write_data, sizeof(write_data));
+
         this->ui->can_message_rcvd->setText("CAN-message sent");
     });
 
@@ -76,6 +83,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
     connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
             &MainWindow::comboBoxIndexChanged);
+
 }
 
 MainWindow::~MainWindow()
@@ -83,10 +91,8 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_button_can_message_clicked()
-{
-    //byte data[] = {0,1,0,1};
-    this->ui->can_message_rcvd->setText("CAN-message sent");
+void MainWindow::setUDS(UDS u){
+    this->uds = u;
 }
 
 void MainWindow::display_rcvd_can_message(unsigned int id, unsigned short dlc, unsigned char data[])

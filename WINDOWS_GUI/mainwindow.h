@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "editableComboBox.h"
+#include "UDS_Layer/UDS.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -21,13 +22,14 @@ public:
     enum status {
         UPDATE,
         INFO,
-        ERROR,
+        ERR,
         RESET
     };
 
     void display_rcvd_can_message(unsigned int id, unsigned short dlc, unsigned char data[]);
     void on_button_can_message_clicked();
     void updateStatus(MainWindow::status s, QString str);
+    void setUDS(UDS u);
 
 private slots:
     void comboBoxIndexChanged(int index);
@@ -36,5 +38,6 @@ private:
     Ui::MainWindow *ui;
     EditableComboBox *editComboBox_speed;
     QComboBox *comboBox_speedUnit;
+    UDS uds;
 };
 #endif // MAINWINDOW_H

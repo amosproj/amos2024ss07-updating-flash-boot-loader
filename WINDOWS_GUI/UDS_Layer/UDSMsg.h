@@ -17,16 +17,17 @@
 class UDS_Msg {
 
 private:
-	uint8_t sid;
+    uint32_t id;
 	uint8_t *data;
 	uint32_t len;
 
 public:
-	UDS_Msg(uint8_t *data, uint32_t len);
+    UDS_Msg(uint32_t id, uint8_t *data, uint32_t len);
 	virtual ~UDS_Msg();
 
 	uint8_t getSID();
 	uint8_t* getData(uint32_t *len);
+    uint32_t getID();
 };
 
 #endif /* UDS_LAYER_UDSMSG_H_ */

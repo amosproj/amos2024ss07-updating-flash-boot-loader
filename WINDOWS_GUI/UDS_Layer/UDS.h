@@ -14,19 +14,22 @@
 #include "stdint.h"
 
 #include "../Communication_Layer/Communication.h"
+#include "UDS_Event.h"
 
-class UDS {
+class UDS : public UDS_Event_Handler{
 
 private:
 	uint8_t gui_id;
 	Communication *comm;
+    uint8_t init;
 
 
 public:
-	UDS(uint8_t gui_id, Communication *comm_connection);
+    UDS();
+    UDS(uint8_t gui_id, Communication *comm_connection);
 	virtual ~UDS();
 
-	void messageInterpreter(uint8_t* data, uint8_t data_len);
+    void messageInterpreter(UDS_Msg msg);
 
 	void reqIdentification(); // Sending out broadcast for tester present
 

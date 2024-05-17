@@ -13,7 +13,8 @@
 #define COMMUNICATION_LAYER_COMMUNICATION_H_
 
 #include <stdint.h>
-#include <list>
+
+#include "../UDS_Layer/UDS_Event.h"
 
 #include "../Communication/can_wrapper_event.hpp"
 #include "../Communication/Can_Wrapper.hpp"
@@ -27,31 +28,34 @@
 class Communication : public CAN_Wrapper_Event {
 
 private:
+    UDS_Event_Handler* uds_eh;
+
 	uint8_t curr_interface_type;
 
 	VirtualDriver virtualDriver;
 	CAN_Wrapper canDriver;
 
-	uint32_t curr_id;
-	uint8_t *curr_uds_msg;
-	int curr_uds_msg_len;
-	uint32_t curr_uds_msg_idx; // Used for consecutive frames
-
-	int next_msg_available;
-	uint8_t still_receiving;
+    // Used for consecutive frames
+    uint32_t multiframe_curr_id;
+    uint8_t *multiframe_curr_uds_msg;
+    int multiframe_curr_uds_msg_len;
+    uint32_t multiframe_curr_uds_msg_idx;
+    int multiframe_next_msg_available;
+    uint8_t multiframe_still_receiving;
 
 public:
 	Communication();
 	~Communication();
 
+    void setUDSInterpreter(UDS_Event_Handler* uds_eh);
+
 	void init(uint8_t ct);
 	void setCommunicationType(uint8_t ct);
-	//void setID(uint32_t id, CommInterface ci);
 	void setID(uint32_t id); // TODO: Check on Architecture
 
 	void txData(uint8_t *data, uint32_t no_bytes);
-	void dataReceiveHandle();
 
+    void dataReceiveHandleMulti();
 	// CAN_Wrapper_Event
 	void handleCANEvent(unsigned int id, unsigned short dlc, unsigned char data[]);
 };

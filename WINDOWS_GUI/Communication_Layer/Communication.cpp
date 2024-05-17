@@ -15,23 +15,23 @@
 #endif
 
 #include <stdio.h>
-#include <typeinfo>
 
 #include "Communication.h"
 #include "../UDS_Spec/uds_comm_spec.h"
 #include "../Communication/VirtualDriver.h"
 #include "../Communication/Can_Wrapper.hpp"
-#include "../UDS_Layer/UDSMsg.h"
 
 
 Communication::Communication() {
-	curr_interface_type = 0; // Initial with Virtual Driver
+    uds_eh = nullptr;
 
-	curr_id = 0; // Init receiving ID
-	curr_uds_msg = NULL;
-	curr_uds_msg_len = 0;
-	next_msg_available = 0;
-	still_receiving = 0;
+    curr_interface_type = 0; // Initial with Virtual Driver
+
+    multiframe_curr_id = 0; // Init receiving ID
+    multiframe_curr_uds_msg = NULL;
+    multiframe_curr_uds_msg_len = 0;
+    multiframe_next_msg_available = 0;
+    multiframe_still_receiving = 0;
 
 	virtualDriver = VirtualDriver(); // Initialize Virtual Driver
 	virtualDriver.setInterfaceID(0);
@@ -42,6 +42,10 @@ Communication::Communication() {
 
 Communication::~Communication() {
 
+}
+
+void Communication::setUDSInterpreter(UDS_Event_Handler* uds_eh){
+    this->uds_eh = uds_eh;
 }
 
 void Communication::init(uint8_t comm_interface_type){
@@ -134,65 +138,73 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes){
 	}
 }
 
-void Communication::dataReceiveHandle(){
+void Communication::dataReceiveHandleMulti(){
 
-	if(still_receiving == 1 && next_msg_available == 0 && curr_uds_msg != NULL){
-		// Message fully received
-		printf(">> Communication UDS: Received id=0x%08X, len=%d, data=", curr_id, curr_uds_msg_len);
-		for(auto i = 0; i < curr_uds_msg_len; i++){
-			printf("0x%02X ", curr_uds_msg[i]);
-		}
-		printf("\n");
+    if(multiframe_still_receiving == 1 && multiframe_next_msg_available == 0 && multiframe_curr_uds_msg != NULL){
+        // TODO: Create UDS Message
+        UDS_Msg msg = UDS_Msg(multiframe_curr_id, multiframe_curr_uds_msg, multiframe_curr_uds_msg_len);
+        if(uds_eh != nullptr)
+            (*uds_eh).messageInterpreter(msg);
 
-		// TODO: Create UDS Message
+        // Reset both receiving flags and ID
+        multiframe_still_receiving = 0;
+        multiframe_curr_id = 0;
 
-		// Reset both receiving flags and ID
-		still_receiving = 0;
-		curr_id = 0;
-
-		curr_uds_msg_len = 0;
-		curr_uds_msg = NULL;
-	}
+        multiframe_curr_uds_msg_len = 0;
+        multiframe_curr_uds_msg = NULL;
+    }
 }
 
 
 void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned char data[]){
 
-	// Debugging
-	/*
-	printf(">> Communication handleCANEvent: Received id=0x%08X, len=%d, data=", id, dlc);
-	for(auto i = 0; i < dlc; i++){
-		printf("0x%02X ", data[i]);
-	}
-	printf("\n");
-	*/
-
 	// Real processing
-
-	if(curr_interface_type != COMM_INTERFACE_CAN) // CAN is not allowed to forward messages
+    if(curr_interface_type != COMM_INTERFACE_CAN) // CAN is not allowed to forward messages
 		return;
 
-	if(curr_id != 0 && id != curr_id){ // Ignore other IDs
-		printf("Communication: Ignoring 0x%08X. Still processing communication with 0x%08X", id, curr_id);
-		return;
-	}
+    if(dlc == 0){ // Ignoring Empty Messages
+        return;
+    }
 
 	uint8_t starting_frame = rx_is_starting_frame(data, dlc, MAX_FRAME_LEN_CAN);
 	if(starting_frame){
-		still_receiving = 1;
-		curr_id = id;
-		curr_uds_msg_idx = 0;
-		curr_uds_msg = rx_starting_frame(&curr_uds_msg_len, &next_msg_available, MAX_FRAME_LEN_CAN, data, dlc);
+        int temp_uds_msg_len = 0;
+        int temp_next_msg_available = 0;
+        uint8_t* temp_uds_msg = rx_starting_frame(&temp_uds_msg_len, &temp_next_msg_available, MAX_FRAME_LEN_CAN, data, dlc);
 
-		if(next_msg_available)
-			curr_uds_msg_idx = 6; // First 6 bytes contained in First Frame
-	}
+        if(!temp_next_msg_available){ // Single Frame
+
+            UDS_Msg msg = UDS_Msg(id, temp_uds_msg, temp_uds_msg_len);
+            if(uds_eh != nullptr)
+                (*uds_eh).messageInterpreter(msg);
+            return;
+        }
+
+        else {
+            if(multiframe_curr_id != 0 && id != multiframe_curr_id){ // Ignore other IDs
+                printf("Communication: Ignoring 0x%08X. Still processing communication with 0x%08X", id, multiframe_curr_id);
+                return;
+            }
+
+            multiframe_still_receiving = 1;
+            multiframe_curr_id = id;
+            multiframe_curr_uds_msg = temp_uds_msg;
+            multiframe_curr_uds_msg_idx = 6; // First 6 bytes contained in First Frame
+            multiframe_curr_uds_msg_len = temp_uds_msg_len;
+            multiframe_next_msg_available = temp_next_msg_available;
+        }
+    }
 
 	uint8_t consecutive_frame = rx_is_consecutive_frame(data, dlc, MAX_FRAME_LEN_CAN);
 	if(consecutive_frame){
-		still_receiving = 1;
-		rx_consecutive_frame(&curr_uds_msg_len, curr_uds_msg, &next_msg_available, dlc, data, &curr_uds_msg_idx);
+        if(multiframe_curr_id != 0 && id != multiframe_curr_id){ // Ignore other IDs
+            printf("Communication: Ignoring 0x%08X. Still processing communication with 0x%08X", id, multiframe_curr_id);
+            return;
+        }
+
+        multiframe_still_receiving = 1;
+        rx_consecutive_frame(&multiframe_curr_uds_msg_len, multiframe_curr_uds_msg, &multiframe_next_msg_available, dlc, data, &multiframe_curr_uds_msg_idx);
 	}
 
-	this->dataReceiveHandle();
+    this->dataReceiveHandleMulti();
 }
