@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->setFixedSize(this->geometry().width(),this->geometry().height());
 
     // Setup the connections
     uds = UDS();
@@ -88,7 +89,6 @@ MainWindow::MainWindow(QWidget *parent)
             &MainWindow::comboBoxIndexChanged);
 
     ui->Console->setReadOnly(true);
-
 }
 
 MainWindow::~MainWindow()
