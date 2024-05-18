@@ -265,7 +265,7 @@ uint8_t rx_consecutive_frame(int *data_out_len, uint8_t *data_out, int *has_next
 
 	if ((*idx + (data_in_len - 1)) > *data_out_len){
 		*has_next = 0;
-		printf("UDS Comm Spec Usage Error: Received data is too long for data buffer\n");
+        printf("UDS Comm Spec Usage Error: Received data is too long for data buffer - IDX: %d, Data_In_Len: %d, Data_out_len: %d\n", *idx, data_in_len, *data_out_len);
 		return 0;
 	}
 

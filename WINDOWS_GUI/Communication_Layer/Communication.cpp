@@ -87,7 +87,7 @@ void Communication::setID(uint32_t id){
 void Communication::txData(uint8_t *data, uint32_t no_bytes){
 
 	if(curr_interface_type == COMM_INTERFACE_VIRTUAL){ // Using Virtual Driver
-		printf("Using Virtual Driver as TX interface\n");
+        printf("Communication: Sending out Data via Virtual Driver interface\n");
 		uint8_t *send_msg;
 		int send_len;
 		int has_next;
@@ -112,11 +112,10 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes){
 	}
 
 	else if(curr_interface_type == COMM_INTERFACE_CAN){ // Using CAN
-		printf("Communication: Using CAN as TX interface\n");
+        printf("Communication: Sending out Data via CAN Driver\n");
 		uint8_t *send_msg;
 		int send_len;
 		int has_next;
-		//int max_len_per_frame = 8; // Also use CAN Message Length
 		uint8_t max_len_per_frame = 8; // CAN Message Length
 		uint32_t data_ptr = 0;
 		uint8_t idx = 0;
@@ -177,7 +176,6 @@ void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned
             UDS_Msg msg = UDS_Msg(id, temp_uds_msg, temp_uds_msg_len);
             if(uds_eh != nullptr)
                 (*uds_eh).messageInterpreter(msg);
-            return;
         }
 
         else {
@@ -185,6 +183,7 @@ void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned
                 printf("Communication: Ignoring 0x%08X. Still processing communication with 0x%08X", id, multiframe_curr_id);
                 return;
             }
+            //printf("Call of Starting Frame\n");
 
             multiframe_still_receiving = 1;
             multiframe_curr_id = id;
@@ -193,6 +192,7 @@ void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned
             multiframe_curr_uds_msg_len = temp_uds_msg_len;
             multiframe_next_msg_available = temp_next_msg_available;
         }
+        return;
     }
 
 	uint8_t consecutive_frame = rx_is_consecutive_frame(data, dlc, MAX_FRAME_LEN_CAN);
@@ -201,10 +201,20 @@ void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned
             printf("Communication: Ignoring 0x%08X. Still processing communication with 0x%08X", id, multiframe_curr_id);
             return;
         }
+        //printf("Call of Consecutive Frame: DLC %d\n", dlc);
 
         multiframe_still_receiving = 1;
         rx_consecutive_frame(&multiframe_curr_uds_msg_len, multiframe_curr_uds_msg, &multiframe_next_msg_available, dlc, data, &multiframe_curr_uds_msg_idx);
+        this->dataReceiveHandleMulti();
+        return;
 	}
+}
 
-    this->dataReceiveHandleMulti();
+void Communication::setTestMode(){
+    if(curr_interface_type == COMM_INTERFACE_VIRTUAL){ // Virtual Driver
+        // No changes for Testing necessary
+    }
+    else if(curr_interface_type == COMM_INTERFACE_CAN){ // CAN Driver
+        canDriver.setTestingAppname();
+    }
 }

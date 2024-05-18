@@ -26,8 +26,6 @@
 #define CHAN01 					0		// Index of Channel 1
 #define MAX_USED_CHANNEL		1		// do not edit! Currently 1 is supported only
 
-#include <stdio.h>
-
 #include "../Communication_Layer/CommInterface.h"
 #include "can_wrapper_event.hpp"
 #include "vxlapi.h"
@@ -36,7 +34,9 @@ class CAN_Wrapper : public CommInterface {
 
 	// Variables
 	private:
-		char appName[XL_MAX_APPNAME+1] 		= "AMOS FBL GUI";				// AppName, will be registered
+        uint8_t testMode                    = 0;                            // Used for controlling custom appname
+        char testing_appNAme[XL_MAX_APPNAME+1] = "AMOS TESTING";            // Custom Appname, mainly for testing
+        char appName[XL_MAX_APPNAME+1] 		= "AMOS FBL GUI";				// AppName, will be registered
 		XLportHandle portHandle 			= XL_INVALID_PORTHANDLE;		// Holds the port handle for communication
 		XLdriverConfig drvConfig;											// Holds the driver configuration
 		XLaccess channelMask 				= 0;							// Chosen channel mask
@@ -64,6 +64,8 @@ class CAN_Wrapper : public CommInterface {
 
 		uint8_t txData(uint8_t *data, uint8_t no_bytes) override;
 		HANDLE startRXThread(CAN_Wrapper_Event* h);
+
+        void setTestingAppname();
 
 
 	private:

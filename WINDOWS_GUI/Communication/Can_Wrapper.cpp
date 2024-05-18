@@ -10,6 +10,15 @@
 //============================================================================
 
 #include "Can_Wrapper.hpp"
+#include <stdio.h>
+
+//============================================================================
+// Public Testing
+//============================================================================
+
+void CAN_Wrapper::setTestingAppname(){
+    this->testMode = 1;
+}
 
 //============================================================================
 // Public
@@ -61,6 +70,12 @@ uint8_t CAN_Wrapper::initDriver(){
 	unsigned int hwChannel = 0;
 	unsigned int appChannel = 0;
 	unsigned int busType = XL_BUS_TYPE_CAN;
+
+    // Check on some custom appname
+    if (testMode){
+        strncpy_s(appName, testing_appNAme, sizeof(appName));
+        printf("Changed app name to %s.\n", appName);
+    }
 
 	// Open the driver
 	status = xlOpenDriver();

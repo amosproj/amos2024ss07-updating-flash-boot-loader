@@ -92,3 +92,4 @@ compile_commands.json
 
 # QT build directory
 WINDOWS_GUI/build*/
+TESTING_WINDOWS_GUI/build*/

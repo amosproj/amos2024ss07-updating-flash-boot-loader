@@ -58,6 +58,9 @@ public:
     void dataReceiveHandleMulti();
 	// CAN_Wrapper_Event
 	void handleCANEvent(unsigned int id, unsigned short dlc, unsigned char data[]);
+
+    // Testing
+    void setTestMode();
 };
 
 #endif /* COMMUNICATION_LAYER_COMMUNICATION_H_ */
