@@ -22,6 +22,7 @@ private:
 	uint32_t len;
 
 public:
+    UDS_Msg();
     UDS_Msg(uint32_t id, uint8_t *data, uint32_t len);
 	virtual ~UDS_Msg();
 

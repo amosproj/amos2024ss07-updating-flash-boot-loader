@@ -173,7 +173,7 @@ void UDS::testerPresent(uint32_t id){
         return;
     }
 
-    printf("UDS: Sending out Test Present\n");
+    printf("UDS: Sending out Tester Present\n");
 
 	// First create the common ID
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);

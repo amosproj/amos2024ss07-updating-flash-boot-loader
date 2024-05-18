@@ -16,6 +16,12 @@
  #include <windows.h>
 #endif
 
+UDS_Msg::UDS_Msg(){
+    this->id = 0;
+    this->data = nullptr;
+    this->len = 0;
+}
+
 UDS_Msg::UDS_Msg(uint32_t id, uint8_t *data, uint32_t len) {
     this->id = id;
     this->data = data;
