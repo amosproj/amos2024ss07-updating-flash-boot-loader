@@ -31,6 +31,13 @@
 
 #include "loader.h"
 #include "led_driver.h"
+#include "isotp.h"
+#include "can_driver.h"
+#include "can_init.h"
+
+#include <stdio.h>
+
+#define BSP_DEFAULT_TIMER (&MODULE_STM0)
 
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
@@ -48,17 +55,57 @@ void core0_main(void)
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
 
-    //show_led();
 
-    show_flash();
+    init_led_driver();
+    //show_flash();
+
+    canInitDriver();
 
     led_off(LED1);
     led_off(LED2);
 
-    show_can();
+    led_on(LED1);
+    led_on(LED2);
+
+
+    //show_can();
+
+    //IsoTpContext ctx;
+
+
+    //isotp_init(&ctx);
 
     while(1)
     {
+
+        toggle_led_activity(LED1);
+
+
+
+        //toggle_led_activity(LED1);
+        /*
+        toggle_led_activity(LED1);
+
+        isotp_poll(&ctx);
+
+        uint8_t data[] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x01, 0x02, 0x03, 0x04};
+
+        if (isotp_send(&ctx, 0x123, data, sizeof(data)) == 0) {
+            // Message sent successfully
+
+        }
+        else {
+            // Error sending message
+
+            toggle_led_activity(LED2);
+        }
+
+        CanMessage msg;
+        if (isotp_receive(&ctx, &msg) == 0) {
+            // Process received message
+        }
+        */
+
 
     }
 }

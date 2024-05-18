@@ -111,21 +111,85 @@ void canInitDriver(void){
     IfxCan_Can_initMessage(&g_can.rxMsg); /*Init for RX Message*/
 }
 
-/**
- * Transmits a CAN Message: Initialize new TX message, TX is transmitted
- * @param canMessageID ID of CAN Message for Prio in BUS
- * @param data data of CAN Message
- * @param len of CAN Message
-*/
+//ISOTP: Testing different headers for CAN messages
+
+void canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
+    IfxCan_Can_initMessage(&g_can.txMsg);
+        g_can.txMsg.messageId = canMessageID;
+
+        // Ensure that the size of data does not exceed 4 bytes (32 bits)
+        if (size > 4) {
+            // Handle error: data size exceeds 4 bytes
+            return;
+        }
+
+        // Initialize low_word and high_word to 0
+        uint32_t data_word = 0;
+
+        // Copy the data to the low_word and high_word
+        memcpy(&data_word, data, size);
+
+        g_can.txData[0] = data_word; //To transmit data
+        //g_can.txData[1] = high_word;
+
+
+        //Sends CAN Message, only if BUS is empty
+        while( IfxCan_Status_notSentBusy ==
+               IfxCan_Can_sendMessage(&g_can.canSrcNode, &g_can.txMsg, &g_can.txData[0]))
+        {
+        }
+}
+
+/*
 void canTransmitMessage(uint32_t canMessageID, uint32_t low_word, uint32_t high_word){
     IfxCan_Can_initMessage(&g_can.txMsg);
-    g_can.txData[0] = low_word; /*To transmit data*/
+    g_can.txData[0] = low_word; //To transmit data
     g_can.txData[1] = high_word;
     g_can.txMsg.messageId = canMessageID;
 
-    /*Sends CAN Message, only if BUS is empty*/
+    //Sends CAN Message, only if BUS is empty
     while( IfxCan_Status_notSentBusy ==
            IfxCan_Can_sendMessage(&g_can.canSrcNode, &g_can.txMsg, &g_can.txData[0]))
     {
     }
 }
+*/
+
+/**
+ * TODO: Check with Andi if this is ok
+ * ATTENTION: CAN_sendMessage wants uint32_t data, but I thought we can send 8 bytes of data trough CAN? ~Leon
+ * Transmits a CAN Message: Initialize new TX message, TX is transmitted
+ * @param canMessageID ID of CAN Message for Prio in BUS
+ * @param low_word
+ * @param high_word
+*/
+/*
+void canTransmitMessage(uint32_t canMessageID, uint8_t *low_word_data, size_t low_word_size, uint8_t *high_word_data, size_t high_word_size){
+    IfxCan_Can_initMessage(&g_can.txMsg);
+    g_can.txMsg.messageId = canMessageID;
+
+    // Ensure that the size of data does not exceed 4 bytes (32 bits)
+    if (low_word_size > 4 || high_word_size > 4) {
+        // Handle error: data size exceeds 4 bytes
+        return;
+    }
+
+    // Initialize low_word and high_word to 0
+    uint32_t low_word = 0;
+    uint32_t high_word = 0;
+
+    // Copy the data to the low_word and high_word
+    memcpy(&low_word, low_word_data, low_word_size);
+    memcpy(&high_word, high_word_data, high_word_size);
+
+    g_can.txData[0] = low_word; /*To transmit data
+    g_can.txData[1] = high_word;
+
+
+    /*Sends CAN Message, only if BUS is empty
+    while( IfxCan_Status_notSentBusy ==
+           IfxCan_Can_sendMessage(&g_can.canSrcNode, &g_can.txMsg, &g_can.txData[0]))
+    {
+    }
+}
+*/

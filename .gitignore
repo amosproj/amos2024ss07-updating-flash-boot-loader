@@ -28,6 +28,10 @@ dist/
 .idea/
 out/
 
+# Aurix IDE
+.metadata/
+.settings/
+
 # Eclipse IDE
 # .project
 # bin/

@@ -18,6 +18,7 @@ void init_led_driver(void)
     /* Initializing LED2 */
     IfxPort_setPinModeOutput(LED2, IfxPort_OutputMode_pushPull, IfxPort_OutputIdx_general);
     IfxPort_setPinHigh(LED2);
+
 }
 
 /* This function toggles the activity of one specific LED, described by the combination of port and pinIndex.
