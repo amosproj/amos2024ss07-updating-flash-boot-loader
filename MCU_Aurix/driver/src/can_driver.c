@@ -113,31 +113,34 @@ void canInitDriver(void){
 
 //ISOTP: Testing different headers for CAN messages
 
-void canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
+int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
     IfxCan_Can_initMessage(&g_can.txMsg);
-        g_can.txMsg.messageId = canMessageID;
+    g_can.txMsg.messageId = canMessageID;
 
-        // Ensure that the size of data does not exceed 4 bytes (32 bits)
-        if (size > 4) {
-            // Handle error: data size exceeds 4 bytes
-            return;
-        }
+    //Not sure if necessary ~Leon
+    // Ensure that the size of data does not exceed 8 bytes (32 bits)
+    if (size > 8) {
+        // Handle error: data size exceeds 4 bytes
+        return -1;
+    }
 
-        // Initialize low_word and high_word to 0
-        uint32_t data_word = 0;
+    // Initialize g_can.txData to zero
+    g_can.txData[0] = 0;
+    g_can.txData[1] = 0;
 
-        // Copy the data to the low_word and high_word
-        memcpy(&data_word, data, size);
-
-        g_can.txData[0] = data_word; //To transmit data
-        //g_can.txData[1] = high_word;
+    // Copy up to 8 bytes of data into g_can.txData
+    memcpy((uint8_t*)g_can.txData, data, size);
 
 
-        //Sends CAN Message, only if BUS is empty
-        while( IfxCan_Status_notSentBusy ==
-               IfxCan_Can_sendMessage(&g_can.canSrcNode, &g_can.txMsg, &g_can.txData[0]))
-        {
-        }
+    //Sends CAN Message, only if BUS is empty
+    while( IfxCan_Status_notSentBusy ==
+           IfxCan_Can_sendMessage(&g_can.canSrcNode, &g_can.txMsg, g_can.txData))
+    {
+
+
+    }
+
+    return 0;
 }
 
 /*

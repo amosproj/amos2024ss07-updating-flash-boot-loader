@@ -35,9 +35,23 @@
 #include "can_driver.h"
 #include "can_init.h"
 
-#include <stdio.h>
+/*
+ * ------------------------------------------------------------------------
+ * TESTING
+ * ------------------------------------------------------------------------
+ */
 
-#define BSP_DEFAULT_TIMER (&MODULE_STM0)
+#include "Bsp.h"
+
+IsoTpContext ctx;
+
+
+/*
+ * ------------------------------------------------------------------------
+ * TESTING
+ * ------------------------------------------------------------------------
+ */
+
 
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
@@ -64,47 +78,45 @@ void core0_main(void)
     led_off(LED1);
     led_off(LED2);
 
-    led_on(LED1);
-    led_on(LED2);
+    isotp_init(&ctx);
 
+    uint8_t dataCAN[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
 
-    //show_can();
+    uint8_t dataIsoSolo[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+    uint8_t dataIsoMulti[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
 
-    //IsoTpContext ctx;
-
-
-    //isotp_init(&ctx);
 
     while(1)
     {
+        waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 1000));
 
-        toggle_led_activity(LED1);
-
-
-
-        //toggle_led_activity(LED1);
-        /*
         toggle_led_activity(LED1);
 
         isotp_poll(&ctx);
 
-        uint8_t data[] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x01, 0x02, 0x03, 0x04};
 
-        if (isotp_send(&ctx, 0x123, data, sizeof(data)) == 0) {
+
+
+
+
+        if (canTransmitMessage(0x123, dataCAN, sizeof(dataCAN)) == 0) {
             // Message sent successfully
 
         }
         else {
             // Error sending message
 
-            toggle_led_activity(LED2);
+            led_on(LED2);
         }
 
-        CanMessage msg;
-        if (isotp_receive(&ctx, &msg) == 0) {
-            // Process received message
+        /*
+        if (isotp_send(&ctx, 0x123, dataIsoSolo, sizeof(dataIsoSolo)) == 0) {
+            // Message sent successfully
+        } else {
+            // Error sending message
         }
         */
+
 
 
     }

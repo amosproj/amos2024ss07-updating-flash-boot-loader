@@ -32,7 +32,7 @@
 //ISOTP: testing different headers
 //void canTransmitMessage(uint32_t canMessageID, uint8_t *low_word_data, size_t low_word_size, uint8_t *high_word_data, size_t high_word_size); //oder uint8_t*
 //void canTransmitMessage(uint32_t canMessageID, uint32_t low_word, uint32_t high_word); //oder uint8_t*
-void canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size); //oder uint8_t*
+int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size); //oder uint8_t*
 void canIsrRxHandler();
 
 #endif /*CAN_DRIVER_H*/

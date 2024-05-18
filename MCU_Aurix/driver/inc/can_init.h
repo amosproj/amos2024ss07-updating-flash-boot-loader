@@ -34,8 +34,8 @@ typedef struct canType
     IfxCan_Filter canFilter;                                /* CAN filter configuration structure                   */
     IfxCan_Message txMsg;                                   /* Transmitted CAN message structure                    */
     IfxCan_Message rxMsg;                                   /* Received CAN message structure                       */
-    uint32_t txData[MAXIMUM_CAN_DATA_PAYLOAD];                /* Transmitted CAN data array                           */
-    uint32_t rxData[MAXIMUM_CAN_DATA_PAYLOAD];                /* Received CAN data array                              */
+    uint32 txData[MAXIMUM_CAN_DATA_PAYLOAD];                /* Transmitted CAN data array                           */
+    uint32 rxData[MAXIMUM_CAN_DATA_PAYLOAD];                /* Received CAN data array                              */
 }canType;
 
 typedef struct msg
