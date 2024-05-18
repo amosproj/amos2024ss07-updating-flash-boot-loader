@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "../WINDOWS_GUI/Communication_Layer/Communication.h"
 #include "../WINDOWS_GUI/UDS_Layer/UDS.h"
+#include "testcases.h"
 
 int main(int argc, char *argv[])
 {
@@ -19,11 +20,14 @@ int main(int argc, char *argv[])
     comm.setTestMode(); // Only necessary for Testing!
     comm.init(1); // Set to CAN
 
-    printf("Main: Create UDS Layer and connect Communcation Layer to it\n");
-    UDS uds = UDS(0x001, &comm);
-    comm.setUDSInterpreter(&uds);
+    printf("Main: Create UDS Layer and connect Testcase Instance to it\n");
+    UDS uds = UDS(0x000, &comm);
+    Testcases *tc = new Testcases();
+    tc->setUDS(&uds);
+    comm.setUDSInterpreter(tc);
 
     MainWindow w;
     w.show();
+
     return a.exec();
 }

@@ -9,11 +9,11 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    this->setFixedSize(1200,600);
+    this->setFixedSize(this->geometry().width(),this->geometry().height());
 
-    this->setWindowIcon(QIcon::fromTheme("Testing FlashBootloader",
+
+    this->setWindowIcon(QIcon::fromTheme("Testing Flashbootloader",
                                          QIcon("../../icon.png")));
-
 
 }
 

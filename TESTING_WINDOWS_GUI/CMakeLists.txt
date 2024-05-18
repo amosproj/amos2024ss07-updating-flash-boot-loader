@@ -18,6 +18,8 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        testcases.cpp
+        testcases.h
         ../WINDOWS_GUI/GUI_Events/consoleUpdater.h
         ../WINDOWS_GUI/GUI_Events/consoleUpdater.cpp
         ../WINDOWS_GUI/Communication/can_wrapper_event.hpp
