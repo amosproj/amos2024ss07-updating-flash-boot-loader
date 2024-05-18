@@ -1,4 +1,5 @@
 #include <QFileDialog>
+#include <QThread>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -20,6 +21,8 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    // Setup the connections
     uds = UDS();
 
     this->setWindowIcon(QIcon::fromTheme("FlashBootloader",
@@ -83,6 +86,8 @@ MainWindow::MainWindow(QWidget *parent)
     // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
     connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
             &MainWindow::comboBoxIndexChanged);
+
+    ui->Console->setReadOnly(true);
 
 }
 
@@ -196,4 +201,9 @@ void MainWindow::comboBoxIndexChanged(int index)
         editComboBox_speed->hide();
         comboBox_speedUnit->hide();
     }
+}
+
+// Will write Text to console
+void MainWindow::appendTextToConsole(const QString &text){
+    ui->Console->appendPlainText(text);
 }

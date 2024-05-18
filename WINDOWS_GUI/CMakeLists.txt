@@ -20,6 +20,8 @@ set(PROJECT_SOURCES
         mainwindow.ui
         editableComboBox.h
         editablecombobox.cpp
+        GUI_Events/consoleUpdater.h
+        GUI_Events/consoleUpdater.cpp
         Communication/can_wrapper_event.hpp
         Communication/Can_Wrapper.cpp
         Communication/Can_Wrapper.hpp

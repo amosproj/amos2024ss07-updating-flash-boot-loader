@@ -23,9 +23,18 @@ UDS::UDS(uint8_t gui_id, Communication *comm_connection) {
 	this->gui_id = gui_id;
 	this->comm = comm_connection;
     this->init = 1;
+    this->console = nullptr;
 }
 
 UDS::~UDS() {
+
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Public - Communication with GUI
+//////////////////////////////////////////////////////////////////////////////
+void UDS::setGUIConsoleConnection(ConsoleUpdater* console){
+    this->console = console;
 
 }
 
@@ -43,6 +52,7 @@ void UDS::messageInterpreter(UDS_Msg msg){
     printf("\n");
 
     // TODO: Implement UDS Message Interpreter
+    //console->appendToConsole("Test");
 }
 
 

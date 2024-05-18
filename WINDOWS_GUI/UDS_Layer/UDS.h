@@ -15,6 +15,7 @@
 
 #include "../Communication_Layer/Communication.h"
 #include "UDS_Event.h"
+#include "../GUI_Events/consoleUpdater.h"
 
 class UDS : public UDS_Event_Handler{
 
@@ -22,6 +23,7 @@ private:
 	uint8_t gui_id;
 	Communication *comm;
     uint8_t init;
+    ConsoleUpdater* console;
 
 
 public:
@@ -29,6 +31,7 @@ public:
     UDS(uint8_t gui_id, Communication *comm_connection);
 	virtual ~UDS();
 
+    void setGUIConsoleConnection(ConsoleUpdater* console);
     void messageInterpreter(UDS_Msg msg);
 
 	void reqIdentification(); // Sending out broadcast for tester present
