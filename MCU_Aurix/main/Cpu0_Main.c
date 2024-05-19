@@ -25,6 +25,7 @@
  * IN THE SOFTWARE.
  *********************************************************************************************************************/
 
+#include <bootloader.h>
 #include "Ifx_Types.h"
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
