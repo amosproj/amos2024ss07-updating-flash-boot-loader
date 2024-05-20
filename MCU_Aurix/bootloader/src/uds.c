@@ -14,8 +14,8 @@
 #include "uds.h"
 #include "uds_comm_spec.h"
 
-#define REQUEST                         0
-#define RESPONSE                        1
+#define REQUEST                                                 0
+#define RESPONSE                                                1
 
 
 // TODO should I add these UDS_Msg functions to the header?
@@ -23,12 +23,10 @@ struct UDS_Msg {
     uint32 len;
     uint8 data[]; // flexible array member
 };
-
 typedef struct UDS_Msg UDS_Msg;
 
 uint8 getSID(UDS_Msg *msg);
 void getData(UDS_Msg *msg, uint8 *data, uint32 *len);
-//uint32 getID(UDS_Msg *msg);
 uint32 getDataLength(UDS_Msg *msg);
 
 
@@ -49,11 +47,52 @@ uint32 getDataLength(UDS_Msg *msg){
 }
 
 void handleRXUDS(uint8* data, uint32 data_len){
+    uint8 array[data_len + sizeof(uint32)]; // TODO change if incoming data format is different
+
+    UDS_Msg* msg = (UDS_Msg*) array;
+    msg->len = data_len;
+    memcpy(data, msg->data, data_len);
+
+    // parse incoming data by SID and call function for SID
+    uint8 SID = getSID(msg);
+    switch (SID)
+    {
+        case FBL_DIAGNOSTIC_SESSION_CONTROL:
+            diagnosticSessionControl();
+            break;
+        case FBL_ECU_RESET:
+            break;
+        case FBL_SECURITY_ACCESS:
+            break;
+        case FBL_TESTER_PRESENT:
+            break;
+        case FBL_READ_DATA_BY_IDENTIFIER:
+            break;
+        case FBL_READ_MEMORY_BY_ADDRESS:
+            break;
+        case FBL_WRITE_DATA_BY_IDENTIFIER:
+            break;
+        case FBL_REQUEST_DOWNLOAD:
+            break;
+        case FBL_REQUEST_UPLOAD:
+            break;
+        case FBL_TRANSFER_DATA:
+            break;
+        case FBL_REQUEST_TRANSFER_EXIT:
+            break;
+        default:
+            // TODO send error tx
+            ;
+    }
 
 }
 
-void diagnosticSessionControl(UDS_Msg *msg){
+void diagnosticSessionControl(){
 
+    int response_len;
+    uint8 session = FBL_DIAG_SESSION_DEFAULT;//getSession(); // TODO getSession not really implemented yet!
+    uint8* response_msg = _create_diagnostic_session_control(&response_len, RESPONSE, session);
+    // TODO send
 }
 
 //void ecuReset();
