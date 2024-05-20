@@ -33,6 +33,7 @@
 #include "led_driver.h"
 #include "can_driver.h"
 #include "can_init.h"
+#include "isotp.h"
 
 /*
  * ------------------------------------------------------------------------
@@ -86,16 +87,10 @@ void core0_main(void)
     uint8_t dataCAN[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
 
     uint8_t dataIsoSolo[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+    uint8_t dataIsoSolo2[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
+
     uint8_t dataIsoMulti[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
 
-
-
-    uint32_t data_in_len = sizeof(dataIsoMulti);
-    uint32_t data_out_idx_ctr = 0;
-    uint8_t frame_idx = 0;
-    int data_out_len;
-    int has_next;
-    uint8_t max_len_per_frame = 8;
 
     while(1)
     {
@@ -110,29 +105,13 @@ void core0_main(void)
         //printf("TESTING\n");
 
         // Create and send the first frame
-        uint8_t* first_frame = tx_starting_frame(&data_out_len,
-                                                    &has_next,
-                                                    max_len_per_frame,
-                                                    dataIsoMulti,
-                                                    data_in_len,
-                                                    &data_out_idx_ctr);
 
-        canTransmitMessage(0x123, first_frame, data_out_len);
-        free(first_frame);
 
-        // Send consecutive frames if necessary
-        while (has_next) {
-            uint8_t* consecutive_frame = tx_consecutive_frame(&data_out_len,
-                                                                &has_next,
-                                                                max_len_per_frame,
-                                                                dataIsoMulti,
-                                                                data_in_len,
-                                                                &data_out_idx_ctr,
-                                                                &frame_idx);
+        isoTP* iso = isotp_init();
 
-            canTransmitMessage(0x123, consecutive_frame, data_out_len);
-            free(consecutive_frame);
-        }
+        iso->max_len_per_frame = CAN;
+
+        isotp_send(iso, dataIsoSolo, sizeof(dataIsoSolo));
 
 
 
