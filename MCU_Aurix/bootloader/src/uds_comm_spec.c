@@ -22,7 +22,8 @@ extern "C" {
 
 //TODO:
 /*
- * How about a struct with all the necessary information for the isoTP sending process?
+ * How about a struct with all the necessary information for the isoTP sending process? And corresponding init() function?
+ *
  * Like :
  *
  *  typedef struct canType

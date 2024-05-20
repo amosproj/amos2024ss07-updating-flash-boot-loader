@@ -3,7 +3,7 @@
 
 //============================================================================
 // Name        : uds_comm_spec.h
-// Author      : Michael Bauer, Leon Wilms
+// Author      : Michael Bauer
 // Version     : 0.2
 // Copyright   : MIT
 // Description : UDS communication specification for AMOS Flashbootloader
