@@ -2,8 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "UDS_Layer/UDS.hpp"
-#include "Communication_Layer/Communication.hpp"
+#include "../WINDOWS_GUI/UDS_Layer/UDS.hpp"
+#include "../WINDOWS_GUI/Communication_Layer/Communication.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {

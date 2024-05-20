@@ -18,18 +18,18 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
-        Communication/CommInterface.cpp
-        Communication/CommInterface.hpp
-        Communication/Can_Wrapper.cpp
-        Communication/Can_Wrapper.hpp
-        Communication/VirtualDriver.cpp
-        Communication/VirtualDriver.hpp
-        Communication_Layer/Communication.cpp
-        Communication_Layer/Communication.hpp
-        UDS_Layer/UDS.cpp
-        UDS_Layer/UDS.hpp
-        UDS_Spec/uds_comm_spec.cpp
-        UDS_Spec/uds_comm_spec.h
+        ../WINDOWS_GUI/Communication/CommInterface.cpp
+        ../WINDOWS_GUI/Communication/CommInterface.hpp
+        ../WINDOWS_GUI/Communication/Can_Wrapper.cpp
+        ../WINDOWS_GUI/Communication/Can_Wrapper.hpp
+        ../WINDOWS_GUI/Communication/VirtualDriver.cpp
+        ../WINDOWS_GUI/Communication/VirtualDriver.hpp
+        ../WINDOWS_GUI/Communication_Layer/Communication.cpp
+        ../WINDOWS_GUI/Communication_Layer/Communication.hpp
+        ../WINDOWS_GUI/UDS_Layer/UDS.cpp
+        ../WINDOWS_GUI/UDS_Layer/UDS.hpp
+        ../WINDOWS_GUI/UDS_Spec/uds_comm_spec.cpp
+        ../WINDOWS_GUI/UDS_Spec/uds_comm_spec.h
         )
 
 file(GLOB VECTOR_LIB "C:/Users/Public/Documents/Vector/XL\ Driver\ Library\ */bin")
