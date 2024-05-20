@@ -29,12 +29,15 @@ MainWindow::MainWindow(QWidget *parent)
     // Connect the signals and slots
 
     // Comm RX Signal to UDS RX Slot
-    connect(comm, SIGNAL(rxDataReceived(UDS_Msg)), uds, SLOT(rxDataReceiverSlot(UDS_Msg)), Qt::DirectConnection);
+    connect(comm, SIGNAL(rxDataReceived(unsigned int, QByteArray)), uds, SLOT(rxDataReceiverSlot(unsigned int, QByteArray)), Qt::DirectConnection);
 
     // UDS TX Signals to Comm TX Slots
     connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
     connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
     //=====================================================================
+
+    // GUI Console Print
+    connect(uds, SIGNAL(toConsole(QString)), this->ui->consoleOut, SLOT(appendPlainText(QString)));
 }
 
 MainWindow::~MainWindow()

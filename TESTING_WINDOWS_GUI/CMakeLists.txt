@@ -26,8 +26,6 @@ set(PROJECT_SOURCES
         Communication/VirtualDriver.hpp
         Communication_Layer/Communication.cpp
         Communication_Layer/Communication.hpp
-        UDS_Layer/UDSMsg.cpp
-        UDS_Layer/UDSMsg.h
         UDS_Layer/UDS.cpp
         UDS_Layer/UDS.hpp
         UDS_Spec/uds_comm_spec.cpp

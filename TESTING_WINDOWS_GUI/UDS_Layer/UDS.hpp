@@ -15,7 +15,6 @@
 #include <QByteArray>
 
 #include "stdint.h"
-#include "UDSMsg.h"
 
 
 class UDS : public QObject{
@@ -31,7 +30,7 @@ public:
     UDS(uint8_t gui_id);
 	virtual ~UDS();
 
-    void messageInterpreter(UDS_Msg msg);
+    void messageInterpreter(unsigned int id, uint8_t *data, uint8_t no_bytes);
 
 	void reqIdentification(); // Sending out broadcast for tester present
 
@@ -74,12 +73,18 @@ signals:
      */
     void txData(const QByteArray &data);
 
+
+    /**
+     * @brief Signals a Text to be print to GUI console
+     */
+    void toConsole(const QString &);
+
 public slots:
     /**
      * @brief Slot for received UDS Message to be interpreted
      * @param uds UDS Message
      */
-    void rxDataReceiverSlot( const UDS_Msg &uds);
+    void rxDataReceiverSlot(const unsigned int id, const QByteArray &ba);
 
 };
 

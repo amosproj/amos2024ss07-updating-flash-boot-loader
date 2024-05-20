@@ -21,7 +21,6 @@
 
 #include "../Communication/Can_Wrapper.hpp"
 #include "../Communication/VirtualDriver.hpp"
-#include "../UDS_Layer/UDSMsg.h"
 
 #define COMM_INTERFACE_VIRTUAL				(0x0)
 #define COMM_INTERFACE_CAN					(0x1)
@@ -70,7 +69,7 @@ signals:
      * @param id ID of the Sender
      * @param ba ByteArray with the data
      */
-    void rxDataReceived (const UDS_Msg &uds);
+    void rxDataReceived (const unsigned int id, const QByteArray &ba);
 
     /**
      * @brief Signals that Virtual TX Data is ready to be transmitted

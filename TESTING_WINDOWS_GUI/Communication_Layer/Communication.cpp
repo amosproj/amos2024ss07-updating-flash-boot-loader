@@ -187,11 +187,15 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes){
 void Communication::dataReceiveHandleMulti(){
 
     if(multiframe_still_receiving == 1 && multiframe_next_msg_available == 0 && multiframe_curr_uds_msg != NULL){
-        // TODO: Create UDS Message
-        UDS_Msg msg = UDS_Msg(multiframe_curr_id, multiframe_curr_uds_msg, multiframe_curr_uds_msg_len);
+        QByteArray ba;
+        ba.resize(multiframe_curr_uds_msg_len);
+        for(int i = 0; i < multiframe_curr_uds_msg_len; i++)
+            ba[i] = multiframe_curr_uds_msg[i];
+        const unsigned int id_ba = multiframe_curr_id;
+
         // Emit Signal
         qInfo("Communication: Sending Signal rxDataReceived for Multi Frame");
-        emit rxDataReceived(msg);
+        emit rxDataReceived(id_ba, ba);
 
         // Reset both receiving flags and ID
         multiframe_still_receiving = 0;
@@ -220,11 +224,15 @@ void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned
         uint8_t* temp_uds_msg = rx_starting_frame(&temp_uds_msg_len, &temp_next_msg_available, MAX_FRAME_LEN_CAN, data, dlc);
 
         if(!temp_next_msg_available){ // Single Frame
+            QByteArray ba;
+            ba.resize(temp_uds_msg_len);
+            for(int i = 0; i < temp_uds_msg_len; i++)
+                ba[i] = temp_uds_msg[i];
+            const unsigned int id_ba = id;
 
-            UDS_Msg msg = UDS_Msg(id, temp_uds_msg, temp_uds_msg_len);
             // Emit Signal
             qInfo("Communication: Sending Signal rxDataReceived for Single Frame");
-            emit rxDataReceived(msg);
+            emit rxDataReceived(id_ba, ba);
         }
 
         else {
