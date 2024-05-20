@@ -30,7 +30,7 @@ IfxCan_Can_Pins canPins = {
 
 /*Interrupts*/
 IFX_INTERRUPT(canIsrTxHandler, 0, INTERRUPT_PRIO_TX);
-IFX_INTERRUPT(canIsrRxHandler, 0, INTERRUPT_PRIO_RX);
+IFX_INTERRUPT(canIsrRxFifo0Handler, 0, INTERRUPT_PRIO_RX);
 
 void canIsrTxHandler(void){
       IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_transmissionCompleted);
@@ -43,7 +43,7 @@ void canIsrTxHandler(void){
  * Calls function to execute on Data Read in CAN Message
  * @param processDataFunction Pointer to function that processes Data read in CAN Message
 */
-void canIsrRxHandler(){
+void canIsrRxFifo0Handler(){
     
      //Read Message
     if (processDataFunction != NULL)
@@ -51,8 +51,8 @@ void canIsrRxHandler(){
         //Callback
     }
     
-        IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_messageStoredToDedicatedRxBuffer); /*Clear Message Stored Flag*/
-        IfxCan_Can_readMessage(&g_can.canTXandRXNode, &g_can.rxMsg, g_can.rxData);
+        IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_rxFifo0NewMessage); /*Clear Message Stored Flag*/
+        IfxCan_Can_readMessage(&g_can.canTXandRXNode, &g_can.rxMsg, (uint32*)g_can.rxData);
         toggle_led_activity(LED1);
 
 }
@@ -60,11 +60,11 @@ void canIsrRxHandler(){
  
 void canAcceptAllMessagesFilter(void){
     g_can.canFilter.number = 0;
-    g_can.canFilter.elementConfiguration = IfxCan_FilterElementConfiguration_storeInRxBuffer;
+    g_can.canFilter.elementConfiguration = IfxCan_FilterElementConfiguration_storeInRxFifo0;
     g_can.canFilter.type = IfxCan_FilterType_classic;
-    g_can.canFilter.id1 = 0x000;
-    g_can.canFilter.id2 = 0x7FF;
-    g_can.canFilter.rxBufferOffset = IfxCan_RxBufferId_0;
+    g_can.canFilter.id1 = 0x0FF;
+    g_can.canFilter.id2 = 0x700;
+    //g_can.canFilter.rxBufferOffset = IfxCan_RxBufferId_0;
     IfxCan_Can_setStandardFilter(&g_can.canTXandRXNode, &g_can.canFilter);
 }
 
@@ -76,15 +76,27 @@ void initTXandRXNode(void){
     
     /*FRAME TYPE RX AND TX*/
     g_can.canNodeConfig.frame.type = IfxCan_FrameType_transmitAndReceive;
+    g_can.canNodeConfig.rxConfig.rxFifo0DataFieldSize = IfxCan_DataFieldSize_64;
+    g_can.canNodeConfig.rxConfig.rxFifo0Size = 15;
+    g_can.canNodeConfig.rxConfig.rxMode = IfxCan_RxMode_fifo0;
 
     /*PIN Definition*/
     g_can.canNodeConfig.pins = &canPins;
 
+    /*Filter config*/
+    g_can.canNodeConfig.filterConfig.messageIdLength = IfxCan_MessageIdLength_both;
+    g_can.canNodeConfig.filterConfig.standardListSize = 0;
+    g_can.canNodeConfig.filterConfig.extendedListSize = 0;
+    g_can.canNodeConfig.filterConfig.standardFilterForNonMatchingFrames = IfxCan_NonMatchingFrame_acceptToRxFifo0;
+    g_can.canNodeConfig.filterConfig.extendedFilterForNonMatchingFrames = IfxCan_NonMatchingFrame_reject;
+    g_can.canNodeConfig.filterConfig.rejectRemoteFramesWithStandardId = TRUE;
+    g_can.canNodeConfig.filterConfig.rejectRemoteFramesWithExtendedId = TRUE;
+
     /*Interrupt Config*/
-    g_can.canNodeConfig.interruptConfig.messageStoredToDedicatedRxBufferEnabled = TRUE; /*Raise Interrupt when msg is stored in RX Buffer*/
-    g_can.canNodeConfig.interruptConfig.reint.priority = INTERRUPT_PRIO_RX;           /*Prio*/
-    g_can.canNodeConfig.interruptConfig.reint.interruptLine = IfxCan_InterruptLine_1;   /*Interrupt Line 1*/
-    g_can.canNodeConfig.interruptConfig.reint.typeOfService = IfxSrc_Tos_cpu0;          /*On CPU 0*/
+    g_can.canNodeConfig.interruptConfig.rxFifo0NewMessageEnabled = TRUE;
+    g_can.canNodeConfig.interruptConfig.rxf0n.priority = INTERRUPT_PRIO_RX;           /*Prio*/
+    g_can.canNodeConfig.interruptConfig.rxf0n.interruptLine = IfxCan_InterruptLine_1;   /*Interrupt Line 1*/
+    g_can.canNodeConfig.interruptConfig.rxf0n.typeOfService = IfxSrc_Tos_cpu0;          /*On CPU 0*/
 
     g_can.canNodeConfig.interruptConfig.transmissionCompletedEnabled = TRUE;     /*Raises Interrupt when transmition is done*/
     g_can.canNodeConfig.interruptConfig.traco.priority = INTERRUPT_PRIO_TX;    /*Prio*/
@@ -104,7 +116,7 @@ void canInitDriver(void){
     IfxCan_Can_initModule(&g_can.canModule, &g_can.canConfig); /*Init with default config*/
 
     initTXandRXNode();
-    canAcceptAllMessagesFilter();
+    // canAcceptAllMessagesFilter();
 
     
     IfxCan_Can_initMessage(&g_can.rxMsg); /*Init for RX Message*/
@@ -124,7 +136,7 @@ void canTransmitMessage(uint32_t canMessageID, uint32_t lowWord, uint32_t highWo
 
     /*Sends CAN Message, only if BUS is empty*/
         while( IfxCan_Status_notSentBusy ==
-           IfxCan_Can_sendMessage(&g_can.canTXandRXNode, &g_can.txMsg, &g_can.txData[0])){}
+           IfxCan_Can_sendMessage(&g_can.canTXandRXNode, &g_can.txMsg, (uint32*)&g_can.txData[0])){}
 
 }
 
