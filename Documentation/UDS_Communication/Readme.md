@@ -1,9 +1,9 @@
 # UDS Communication Documentation for Flashbootloader
 
-This document describes the concept of the UDS communication that is used for this project. Mainly there is only a suitable subset of the UDS protocol implemented so that the bootloader stays as simple as possible. Furthermore this means that adaptions were made if necessary for this project.
+This document describes the concept of the UDS communication that is used for this project. Mainly there is only a suitable subset of the UDS protocol implemented so that the bootloader stays as simple as possible. Furthermore, this means that adaptions were made if necessary for this project.
 
 ## CAN and CAN FD Basics
-CAN and CAN FD is used as main communication protocol. There are some further readings found under [CAN FD Wikipedia](https://en.wikipedia.org/wiki/CAN_FD)
+CAN and CAN FD are used as the main communication protocol. There are some further readings found under [CAN FD Wikipedia](https://en.wikipedia.org/wiki/CAN_FD)
 and [CAN Bus Wikipedia](https://en.wikipedia.org/wiki/CAN_bus). First of all the communication in general is defined in the following section.
 
 >The identification of the different ECUs and the Flashbootloader GUI is considered as following:
@@ -15,9 +15,9 @@ and [CAN Bus Wikipedia](https://en.wikipedia.org/wiki/CAN_bus). First of all the
 > - The range of the identifier of the ECUs is 0xF24 FFF0 - 1111 0010 0100 1111 1111 1111 0000
 > - Example for ECU A identifier: 0x0F24 0010 
 > - Example for transmitting from GUI to ECU A: 0x0F24 0011 (indicates for ECU A that there is a request from GUI with ID 1)
-> - Example for transmitting from ECU A to GUI: 0x0F24 0010 (inidicates for GUI that there is a response from ECU)
+> - Example for transmitting from ECU A to GUI: 0x0F24 0010 (indicates for GUI that there is a response from ECU)
   
-> For this documentation it is further on assumed that the ECU is identified by ID <span style="color:green">"0x0F24 0010"</span> and the GUI is identified by ID <span style="color:yellow">"0x0F24 0001"</span>. To directly address some information to the ECU, the GUI uses the direct communication identifier for the ECU <span style="color:yellow">"0x0F24 0011"</span>.
+> For this documentation it is further assumed that the ECU is identified by ID <span style="color:green">"0x0F24 0010"</span> and the GUI is identified by ID <span style="color:yellow">"0x0F24 0001"</span>. To directly address some information to the ECU, the GUI uses the direct communication identifier for the ECU <span style="color:yellow">"0x0F24 0011"</span>.
 
 **Extended frame format**
 | Field name                 | Length (bits) | Purpose                                         |
@@ -42,7 +42,7 @@ and [CAN Bus Wikipedia](https://en.wikipedia.org/wiki/CAN_bus). First of all the
 To get a more detailed insight into the UDS protocol the following sources have been used:
 - [CSS Electronics - UDS Explained - A Simple Intro (Unified Diagnostic Services)](https://www.csselectronics.com/pages/uds-protocol-tutorial-unified-diagnostic-services)
 - [Automotive Softing - UDS ISO 14229](https://automotive.softing.com/fileadmin/sof-files/pdf/de/ae/poster/UDS_Faltposter_softing2016.pdf)
-- [Security Alogrithm Example](https://udsoncan.readthedocs.io/en/latest/udsoncan/intro.html)
+- [Security Algorithm Example](https://udsoncan.readthedocs.io/en/latest/udsoncan/intro.html)
 
 ### CAN ISO-TP 
 - For classical CAN frames the maximum payload is 8 bytes, for CAN FD the payload is limited to 64 bytes
@@ -68,7 +68,7 @@ To get a more detailed insight into the UDS protocol the following sources have 
 
 ![Software Architecture](../Architecture/AMOS_Flashbootloader_SW_Architecture.png)
 
-The main logic for the UDS communication is located in the UDS Layer of the Windows GUI framework on the one side and in the UDS Layer of the MCU. In general the communication can be handled via CAN, CAN FD or Ethernet. The details for the different technologies is not part of the documentation.
+The main logic for the UDS communication is located in the UDS Layer of the Windows GUI framework on the one side and in the UDS Layer of the MCU. In general the communication can be handled via CAN, CAN FD or Ethernet. The details for the different technologies are not part of the documentation.
 
 
 ## Protocol description for Flashbootloader
@@ -132,7 +132,7 @@ The main logic for the UDS communication is located in the UDS Layer of the Wind
 --- 
 
 ## Switch to Flashbootloader Sequence
-> The application software need to have an interface to trigger a reset of the ECU. The Bootloder Key need to be set to 0x00000000 when the switch to bootloader mode is triggered.
+> The application software needs to have an interface to trigger a reset of the ECU. The Bootloader Key need to be set to 0x00000000 when the switch to bootloader mode is triggered.
 
 ![Switch from Application Software to Flashbootloader](./Switch_ASW_Bootloader.png)
 
@@ -146,12 +146,12 @@ The main logic for the UDS communication is located in the UDS Layer of the Wind
 
 ![Session Handling](./Session_Handling.png)
 
-> - Programming relevant services (SIDs) are only accessable in programming session.
-> - To enable the full access there need to be a security access after changing to programming session
+> - Programming relevant services (SIDs) are only accessible in programming session.
+> - To enable the full access there needs to be a security access after changing to programming session
 
-To fully activate the programming session without any restrictions the following procedure need to be done:
+To fully activate the programming session without any restrictions the following procedure needs to be done:
 ![Session Handling](./Security_Access.png)
-> 1. The GUI requests for a seed - Need to be a random value that must be use in order to compute the key
+> 1. The GUI requests for a seed - Need to be a random value that must be used in order to compute the key
 > 2. The GUI computes a key based on the seed using an algorithm that is defined for the AMOS Bootloader and known to GUI and ECU
 > 3. The GUI sends the key to the ECU, the ECU verifies it and, if it matches the ECU's value, the programming session is fully unlocked
 
@@ -270,7 +270,7 @@ To fully activate the programming session without any restrictions the following
 > - General Request: [PCI][<span style="color:red">\$SID</span>]\[UDS DID 1\]\[UDS DID 0\] -> PCI = Single Frame (Code = 0)
 > - This service uses a Data Identifier (DID), which is a 2 byte value between 0x0000 and 0xFFFF (65535)
 > - The DID serves for both - request and response
-> - DID of UDS Protocol have been used according to ISO 14229 (when possible) - [Data Identifier List](https://piembsystech.com/data-identifiers-did-of-uds-protocol-iso-14229/)
+> - DID of UDS Protocol has been used according to ISO 14229 (when possible) - [Data Identifier List](https://piembsystech.com/data-identifiers-did-of-uds-protocol-iso-14229/)
 
 | DID Number        | DID Name                                          | DID Value Description                       |
 |-------------------|---------------------------------------------------|---------------------------------------------|
@@ -278,14 +278,14 @@ To fully activate the programming session without any restrictions the following
 | 0xF199            | Programming Date ID                               | BCD Format - YYMMDD                         |
 | **0xFD00-0xFEFF** | System Supplier Specific                          | Range for storing specific values           |
 | 0xFD00            | Bootloader Key Address                            | Address for the Bootloader key              |
-| 0xFD01            | Booloader Key Good Value                          | Value to store for ASW                      |
+| 0xFD01            | Bootloader Key Good Value                          | Value to store for ASW                      |
 | 0xFD02            | CAN Base Mask                                     | First 11 bits of CAN ID - 0x0F24            |
 | 0xFD03            | CAN ECU ID                                        | Next 12 bits of CAN ID - 0x001              |
-| 0xFD10            | Bootloader Writeable App Start Address - Core 0   | First Byte of addresss for Storing ASW      |
+| 0xFD10            | Bootloader Writeable App Start Address - Core 0   | First Byte of address for Storing ASW      |
 | 0xFD11            | Bootloader Writeable App End Address - Core 0     | Last Byte of address for Storing ASW        |
-| 0xFD12            | Bootloader Writeable App Start Address - Core 1   | First Byte of addresss for Storing ASW      |
+| 0xFD12            | Bootloader Writeable App Start Address - Core 1   | First Byte of address for Storing ASW      |
 | 0xFD13            | Bootloader Writeable App End Address - Core 1     | Last Byte of address for Storing ASW        |
-| 0xFD14            | Bootloader Writeable App Start Address - Core 2   | First Byte of addresss for Storing ASW      |
+| 0xFD14            | Bootloader Writeable App Start Address - Core 2   | First Byte of address for Storing ASW      |
 | 0xFD15            | Bootloader Writeable App End Address - Core 2     | Last Byte of address for Storing ASW        |
 
 
