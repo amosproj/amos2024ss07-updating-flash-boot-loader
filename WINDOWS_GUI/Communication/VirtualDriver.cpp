@@ -4,14 +4,15 @@
 //============================================================================
 // Name        : VirtualDriver.cpp
 // Author      : Michael Bauer
-// Version     : 0.1
+// Version     : 0.2
 // Copyright   : MIT
-// Description : Virtual Driver Implementation
+// Description : Qt Virtual Driver Implementation
 //============================================================================
 
-#include "VirtualDriver.h"
+#include <QDebug>
 
-#include <stdio.h>
+#include "VirtualDriver.hpp"
+
 #include <stdint.h>
 
 VirtualDriver::VirtualDriver() {
@@ -27,19 +28,32 @@ VirtualDriver::~VirtualDriver() {
 
 void VirtualDriver::setID(uint32_t id){
 	this->id = id;
-	printf("Virtual Driver: TX ID is set to 0x%08X\n", this->id);
+    qInfo("Virtual Driver: TX ID is set to 0x%08X\n", this->id);
 }
 
 uint8_t VirtualDriver::initDriver(){
-	printf("Virtual Driver init successful\n");
+    qInfo("Virtual Driver init successful\n");
+    emit driverInit("Virtual Driver init successful");
 	return 0;
 }
 
 uint8_t VirtualDriver::txData(uint8_t *data, uint8_t no_bytes){
-	printf("Virtual Driver (TX ID=0x%08X) - TX (HEX): ", id);
-	for(auto i = 0; i < no_bytes; i++){
-		printf("%02X ", data[i]);
+
+    QByteArray ba;
+    ba.resize(no_bytes);
+    for(auto i = 0; i < no_bytes; i++){
+        ba[i] = data[i];
 	}
-	printf("\n");
-	return 1;
+    qInfo() << "Virtual Driver (TX ID="<< id << ") Data: " << ba.toStdString();
+    emit txDataSentStatus("Virtual Driver TX successful");
+    return 1;
+}
+
+void VirtualDriver::doRX(){
+    mutex.lock();
+    _working = false;
+    mutex.unlock();
+
+    qWarning("No usage RX Thread in Virtual Driver\n");
+    emit rxThreadFinished();
 }

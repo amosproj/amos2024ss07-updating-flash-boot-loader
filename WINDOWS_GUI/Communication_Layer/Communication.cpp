@@ -4,9 +4,9 @@
 //============================================================================
 // Name        : Communication.cpp
 // Author      : Michael Bauer
-// Version     : 0.1
+// Version     : 0.2
 // Copyright   : MIT
-// Description : Communication Layer implementation
+// Description : Qt Communication Layer implementation
 //============================================================================
 
 #if defined(_Windows) || defined(_MSC_VER) || defined (__GNUC__)
@@ -14,17 +14,10 @@
  #include <windows.h>
 #endif
 
-#include <stdio.h>
-
-#include "Communication.h"
+#include "Communication.hpp"
 #include "../UDS_Spec/uds_comm_spec.h"
-#include "../Communication/VirtualDriver.h"
-#include "../Communication/Can_Wrapper.hpp"
 
-
-Communication::Communication() {
-    uds_eh = nullptr;
-
+Communication::Communication(){
     curr_interface_type = 0; // Initial with Virtual Driver
 
     multiframe_curr_id = 0; // Init receiving ID
@@ -33,19 +26,28 @@ Communication::Communication() {
     multiframe_next_msg_available = 0;
     multiframe_still_receiving = 0;
 
-	virtualDriver = VirtualDriver(); // Initialize Virtual Driver
-	virtualDriver.setInterfaceID(0);
 
-	canDriver = CAN_Wrapper(500000);
-	canDriver.setInterfaceID(1);
+    // The thread and the worker are created in the constructor so it is always safe to delete them.
+    threadVD = new QThread();
+    virtualDriver = new VirtualDriver(); // Initialize Virtual Driver
+    virtualDriver->setInterfaceID(0);
+    virtualDriver->moveToThread(threadVD);
+    connect(virtualDriver, SIGNAL(rxStartThreadRequested()), threadVD, SLOT(start()));
+    connect(threadVD, SIGNAL(started()), virtualDriver, SLOT(runThread()));
+    connect(virtualDriver, SIGNAL(rxThreadFinished()), threadVD, SLOT(quit()), Qt::DirectConnection);
+
+    threadCAN = new QThread();
+    canDriver = new CAN_Wrapper(500000);
+    canDriver->setInterfaceID(1);
+    canDriver->moveToThread(threadCAN);
+    connect(canDriver, SIGNAL(rxStartThreadRequested()), threadCAN, SLOT(start()));
+    connect(threadCAN, SIGNAL(started()), canDriver, SLOT(runThread()));
+    connect(canDriver, SIGNAL(rxThreadFinished()), threadCAN, SLOT(quit()), Qt::DirectConnection);
 }
 
 Communication::~Communication() {
-
-}
-
-void Communication::setUDSInterpreter(UDS_Event_Handler* uds_eh){
-    this->uds_eh = uds_eh;
+    virtualDriver->stopRX();
+    canDriver->stopRX();
 }
 
 void Communication::init(uint8_t comm_interface_type){
@@ -53,41 +55,53 @@ void Communication::init(uint8_t comm_interface_type){
 	uint8_t init_status = 0;
 
 	if(comm_interface_type == COMM_INTERFACE_VIRTUAL){ // Init VirtualDriver
-		init_status = virtualDriver.initDriver();
+        init_status = virtualDriver->initDriver();
+        // TODO: Connect Virtual Driver RX with Communication RX
+        //connect(virtualDriver, SIGNAL(rxDataReceived(unsigned int, QByteArray)), this, SLOT(rxCANDataSlot(unsigned int, QByteArray)), Qt::DirectConnection);
+
+        // Connect Communication TX with Virtual Driver TX
+        connect(this, SIGNAL(txVirtualDataSignal(QByteArray)), virtualDriver, SLOT(txDataSlot(QByteArray)), Qt::DirectConnection);
+        virtualDriver->startRX();
 	}
 	else if(comm_interface_type == COMM_INTERFACE_CAN){ // Init CanDriver
-		init_status = canDriver.initDriver();
-		canDriver.startRXThread(dynamic_cast<CAN_Wrapper_Event*>(this));
+        init_status = canDriver->initDriver();
+        // Connect CAN Driver RX with Communication RX
+        connect(canDriver, SIGNAL(rxDataReceived(unsigned int, QByteArray)), this, SLOT(rxCANDataSlot(unsigned int, QByteArray)), Qt::DirectConnection);
+
+        // Connect Communication TX with CAN Driver TX
+        connect(this, SIGNAL(txCANDataSignal(QByteArray)), canDriver, SLOT(txDataSlot(QByteArray)), Qt::DirectConnection);
+
+        canDriver->startRX();
 	}
 
 	// TODO: Error Handling
 	if(!init_status){
-		printf("Communication: Init successful for type %d\n", comm_interface_type);
+        qInfo() << "Communication: Init successful for type " << comm_interface_type;
 		return;
 	}
-	printf("Communication: Error with init of driver with type %d\n", comm_interface_type);
+    qInfo() << "Communication: Error with init of driver with type " << comm_interface_type;
 	return;
 }
 
 void Communication::setCommunicationType(uint8_t comm_interface_type){
 
 	this->curr_interface_type = comm_interface_type;
-	printf("Communication: Set interface to type %d\n", comm_interface_type);
+    qInfo() << "Communication: Set interface to type " << comm_interface_type;
 }
 
 void Communication::setID(uint32_t id){
 	if(curr_interface_type == COMM_INTERFACE_VIRTUAL){ // VirtualDriver
-		virtualDriver.setID(id);
+        virtualDriver->setID(id);
 	}
 	else if(curr_interface_type == COMM_INTERFACE_CAN){ // CANDriver
-		canDriver.setID(id);
+        canDriver->setID(id);
 	}
 }
 
 void Communication::txData(uint8_t *data, uint32_t no_bytes){
 
 	if(curr_interface_type == COMM_INTERFACE_VIRTUAL){ // Using Virtual Driver
-        printf("Communication: Sending out Data via Virtual Driver interface\n");
+        qInfo("Communication: Sending out Data via Virtual Driver interface");
 		uint8_t *send_msg;
 		int send_len;
 		int has_next;
@@ -97,22 +111,39 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes){
 		uint8_t idx = 0;
 
 		send_msg = tx_starting_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr);
-		virtualDriver.txData(send_msg, send_len);
-		free(send_msg);
+        // Wrap data into QByteArray for signaling
+        QByteArray qbdata;
+        qbdata.resize(send_len);
+        for(int i=0; i < qbdata.size(); i++)
+            qbdata[i] = send_msg[i];
+        // Free the allocated memory of msg
+        free(send_msg);
+
+        qInfo("Communication: Sending Signal txVirtualDataSignal with payload (Single/First Frame)");
+        emit txVirtualDataSignal(qbdata);
 
 		if (has_next){ // Check in flow control and continue sending
 			// TODO: Wait on flow control...
 
 			while(has_next){
 				send_msg = tx_consecutive_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr, &idx);
-				virtualDriver.txData(send_msg, send_len);
-				free(send_msg);
+
+                // Wrap data into QByteArray for signaling
+                qbdata.clear();
+                qbdata.resize(send_len);
+                for(int i=0; i < qbdata.size(); i++)
+                    qbdata[i] = send_msg[i];
+                // Free the allocated memory of msg
+                free(send_msg);
+
+                qInfo("Communication: Sending Signal txVirtualDataSignal with payload (Consecutive Frame)");
+                emit txVirtualDataSignal(qbdata);
 			}
 		}
 	}
 
 	else if(curr_interface_type == COMM_INTERFACE_CAN){ // Using CAN
-        printf("Communication: Sending out Data via CAN Driver\n");
+        qInfo("Communication: Sending out Data via CAN Driver - Started!");
 		uint8_t *send_msg;
 		int send_len;
 		int has_next;
@@ -121,29 +152,50 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes){
 		uint8_t idx = 0;
 
 		send_msg = tx_starting_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr);
-		canDriver.txData(send_msg, send_len);
-		free(send_msg);
+        // Wrap data into QByteArray for signaling
+        QByteArray qbdata;
+        qbdata.resize(send_len);
+        for(int i=0; i < qbdata.size(); i++)
+            qbdata[i] = send_msg[i];
+        // Free the allocated memory of msg
+        free(send_msg);
 
+        qInfo("Communication: Sending Signal txCANDataSignal with payload (Single/First Frame)");
+        emit txCANDataSignal(qbdata);
 
 		if (has_next){ // Check in flow control and continue sending
 			// TODO: Wait on flow control...
 
 			while(has_next){
 				send_msg = tx_consecutive_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr, &idx);
-				canDriver.txData(send_msg, send_len);
-				free(send_msg);
+                // Wrap data into QByteArray for signaling
+                qbdata.clear();
+                qbdata.resize(send_len);
+                for(int i=0; i < qbdata.size(); i++)
+                    qbdata[i] = send_msg[i];
+                // Free the allocated memory of msg
+                free(send_msg);
+
+                qInfo("Communication: Sending Signal txCANDataSignal with payload (Consecutive Frame)");
+                emit txCANDataSignal(qbdata);
 			}
 		}
 	}
+    qInfo("Communication: Sending out Data via CAN Driver - Finished!");
 }
 
 void Communication::dataReceiveHandleMulti(){
 
     if(multiframe_still_receiving == 1 && multiframe_next_msg_available == 0 && multiframe_curr_uds_msg != NULL){
-        // TODO: Create UDS Message
-        UDS_Msg msg = UDS_Msg(multiframe_curr_id, multiframe_curr_uds_msg, multiframe_curr_uds_msg_len);
-        if(uds_eh != nullptr)
-            (*uds_eh).messageInterpreter(msg);
+        QByteArray ba;
+        ba.resize(multiframe_curr_uds_msg_len);
+        for(int i = 0; i < multiframe_curr_uds_msg_len; i++)
+            ba[i] = multiframe_curr_uds_msg[i];
+        const unsigned int id_ba = multiframe_curr_id;
+
+        // Emit Signal
+        qInfo("Communication: Sending Signal rxDataReceived for Multi Frame");
+        emit rxDataReceived(id_ba, ba);
 
         // Reset both receiving flags and ID
         multiframe_still_receiving = 0;
@@ -172,18 +224,23 @@ void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned
         uint8_t* temp_uds_msg = rx_starting_frame(&temp_uds_msg_len, &temp_next_msg_available, MAX_FRAME_LEN_CAN, data, dlc);
 
         if(!temp_next_msg_available){ // Single Frame
+            QByteArray ba;
+            ba.resize(temp_uds_msg_len);
+            for(int i = 0; i < temp_uds_msg_len; i++)
+                ba[i] = temp_uds_msg[i];
+            const unsigned int id_ba = id;
 
-            UDS_Msg msg = UDS_Msg(id, temp_uds_msg, temp_uds_msg_len);
-            if(uds_eh != nullptr)
-                (*uds_eh).messageInterpreter(msg);
+            // Emit Signal
+            qInfo("Communication: Sending Signal rxDataReceived for Single Frame");
+            emit rxDataReceived(id_ba, ba);
         }
 
         else {
             if(multiframe_curr_id != 0 && id != multiframe_curr_id){ // Ignore other IDs
-                printf("Communication: Ignoring 0x%08X. Still processing communication with 0x%08X", id, multiframe_curr_id);
+                qInfo()<<"Communication: Ignoring ID"<<id<<". Still processing communication with "<<multiframe_curr_id;
                 return;
             }
-            //printf("Call of Starting Frame\n");
+            //qInfo("Call of Starting Frame\n");
 
             multiframe_still_receiving = 1;
             multiframe_curr_id = id;
@@ -198,10 +255,10 @@ void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned
 	uint8_t consecutive_frame = rx_is_consecutive_frame(data, dlc, MAX_FRAME_LEN_CAN);
 	if(consecutive_frame){
         if(multiframe_curr_id != 0 && id != multiframe_curr_id){ // Ignore other IDs
-            printf("Communication: Ignoring 0x%08X. Still processing communication with 0x%08X", id, multiframe_curr_id);
+            qInfo()<<"Communication: Ignoring ID"<<id<<". Still processing communication with "<<multiframe_curr_id;
             return;
         }
-        //printf("Call of Consecutive Frame: DLC %d\n", dlc);
+        //qInfo()<<"Call of Consecutive Frame: DLC "<<dlc;
 
         multiframe_still_receiving = 1;
         rx_consecutive_frame(&multiframe_curr_uds_msg_len, multiframe_curr_uds_msg, &multiframe_next_msg_available, dlc, data, &multiframe_curr_uds_msg_idx);
@@ -215,6 +272,42 @@ void Communication::setTestMode(){
         // No changes for Testing necessary
     }
     else if(curr_interface_type == COMM_INTERFACE_CAN){ // CAN Driver
-        canDriver.setTestingAppname();
+        canDriver->setTestingAppname();
     }
+}
+
+//============================================================================
+// Slots
+//============================================================================
+
+void Communication::rxCANDataSlot(const unsigned int id, const QByteArray &ba){
+    qInfo("Communication: Slot - Received RX CAN Data to be processed");
+    uint8_t* data = (uint8_t*)calloc(ba.size(), sizeof(uint8_t));
+    if(data != nullptr){
+        for(int i = 0; i < ba.size(); i++){
+            data[i] = ba[i];
+        }
+        this->handleCANEvent(id, sizeof(data), data);
+        free(data);
+    }
+}
+
+void Communication::txDataSlot(const QByteArray &data){
+    qInfo() << "Communication: Slot - Received TX Data to be transmitted - Size =" << data.size() << " Bytes";
+
+    // Unwrap the received data
+    uint8_t* msg = (uint8_t*)calloc(data.size(), sizeof(uint8_t));
+    if (msg != nullptr){
+        for(int i= 0; i < data.size(); i++){
+            msg[i] = data[i];
+            //qInfo() << "Step " << i << "Data: " << msg[i];
+        }
+        this->txData(msg, data.size());
+        free(msg);
+    }
+}
+
+void Communication::setIDSlot(uint32_t id){
+    qInfo("Communication: Slot - Received setID");
+    this->setID(id);
 }

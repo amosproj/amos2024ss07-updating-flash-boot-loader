@@ -20,23 +20,16 @@ set(PROJECT_SOURCES
         mainwindow.ui
         editableComboBox.h
         editablecombobox.cpp
-        GUI_Events/consoleUpdater.h
-        GUI_Events/consoleUpdater.cpp
-        Communication/can_wrapper_event.hpp
+        Communication/CommInterface.cpp
+        Communication/CommInterface.hpp
         Communication/Can_Wrapper.cpp
         Communication/Can_Wrapper.hpp
         Communication/VirtualDriver.cpp
-        Communication/VirtualDriver.h
-        Communication_Layer/CommInterface.cpp
-        Communication_Layer/CommInterface.h
+        Communication/VirtualDriver.hpp
         Communication_Layer/Communication.cpp
-        Communication_Layer/Communication.h
+        Communication_Layer/Communication.hpp
         UDS_Layer/UDS.cpp
-        UDS_Layer/UDS.h
-        UDS_Layer/UDSMsg.cpp
-        UDS_Layer/UDSMsg.h
-        UDS_Layer/UDS_Event.h
-        UDS_Layer/UDS_Event.cpp
+        UDS_Layer/UDS.hpp
         UDS_Spec/uds_comm_spec.cpp
         UDS_Spec/uds_comm_spec.h
         )

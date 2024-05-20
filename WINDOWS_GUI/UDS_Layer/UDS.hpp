@@ -2,37 +2,35 @@
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
 
 //============================================================================
-// Name        : UDS.h
+// Name        : UDS.hpp
 // Author      : Michael Bauer
-// Version     : 0.1
+// Version     : 0.2
 // Copyright   : MIT
-// Description : UDS Layer implementation
+// Description : Qt UDS Layer implementation
 //============================================================================
 #ifndef UDS_LAYER_UDS_H_
 #define UDS_LAYER_UDS_H_
 
+#include <QObject>
+#include <QByteArray>
+
 #include "stdint.h"
 
-#include "../Communication_Layer/Communication.h"
-#include "UDS_Event.h"
-#include "../GUI_Events/consoleUpdater.h"
 
-class UDS : public UDS_Event_Handler{
+class UDS : public QObject{
+    Q_OBJECT
 
 private:
 	uint8_t gui_id;
-	Communication *comm;
     uint8_t init;
-    ConsoleUpdater* console;
 
 
 public:
     UDS();
-    UDS(uint8_t gui_id, Communication *comm_connection);
+    UDS(uint8_t gui_id);
 	virtual ~UDS();
 
-    void setGUIConsoleConnection(ConsoleUpdater* console);
-    void messageInterpreter(UDS_Msg msg);
+    void messageInterpreter(unsigned int id, uint8_t *data, uint8_t no_bytes);
 
 	void reqIdentification(); // Sending out broadcast for tester present
 
@@ -60,6 +58,34 @@ public:
 
 private:
 	uint32_t createCommonID(uint32_t base_id, uint8_t gui_id, uint32_t ecu_id);
+
+
+signals:
+    /**
+     * @brief Signals that the ID need to be changed
+     * @param id ID to be set
+     */
+    void setID(uint32_t id);
+
+    /**
+     * @brief Signals that Data need to transmitted
+     * @param data Data to be transmitted
+     */
+    void txData(const QByteArray &data);
+
+
+    /**
+     * @brief Signals a Text to be print to GUI console
+     */
+    void toConsole(const QString &);
+
+public slots:
+    /**
+     * @brief Slot for received UDS Message to be interpreted
+     * @param uds UDS Message
+     */
+    void rxDataReceiverSlot(const unsigned int id, const QByteArray &ba);
+
 };
 
 #endif /* UDS_LAYER_UDS_H_ */

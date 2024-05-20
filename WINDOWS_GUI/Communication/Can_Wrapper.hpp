@@ -6,7 +6,7 @@
 // Author      : Michael Bauer
 // Version     : 0.2
 // Copyright   : MIT
-// Description : Header for CAN Wrapper for Vector XL-Driver Library 20.30.14
+// Description : Header for Qt CAN Wrapper for Vector XL-Driver Library 20.30.14
 //============================================================================
 
 #ifndef CAN_WRAPPER_HPP_
@@ -26,31 +26,28 @@
 #define CHAN01 					0		// Index of Channel 1
 #define MAX_USED_CHANNEL		1		// do not edit! Currently 1 is supported only
 
-#include "../Communication_Layer/CommInterface.h"
-#include "can_wrapper_event.hpp"
+#include <QByteArray>
+
+#include "CommInterface.hpp"
 #include "vxlapi.h"
 
 class CAN_Wrapper : public CommInterface {
 
 	// Variables
 	private:
-        uint8_t testMode                    = 0;                            // Used for controlling custom appname
-        char testing_appNAme[XL_MAX_APPNAME+1] = "AMOS TESTING";            // Custom Appname, mainly for testing
-        char appName[XL_MAX_APPNAME+1] 		= "AMOS FBL GUI";				// AppName, will be registered
-		XLportHandle portHandle 			= XL_INVALID_PORTHANDLE;		// Holds the port handle for communication
-		XLdriverConfig drvConfig;											// Holds the driver configuration
-		XLaccess channelMask 				= 0;							// Chosen channel mask
-		int channelIndex					= 0;							// Chosen channel index
-		XLaccess permissionMask 			= 0;							// Possible channel mask (permitted)
-		unsigned int baudrate 				= 500000;						// Default baudrate
+        uint8_t testMode                        = 0;                            // Used for controlling custom appname
+        char testing_appNAme[XL_MAX_APPNAME+1]  = "AMOS TESTING";               // Custom Appname, mainly for testing
+        char appName[XL_MAX_APPNAME+1]          = "AMOS FBL GUI";				// AppName, will be registered
+        XLportHandle portHandle                 = XL_INVALID_PORTHANDLE;		// Holds the port handle for communication
+        XLdriverConfig drvConfig;                                               // Holds the driver configuration
+        XLaccess channelMask                    = 0;							// Chosen channel mask
+        int channelIndex                        = 0;							// Chosen channel index
+        XLaccess permissionMask                 = 0;							// Possible channel mask (permitted)
+        unsigned int baudrate                   = 500000;						// Default baudrate
 
-		unsigned int txID 					= 0;							// TX ID for sending CAN messages
-		XLevent event;														// Template variable for TX Event
-
-		int RXThreadRunning;												// Flag for controlling RX thread
-		HANDLE RXThread;													// Handle for the RX Thread
-		XLhandle msgEvent;													// Message event for SetNotification
-		CAN_Wrapper_Event* clientHandle		= nullptr;						// Handle for the client to inform about
+        unsigned int txID                       = 0;							// TX ID for sending CAN messages
+        XLevent event;                  										// Template variable for TX Event
+        XLhandle msgEvent;                                                      // Message event for SetNotification
 
 
 	// Methods
@@ -59,11 +56,11 @@ class CAN_Wrapper : public CommInterface {
 		CAN_Wrapper(unsigned int baudrate);
 		~CAN_Wrapper();
 
+        void setID(uint32_t id) override;
 		uint8_t initDriver() override;
-		void setID(uint32_t id) override;
 
-		uint8_t txData(uint8_t *data, uint8_t no_bytes) override;
-		HANDLE startRXThread(CAN_Wrapper_Event* h);
+        uint8_t txData(uint8_t *data, uint8_t no_bytes) override;
+        void doRX() override;
 
         void setTestingAppname();
 
@@ -76,12 +73,8 @@ class CAN_Wrapper : public CommInterface {
 		XLstatus actChannels();
 		XLstatus setNotification();
 
-		// RX handling
-		static DWORD WINAPI RXThreadHandling(LPVOID);
-
 		// debugging methods
 		void _printConfig();
-
 };
 
 

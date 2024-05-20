@@ -3,10 +3,7 @@
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
-//#include "can_wrapper.hpp"
-//#include "can_wrapper_event.hpp"
 #include "editableComboBox.h"
-#include "UDS_Spec/uds_comm_spec.h"
 
 static inline void dummy_function(QByteArray data) {
     qDebug() << "Received " << data;
@@ -23,11 +20,32 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     this->setFixedSize(this->geometry().width(),this->geometry().height());
 
-    // Setup the connections
-    uds = UDS();
-
     this->setWindowIcon(QIcon::fromTheme("FlashBootloader",
                                          QIcon("../../icon.png")));
+
+    qInfo("Main: Create Communication Layer");
+    comm = new Communication();
+    comm->setCommunicationType(1); // Set to CAN
+    comm->init(1); // Set to CAN
+
+    qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
+    uds = new UDS(0x001);
+
+    //=====================================================================
+    // Connect the signals and slots
+
+    // Comm RX Signal to UDS RX Slot
+    connect(comm, SIGNAL(rxDataReceived(unsigned int, QByteArray)), uds, SLOT(rxDataReceiverSlot(unsigned int, QByteArray)), Qt::DirectConnection);
+
+    // UDS TX Signals to Comm TX Slots
+    connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
+    connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
+    //=====================================================================
+
+    // GUI Console Print
+    connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)));
+
+    //=====================================================================
 
     connect(ui->button_file, &QPushButton::clicked, this, [=]() {
         QString path = QFileDialog::getOpenFileName(nullptr, "Choose File");
@@ -64,13 +82,7 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     connect(ui->button_can_message, &QPushButton::clicked, this, [=]{
-        uint32_t ecu_id = 0x001;
-        uds.diagnosticSessionControl(ecu_id, FBL_DIAG_SESSION_DEFAULT);
-
-        uint8_t write_data[] = "AMOS Flashbootloader rocks!";
-        uds.writeDataByIdentifier(ecu_id, FBL_DID_SYSTEM_NAME, write_data, sizeof(write_data));
-
-        this->ui->can_message_rcvd->setText("CAN-message sent");
+        uds->testerPresent(0x001);
     });
 
     // Create both QComboBoxes for later
@@ -94,10 +106,6 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
-}
-
-void MainWindow::setUDS(UDS u){
-    this->uds = u;
 }
 
 void MainWindow::display_rcvd_can_message(unsigned int id, unsigned short dlc, unsigned char data[])

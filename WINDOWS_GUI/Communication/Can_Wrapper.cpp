@@ -6,11 +6,13 @@
 // Author      : Michael Bauer
 // Version     : 0.2
 // Copyright   : MIT
-// Description : CAN Wrapper for Vector XL-Driver Library 20.30.14
+// Description : Qt CAN Wrapper for Vector XL-Driver Library 20.30.14
 //============================================================================
 
+#include <QDebug>
+#include <QString>
+
 #include "Can_Wrapper.hpp"
-#include <stdio.h>
 
 //============================================================================
 // Public Testing
@@ -43,9 +45,7 @@ CAN_Wrapper::CAN_Wrapper(unsigned int baudrate /*= 500000*/){
  * Deconstructor for CAN_Wrapper. Closes the port and driver.
  */
 CAN_Wrapper::~CAN_Wrapper(){
-
-	// Shutdown the RX thread
-	RXThreadRunning = 0;
+    stopRX();
 
 	// Close the port and the driver
 	closePort();
@@ -74,7 +74,7 @@ uint8_t CAN_Wrapper::initDriver(){
     // Check on some custom appname
     if (testMode){
         strncpy_s(appName, testing_appNAme, sizeof(appName));
-        printf("Changed app name to %s.\n", appName);
+        qInfo("Changed app name to %s.\n", appName);
     }
 
 	// Open the driver
@@ -89,11 +89,12 @@ uint8_t CAN_Wrapper::initDriver(){
 	if (status == XL_SUCCESS) {
 		_printConfig();
 
-		if (DEBUGGING) printf("----------------------------------------------------------------------------------------------\n");
+        if (DEBUGGING) qInfo("----------------------------------------------------------------------------------------------");
 
 		channelMask = 0;
 
 		// Check application configuration for the relevant channel
+        qInfo("CAN_Wrapper: Checking Channel Mask for th relevant channel");
 		channelMask = xlGetChannelMask(hwType, hwIndex, hwChannel);
 
 		for (i = 0; i < drvConfig.channelCount; i++){
@@ -107,16 +108,20 @@ uint8_t CAN_Wrapper::initDriver(){
 
 		// State Error if no assignment is given
 		if(!found){
-			printf("Please assign %d CAN channel(s) in Vector Hardware Config or Vector Hardware Manager and restart the application\n", MAX_USED_CHANNEL);
+            qInfo() << "CAN_Wrapper: Please assign "<< MAX_USED_CHANNEL<<" CAN channel(s) in Vector Hardware Config or Vector Hardware Manager and restart the application";
 			status = XL_ERROR;
 		}
+        else
+            qInfo("CAN_Wrapper: Found relevant assignment");
 
 		// Open one port including all channels
-		if (status == XL_SUCCESS){
+        qInfo("CAN_Wrapper: Opening port");
+        if (status == XL_SUCCESS){
 			status = openPort();
 		}
 
 		// Set the defined BaudRate
+        qInfo("CAN_Wrapper: Set Baudrate");
 		if ((status == XL_SUCCESS) && (portHandle != XL_INVALID_PORTHANDLE)){
 			status = setBaudrate(baudrate);
 		}
@@ -127,19 +132,23 @@ uint8_t CAN_Wrapper::initDriver(){
 		}
 
 		// Activate all channel on the bus
+        qInfo("CAN_Wrapper: Activate all channel on the bus");
 		if (status == XL_SUCCESS){
 			status = actChannels();
 		}
 
 		// Get an event for every message
+        qInfo("CAN_Wrapper: Get event for every message");
 		if (status == XL_SUCCESS){
 			status = setNotification();
 		}
 
 		if (status != XL_SUCCESS)
-				printf("\nCAN_Wrapper: Error during initialization of the driver! Info: %s\n", xlGetErrorString(status));
-
-		if (DEBUGGING) printf("----------------------------------------------------------------------------------------------\n");
+            qInfo() << "CAN_Wrapper: Error during initialization of the driver! Info:"<<xlGetErrorString(status);
+        else{
+            qInfo() << "CAN_Wrapper: Initialization of the driver finished! Info:"<<xlGetErrorString(status);
+        }
+        if (DEBUGGING) qInfo("----------------------------------------------------------------------------------------------\n");
 
 	}
 
@@ -160,11 +169,13 @@ uint8_t CAN_Wrapper::initDriver(){
 				appChannel++;
 			}
 		}
-		printf("CAN_Wrapper: No HW defined\n");
-		printf("\tPlease assign %d CAN channel(s) in Vector Hardware Config or Vector Hardware Manager and restart the application\n\n", MAX_USED_CHANNEL);
-		return XL_ERR_INIT_ACCESS_MISSING;
+        qInfo("CAN_Wrapper: No HW defined");
+        qInfo() << "CAN_Wrapper: Please assign "<< MAX_USED_CHANNEL<<" CAN channel(s) in Vector Hardware Config or Vector Hardware Manager and restart the application";
+        emit driverInit(xlGetErrorString(XL_ERR_INIT_ACCESS_MISSING));
+        return XL_ERR_INIT_ACCESS_MISSING;
 	}
 
+    emit driverInit(xlGetErrorString(status));
 	return XL_SUCCESS;
 }
 
@@ -175,7 +186,7 @@ uint8_t CAN_Wrapper::initDriver(){
  */
 void CAN_Wrapper::setID(uint32_t id){
 	txID = id;
-	printf("CAN_Wrapper: TX ID is set to 0x%08X\n", txID);
+    qInfo("CAN_Wrapper: TX ID is set to 0x%08X\n", txID);
 }
 
 /**
@@ -191,11 +202,15 @@ uint8_t CAN_Wrapper::txData(uint8_t *data, uint8_t no_bytes) {
 	XLaccess chanMaskTx = channelMask;
 	unsigned int msgCount = 1;
 
+    qInfo() << "CAN_Wrapper: txData - Sending of " << no_bytes << "bytes is requested";
+
 	// Error Handling
 	if (no_bytes > 8) {
-		printf("CAN_Wrapper: Maximum number of Bytes is 8");
+        qInfo("CAN_Wrapper: Maximum number of Bytes is 8");
 		return false;
 	}
+    qInfo("CAN_Wrapper: Sending Signal txDataSentRequested");
+    emit txDataSentRequested("CAN_Wrapper: TX requested");
 
 	// Message processing
 
@@ -209,25 +224,16 @@ uint8_t CAN_Wrapper::txData(uint8_t *data, uint8_t no_bytes) {
 	event.tagData.msg.flags = 0;
 	for (unsigned int i = 0; i < no_bytes; i++){
 		event.tagData.msg.data[i] = data[i];
+        //qInfo() << "CAN_Wrapper: Setting byte "<<i<<"to "<<data[i];
 	}
 
 	// Transmit the message
 	status = xlCanTransmit(portHandle, chanMaskTx, &msgCount, &event);
-	printf("<< CAN_Wrapper: Transmitting %d byte CAN message with CM(0x%I64x), %s\n", no_bytes, chanMaskTx, xlGetErrorString(status));
+    qInfo() << "<< CAN_Wrapper: Transmitting "<<no_bytes<<" byte CAN message with CM("<<chanMaskTx<<") - Info: " <<xlGetErrorString(status);
 
+    qInfo("CAN_Wrapper: Sending Signal txDataSentStatus");
+    emit txDataSentStatus(xlGetErrorString(status));
 	return (status == XL_SUCCESS);
-}
-
-/**
- * Method to start a RX Thread that uses the CAN_Wrapper_Event Handle to inform about new messages
- *
- * @param CAN_Wrapper_Event h: Defined handle to be used by the CAN_Wrapper
- */
-HANDLE CAN_Wrapper::startRXThread(CAN_Wrapper_Event* h){
-	if (h != nullptr)
-			clientHandle = h;
-
-	return CreateThread(0, 0, RXThreadHandling, this, 0, 0);
 }
 
 //============================================================================
@@ -241,8 +247,9 @@ XLstatus CAN_Wrapper::openPort(){
 	permissionMask = channelMask;
 
 	status = xlOpenPort(&portHandle, appName, channelMask, &permissionMask, RX_QUEUE_SIZE, XL_INTERFACE_VERSION, XL_BUS_TYPE_CAN);
-	if (DEBUGGING) printf("CAN_Wrapper: Opened Port with CM=0x%I64x, PM=0x%I64x, PH=0x%02ld, Info: %s\n",
-			channelMask, permissionMask, portHandle, xlGetErrorString(status));
+    if (DEBUGGING) {
+        qInfo()<<"CAN_Wrapper: Opened Port with CM=" << channelMask << ", PM="<<permissionMask<<", PH="<<portHandle<<", Info: "<<xlGetErrorString(status);
+    }
 
 	return status;
 }
@@ -252,8 +259,9 @@ XLstatus CAN_Wrapper::closePort(){
 
 	if(portHandle != XL_INVALID_PORTHANDLE){
 		status = xlClosePort(portHandle);
-		if (DEBUGGING) printf("CAN_Wrapper: Closed Port with PH=0x%02ld, Info: %s\n",
-							portHandle, xlGetErrorString(status));
+        if (DEBUGGING) {
+            qInfo()<<"CAN_Wrapper: Closed Port with PH="<<portHandle<<", Info: "<< xlGetErrorString(status);
+        }
 	}
 	portHandle = XL_INVALID_PORTHANDLE;
 	return status;
@@ -264,8 +272,9 @@ XLstatus CAN_Wrapper::setBaudrate(unsigned int baudrate){
 	XLstatus status;
 
 	status = xlCanSetChannelBitrate(portHandle, channelMask, baudrate);
-	if (DEBUGGING) printf("CAN_Wrapper: CanSetChannelBitrate to BaudRate=%u, Info: %s\n",
-			baudrate, xlGetErrorString(status));
+    if (DEBUGGING) {
+        qInfo()<<"CAN_Wrapper: CanSetChannelBitrate to BaudRate="<<baudrate<<", Info:"<< xlGetErrorString(status);
+    }
 
 	return status;
 
@@ -275,8 +284,9 @@ XLstatus CAN_Wrapper::actChannels(){
 	XLstatus status;
 
 	status = xlActivateChannel(portHandle, channelMask, XL_BUS_TYPE_CAN, XL_ACTIVATE_RESET_CLOCK);
-	if (DEBUGGING) printf("CAN_Wrapper: ActivateChannel CM=0x%I64x, Info: %s\n",
-				channelMask, xlGetErrorString(status));
+    if (DEBUGGING) {
+        qInfo()<<"CAN_Wrapper: ActivateChannel CM="<<channelMask<<", Info: "<<xlGetErrorString(status);
+    }
 
 	return status;
 }
@@ -285,60 +295,69 @@ XLstatus CAN_Wrapper::setNotification(){
 	XLstatus status;
 
 	status = xlSetNotification (portHandle, &msgEvent, 1);
-	if (DEBUGGING) printf("CAN_Wrapper: SetNotification for every message, Info: %s\n",
-				xlGetErrorString(status));
+    if (DEBUGGING) {
+        qInfo()<<"CAN_Wrapper: SetNotification for every message, Info: "<<xlGetErrorString(status);
+    }
 
 	return status;
 }
 
 //============================================================================
-// Private RX handling
+// Public RX Thread
 //============================================================================
 
-DWORD WINAPI CAN_Wrapper::RXThreadHandling(LPVOID param){
-	CAN_Wrapper *instance = static_cast<CAN_Wrapper*>(param);
-
+void CAN_Wrapper::doRX(){
 	XLstatus status;
 
 	unsigned int msgrx = RECEIVE_EVENT_SIZE;
 	XLevent event;
 
-	if (instance == nullptr)
-		return ERROR_INVALID_INSTANCE;
+    if ((this->portHandle) != XL_INVALID_PORTHANDLE){
+        qInfo("CAN_Wrapper: Starting RX\n");
 
-	if (instance->clientHandle == nullptr){
-		return ERROR_INVALID_ACCESS;
-	}
+        while(this->_working) {
+            // Check if thread should be canceled
+            mutex.lock();
+            bool abort = _abort;
+            mutex.unlock();
 
-	if ((instance->portHandle) != XL_INVALID_PORTHANDLE){
-		printf("CAN_Wrapper: Starting RXThreadHandling\n");
+            if(abort)
+                break;
 
-		instance->RXThreadRunning = 1;
-		while(instance->RXThreadRunning) {
-			WaitForSingleObject(instance->msgEvent, 10);
+
+            WaitForSingleObject(this->msgEvent, 10);
 
 			status = XL_SUCCESS;
 			while(!status){
 
 				msgrx = RECEIVE_EVENT_SIZE;
-				status = xlReceive(instance->portHandle, &msgrx, &event);
+                status = xlReceive(this->portHandle, &msgrx, &event);
 
 				if(status != XL_ERR_QUEUE_IS_EMPTY){
+                    qInfo() << ">> CAN_Wrapper: Received"<<event.tagData.msg.dlc<<"byte CAN message";
 
-					if (instance->clientHandle != nullptr){
-						(*instance->clientHandle).handleCANEvent(event.tagData.msg.id, event.tagData.msg.dlc, event.tagData.msg.data);
-					}
-					else {
-						printf("CAN_Wrapper: No handler defined... Stopping Thread\n");
-						instance->RXThreadRunning = 0;
-					}
+                    QByteArray ba;
+                    ba.resize(event.tagData.msg.dlc);
+                    for(int i = 0; i < event.tagData.msg.dlc; i++)
+                        ba[i] = event.tagData.msg.data[i];
+                    qInfo() << "CAN_Wrapper: Sending Signal rxDataReceived for ID" << QString("0x%1").arg(event.tagData.msg.id, 8, 16, QLatin1Char( '0' ));
+                    const unsigned int id = event.tagData.msg.id;
+                    emit rxDataReceived(id, ba);
 				}
 			}
 		}
-		return NO_ERROR;
 	}
+    else{
+        qInfo("CAN_Wrapper: Could not start RX since Porthandle is missing. Init was not successfull");
+    }
 
-	return ERROR_CREATE_FAILED;
+    // Set _working to false, meaning the process can't be aborted anymore.
+    mutex.lock();
+    _working = false;
+    mutex.unlock();
+
+    qDebug("CAN_Wrapper: RX Thread stopped");
+    emit rxThreadFinished();
 }
 
 //============================================================================
@@ -348,22 +367,23 @@ DWORD WINAPI CAN_Wrapper::RXThreadHandling(LPVOID param){
 void CAN_Wrapper::_printConfig(){
 	if (!DEBUGGING) return;
 
-	printf("----------------------------------------------------------------------------------------------\n");
-	printf("HW Configuration\n");
-	printf("- %02d channels\n", drvConfig.channelCount);
+    qInfo("----------------------------------------------------------------------------------------------");
+    qInfo("HW Configuration");
+    qInfo() << "-"<<  drvConfig.channelCount << " channels";
 
 	for(unsigned int i = 0; i < drvConfig.channelCount; i++){
-		printf("\t-Ch: %02d, Mask:0x%03I64x, Name: %23s",
-				drvConfig.channel[i].channelIndex,
-				drvConfig.channel[i].channelMask,
-				drvConfig.channel[i].name);
+
 
 		if (drvConfig.channel[i].transceiverType != XL_TRANSCEIVER_TYPE_NONE)
-			printf(", TX %13s", drvConfig.channel[i].transceiverName);
+            qInfo() << "\t-Ch: " << drvConfig.channel[i].channelIndex << ", Mask: " << drvConfig.channel[i].channelMask << ", Name: " <<drvConfig.channel[i].name << "TX: " << drvConfig.channel[i].transceiverName;
+        else{
+            qInfo() << "\t-Ch: " << drvConfig.channel[i].channelIndex << ", Mask: " << drvConfig.channel[i].channelMask << ", Name: " <<drvConfig.channel[i].name;
+        }
 
-		printf("\n");
 	}
-
-	printf("----------------------------------------------------------------------------------------------\n");
+    qInfo("----------------------------------------------------------------------------------------------\n");
 }
 
+//============================================================================
+// Slots
+//============================================================================
