@@ -21,6 +21,14 @@ void (*processDataFunction)(void*);
 
 canType g_can; //Global control struct
 
+IfxCan_Can_Pins canPins = {
+    .padDriver = IfxPort_PadDriver_cmosAutomotiveSpeed2,
+    .rxPin = CAN_RX_PIN,
+    .rxPinMode = IfxPort_InputMode_noPullDevice,
+    .txPin = CAN_TX_PIN,
+    .txPinMode = IfxPort_OutputMode_pushPull
+};
+
 
 /*Interrupts*/
 IFX_INTERRUPT(canIsrTxHandler, 0, INTERRUPT_PRIO_TX);
@@ -48,7 +56,7 @@ void canIsrRxHandler(){
         //LED 1 If Message ID TX and RX is same
         if (g_can.rxMsg.messageId == g_can.txMsg.messageId)
         {
-            led_on(LED1);
+            //led_on(LED1);
         }
         //LED 2 if data TX and RX is the same
         if (g_can.rxData[0] == g_can.txData[0] )
@@ -60,7 +68,7 @@ void canIsrRxHandler(){
     }
     
 
-    
+
 }
 
 void initSrcNode(){
@@ -99,6 +107,34 @@ void initDstNode(){
     //TODO:Check if we need CAN Filter here
 }
 
+void initTXandRXNode(void){
+    IfxCan_Can_initNodeConfig(&g_can.canNodeConfig, &g_can.canModule);                  /*Default Config*/
+
+    g_can.canNodeConfig.busLoopbackEnabled = FALSE;                                      /*Loopbackmode*/
+    g_can.canNodeConfig.nodeId = IfxCan_NodeId_0;                                         /*Node ID 0 -> is must*/
+
+    /*FRAME TYPE RX AND TX*/
+    g_can.canNodeConfig.frame.type = IfxCan_FrameType_transmitAndReceive;
+
+    /*PIN Definition*/
+    g_can.canNodeConfig.pins = &canPins;
+
+    /*Interrupt Config*/
+    g_can.canNodeConfig.interruptConfig.messageStoredToDedicatedRxBufferEnabled = TRUE; /*Raise Interrupt when msg is stored in RX Buffer*/
+    g_can.canNodeConfig.interruptConfig.reint.priority = INTERRUPT_PRIO_RX;           /*Prio*/
+    g_can.canNodeConfig.interruptConfig.reint.interruptLine = IfxCan_InterruptLine_1;   /*Interrupt Line 1*/
+    g_can.canNodeConfig.interruptConfig.reint.typeOfService = IfxSrc_Tos_cpu0;          /*On CPU 0*/
+
+    g_can.canNodeConfig.interruptConfig.transmissionCompletedEnabled = TRUE;     /*Raises Interrupt when transmition is done*/
+    g_can.canNodeConfig.interruptConfig.traco.priority = INTERRUPT_PRIO_TX;    /*Prio*/
+    g_can.canNodeConfig.interruptConfig.traco.interruptLine = IfxCan_InterruptLine_0; /*Interrupt line 0*/
+    g_can.canNodeConfig.interruptConfig.traco.typeOfService = IfxSrc_Tos_cpu0;       /*On CPU0*/
+    IfxPort_setPinModeOutput(CAN_STB, IfxPort_OutputMode_pushPull, IfxPort_OutputIdx_general);
+    IfxPort_setPinLow(CAN_STB);
+    IfxCan_Can_initNode(&g_can.canTXandRXNode, &g_can.canNodeConfig); //Init Node with CAN Pin Config and Standard Baud Rate 500k
+
+}
+
 /**
  * Initialize CAN Module and Node
 */
@@ -106,13 +142,15 @@ void canInitDriver(void){
     IfxCan_Can_initModuleConfig(&g_can.canConfig, &MODULE_CAN0); /*LoadsDefault Config*/
     IfxCan_Can_initModule(&g_can.canModule, &g_can.canConfig); /*Init with default config*/
 
-    initSrcNode();
-    initDstNode();
+    //ISOTP: commented both lines for testing
+    //initSrcNode();
+    //initDstNode();
+    initTXandRXNode();
     IfxCan_Can_initMessage(&g_can.rxMsg); /*Init for RX Message*/
 }
 
 //ISOTP: Testing different headers for CAN messages
-
+/*
 int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
     IfxCan_Can_initMessage(&g_can.txMsg);
     g_can.txMsg.messageId = canMessageID;
@@ -142,8 +180,8 @@ int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
 
     return 0;
 }
+*/
 
-/*
 void canTransmitMessage(uint32_t canMessageID, uint32_t low_word, uint32_t high_word){
     IfxCan_Can_initMessage(&g_can.txMsg);
     g_can.txData[0] = low_word; //To transmit data
@@ -156,8 +194,8 @@ void canTransmitMessage(uint32_t canMessageID, uint32_t low_word, uint32_t high_
     {
     }
 }
+/*
 */
-
 /**
  * TODO: Check with Andi if this is ok
  * ATTENTION: CAN_sendMessage wants uint32_t data, but I thought we can send 8 bytes of data trough CAN? ~Leon

@@ -31,7 +31,6 @@
 
 #include "loader.h"
 #include "led_driver.h"
-#include "isotp.h"
 #include "can_driver.h"
 #include "can_init.h"
 
@@ -41,9 +40,11 @@
  * ------------------------------------------------------------------------
  */
 
+#include <stdio.h>
+#include <uds_comm_spec.h>
 #include "Bsp.h"
 
-IsoTpContext ctx;
+//IsoTpContext ctx;
 
 
 /*
@@ -70,6 +71,8 @@ void core0_main(void)
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
 
 
+    //SerialASC.begin(9600);
+
     init_led_driver();
     //show_flash();
 
@@ -78,7 +81,7 @@ void core0_main(void)
     led_off(LED1);
     led_off(LED2);
 
-    isotp_init(&ctx);
+    //isotp_init(&ctx);
 
     uint8_t dataCAN[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
 
@@ -92,9 +95,11 @@ void core0_main(void)
 
         toggle_led_activity(LED1);
 
-        isotp_poll(&ctx);
+        //isotp_poll(&ctx);
 
+        //SerialASC.print("Test\n");
 
+        //printf("TESTING\n");
 
 
 
@@ -116,8 +121,6 @@ void core0_main(void)
             // Error sending message
         }
         */
-
-
 
     }
 }
