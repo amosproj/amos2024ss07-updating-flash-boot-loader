@@ -104,15 +104,48 @@ void core0_main(void)
 
 
 
-        if (canTransmitMessage(0x123, dataCAN, sizeof(dataCAN)) == 0) {
-            // Message sent successfully
+
+        for(int i = 0; i < sizeof(dataCAN); i++){
+
+            printf("dataCAN[%d]: %d\n", i, dataCAN[i]);
+
 
         }
-        else {
-            // Error sending message
 
-            led_on(LED2);
+        printf("\n");
+
+        uint32_t testTxData[2];
+
+        testTxData[0] = 0;
+        testTxData[1] = 0;
+
+        for(int j = 0; j < 2 ; j++){
+
+            printf("testTxData[%d]: %d\n", j, testTxData[j]);
+
+
         }
+
+        memcpy(testTxData, dataCAN, sizeof(dataCAN));
+
+
+        for(int j = 0; j < 2; j++){
+
+            printf("testTxData[%d]: %d\n", j, testTxData[j]);
+
+
+        }
+        printf("\n");
+
+        int b = 0;
+
+
+        //not working
+        canTransmitMessage(0x123, dataCAN, sizeof(dataCAN));
+
+        //works
+        //canTransmitMessage(0x123, 0xFFFFFFFF, 0x00000000);
+
 
         /*
         if (isotp_send(&ctx, 0x123, dataIsoSolo, sizeof(dataIsoSolo)) == 0) {

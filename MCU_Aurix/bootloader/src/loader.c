@@ -37,10 +37,11 @@ void show_can(void)
      * ------------------------------------------------------------------------
      */
     //ISOTP: Edited canTransmit to test new isoTP implementation
+    //uint8_t debugMessage = CAN_DEBUG_DATA2;
+    //canTransmitMessage(CAN_DEBUG_ID, &debugMessage, 1);
 
-    //canTransmitMessage(CAN_DEBUG_ID,CAN_DEBUG_DATA, 1);
-    uint8_t debugMessage = CAN_DEBUG_DATA2;
-    canTransmitMessage(CAN_DEBUG_ID, &debugMessage, 1);
+    canTransmitMessage(CAN_DEBUG_ID,CAN_DEBUG_DATA, 1);
+
 
     /*
      * ------------------------------------------------------------------------

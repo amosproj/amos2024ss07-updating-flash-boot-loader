@@ -12,7 +12,7 @@
 #include "can_driver.h"
 #include "can_init.h"
 #include "led_driver.h"
-
+#include "led_driver_TC375_LK.h"
 
 void (*processDataFunction)(void*);
 
@@ -20,7 +20,6 @@ void (*processDataFunction)(void*);
 
 
 canType g_can; //Global control struct
-
 IfxCan_Can_Pins canPins = {
     .padDriver = IfxPort_PadDriver_cmosAutomotiveSpeed2,
     .rxPin = CAN_RX_PIN,
@@ -29,13 +28,17 @@ IfxCan_Can_Pins canPins = {
     .txPinMode = IfxPort_OutputMode_pushPull
 };
 
-
 /*Interrupts*/
 IFX_INTERRUPT(canIsrTxHandler, 0, INTERRUPT_PRIO_TX);
 IFX_INTERRUPT(canIsrRxHandler, 0, INTERRUPT_PRIO_RX);
 
 void canIsrTxHandler(void){
-    IfxCan_Node_clearInterruptFlag(g_can.canSrcNode.node, IfxCan_Interrupt_transmissionCompleted); //Just clears the Interrupt 
+      IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_transmissionCompleted);
+
+      // ISOTP: removed LED toggle for debugging
+      //toggle_led_activity(LED2);
+
+
 }
 
 /**
@@ -44,67 +47,32 @@ void canIsrTxHandler(void){
  * @param processDataFunction Pointer to function that processes Data read in CAN Message
 */
 void canIsrRxHandler(){
-    IfxCan_Node_clearInterruptFlag(g_can.canDstNode.node, IfxCan_Interrupt_messageStoredToDedicatedRxBuffer); /*Clear Message Stored Flag*/
-    IfxCan_Can_readMessage(&g_can.canDstNode, &g_can.rxMsg, g_can.rxData); //Read Message
+
+     //Read Message
     if (processDataFunction != NULL)
     {
         //Callback
     }
-
-    if (DEBUGGING)
-    {
-        //LED 1 If Message ID TX and RX is same
-        if (g_can.rxMsg.messageId == g_can.txMsg.messageId)
-        {
-            //led_on(LED1);
-        }
-        //LED 2 if data TX and RX is the same
-        if (g_can.rxData[0] == g_can.txData[0] )
-        {
-            //led_on(LED2);
-        }
-        
-        
-    }
     
+        IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_messageStoredToDedicatedRxBuffer); /*Clear Message Stored Flag*/
+        IfxCan_Can_readMessage(&g_can.canTXandRXNode, &g_can.rxMsg, g_can.rxData);
 
+        // ISOTP: removed LED toggle for debugging
+        //led_on(LED1);
+
+        //toggle_led_activity(LED1);
 
 }
 
-void initSrcNode(){
-    //TODO: Change Loopback mode 
-    IfxCan_Can_initNodeConfig(&g_can.canNodeConfig, &g_can.canModule);
 
-    g_can.canNodeConfig.busLoopbackEnabled = TRUE;                               /*Loopback Mode (no external pins)*/
-    g_can.canNodeConfig.nodeId = IfxCan_NodeId_0;                                /*ID = 0*/
-
-    g_can.canNodeConfig.frame.type = IfxCan_FrameType_transmit;                  /*Frame is a transmitting one*/
-
-    g_can.canNodeConfig.interruptConfig.transmissionCompletedEnabled = TRUE;     /*Raises Interrupt when transmition is done*/
-    g_can.canNodeConfig.interruptConfig.traco.priority = INTERRUPT_PRIO_TX;    /*Prio*/
-    g_can.canNodeConfig.interruptConfig.traco.interruptLine = IfxCan_InterruptLine_0; /*Interrupt line 0*/
-    g_can.canNodeConfig.interruptConfig.traco.typeOfService = IfxSrc_Tos_cpu0;       /*On CPU0*/
-
-    IfxCan_Can_initNode(&g_can.canSrcNode, &g_can.canNodeConfig);             /*INIT Node with this Config*/
-}
-
-void initDstNode(){
-    //TODO: Change Loopback mode when PINS are used
-    IfxCan_Can_initNodeConfig(&g_can.canNodeConfig, &g_can.canModule);                  /*Default Config*/
-
-    g_can.canNodeConfig.busLoopbackEnabled = TRUE;                                      /*Loopbackmode*/
-    g_can.canNodeConfig.nodeId = IfxCan_NodeId_1;                                       /*ID = 1*/
-
-    g_can.canNodeConfig.frame.type = IfxCan_FrameType_receive;                          /*Receiving Frame*/
-
-    g_can.canNodeConfig.interruptConfig.messageStoredToDedicatedRxBufferEnabled = TRUE; /*Raise Interrupt when msg is stored in RX Buffer*/
-    g_can.canNodeConfig.interruptConfig.reint.priority = INTERRUPT_PRIO_RX;           /*Prio*/
-    g_can.canNodeConfig.interruptConfig.reint.interruptLine = IfxCan_InterruptLine_1;   /*Interrupt Line 1*/
-    g_can.canNodeConfig.interruptConfig.reint.typeOfService = IfxSrc_Tos_cpu0;          /*On CPU 0*/
-
-    IfxCan_Can_initNode(&g_can.canDstNode, &g_can.canNodeConfig);                        /*INIT Node with this Config*/
-
-    //TODO:Check if we need CAN Filter here
+void canAcceptAllMessagesFilter(void){
+    g_can.canFilter.number = 0;
+    g_can.canFilter.elementConfiguration = IfxCan_FilterElementConfiguration_storeInRxBuffer;
+    g_can.canFilter.type = IfxCan_FilterType_classic;
+    g_can.canFilter.id1 = 0x000;
+    g_can.canFilter.id2 = 0x7FF;
+    g_can.canFilter.rxBufferOffset = IfxCan_RxBufferId_0;
+    IfxCan_Can_setStandardFilter(&g_can.canTXandRXNode, &g_can.canFilter);
 }
 
 void initTXandRXNode(void){
@@ -142,15 +110,35 @@ void canInitDriver(void){
     IfxCan_Can_initModuleConfig(&g_can.canConfig, &MODULE_CAN0); /*LoadsDefault Config*/
     IfxCan_Can_initModule(&g_can.canModule, &g_can.canConfig); /*Init with default config*/
 
-    //ISOTP: commented both lines for testing
-    //initSrcNode();
-    //initDstNode();
     initTXandRXNode();
+    canAcceptAllMessagesFilter();
+
+
     IfxCan_Can_initMessage(&g_can.rxMsg); /*Init for RX Message*/
 }
 
-//ISOTP: Testing different headers for CAN messages
+/**
+ * Transmits a CAN Message: Initialize new TX message, TX is transmitted
+ * @param canMessageID ID of CAN Message for Prio in BUS
+ * @param data data of CAN Message
+ * @param len of CAN Message
+*/
 /*
+void canTransmitMessage(uint32_t canMessageID, uint32_t lowWord, uint32_t highWord){
+    IfxCan_Can_initMessage(&g_can.txMsg);
+    g_can.txData[0] = lowWord; //To transmit data
+    g_can.txData[1] = highWord;
+    g_can.txMsg.messageId = canMessageID;
+
+    //Sends CAN Message, only if BUS is empty
+        while( IfxCan_Status_notSentBusy ==
+           IfxCan_Can_sendMessage(&g_can.canTXandRXNode, &g_can.txMsg, &g_can.txData[0])){}
+
+}
+*/
+
+//ISOTP
+
 int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
     IfxCan_Can_initMessage(&g_can.txMsg);
     g_can.txMsg.messageId = canMessageID;
@@ -166,13 +154,25 @@ int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
     g_can.txData[0] = 0;
     g_can.txData[1] = 0;
 
-    // Copy up to 8 bytes of data into g_can.txData
-    memcpy((uint8_t*)g_can.txData, data, size);
+    uint32_t testTxData[2];
 
+    testTxData[0] = g_can.txData[0];
+    testTxData[1] = g_can.txData[1];
+
+
+
+    // Copy up to 8 bytes of data into g_can.txData
+    memcpy(g_can.txData, data, size);
+
+
+
+
+    testTxData[0] = g_can.txData[0];
+    testTxData[1] = g_can.txData[1];
 
     //Sends CAN Message, only if BUS is empty
     while( IfxCan_Status_notSentBusy ==
-           IfxCan_Can_sendMessage(&g_can.canSrcNode, &g_can.txMsg, g_can.txData))
+           IfxCan_Can_sendMessage(&g_can.canTXandRXNode, &g_can.txMsg, &g_can.txData[0]))
     {
 
 
@@ -180,57 +180,10 @@ int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
 
     return 0;
 }
-*/
 
-void canTransmitMessage(uint32_t canMessageID, uint32_t low_word, uint32_t high_word){
-    IfxCan_Can_initMessage(&g_can.txMsg);
-    g_can.txData[0] = low_word; //To transmit data
-    g_can.txData[1] = high_word;
-    g_can.txMsg.messageId = canMessageID;
 
-    //Sends CAN Message, only if BUS is empty
-    while( IfxCan_Status_notSentBusy ==
-           IfxCan_Can_sendMessage(&g_can.canSrcNode, &g_can.txMsg, &g_can.txData[0]))
-    {
-    }
+
+void canDummyMessagePeriodicly(void){
+    canTransmitMessage(0x123, 0x12345678, 0x87654321);
+    waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 500));
 }
-/*
-*/
-/**
- * TODO: Check with Andi if this is ok
- * ATTENTION: CAN_sendMessage wants uint32_t data, but I thought we can send 8 bytes of data trough CAN? ~Leon
- * Transmits a CAN Message: Initialize new TX message, TX is transmitted
- * @param canMessageID ID of CAN Message for Prio in BUS
- * @param low_word
- * @param high_word
-*/
-/*
-void canTransmitMessage(uint32_t canMessageID, uint8_t *low_word_data, size_t low_word_size, uint8_t *high_word_data, size_t high_word_size){
-    IfxCan_Can_initMessage(&g_can.txMsg);
-    g_can.txMsg.messageId = canMessageID;
-
-    // Ensure that the size of data does not exceed 4 bytes (32 bits)
-    if (low_word_size > 4 || high_word_size > 4) {
-        // Handle error: data size exceeds 4 bytes
-        return;
-    }
-
-    // Initialize low_word and high_word to 0
-    uint32_t low_word = 0;
-    uint32_t high_word = 0;
-
-    // Copy the data to the low_word and high_word
-    memcpy(&low_word, low_word_data, low_word_size);
-    memcpy(&high_word, high_word_data, high_word_size);
-
-    g_can.txData[0] = low_word; /*To transmit data
-    g_can.txData[1] = high_word;
-
-
-    /*Sends CAN Message, only if BUS is empty
-    while( IfxCan_Status_notSentBusy ==
-           IfxCan_Can_sendMessage(&g_can.canSrcNode, &g_can.txMsg, &g_can.txData[0]))
-    {
-    }
-}
-*/
