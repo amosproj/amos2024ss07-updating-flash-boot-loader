@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "UDS_Layer/UDS.hpp"
+#include "Communication_Layer/Communication.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -17,7 +19,17 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+    void on_StartGUITest_clicked();
+
 private:
     Ui::MainWindow *ui;
+
+    // Background Thread
+    QThread *thread;
+
+    Communication *comm;
+    UDS *uds;
 };
+
 #endif // MAINWINDOW_H

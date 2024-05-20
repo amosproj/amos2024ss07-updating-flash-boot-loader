@@ -18,27 +18,20 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
-        testcases.cpp
-        testcases.h
-        ../WINDOWS_GUI/GUI_Events/consoleUpdater.h
-        ../WINDOWS_GUI/GUI_Events/consoleUpdater.cpp
-        ../WINDOWS_GUI/Communication/can_wrapper_event.hpp
-        ../WINDOWS_GUI/Communication/Can_Wrapper.cpp
-        ../WINDOWS_GUI/Communication/Can_Wrapper.hpp
-        ../WINDOWS_GUI/Communication/VirtualDriver.cpp
-        ../WINDOWS_GUI/Communication/VirtualDriver.h
-        ../WINDOWS_GUI/Communication_Layer/CommInterface.cpp
-        ../WINDOWS_GUI/Communication_Layer/CommInterface.h
-        ../WINDOWS_GUI/Communication_Layer/Communication.cpp
-        ../WINDOWS_GUI/Communication_Layer/Communication.h
-        ../WINDOWS_GUI/UDS_Layer/UDS.cpp
-        ../WINDOWS_GUI/UDS_Layer/UDS.h
-        ../WINDOWS_GUI/UDS_Layer/UDSMsg.cpp
-        ../WINDOWS_GUI/UDS_Layer/UDSMsg.h
-        ../WINDOWS_GUI/UDS_Layer/UDS_Event.h
-        ../WINDOWS_GUI/UDS_Layer/UDS_Event.cpp
-        ../WINDOWS_GUI/UDS_Spec/uds_comm_spec.cpp
-        ../WINDOWS_GUI/UDS_Spec/uds_comm_spec.h
+        Communication/CommInterface.cpp
+        Communication/CommInterface.hpp
+        Communication/Can_Wrapper.cpp
+        Communication/Can_Wrapper.hpp
+        Communication/VirtualDriver.cpp
+        Communication/VirtualDriver.hpp
+        Communication_Layer/Communication.cpp
+        Communication_Layer/Communication.hpp
+        UDS_Layer/UDSMsg.cpp
+        UDS_Layer/UDSMsg.h
+        UDS_Layer/UDS.cpp
+        UDS_Layer/UDS.hpp
+        UDS_Spec/uds_comm_spec.cpp
+        UDS_Spec/uds_comm_spec.h
         )
 
 file(GLOB VECTOR_LIB "C:/Users/Public/Documents/Vector/XL\ Driver\ Library\ */bin")
