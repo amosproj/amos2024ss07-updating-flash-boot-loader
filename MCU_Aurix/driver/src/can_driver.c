@@ -119,26 +119,10 @@ void canInitDriver(void){
 
 /**
  * Transmits a CAN Message: Initialize new TX message, TX is transmitted
- * @param canMessageID ID of CAN Message for Prio in BUS
- * @param data data of CAN Message
- * @param len of CAN Message
+ * @param canMessageID, ID of CAN Message for Prio in BUS
+ * @param data,  data of CAN Message
+ * @param size, len of CAN Message
 */
-/*
-void canTransmitMessage(uint32_t canMessageID, uint32_t lowWord, uint32_t highWord){
-    IfxCan_Can_initMessage(&g_can.txMsg);
-    g_can.txData[0] = lowWord; //To transmit data
-    g_can.txData[1] = highWord;
-    g_can.txMsg.messageId = canMessageID;
-
-    //Sends CAN Message, only if BUS is empty
-        while( IfxCan_Status_notSentBusy ==
-           IfxCan_Can_sendMessage(&g_can.canTXandRXNode, &g_can.txMsg, &g_can.txData[0])){}
-
-}
-*/
-
-//ISOTP
-
 int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
     IfxCan_Can_initMessage(&g_can.txMsg);
     g_can.txMsg.messageId = canMessageID;
@@ -154,21 +138,10 @@ int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
     g_can.txData[0] = 0;
     g_can.txData[1] = 0;
 
-    uint32_t testTxData[2];
-
-    testTxData[0] = g_can.txData[0];
-    testTxData[1] = g_can.txData[1];
-
-
 
     // Copy up to 8 bytes of data into g_can.txData
     memcpy(g_can.txData, data, size);
 
-
-
-
-    testTxData[0] = g_can.txData[0];
-    testTxData[1] = g_can.txData[1];
 
     //Sends CAN Message, only if BUS is empty
     while( IfxCan_Status_notSentBusy ==

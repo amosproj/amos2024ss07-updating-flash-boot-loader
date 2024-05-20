@@ -20,6 +20,23 @@ extern "C" {
 
 // TODO: Check on Error Handling for calloc -> Mainly relevant for MCU
 
+//TODO:
+/*
+ * How about a struct with all the necessary information for the isoTP sending process?
+ * Like :
+ *
+ *  typedef struct canType
+ *  {
+ *      uint8_t* frame;
+ *      int* data_out_len;
+ *      int* has_next;
+ *
+ *      uint8_t max_len_per_frame;
+ *      uint8_t frame_idx;
+ *      uint32_t data_out_idx_ctr;
+ *  }isoTP;
+ */
+
 //////////////////////////////////////////////////////////////////////////////
 // ISO TP Handling - TX
 //////////////////////////////////////////////////////////////////////////////
@@ -28,6 +45,8 @@ uint8_t *tx_starting_frame(int *data_out_len, int *has_next, uint8_t max_len_per
     // Caller need to free the memory after processing
     uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
 
+    // TODO: question from leon
+    // *has_next not set?
     if (data_in_len == 0){
         *data_out_len = 0;
         uint8_t *msg = (uint8_t*)calloc(*data_out_len, sizeof(uint8_t));

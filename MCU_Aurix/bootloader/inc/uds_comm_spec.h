@@ -17,6 +17,7 @@ extern "C" {
 #endif
 
 #include "stdint.h"
+#include <stdlib.h>
 
 #define MAX_FRAME_LEN_CAN                                           (0x08)
 #define FBLCAN_IDENTIFIER_MASK                                      (0x0F24FFFF)

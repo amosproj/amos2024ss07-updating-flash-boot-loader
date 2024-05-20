@@ -86,8 +86,16 @@ void core0_main(void)
     uint8_t dataCAN[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
 
     uint8_t dataIsoSolo[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
-    uint8_t dataIsoMulti[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+    uint8_t dataIsoMulti[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
 
+
+
+    uint32_t data_in_len = sizeof(dataIsoMulti);
+    uint32_t data_out_idx_ctr = 0;
+    uint8_t frame_idx = 0;
+    int data_out_len;
+    int has_next;
+    uint8_t max_len_per_frame = 8;
 
     while(1)
     {
@@ -101,59 +109,35 @@ void core0_main(void)
 
         //printf("TESTING\n");
 
+        // Create and send the first frame
+        uint8_t* first_frame = tx_starting_frame(&data_out_len,
+                                                    &has_next,
+                                                    max_len_per_frame,
+                                                    dataIsoMulti,
+                                                    data_in_len,
+                                                    &data_out_idx_ctr);
 
+        canTransmitMessage(0x123, first_frame, data_out_len);
+        free(first_frame);
 
+        // Send consecutive frames if necessary
+        while (has_next) {
+            uint8_t* consecutive_frame = tx_consecutive_frame(&data_out_len,
+                                                                &has_next,
+                                                                max_len_per_frame,
+                                                                dataIsoMulti,
+                                                                data_in_len,
+                                                                &data_out_idx_ctr,
+                                                                &frame_idx);
 
-
-        for(int i = 0; i < sizeof(dataCAN); i++){
-
-            printf("dataCAN[%d]: %d\n", i, dataCAN[i]);
-
-
+            canTransmitMessage(0x123, consecutive_frame, data_out_len);
+            free(consecutive_frame);
         }
 
-        printf("\n");
-
-        uint32_t testTxData[2];
-
-        testTxData[0] = 0;
-        testTxData[1] = 0;
-
-        for(int j = 0; j < 2 ; j++){
-
-            printf("testTxData[%d]: %d\n", j, testTxData[j]);
 
 
-        }
+        //canTransmitMessage(0x123, dataCAN, sizeof(dataCAN));
 
-        memcpy(testTxData, dataCAN, sizeof(dataCAN));
-
-
-        for(int j = 0; j < 2; j++){
-
-            printf("testTxData[%d]: %d\n", j, testTxData[j]);
-
-
-        }
-        printf("\n");
-
-        int b = 0;
-
-
-        //not working
-        canTransmitMessage(0x123, dataCAN, sizeof(dataCAN));
-
-        //works
-        //canTransmitMessage(0x123, 0xFFFFFFFF, 0x00000000);
-
-
-        /*
-        if (isotp_send(&ctx, 0x123, dataIsoSolo, sizeof(dataIsoSolo)) == 0) {
-            // Message sent successfully
-        } else {
-            // Error sending message
-        }
-        */
 
     }
 }
