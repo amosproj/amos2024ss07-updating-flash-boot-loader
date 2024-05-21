@@ -52,5 +52,5 @@ typedef struct rx_ringbuffer
     size_t next_read;
 }rx_ringbuffer;
 
-void canInitDriver(void); 
+rx_ringbuffer* canInitDriver(void);
 void writeInBuffer(uint32_t* data, size_t size);
