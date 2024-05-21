@@ -1,4 +1,5 @@
 #include <QFileDialog>
+#include <QThread>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -17,9 +18,34 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->setFixedSize(this->geometry().width(),this->geometry().height());
 
     this->setWindowIcon(QIcon::fromTheme("FlashBootloader",
                                          QIcon("../../icon.png")));
+
+    qInfo("Main: Create Communication Layer");
+    comm = new Communication();
+    comm->setCommunicationType(1); // Set to CAN
+    comm->init(1); // Set to CAN
+
+    qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
+    uds = new UDS(0x001);
+
+    //=====================================================================
+    // Connect the signals and slots
+
+    // Comm RX Signal to UDS RX Slot
+    connect(comm, SIGNAL(rxDataReceived(unsigned int, QByteArray)), uds, SLOT(rxDataReceiverSlot(unsigned int, QByteArray)), Qt::DirectConnection);
+
+    // UDS TX Signals to Comm TX Slots
+    connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
+    connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
+    //=====================================================================
+
+    // GUI Console Print
+    connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)));
+
+    //=====================================================================
 
     connect(ui->button_file, &QPushButton::clicked, this, [=]() {
         QString path = QFileDialog::getOpenFileName(nullptr, "Choose File");
@@ -55,6 +81,10 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
+    connect(ui->button_can_message, &QPushButton::clicked, this, [=]{
+        uds->testerPresent(0x001);
+    });
+
     // Create both QComboBoxes for later
     editComboBox_speed = new EditableComboBox(this);
     comboBox_speedUnit = new QComboBox(this);
@@ -69,11 +99,24 @@ MainWindow::MainWindow(QWidget *parent)
     // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
     connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
             &MainWindow::comboBoxIndexChanged);
+
+    ui->Console->setReadOnly(true);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::display_rcvd_can_message(unsigned int id, unsigned short dlc, unsigned char data[])
+{
+    QString str = "Received id=";
+    str.append(QString::number(id) + ", dlc=" + QString::number(dlc) + ", data=");
+    str.append(QString::fromUtf8((char *)data));
+    /*for (int i = 0; i < strlen(data)) {
+        str.append(QString::number(data[i]) + ", ");
+    }*/
+    this->ui->textBrowser_flash_status->setText(str);
 }
 
 void MainWindow::updateStatus(MainWindow::status s, QString str) {
@@ -89,9 +132,9 @@ void MainWindow::updateStatus(MainWindow::status s, QString str) {
         case INFO:
             status = "[INFO] ";
             break;
-        case ERROR:
+        /*case ERROR:
             status = "[ERROR] ";
-            break;
+            break;*/
         case RESET:
             status = "";
             this->ui->progressBar_flash->setValue(0);
@@ -166,4 +209,9 @@ void MainWindow::comboBoxIndexChanged(int index)
         editComboBox_speed->hide();
         comboBox_speedUnit->hide();
     }
+}
+
+// Will write Text to console
+void MainWindow::appendTextToConsole(const QString &text){
+    ui->Console->appendPlainText(text);
 }

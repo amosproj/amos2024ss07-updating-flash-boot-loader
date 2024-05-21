@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(WINDOWS_GUI VERSION 0.1 LANGUAGES CXX)
+project(TESTING_WINDOWS_GUI VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -18,20 +18,18 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
-        editableComboBox.h
-        editablecombobox.cpp
-        Communication/CommInterface.cpp
-        Communication/CommInterface.hpp
-        Communication/Can_Wrapper.cpp
-        Communication/Can_Wrapper.hpp
-        Communication/VirtualDriver.cpp
-        Communication/VirtualDriver.hpp
-        Communication_Layer/Communication.cpp
-        Communication_Layer/Communication.hpp
-        UDS_Layer/UDS.cpp
-        UDS_Layer/UDS.hpp
-        UDS_Spec/uds_comm_spec.cpp
-        UDS_Spec/uds_comm_spec.h
+        ../WINDOWS_GUI/Communication/CommInterface.cpp
+        ../WINDOWS_GUI/Communication/CommInterface.hpp
+        ../WINDOWS_GUI/Communication/Can_Wrapper.cpp
+        ../WINDOWS_GUI/Communication/Can_Wrapper.hpp
+        ../WINDOWS_GUI/Communication/VirtualDriver.cpp
+        ../WINDOWS_GUI/Communication/VirtualDriver.hpp
+        ../WINDOWS_GUI/Communication_Layer/Communication.cpp
+        ../WINDOWS_GUI/Communication_Layer/Communication.hpp
+        ../WINDOWS_GUI/UDS_Layer/UDS.cpp
+        ../WINDOWS_GUI/UDS_Layer/UDS.hpp
+        ../WINDOWS_GUI/UDS_Spec/uds_comm_spec.cpp
+        ../WINDOWS_GUI/UDS_Spec/uds_comm_spec.h
         )
 
 file(GLOB VECTOR_LIB "C:/Users/Public/Documents/Vector/XL\ Driver\ Library\ */bin")
@@ -41,37 +39,37 @@ find_path(VXLAPI_HEADER vxlapi.h PATHS ${VECTOR_LIB})
 include_directories(${VXLAPI_HEADER})
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(WINDOWS_GUI
+    qt_add_executable(TESTING_WINDOWS_GUI
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
 # Define target properties for Android with Qt 6 as:
-#    set_property(TARGET WINDOWS_GUI APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
+#    set_property(TARGET TESTING_WINDOWS_GUI APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
 # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 else()
     if(ANDROID)
-        add_library(WINDOWS_GUI SHARED
+        add_library(TESTING_WINDOWS_GUI SHARED
             ${PROJECT_SOURCES}
         )
 # Define properties for Android with Qt 5 after find_package() calls as:
 #    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
-        add_executable(WINDOWS_GUI
+        add_executable(TESTING_WINDOWS_GUI
             ${PROJECT_SOURCES}
         )
     endif()
 endif()
 
-target_link_libraries(WINDOWS_GUI PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ${VXLAPI})
+target_link_libraries(TESTING_WINDOWS_GUI PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ${VXLAPI})
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
 if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.WINDOWS_GUI)
+  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.TESTING_WINDOWS_GUI)
 endif()
-set_target_properties(WINDOWS_GUI PROPERTIES
+set_target_properties(TESTING_WINDOWS_GUI PROPERTIES
     ${BUNDLE_ID_OPTION}
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
@@ -80,12 +78,12 @@ set_target_properties(WINDOWS_GUI PROPERTIES
 )
 
 include(GNUInstallDirs)
-install(TARGETS WINDOWS_GUI
+install(TARGETS TESTING_WINDOWS_GUI
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(WINDOWS_GUI)
+    qt_finalize_executable(TESTING_WINDOWS_GUI)
 endif()

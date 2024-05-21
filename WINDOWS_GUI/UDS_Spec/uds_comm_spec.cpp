@@ -4,7 +4,7 @@
 //============================================================================
 // Name        : uds_comm_spec.c
 // Author      : Michael Bauer
-// Version     : 0.1
+// Version     : 0.2
 // Copyright   : MIT
 // Description : UDS communication specification implementation
 //============================================================================
@@ -18,43 +18,65 @@ extern "C" {
 #include <stdlib.h>
 #include <stdio.h>
 
+// TODO: Check on Error Handling for calloc -> Mainly relevant for MCU
+
 //////////////////////////////////////////////////////////////////////////////
-// ISO TP Handling
+// ISO TP Handling - TX
 //////////////////////////////////////////////////////////////////////////////
 
-uint8_t *starting_frame(int *len, int *has_next, uint8_t max_len_per_frame, uint8_t* data, uint32_t data_len, uint32_t* ptr_ctr){
-	uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
+uint8_t *tx_starting_frame(int *data_out_len, int *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr){
+    // Caller need to free the memory after processing
+    uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
+
+	if (data_in_len == 0){
+		*data_out_len = 0;
+		uint8_t *msg = (uint8_t*)calloc(*data_out_len, sizeof(uint8_t));
+		*data_out_idx_ctr = 0; // No further frame
+		return msg;
+	}
 
 	if (can){
-		if (data_len < max_len_per_frame){
+		if (data_in_len < max_len_per_frame){
 			// Generate Single Frame (Code = 0; Size 0-7) -> Data consists of 0 - 7 bytes of payload
-			*len = data_len + 1; // Include Protocol Control Information (PCI)
+			*data_out_len = data_in_len + 1; // Include Protocol Control Information (PCI)
 			*has_next = 0;		 // No further frames necessary
 
-			uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
-			msg[0] = (uint8_t)(data_len & 0xF); // PCI
-			for(uint32_t i = 0; i < data_len; i++)
-					msg[1+i] = data[i];	// Payload
-			*ptr_ctr = 0; // No further frame
+			uint8_t *msg = (uint8_t*)calloc(*data_out_len, sizeof(uint8_t));
+
+			if (msg == NULL){
+				*data_out_len = 0;
+				return msg;
+			}
+
+			msg[0] = (uint8_t)(data_in_len & 0xF); // PCI
+			for(uint32_t i = 0; i < data_in_len; i++)
+					msg[1+i] = data_in[i];	// Payload
+			*data_out_idx_ctr = 0; // No further frame
 			return msg;
 		}
 		else {
 			// Generate First Frame (Code = 1, Data 0+1 (=0x1008..0x1FFF)) -> Data consists of initial payload (6 bytes), Size 8-4095
-			*len = max_len_per_frame; // Include Protocol Control Information (PCI)
+			*data_out_len = max_len_per_frame; // Include Protocol Control Information (PCI)
 			*has_next = 1;		// Further frames necessary
 
-			uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+			uint8_t *msg = (uint8_t*)calloc(*data_out_len, sizeof(uint8_t));
+
+			if (msg == NULL){
+				*data_out_len = 0;
+				return msg;
+			}
+
 			msg[0] = (1<<4); 	// PCI
 
-			if (data_len > 0xFFF)	// Restrict length to max length
-				data_len = 0xFFF;
+			if (data_in_len > 0xFFF)	// Restrict length to max length
+				data_in_len = 0xFFF;
 
-			msg[0] |= (uint8_t)(data_len>>8 & 0xF);
-			msg[1] = (uint8_t)(data_len & 0xFF);
+			msg[0] |= (uint8_t)(data_in_len>>8 & 0xF);
+			msg[1] = (uint8_t)(data_in_len & 0xFF);
 
-			*ptr_ctr = 6; // Add the first 6 bytes, next frame starts at idx 6
-			for(uint32_t i = 0; i < *ptr_ctr; i++)
-				msg[2+i] = data[i];	// Payload
+			*data_out_idx_ctr = 6; // Add the first 6 bytes, next frame starts at idx 6
+			for(uint32_t i = 0; i < *data_out_idx_ctr; i++)
+				msg[2+i] = data_in[i];	// Payload
 			return msg;
 		}
 	}
@@ -62,52 +84,66 @@ uint8_t *starting_frame(int *len, int *has_next, uint8_t max_len_per_frame, uint
 	// Other, e.g. CAN FD
 	else {
 		printf("TODO: Not yet implemented!");
-		*len = 0;
+		*data_out_len = 0;
 		*has_next = 0;
 		return (uint8_t*)calloc(0, sizeof(uint8_t));
 	}
 }
 
-uint8_t *consecutive_frame(int *len, int *has_next, uint8_t max_len_per_frame, uint8_t* data, uint32_t data_len, uint32_t* ptr_ctr, uint8_t* idx){
-	uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
+uint8_t *tx_consecutive_frame(int *data_out_len, int *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr, uint8_t* frame_idx){
+    // Caller need to free the memory after processing
+    uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
+
+	if (data_in_len == 0){
+		*data_out_len = 0;
+		uint8_t *msg = (uint8_t*)calloc(*data_out_len, sizeof(uint8_t));
+		*has_next = 0;
+		return msg;
+	}
 
 	if (can){
-		if (data_len > 0xFFF)	// Restrict length to max length
-			data_len = 0xFFF;
+		if (data_in_len > 0xFFF)	// Restrict length to max length
+			data_in_len = 0xFFF;
 
 		// Generate Consecutive Frame (Code = 2, Index 1-15)
-		if((*ptr_ctr + (max_len_per_frame-1)) < data_len){
-			*len = max_len_per_frame; // Include Protocol Control Information (PCI)
+		if((*data_out_idx_ctr + (max_len_per_frame-1)) < data_in_len){
+			*data_out_len = max_len_per_frame; // Include Protocol Control Information (PCI)
 			*has_next = 1;
 		}
 		else { // Last Frame reached
-			*len = data_len - *ptr_ctr + 1;
+			*data_out_len = data_in_len - *data_out_idx_ctr + 1;
 			*has_next = 0;
 		}
 
-		uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+		uint8_t *msg = (uint8_t*)calloc(*data_out_len, sizeof(uint8_t));
 		msg[0] = (2<<4); 	// PCI
-		*idx += 1;
-		if ((*idx % 0x10) == 0)
-			*idx = 1;
-		msg[0] |= *idx;
+		*frame_idx += 1;
+		if ((*frame_idx % 0x10) == 0)
+			*frame_idx = 1;
+		msg[0] |= *frame_idx;
 
-		for(uint8_t i = 0; i < *len-1; i++){
-			msg[1+i] = data[*ptr_ctr];
-			*ptr_ctr += 1;
+		for(uint8_t i = 0; i < *data_out_len-1; i++){
+			msg[1+i] = data_in[*data_out_idx_ctr];
+			*data_out_idx_ctr += 1;
 		}
 		return msg;
 	}
 
 	printf("TODO: Not yet implemented!");
-	*len = 0;
+	*data_out_len = 0;
 	*has_next = 0;
 	return (uint8_t*)calloc(0, sizeof(uint8_t));
 }
 
-uint8_t *flow_control_frame(int *len, uint8_t flag, uint8_t blocksize, uint8_t sep_time_millis, uint8_t sep_time_multi_millis){
-	*len = 3;
-	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+uint8_t *tx_flow_control_frame(int *data_out_len, uint8_t flag, uint8_t blocksize, uint8_t sep_time_millis, uint8_t sep_time_multi_millis){
+    // Caller need to free the memory after processing
+    *data_out_len = 3;
+	uint8_t *msg = (uint8_t*)calloc(*data_out_len, sizeof(uint8_t));
+
+	if (msg == NULL){
+		*data_out_len = 0;
+		return msg;
+	}
 
 	msg[0] = (3<<4);
 	msg[0] |= (flag & 0x3);
@@ -126,6 +162,128 @@ uint8_t *flow_control_frame(int *len, uint8_t flag, uint8_t blocksize, uint8_t s
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// ISO TP Handling - RX
+//////////////////////////////////////////////////////////////////////////////
+
+uint8_t rx_is_starting_frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_len_per_frame){
+	uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
+
+	if (data_in_len == 0)
+		return 0xFF; // Error
+
+	if(can){
+		uint8_t result = (((0xF0 & data_in[0])>> 4) == 0) || (((0xF0 & data_in[0])>> 4) == 1);
+		//printf("UDS_Comm_Spec - rx_is_starting_frame: %d\n", result);
+		return result;
+	}
+
+	printf("TODO: Not yet implemented!");
+	return 0xFF; // Error
+}
+
+uint8_t rx_is_consecutive_frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_len_per_frame){
+	uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
+
+	if (data_in_len == 0)
+		return 0xFF; // Error
+
+	if(can){
+		uint8_t result = ((0xF0 & data_in[0])>> 4) == 2;
+		//printf("UDS_Comm_Spec - rx_is_consecutive_frame: %d\n", result);
+		return result;
+	}
+
+	printf("TODO: Not yet implemented!");
+	return 0xFF; // Error
+}
+
+uint8_t *rx_starting_frame(int *data_out_len, int *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len){
+    // Caller need to free the memory after processing
+    uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
+
+	if (data_in_len == 0){
+		*data_out_len = 0;
+		uint8_t *msg = (uint8_t*)calloc(*data_out_len, sizeof(uint8_t));
+		return msg;
+	}
+
+	if (can){
+		if(((0xF0 & data_in[0]) >> 4) == 0){ // Single Frame
+			*data_out_len = 0xF & data_in[0];
+			uint8_t *msg = (uint8_t*)calloc(*data_out_len, sizeof(uint8_t));
+			*has_next = 0;
+
+			if (msg == NULL){
+				*data_out_len = 0;
+				return msg;
+			}
+
+			// Copy content
+			for(int i = 0; i < *data_out_len; i++){
+				msg[i] = data_in[i+1];
+			}
+			return msg;
+		}
+
+		else if(((0xF0 & data_in[0])>>4) == 1){ // First Frame
+			*data_out_len = ((data_in[0] & 0x0F) << 4) | data_in[1];
+			uint8_t *msg = (uint8_t*)calloc(*data_out_len, sizeof(uint8_t));
+			*has_next = 1;
+
+			if (msg == NULL){
+				*data_out_len = 0;
+				return msg;
+			}
+
+			// Copy content
+			for(int i = 0; i < data_in_len - 2; i++){
+				msg[i] = data_in[i+2];
+			}
+			return msg;
+		}
+		else{
+			*data_out_len = 0;
+			*has_next = 0;
+			return (uint8_t*)calloc(0, sizeof(uint8_t));
+		}
+	}
+	// Other, e.g. CAN FD
+	else {
+		printf("TODO: Not yet implemented!");
+		*data_out_len = 0;
+		*has_next = 0;
+		return (uint8_t*)calloc(0, sizeof(uint8_t));
+	}
+}
+
+uint8_t rx_consecutive_frame(int *data_out_len, uint8_t *data_out, int *has_next, uint32_t data_in_len, uint8_t* data_in, uint32_t *idx){
+
+    if (data_in_len == 0){
+        *has_next = 0;
+        return 0;
+    }
+
+	if ((*idx + (data_in_len - 1)) > *data_out_len){
+		*has_next = 0;
+        printf("UDS Comm Spec Usage Error: Received data is too long for data buffer - IDX: %d, Data_In_Len: %d, Data_out_len: %d\n", *idx, data_in_len, *data_out_len);
+		return 0;
+	}
+
+	// Write all the data that fits into available data_out buffer
+	for(int i = 1; i < data_in_len; i++){
+		data_out[*idx] = data_in[i];
+		*idx = *idx + 1;
+	}
+
+	if (*idx < *data_out_len )
+		*has_next = 1;
+	else
+		*has_next = 0;
+
+	return 1;
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // Supported Service Overview (SID)
 //////////////////////////////////////////////////////////////////////////////
 
@@ -138,6 +296,12 @@ uint8_t *_create_diagnostic_session_control(int *len, uint8_t response, uint8_t 
 	// Caller need to free the memory after processing
 	*len = 2;
 	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+
+	if (msg == NULL){
+		*len = 0;
+		return msg;
+	}
+
 	msg[0] = FBL_DIAGNOSTIC_SESSION_CONTROL;					// SID
 	if (response)
 		msg[0] += FBL_SID_ACK;									// Response ACK
@@ -150,6 +314,12 @@ uint8_t *_create_ecu_reset(int *len, uint8_t response, uint8_t reset_type){
 	// Caller need to free the memory after processing
 	*len = 2;
 	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+
+	if (msg == NULL){
+		*len = 0;
+		return msg;
+	}
+
 	msg[0] = FBL_ECU_RESET;										// SID
 	if (response)
 		msg[0] += FBL_SID_ACK;									// Response ACK
@@ -162,6 +332,12 @@ uint8_t *_create_security_access(int *len, uint8_t response, uint8_t request_typ
 	// Caller need to free the memory after processing
 	*len = 2 + key_len;
 	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+
+	if (msg == NULL){
+		*len = 0;
+		return msg;
+	}
+
 	msg[0] = FBL_SECURITY_ACCESS;								// SID
 	if (response)
 		msg[0] += FBL_SID_ACK;									// Response ACK
@@ -176,6 +352,12 @@ uint8_t *_create_tester_present(int *len, uint8_t response, uint8_t response_typ
 	// Caller need to free the memory after processing
 	*len = 2;
 	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+
+	if (msg == NULL){
+		*len = 0;
+		return msg;
+	}
+
 	msg[0] = FBL_TESTER_PRESENT;								// SID
 	if (response)
 		msg[0] += FBL_SID_ACK;									// Response ACK
@@ -192,6 +374,12 @@ uint8_t *_create_read_data_by_ident(int *len, uint8_t response, uint16_t did, ui
 	// Caller need to free the memory after processing
 	*len = 3 + data_len;
 	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+
+	if (msg == NULL){
+		*len = 0;
+		return msg;
+	}
+
 	msg[0] = FBL_READ_DATA_BY_IDENTIFIER;						// SID
 	if (response)
 		msg[0] += FBL_SID_ACK;									// Response ACK
@@ -209,6 +397,12 @@ uint8_t *_create_read_memory_by_address(int *len, uint8_t response, uint32_t add
 	if(data_len)
 		*len += -2 + data_len; 									// Without Number of Bytes
 	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+
+	if (msg == NULL){
+		*len = 0;
+		return msg;
+	}
+
 	msg[0] = FBL_READ_MEMORY_BY_ADDRESS;						// SID
 	if (response)
 		msg[0] += FBL_SID_ACK;									// Response ACK
@@ -233,6 +427,12 @@ uint8_t *_create_write_data_by_ident(int *len, uint8_t response, uint16_t did, u
 	// Caller need to free the memory after processing
 	*len = 3 + data_len;
 	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+
+	if (msg == NULL){
+		*len = 0;
+		return msg;
+	}
+
 	msg[0] = FBL_WRITE_DATA_BY_IDENTIFIER;						// SID
 	if (response)
 		msg[0] += FBL_SID_ACK;									// Response ACK
@@ -257,6 +457,12 @@ uint8_t *_create_request_download(int *len, uint8_t response, uint32_t add, uint
 		*len = 5;
 
 	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+
+	if (msg == NULL){
+		*len = 0;
+		return msg;
+	}
+
 	msg[0] = FBL_REQUEST_DOWNLOAD;								// SID
 	if (response)
 		msg[0] += FBL_SID_ACK;									// Response ACK
@@ -283,6 +489,12 @@ uint8_t *_create_request_upload(int *len, uint8_t response, uint32_t add, uint32
 		*len = 5;
 
 	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+
+	if (msg == NULL){
+		*len = 0;
+		return msg;
+	}
+
 	msg[0] = FBL_REQUEST_UPLOAD;								// SID
 	if (response)
 		msg[0] += FBL_SID_ACK;									// Response ACK
@@ -311,6 +523,12 @@ uint8_t *_create_transfer_data(int *len, uint32_t add, uint8_t* data, uint32_t d
 
 	*len = 5 + data_len;
 	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+
+	if (msg == NULL){
+		*len = 0;
+		return msg;
+	}
+
 	msg[0] = FBL_TRANSFER_DATA;									// SID
 	msg[1] = (uint8_t)((add>>24) & 0xFF);						// Address Byte 4
 	msg[2] = (uint8_t)((add>>16) & 0xFF);						// Address Byte 3
@@ -327,6 +545,12 @@ uint8_t *_create_request_transfer_exit(int *len, uint8_t response, uint32_t add)
 	*len = 5;
 
 	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+
+	if (msg == NULL){
+		*len = 0;
+		return msg;
+	}
+
 	msg[0] = FBL_REQUEST_TRANSFER_EXIT;							// SID
 	if (response)
 		msg[0] += FBL_SID_ACK;									// Response ACK
@@ -347,6 +571,12 @@ uint8_t *_create_neg_response(int *len, uint8_t rej_sid, uint8_t neg_resp_code){
 	// Caller need to free the memory after processing
 	*len = 3;
 	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+
+	if (msg == NULL){
+		*len = 0;
+		return msg;
+	}
+
 	msg[0] = FBL_NEGATIVE_RESPONSE;								// SID
 	msg[1] = rej_sid;											// Rejected SID
 	msg[2] = neg_resp_code;										// Negative Response Code
