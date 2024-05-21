@@ -60,7 +60,8 @@ void core0_main(void)
 
     //show_can();
     init_led_driver();
-    canInitDriver();
+    
+    rx_ringbuffer* rx_buffer = canInitDriver();
     
     while(1)
     {

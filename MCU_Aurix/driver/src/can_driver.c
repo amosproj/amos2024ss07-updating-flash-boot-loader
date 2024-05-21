@@ -17,6 +17,19 @@
 void (*processDataFunction)(void*);
 
 //TODO: Implement the processDataFunction we want to use
+rx_ringbuffer rx_buffer = { {0}, 0, 0 };
+
+
+/**
+ * Write data in buffer
+ * Takes uint32_t data and writes it in uint8_t buffer taking byte by byte
+*/
+void write_rx_buffer_32(uin32_t* data, size_t size){
+    for(size_t i = 0; i < size; i++){
+        rx_buffer.Data[rx_buffer.next_write] = (uint8_t)(*data >> (8*i)) & 0xFF;
+        rx_buffer.next_write = (rx_buffer.next_write + 1) % RX_BUFFER_SIZE;
+    }
+}
 
 
 canType g_can; //Global control struct
@@ -52,6 +65,7 @@ void canIsrRxFifo0Handler(){
     
         IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_rxFifo0NewMessage); /*Clear Message Stored Flag*/
         IfxCan_Can_readMessage(&g_can.canTXandRXNode, &g_can.rxMsg, (uint32*)g_can.rxData);
+        writeInBuffer(g_can.rxData, 8);
 
 }
 
@@ -109,7 +123,7 @@ void initTXandRXNode(void){
 /**
  * Initialize CAN Module and Node
 */
-void canInitDriver(void){
+rx_buffer* canInitDriver(void){
     IfxCan_Can_initModuleConfig(&g_can.canConfig, &MODULE_CAN0); /*LoadsDefault Config*/
     IfxCan_Can_initModule(&g_can.canModule, &g_can.canConfig); /*Init with default config*/
 
@@ -118,6 +132,7 @@ void canInitDriver(void){
 
     
     IfxCan_Can_initMessage(&g_can.rxMsg); /*Init for RX Message*/
+    return &rx_buffer;g
 }
 
 /**

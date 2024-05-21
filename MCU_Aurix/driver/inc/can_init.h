@@ -28,6 +28,7 @@
 #define CAN_TX_PIN                  &IfxCan_TXD00_P20_8_OUT /*From User Manual 2.5*/
 #define CAN_RX_PIN                  &IfxCan_RXD00B_P20_7_IN /*From User Manual 2.5*/
 #define CAN_STB                     &MODULE_P20, 6   
+#define RX_BUFFER_SIZE              4096
 /*canType struct contains Data Structures needed for config and processing of CAN Messages*/
 typedef struct canType
 {
@@ -44,10 +45,12 @@ typedef struct canType
     uint32_t rxData[MAXIMUM_CAN_DATA_PAYLOAD];                /* Received CAN data array                              */
 }canType;
 
-typedef struct msg
+typedef struct rx_ringbuffer
 {
-    IfxCan_Message Msg;
-    uint32 Data[MAXIMUM_CAN_DATA_PAYLOAD];
-}msg;
+    uint8_t Data[4096];
+    size_t next_write; 
+    size_t next_read;
+}rx_ringbuffer;
 
-void canInitDriver(void);
+void canInitDriver(void); 
+void writeInBuffer(uint32_t* data, size_t size);
