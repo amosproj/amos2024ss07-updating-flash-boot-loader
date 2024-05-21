@@ -109,7 +109,7 @@ void core0_main(void)
 
         isoTP* iso = isotp_init();
 
-        iso->max_len_per_frame = CAN;
+        iso->max_len_per_frame = 8;
 
         isotp_send(iso, dataIsoSolo, sizeof(dataIsoSolo));
 

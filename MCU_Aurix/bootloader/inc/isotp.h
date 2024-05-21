@@ -9,27 +9,25 @@
 #define BOOTLOADER_INC_ISOTP_H_
 
 
+
 #include "can_driver.h"
 #include "uds_comm_spec.h"
 
-typedef enum {
-    CAN = 8,
-
-    //TODO: change max frame size for FD and Ethernet
-    CAN_FD = 10,
-    Ethernet = 15
-} CommunicationType;
-
-//TODO: change int* to an uintX_t standard
-
+// TODO: I changed 'data_out_len' and 'has_next' to uint32_t. Will this still work?
 typedef struct isoTp
 {
-    int data_out_len;
-    int has_next;
+    uint32_t data_out_len;
+    uint32_t has_next;
     uint8_t frame_idx;
     uint32_t data_out_idx_ctr;
 
     uint8_t max_len_per_frame;
+
+    // Flow control fields
+    uint8_t flow_flag;          // Flow control flags
+    uint8_t bs;                 // Block Size
+    uint8_t stmin;              // Separation Time Minimum
+    uint32_t timer;             // Timer for separation time
 
 }isoTP;
 
