@@ -2,8 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "../WINDOWS_GUI/UDS_Layer/UDS.hpp"
-#include "../WINDOWS_GUI/Communication_Layer/Communication.hpp"
+
+#include "testcases.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -20,16 +20,15 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_StartGUITest_clicked();
+    void on_StartSelfTest_clicked();
+
+    void on_StartECUTest_clicked();
+
+    void on_StartUDSListening_clicked();
 
 private:
     Ui::MainWindow *ui;
-
-    // Background Thread
-    QThread *thread;
-
-    Communication *comm;
-    UDS *uds;
+    Testcases *tests;
 };
 
 #endif // MAINWINDOW_H
