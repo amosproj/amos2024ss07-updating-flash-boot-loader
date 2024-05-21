@@ -34,7 +34,6 @@ IFX_INTERRUPT(canIsrRxFifo0Handler, 0, INTERRUPT_PRIO_RX);
 
 void canIsrTxHandler(void){
       IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_transmissionCompleted);
-      toggle_led_activity(LED2);
 
 }
 
