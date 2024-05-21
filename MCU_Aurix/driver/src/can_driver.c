@@ -52,7 +52,6 @@ void canIsrRxFifo0Handler(){
     
         IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_rxFifo0NewMessage); /*Clear Message Stored Flag*/
         IfxCan_Can_readMessage(&g_can.canTXandRXNode, &g_can.rxMsg, (uint32*)g_can.rxData);
-        toggle_led_activity(LED1);
 
 }
 
