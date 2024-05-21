@@ -30,13 +30,23 @@ uint8 getSID(UDS_Msg *msg);
 void getData(UDS_Msg *msg, uint8 *data, uint32 *len);
 uint32 getDataLength(UDS_Msg *msg);
 
-
 uint8 getSID(UDS_Msg *msg){
     if (msg->len == 0){
         return 0;
     }
     uint8 first_byte = msg->data[0];
     return (first_byte & 0x3f); // TODO 6 Bit of first byte are SID, right?
+}
+
+uint16 getDID(UDS_Msg *msg){
+    if (msg->len == 0){
+        return 0;
+    }
+    uint8 high = msg->data[1];                              // DID high Byte
+    uint8 low = msg->data[2];                               // DID low Byte
+    uint16 did = ((uint16) high) << 8;
+    did |= low;
+    return did;
 }
 
 void getData(UDS_Msg *msg, uint8 *data, uint32 *len){
@@ -47,6 +57,7 @@ uint32 getDataLength(UDS_Msg *msg){
     return msg->len;
 }
 
+// TODO remove debug print
 void debug_print(uint8 *data, uint32 len){
     FILE * f3 = fopen("terminal window 3", "rw");
     fprintf(f3, "\nMessage:\n");
@@ -66,10 +77,19 @@ static void diagnosticSessionControl(void){
     free(response_msg);
 }
 
+static void readDataByIdentifier(uint16 did){
+    int response_len;
+	uint8 data[] = "AMOS FBL 24";
+	uint8* response_msg = _create_read_data_by_ident(&response_len, 1, did, data, sizeof(data));
+    // TODO send response_msg
+    debug_print(response_msg, response_len);
+    free(response_msg);
+}
+
 //void ecuReset();
 //void securityAccess();
 //void testerPresent();
-//void readDataByIdentifier(identifier);
+
 //void readMemoryByAddress(address);
 //void writeDataByIdentifier(data);
 //void requestDownload();
@@ -86,6 +106,8 @@ void handleRXUDS(uint8* data, uint32 data_len){
     memcpy(msg->data, data, data_len);
     debug_print(msg->data, msg->len);
 
+    uint16 did; // only needed for data by identifier, but cannot be declared inside switch statement
+
     // parse incoming data by SID and call function for SID
     uint8 SID = getSID(msg);
     switch (SID)
@@ -100,7 +122,8 @@ void handleRXUDS(uint8* data, uint32 data_len){
         case FBL_TESTER_PRESENT:
             break;
         case FBL_READ_DATA_BY_IDENTIFIER:
-            // TODO for issue
+            did = getDID(msg);
+            readDataByIdentifier(did);
             break;
         case FBL_READ_MEMORY_BY_ADDRESS:
             break;

@@ -83,7 +83,7 @@ void core0_main(void)
     led_off(LED2);
 
     int len;
-    uint8* data = _create_diagnostic_session_control(&len, 0, FBL_DIAG_SESSION_DEFAULT);
+    uint8* data = _create_read_data_by_ident(&len, 0, FBL_DID_SYSTEM_NAME, 0, 0);
     handleRXUDS(data, len);
 
     //isotp_init(&ctx);
