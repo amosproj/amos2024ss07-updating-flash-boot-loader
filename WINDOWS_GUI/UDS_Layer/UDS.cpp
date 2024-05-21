@@ -43,7 +43,67 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint8_t no_bytes){
     }
     qInfo() << console.toStdString();
     emit toConsole(console);
-    // TODO: Implement UDS Message Interpreter
+
+    if(no_bytes == 0) {
+        qInfo() << "UDS: No data passed";
+        return;
+    }
+    uint8_t SID = data[0];
+    qInfo() << "USD: SID = " <<  QString("0x%1").arg(SID, 2, 16, QLatin1Char( '0' ));
+    if(SID == FBL_NEGATIVE_RESPONSE) {
+            qInfo() << "USD Service: Negative Response";
+            return;
+    }
+    bool response = (SID & FBL_SID_ACK);
+    QString info = "";
+    if(response) {
+        info = "Response for ";
+        SID -= FBL_SID_ACK;
+    }
+
+    switch(SID) {
+        case FBL_DIAGNOSTIC_SESSION_CONTROL:
+            qInfo() << info + "USD Service: Diagnostic Session Control";
+            break;
+        case FBL_ECU_RESET:
+            qInfo() << info + "USD Service: ECU Reset";
+            break;
+        case FBL_SECURITY_ACCESS:
+            qInfo() << info + "USD Service: Security Access";
+            break;
+        case FBL_TESTER_PRESENT:
+            qInfo() << info + "USD Service: Tester Present";
+            break;
+        case FBL_READ_DATA_BY_IDENTIFIER:
+            qInfo() << info + "USD Service: Read Data By Identifier";
+            qInfo() << "DID: " << QString("0x%1").arg(data[1], 2, 16, QLatin1Char( '0' )) << QString("0x%1").arg(data[2], 2, 16, QLatin1Char( '0' ));
+            if(response)
+                qInfo() << "System name: " << QString::fromLocal8Bit(&data[3]);
+            break;
+        case FBL_READ_MEMORY_BY_ADDRESS:
+            qInfo() << info + "USD Service: Read Memory By Address";
+            break;
+        case FBL_WRITE_DATA_BY_IDENTIFIER:
+            qInfo() << info + "USD Service: Write Data By Identifier";
+            break;
+        case FBL_REQUEST_DOWNLOAD:
+            qInfo() << info + "USD Service: Request Download";
+            break;
+        case FBL_REQUEST_UPLOAD:
+            qInfo() << info + "USD Service: Request Upload";
+            break;
+        case FBL_TRANSFER_DATA:
+            qInfo() << info + "USD Service: Transfer Data";
+            break;
+        case FBL_REQUEST_TRANSFER_EXIT:
+            qInfo() << info + "USD Service: Request Transfer Exit";
+            break;
+        default:
+            qInfo() << info << "USD Service: ERROR UNRECOGNIZED SSID";
+            break;
+    }
+
+    
 }
 
 
@@ -66,7 +126,7 @@ void UDS::reqIdentification() // Sending out broadcast for tester present
     emit setID(id); // TODO: Check Architecture how to handle interface
 
 	// Create the relevant message
-	int len;
+	int len;  
 	uint8_t *msg = _create_tester_present(&len, 0, 1); // Request Tester present from ECUS
     // Wrap data into QByteArray
     QByteArray qbdata;
@@ -227,7 +287,7 @@ void UDS::testerPresent(uint32_t id){
 	// Create the relevant message
 	int len;
 	uint8_t *msg = _create_tester_present(&len, 0, FBL_TESTER_PRES_WITHOUT_RESPONSE);
-    // Wrap data into QByteArray
+   // Wrap data into QByteArray
     QByteArray qbdata;
     qbdata.resize(len);
     for(int i=0; i < qbdata.size(); i++)
