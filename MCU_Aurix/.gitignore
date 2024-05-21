@@ -1,6 +1,7 @@
 # Aurix IDE
-.metadata
-.settings
+.metadata/
+.settings/
+TriCore Debug (TASKING)/
 
 #Code::BLocks IDE
 obj/
@@ -18,3 +19,4 @@ MCMCAN_1_KIT_TC375_LK/
 .settings/
 Configurations/
 Libraries/
+

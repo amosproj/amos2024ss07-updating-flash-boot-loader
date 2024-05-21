@@ -3,8 +3,8 @@
 
 //============================================================================
 // Name        : can_driver.c
-// Author      : Sebastian Rodriguez
-// Version     : 0.1
+// Author      : Sebastian Rodriguez, Leon Wilms
+// Version     : 0.2
 // Copyright   : MIT
 // Description : C File for CAN Driver
 //============================================================================
@@ -122,20 +122,39 @@ void canInitDriver(void){
 
 /**
  * Transmits a CAN Message: Initialize new TX message, TX is transmitted
- * @param canMessageID ID of CAN Message for Prio in BUS
- * @param data data of CAN Message
- * @param len of CAN Message
+ * @param canMessageID, ID of CAN Message for Prio in BUS
+ * @param data,  data of CAN Message
+ * @param size, len of CAN Message
 */
-void canTransmitMessage(uint32_t canMessageID, uint32_t lowWord, uint32_t highWord){
+int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
     IfxCan_Can_initMessage(&g_can.txMsg);
-    g_can.txData[0] = lowWord; /*To transmit data*/
-    g_can.txData[1] = highWord;
     g_can.txMsg.messageId = canMessageID;
 
-    /*Sends CAN Message, only if BUS is empty*/
-        while( IfxCan_Status_notSentBusy ==
-           IfxCan_Can_sendMessage(&g_can.canTXandRXNode, &g_can.txMsg, (uint32*)&g_can.txData[0])){}
+    //Not sure if necessary ~Leon
+    // Ensure that the size of data does not exceed 8 bytes (32 bits)
+    if (size > 8) {
+        // Handle error: data size exceeds 4 bytes
+        return -1;
+    }
 
+    // Initialize g_can.txData to zero
+    g_can.txData[0] = 0;
+    g_can.txData[1] = 0;
+
+
+    // Copy up to 8 bytes of data into g_can.txData
+    memcpy(g_can.txData, data, size);
+
+
+    //Sends CAN Message, only if BUS is empty
+    while( IfxCan_Status_notSentBusy ==
+           IfxCan_Can_sendMessage(&g_can.canTXandRXNode, &g_can.txMsg, &g_can.txData[0]))
+    {
+
+
+    }
+
+    return 0;
 }
 
 void canDummyMessagePeriodicly(void){

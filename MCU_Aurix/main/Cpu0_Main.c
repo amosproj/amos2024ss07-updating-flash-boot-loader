@@ -31,8 +31,25 @@
 
 #include "loader.h"
 #include "led_driver.h"
-#include "can_init.h"
+
 #include "can_driver.h"
+#include "can_init.h"
+#include "isotp.h"
+
+/*
+ * ------------------------------------------------------------------------
+ * For Temporary IsoTp sending
+ * ------------------------------------------------------------------------
+ */
+
+#include <uds_comm_spec.h>
+#include "Bsp.h"
+
+/*
+ * ------------------------------------------------------------------------
+ * For Temporary IsoTp sending
+ * ------------------------------------------------------------------------
+ */
 
 
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
@@ -51,12 +68,22 @@ void core0_main(void)
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
 
-    //show_led();
-
+    init_led_driver();
     //show_flash();
 
-    //led_off(LED1);
-    //led_off(LED2);
+    canInitDriver();
+
+    led_off(LED1);
+    led_off(LED2);
+
+    //isotp_init(&ctx);
+
+    uint8_t dataCAN[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+
+    uint8_t dataIsoSolo[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+    uint8_t dataIsoSolo2[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
+
+    uint8_t dataIsoMulti[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
 
     //show_can();
     init_led_driver();
@@ -64,6 +91,16 @@ void core0_main(void)
     
     while(1)
     {
-        canDummyMessagePeriodicly();
+
+        waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 1000));
+
+        toggle_led_activity(LED1);
+
+        isoTP* iso = isotp_init();
+
+        iso->max_len_per_frame = 8;
+
+        isotp_send(iso, dataIsoSolo, sizeof(dataIsoSolo));
+
     }
 }
