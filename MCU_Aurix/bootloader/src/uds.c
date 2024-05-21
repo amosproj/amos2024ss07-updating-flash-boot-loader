@@ -13,7 +13,6 @@
 #include <stdio.h>
 
 #include "uds.h"
-#include "uds_comm_spec.h"
 
 #define REQUEST                                                 0
 #define RESPONSE                                                1
@@ -78,9 +77,43 @@ static void diagnosticSessionControl(void){
 }
 
 static void readDataByIdentifier(uint16 did){
+	uint8 name[] = "AMOS FBL 24";
+	uint8 *data;
+    int data_len = 0;
+    switch(did)
+    {
+        case FBL_DID_SYSTEM_NAME:
+            data = name;
+            data_len = sizeof(name);
+            break;
+        case FBL_DID_PROGRAMMING_DATE:
+            break;
+        case FBL_DID_BL_KEY_ADDRESS:
+            break;
+        case FBL_DID_BL_KEY_GOOD_VALUE:
+            break;
+        case FBL_DID_CAN_BASE_MASK:
+            break;
+        case FBL_DID_CAN_ID:
+            break;
+        case FBL_DID_BL_WRITE_START_ADD_CORE0:
+            break;
+        case FBL_DID_BL_WRITE_END_ADD_CORE0:
+            break;
+        case FBL_DID_BL_WRITE_START_ADD_CORE1:
+            break;
+        case FBL_DID_BL_WRITE_END_ADD_CORE1:
+            break;
+        case FBL_DID_BL_WRITE_START_ADD_CORE2:
+            break;
+        case FBL_DID_BL_WRITE_END_ADD_CORE2:
+            break;
+        default:
+            ;
+            // TODO send error message
+    }
     int response_len;
-	uint8 data[] = "AMOS FBL 24";
-	uint8* response_msg = _create_read_data_by_ident(&response_len, 1, did, data, sizeof(data));
+	uint8* response_msg = _create_read_data_by_ident(&response_len, 1, did, data, data_len);
     // TODO send response_msg
     debug_print(response_msg, response_len);
     free(response_msg);

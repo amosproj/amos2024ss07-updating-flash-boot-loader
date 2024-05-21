@@ -14,6 +14,8 @@
 
 #include "Ifx_Types.h"
 
+#include "uds_comm_spec.h"
+
 void handleRXUDS(uint8* data, uint32 data_len);
 
 #endif /* BOOTLOADER_INC_UDS_H_ */

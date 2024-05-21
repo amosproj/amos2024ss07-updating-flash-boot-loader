@@ -15,6 +15,7 @@
 #include "can_init.h"
 #include "flash.h"
 #include "led_driver.h"
+#include "uds.h"
 
 void show_led(void)
 {
@@ -76,4 +77,11 @@ void show_flash(void)
     {
         led_on(LED1);
     }
+}
+
+void show_uds_rx_read_data(void)
+{
+    int len;
+    uint8* data = _create_read_data_by_ident(&len, 0, FBL_DID_SYSTEM_NAME, 0, 0);
+    handleRXUDS(data, len);
 }
