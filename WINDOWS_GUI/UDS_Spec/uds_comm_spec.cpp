@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>, Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : uds_comm_spec.c
-// Author      : Michael Bauer
-// Version     : 0.2
+// Author      : Michael Bauer, Wiktor Pilarczyk
+// Version     : 0.3
 // Copyright   : MIT
 // Description : UDS communication specification implementation
 //============================================================================
@@ -287,82 +287,51 @@ uint8_t rx_consecutive_frame(int *data_out_len, uint8_t *data_out, int *has_next
 // Supported Service Overview (SID)
 //////////////////////////////////////////////////////////////////////////////
 
+static inline uint8_t *prepare_message(int *len, uint8_t response, uint8_t SID, uint8_t info = 0, uint8_t len_val = 2) {
+	// Caller need to free the memory after processing
+	*len = len_val;
+	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
+
+	if (msg == NULL){
+		*len = 0;
+		return msg;
+	}
+
+	msg[0] = SID;												// SID
+	if (response)
+		msg[0] += FBL_SID_ACK;									// Response ACK
+	msg[1] = info;
+	return msg;
+}
+
 /**
  * Specification for Diagnostic and Communication Management
  */
 
 //Diagnostic Session Control (0x10)
-uint8_t *_create_diagnostic_session_control(int *len, uint8_t response, uint8_t session){
-	// Caller need to free the memory after processing
-	*len = 2;
-	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
-
-	if (msg == NULL){
-		*len = 0;
-		return msg;
-	}
-
-	msg[0] = FBL_DIAGNOSTIC_SESSION_CONTROL;					// SID
-	if (response)
-		msg[0] += FBL_SID_ACK;									// Response ACK
-	msg[1] = session;											// Session
-	return msg;
+uint8_t *_create_diagnostic_session_control(int *len, uint8_t response, uint8_t session) {
+	return prepare_message(len, response, FBL_DIAGNOSTIC_SESSION_CONTROL, session);
 }
 
 //ECU Reset (0x11)
 uint8_t *_create_ecu_reset(int *len, uint8_t response, uint8_t reset_type){
-	// Caller need to free the memory after processing
-	*len = 2;
-	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
-
-	if (msg == NULL){
-		*len = 0;
-		return msg;
-	}
-
-	msg[0] = FBL_ECU_RESET;										// SID
-	if (response)
-		msg[0] += FBL_SID_ACK;									// Response ACK
-	msg[1] = reset_type;										// Reset Type
-	return msg;
+	return prepare_message(len, response, FBL_ECU_RESET, reset_type);
 }
 
 // Security Access (0x27)
-uint8_t *_create_security_access(int *len, uint8_t response, uint8_t request_type, uint8_t* key, uint8_t key_len){
-	// Caller need to free the memory after processing
-	*len = 2 + key_len;
-	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
-
-	if (msg == NULL){
-		*len = 0;
+uint8_t *_create_security_access(int *len, uint8_t response, uint8_t request_type, uint8_t* key, uint8_t key_len) {
+	uint8_t *msg = prepare_message(len, response, FBL_SECURITY_ACCESS, request_type, 2 + key_len);
+	if (msg == NULL)
 		return msg;
-	}
 
-	msg[0] = FBL_SECURITY_ACCESS;								// SID
-	if (response)
-		msg[0] += FBL_SID_ACK;									// Response ACK
-	msg[1] = request_type;										// Request Type
 	for(int i = 0; i < key_len; i++)
 		msg[2+i] = key[i];										// Payload
 	return msg;
 }
 
 //Tester Present (0x3E)
-uint8_t *_create_tester_present(int *len, uint8_t response, uint8_t response_type){
-	// Caller need to free the memory after processing
-	*len = 2;
-	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
-
-	if (msg == NULL){
-		*len = 0;
-		return msg;
-	}
-
-	msg[0] = FBL_TESTER_PRESENT;								// SID
-	if (response)
-		msg[0] += FBL_SID_ACK;									// Response ACK
-	msg[1] = response_type;										// Response Type
-	return msg;
+uint8_t *_create_tester_present(int *len, uint8_t response, uint8_t response_type) {
+	return prepare_message(len, response, FBL_TESTER_PRESENT, response_type);
 }
 
 /**
@@ -371,18 +340,10 @@ uint8_t *_create_tester_present(int *len, uint8_t response, uint8_t response_typ
 
 // Read Data By Identifier (SID 0x22)
 uint8_t *_create_read_data_by_ident(int *len, uint8_t response, uint16_t did, uint8_t* data, uint8_t data_len){
-	// Caller need to free the memory after processing
-	*len = 3 + data_len;
-	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
-
-	if (msg == NULL){
-		*len = 0;
+	uint8_t *msg = prepare_message(len, response, FBL_READ_DATA_BY_IDENTIFIER, 0, 3 + data_len);
+	if (msg == NULL)
 		return msg;
-	}
-
-	msg[0] = FBL_READ_DATA_BY_IDENTIFIER;						// SID
-	if (response)
-		msg[0] += FBL_SID_ACK;									// Response ACK
+	
 	msg[1] = (uint8_t)((did>>8) & 0xFF);						// DID High Byte
 	msg[2] = (uint8_t)((did)    & 0xFF);						// DID Low Byte
 	for(int i = 0; i < data_len; i++)
@@ -391,25 +352,19 @@ uint8_t *_create_read_data_by_ident(int *len, uint8_t response, uint16_t did, ui
 }
 
 // Read Data By Address (SID 0x23)
-uint8_t *_create_read_memory_by_address(int *len, uint8_t response, uint32_t add, uint16_t no_bytes, uint8_t* data, uint8_t data_len){
+uint8_t *_create_read_memory_by_address(int *len, uint8_t response, uint32_t addr, uint16_t no_bytes, uint8_t* data, uint8_t data_len) {
 	// Caller need to free the memory after processing
 	*len = 7;
 	if(data_len)
 		*len += -2 + data_len; 									// Without Number of Bytes
-	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
-
-	if (msg == NULL){
-		*len = 0;
+	uint8_t *msg = prepare_message(len, response, FBL_READ_MEMORY_BY_ADDRESS, 0, *len);
+	if (msg == NULL)
 		return msg;
-	}
 
-	msg[0] = FBL_READ_MEMORY_BY_ADDRESS;						// SID
-	if (response)
-		msg[0] += FBL_SID_ACK;									// Response ACK
-	msg[1] = (uint8_t)((add>>24) & 0xFF);						// Address Byte 4
-	msg[2] = (uint8_t)((add>>16) & 0xFF);						// Address Byte 3
-	msg[3] = (uint8_t)((add>>8)  & 0xFF);						// Address Byte 2
-	msg[4] = (uint8_t)((add)     & 0xFF);						// Address Byte 1
+	msg[1] = (uint8_t)((addr>>24) & 0xFF);						// Address Byte 4
+	msg[2] = (uint8_t)((addr>>16) & 0xFF);						// Address Byte 3
+	msg[3] = (uint8_t)((addr>>8)  & 0xFF);						// Address Byte 2
+	msg[4] = (uint8_t)((addr)     & 0xFF);						// Address Byte 1
 	if(!data_len){
 		msg[5] = (uint8_t)((no_bytes>>8) & 0xFF);				// Number of Bytes Byte 1
 		msg[6] = (uint8_t)((no_bytes) 	 & 0xFF);				// Number of Bytes Byte 0
@@ -423,19 +378,11 @@ uint8_t *_create_read_memory_by_address(int *len, uint8_t response, uint32_t add
 }
 
 // Write Data By Identifier (SID 0x2E)
-uint8_t *_create_write_data_by_ident(int *len, uint8_t response, uint16_t did, uint8_t* data, uint8_t data_len){
-	// Caller need to free the memory after processing
-	*len = 3 + data_len;
-	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
-
-	if (msg == NULL){
-		*len = 0;
+uint8_t *_create_write_data_by_ident(int *len, uint8_t response, uint16_t did, uint8_t* data, uint8_t data_len) {
+	uint8_t *msg = prepare_message(len, response, FBL_WRITE_DATA_BY_IDENTIFIER, 0, 3 + data_len);
+	if (msg == NULL)
 		return msg;
-	}
 
-	msg[0] = FBL_WRITE_DATA_BY_IDENTIFIER;						// SID
-	if (response)
-		msg[0] += FBL_SID_ACK;									// Response ACK
 	msg[1] = (uint8_t)((did>>8) & 0xFF);						// DID High Byte
 	msg[2] = (uint8_t)((did)    & 0xFF);						// DID Low Byte
 	for(int i = 0; i < data_len; i++)
@@ -448,28 +395,11 @@ uint8_t *_create_write_data_by_ident(int *len, uint8_t response, uint16_t did, u
  * Specification for Upload | Download
  */
 
-// Request Download (0x34)
-uint8_t *_create_request_download(int *len, uint8_t response, uint32_t add, uint32_t bytes_size){
-	// Caller need to free the memory after processing
-	if(!response)
-		*len = 9;
-	else
-		*len = 5;
-
-	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
-
-	if (msg == NULL){
-		*len = 0;
-		return msg;
-	}
-
-	msg[0] = FBL_REQUEST_DOWNLOAD;								// SID
-	if (response)
-		msg[0] += FBL_SID_ACK;									// Response ACK
-	msg[1] = (uint8_t)((add>>24) & 0xFF);						// Address Byte 4
-	msg[2] = (uint8_t)((add>>16) & 0xFF);						// Address Byte 3
-	msg[3] = (uint8_t)((add>>8)  & 0xFF);						// Address Byte 2
-	msg[4] = (uint8_t)((add)     & 0xFF);						// Address Byte 1
+static inline void upload_download_message(uint8_t *msg, uint32_t addr, uint8_t response=1, uint32_t bytes_size=0) {
+	msg[1] = (uint8_t)((addr>>24) & 0xFF);						// Address Byte 4
+	msg[2] = (uint8_t)((addr>>16) & 0xFF);						// Address Byte 3
+	msg[3] = (uint8_t)((addr>>8)  & 0xFF);						// Address Byte 2
+	msg[4] = (uint8_t)((addr)     & 0xFF);						// Address Byte 1
 
 	if(!response){
 		msg[5] = (uint8_t)((bytes_size>>24) & 0xFF);			// Size Byte 4
@@ -477,89 +407,56 @@ uint8_t *_create_request_download(int *len, uint8_t response, uint32_t add, uint
 		msg[7] = (uint8_t)((bytes_size>>8)  & 0xFF);			// Size Byte 2
 		msg[8] = (uint8_t)((bytes_size)     & 0xFF);			// Size Byte 1
 	}
+}
+
+// Request Download (0x34)
+uint8_t *_create_request_download(int *len, uint8_t response, uint32_t addr, uint32_t bytes_size){
+	uint8_t *msg = prepare_message(len, 0, FBL_REQUEST_DOWNLOAD, 0, response ? 5 : 9);
+	if (msg == NULL)
+		return msg;
+	upload_download_message(msg, addr, response, bytes_size);
+
 	return msg;
 }
 
 // Request Upload (0x35)
-uint8_t *_create_request_upload(int *len, uint8_t response, uint32_t add, uint32_t bytes_size){
-	// Caller need to free the memory after processing
-	if(!response)
-		*len = 9;
-	else
-		*len = 5;
-
-	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
-
-	if (msg == NULL){
-		*len = 0;
+uint8_t *_create_request_upload(int *len, uint8_t response, uint32_t addr, uint32_t bytes_size){
+	uint8_t *msg = prepare_message(len, 0, FBL_REQUEST_UPLOAD, 0, response ? 5 : 9);
+	if (msg == NULL)
 		return msg;
-	}
 
-	msg[0] = FBL_REQUEST_UPLOAD;								// SID
-	if (response)
-		msg[0] += FBL_SID_ACK;									// Response ACK
-	msg[1] = (uint8_t)((add>>24) & 0xFF);						// Address Byte 4
-	msg[2] = (uint8_t)((add>>16) & 0xFF);						// Address Byte 3
-	msg[3] = (uint8_t)((add>>8)  & 0xFF);						// Address Byte 2
-	msg[4] = (uint8_t)((add)     & 0xFF);						// Address Byte 1
-
-	if(!response){
-		msg[5] = (uint8_t)((bytes_size>>24) & 0xFF);			// Size Byte 4
-		msg[6] = (uint8_t)((bytes_size>>16) & 0xFF);			// Size Byte 3
-		msg[7] = (uint8_t)((bytes_size>>8)  & 0xFF);			// Size Byte 2
-		msg[8] = (uint8_t)((bytes_size)     & 0xFF);			// Size Byte 1
-	}
+	upload_download_message(msg, addr, response, bytes_size);
 	return msg;
 }
 
 // Transfer Data (0x36)
-uint8_t *_create_transfer_data(int *len, uint32_t add, uint8_t* data, uint32_t data_len){
-	// Caller need to free the memory after processing
+uint8_t *_create_transfer_data(int *len, uint32_t addr, uint8_t* data, uint32_t data_len){
 	if (data_len > (UINT32_MAX - 5)){
 		*len = 0;
-		uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
-		return msg;
+		return NULL;
 	}
 
-	*len = 5 + data_len;
-	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
-
-	if (msg == NULL){
-		*len = 0;
+	uint8_t *msg = prepare_message(len, 0, FBL_TRANSFER_DATA, 0, 5 + data_len);
+	if (msg == NULL)
 		return msg;
-	}
 
-	msg[0] = FBL_TRANSFER_DATA;									// SID
-	msg[1] = (uint8_t)((add>>24) & 0xFF);						// Address Byte 4
-	msg[2] = (uint8_t)((add>>16) & 0xFF);						// Address Byte 3
-	msg[3] = (uint8_t)((add>>8)  & 0xFF);						// Address Byte 2
-	msg[4] = (uint8_t)((add)     & 0xFF);						// Address Byte 1
+	upload_download_message(msg, addr);
 	for(uint32_t i = 0; i < data_len; i++)
 		msg[5+i] = data[i];										// Payload
 	return msg;
 }
 
+
 // Request Transfer Exit (0x37)
-uint8_t *_create_request_transfer_exit(int *len, uint8_t response, uint32_t add){
-	// Caller need to free the memory after processing
-	*len = 5;
-
-	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
-
-	if (msg == NULL){
-		*len = 0;
+uint8_t *_create_request_transfer_exit(int *len, uint8_t response, uint32_t addr){
+	uint8_t *msg = prepare_message(len, 0, FBL_REQUEST_TRANSFER_EXIT, 0, 5);
+	if (msg == NULL)
 		return msg;
-	}
 
-	msg[0] = FBL_REQUEST_TRANSFER_EXIT;							// SID
-	if (response)
-		msg[0] += FBL_SID_ACK;									// Response ACK
-	msg[1] = (uint8_t)((add>>24) & 0xFF);						// Address Byte 4
-	msg[2] = (uint8_t)((add>>16) & 0xFF);						// Address Byte 3
-	msg[3] = (uint8_t)((add>>8)  & 0xFF);						// Address Byte 2
-	msg[4] = (uint8_t)((add)     & 0xFF);						// Address Byte 1
+	upload_download_message(msg, addr);
 	return msg;
 }
+
 
 //////////////////////////////////////////////////////////////////////////////
 // Supported Common Response Codes
@@ -567,18 +464,11 @@ uint8_t *_create_request_transfer_exit(int *len, uint8_t response, uint32_t add)
 
 
 // Negative Response (0x7F)
-uint8_t *_create_neg_response(int *len, uint8_t rej_sid, uint8_t neg_resp_code){
-	// Caller need to free the memory after processing
-	*len = 3;
-	uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
-
-	if (msg == NULL){
-		*len = 0;
+uint8_t *_create_neg_response(int *len, uint8_t rej_sid, uint8_t neg_resp_code) {
+	uint8_t *msg = prepare_message(len, 0, FBL_NEGATIVE_RESPONSE, rej_sid, 3);
+	if (msg == NULL)
 		return msg;
-	}
 
-	msg[0] = FBL_NEGATIVE_RESPONSE;								// SID
-	msg[1] = rej_sid;											// Rejected SID
 	msg[2] = neg_resp_code;										// Negative Response Code
 	return msg;
 }
