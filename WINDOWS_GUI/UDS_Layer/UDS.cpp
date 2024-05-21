@@ -33,6 +33,9 @@ UDS::~UDS() {
 //////////////////////////////////////////////////////////////////////////////
 void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint8_t no_bytes){
 
+    QString s;
+    QTextStream out(&s);
+    /*
     qInfo() << ">> UDS: Received Msg from ID" << QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' )) << "Need to interpret. ";
     QString console = ">> UDS Received from ID: ";
     console.append(QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' )));
@@ -43,15 +46,17 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint8_t no_bytes){
     }
     qInfo() << console.toStdString();
     emit toConsole(console);
+    */
 
     if(no_bytes == 0) {
-        qInfo() << "UDS: No data passed";
+        out << "UDS: No data passed";
         return;
     }
     uint8_t SID = data[0];
-    qInfo() << "USD: SID = " <<  QString("0x%1").arg(SID, 2, 16, QLatin1Char( '0' ));
+    out << "UDS: SID = " <<  QString("0x%1").arg(SID, 2, 16, QLatin1Char( '0' )) << "\n";
     if(SID == FBL_NEGATIVE_RESPONSE) {
-            qInfo() << "USD Service: Negative Response";
+            out << "UDS Service: Negative Response\n";
+            emit toConsole(*out.string());
             return;
     }
     bool response = (SID & FBL_SID_ACK);
@@ -63,46 +68,47 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint8_t no_bytes){
 
     switch(SID) {
         case FBL_DIAGNOSTIC_SESSION_CONTROL:
-            qInfo() << info + "USD Service: Diagnostic Session Control";
+            out << info + "UDS Service: Diagnostic Session Control\n";
             break;
         case FBL_ECU_RESET:
-            qInfo() << info + "USD Service: ECU Reset";
+            out << info + "UDS Service: ECU Reset\n";
             break;
         case FBL_SECURITY_ACCESS:
-            qInfo() << info + "USD Service: Security Access";
+            out << info + "UDS Service: Security Access\n";
             break;
         case FBL_TESTER_PRESENT:
-            qInfo() << info + "USD Service: Tester Present";
+            out << info + "UDS Service: Tester Present\n";
             break;
         case FBL_READ_DATA_BY_IDENTIFIER:
-            qInfo() << info + "USD Service: Read Data By Identifier";
-            qInfo() << "DID: " << QString("0x%1").arg(data[1], 2, 16, QLatin1Char( '0' )) << QString("0x%1").arg(data[2], 2, 16, QLatin1Char( '0' ));
+            out << info + "UDS Service: Read Data By Identifier\n";
+            out << "DID: " << QString("0x%1").arg(data[1], 2, 16, QLatin1Char( '0' )) << QString("0x%1").arg(data[2], 2, 16, QLatin1Char( '0' )) << "\n";
             if(response)
-                qInfo() << "System name: " << QString::fromLocal8Bit(&data[3]);
+                out << "Data: " << QString::fromLocal8Bit(&data[3]) << "\n";
             break;
         case FBL_READ_MEMORY_BY_ADDRESS:
-            qInfo() << info + "USD Service: Read Memory By Address";
+            out << info + "UDS Service: Read Memory By Address\n";
             break;
         case FBL_WRITE_DATA_BY_IDENTIFIER:
-            qInfo() << info + "USD Service: Write Data By Identifier";
+            out << info + "UDS Service: Write Data By Identifier\n";
             break;
         case FBL_REQUEST_DOWNLOAD:
-            qInfo() << info + "USD Service: Request Download";
+            out << info + "UDS Service: Request Download\n";
             break;
         case FBL_REQUEST_UPLOAD:
-            qInfo() << info + "USD Service: Request Upload";
+            out << info + "UDS Service: Request Upload\n";
             break;
         case FBL_TRANSFER_DATA:
-            qInfo() << info + "USD Service: Transfer Data";
+            out << info + "UDS Service: Transfer Data\n";
             break;
         case FBL_REQUEST_TRANSFER_EXIT:
-            qInfo() << info + "USD Service: Request Transfer Exit";
+            out << info + "UDS Service: Request Transfer Exit\n";
             break;
         default:
-            qInfo() << info << "USD Service: ERROR UNRECOGNIZED SSID";
+            out << info << "UDS Service: ERROR UNRECOGNIZED SSID\n";
             break;
     }
 
+    emit toConsole(*out.string());
     
 }
 
