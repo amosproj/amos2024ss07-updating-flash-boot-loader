@@ -17,27 +17,10 @@ MainWindow::MainWindow(QWidget *parent)
                                          QIcon("../../icon.png")));
 
 
-    qInfo("Main: Create Communication Layer");
-    comm = new Communication();
-    comm->setCommunicationType(1); // Set to CAN
-    comm->init(1); // Set to CAN
-
-    qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
-    uds = new UDS(0x001);
-
-    //=====================================================================
-    // Connect the signals and slots
-
-    // Comm RX Signal to UDS RX Slot
-    connect(comm, SIGNAL(rxDataReceived(unsigned int, QByteArray)), uds, SLOT(rxDataReceiverSlot(unsigned int, QByteArray)), Qt::DirectConnection);
-
-    // UDS TX Signals to Comm TX Slots
-    connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
-    connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
-    //=====================================================================
+    tests = new Testcases();
 
     // GUI Console Print
-    connect(uds, SIGNAL(toConsole(QString)), this->ui->consoleOut, SLOT(appendPlainText(QString)));
+    connect(tests, SIGNAL(toConsole(QString)), this->ui->consoleOut, SLOT(appendPlainText(QString)));
 }
 
 MainWindow::~MainWindow()
@@ -46,7 +29,36 @@ MainWindow::~MainWindow()
 }
 
 
-void MainWindow::on_StartGUITest_clicked()
+void MainWindow::on_StartSelfTest_clicked()
 {
-    uds->testerPresent(0x001);
+
+    this->ui->consoleOut->clear();
+    // Start GUI Test
+    this->ui->consoleOut->appendPlainText("Starting Self Tests\n\tMake sure that the CAN Interface is connected to Virtual CAN Bus (Vector Hardware Manager)\n");
+
+    tests->setTestMode(0); // Selftests
+    tests->startTests();
 }
+
+
+void MainWindow::on_StartECUTest_clicked()
+{
+    this->ui->consoleOut->clear();
+    // Start ECU Test
+    this->ui->consoleOut->appendPlainText("Starting ECU Tests\n\tMake sure that the CAN Interface is connected to CAN Bus with ECU connected (Vector Hardware Manager)\n");
+
+
+    tests->setTestMode(2);
+    tests->startTests();
+}
+
+
+void MainWindow::on_StartUDSListening_clicked()
+{
+    this->ui->consoleOut->clear();
+    // Start UDS Listening Mode
+    this->ui->consoleOut->appendPlainText("Starting UDS Listening Mode\n\tMake sure that the CAN Interface is connected a CAN network that contains the UDS Message to be received\n");
+
+    tests->setTestMode(3);
+}
+

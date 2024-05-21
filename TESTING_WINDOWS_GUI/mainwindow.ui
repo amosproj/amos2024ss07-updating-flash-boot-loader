@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>TESTING Flash Bootloader</string>
+   <string>TESTING Flash Bootloader Communication</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QWidget" name="gridLayoutWidget">
@@ -30,15 +30,29 @@
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="0">
-      <widget class="QPushButton" name="StartGUITest">
+     <item row="1" column="0">
+      <widget class="QPushButton" name="StartECUTest">
        <property name="text">
-        <string>Start GUI Test</string>
+        <string>Start ECU Test</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
+     <item row="0" column="0">
+      <widget class="QPushButton" name="StartSelfTest">
+       <property name="text">
+        <string>Start Self Test</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
       <widget class="QPlainTextEdit" name="consoleOut"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QPushButton" name="StartUDSListening">
+       <property name="text">
+        <string>Start UDS Listening</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </widget>

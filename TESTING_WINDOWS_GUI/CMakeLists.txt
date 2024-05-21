@@ -18,6 +18,8 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        testcases.cpp
+        testcases.hpp
         ../WINDOWS_GUI/Communication/CommInterface.cpp
         ../WINDOWS_GUI/Communication/CommInterface.hpp
         ../WINDOWS_GUI/Communication/Can_Wrapper.cpp
