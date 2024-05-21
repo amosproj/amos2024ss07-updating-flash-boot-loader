@@ -16,6 +16,4 @@
 
 void handleRXUDS(uint8* data, uint32 data_len);
 
-void diagnosticSessionControl(void);
-
 #endif /* BOOTLOADER_INC_UDS_H_ */

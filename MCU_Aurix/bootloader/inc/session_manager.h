@@ -12,10 +12,12 @@
 #ifndef BOOTLOADER_INC_SESSION_MANAGER_H_
 #define BOOTLOADER_INC_SESSION_MANAGER_H_
 
+#include "Ifx_Types.h"
+
 // TODO should not all return void
 void setSession();
 void authenticate();
-void getSession();
+uint8 getSession();
 void sessionControl();
 void resetECU();
 

@@ -10,3 +10,9 @@
 //============================================================================
 
 #include "session_manager.h"
+#include "uds_comm_spec.h"
+
+uint8 getSession(){
+    // TODO getSession just a mockup, not really implemented yet!
+    return FBL_DIAG_SESSION_DEFAULT;
+}
