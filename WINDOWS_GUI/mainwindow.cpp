@@ -96,17 +96,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::display_rcvd_can_message(unsigned int id, unsigned short dlc, unsigned char data[])
-{
-    QString str = "Received id=";
-    str.append(QString::number(id) + ", dlc=" + QString::number(dlc) + ", data=");
-    str.append(QString::fromUtf8((char *)data));
-    /*for (int i = 0; i < strlen(data)) {
-        str.append(QString::number(data[i]) + ", ");
-    }*/
-    this->ui->textBrowser_flash_status->setText(str);
-}
-
 void MainWindow::updateStatus(MainWindow::status s, QString str) {
     QString status;
     int val = 0;
