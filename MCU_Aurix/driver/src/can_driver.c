@@ -20,6 +20,7 @@ void (*processDataFunction)(void*);
 
 
 canType g_can; //Global control struct
+
 IfxCan_Can_Pins canPins = {
     .padDriver = IfxPort_PadDriver_cmosAutomotiveSpeed2,
     .rxPin = CAN_RX_PIN,
@@ -52,6 +53,7 @@ void canIsrRxFifo0Handler(){
     
         IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_rxFifo0NewMessage); /*Clear Message Stored Flag*/
         IfxCan_Can_readMessage(&g_can.canTXandRXNode, &g_can.rxMsg, (uint32*)g_can.rxData);
+        toggle_led_activity(LED2);
 
 }
 
@@ -118,6 +120,7 @@ void canInitDriver(void){
 
     
     IfxCan_Can_initMessage(&g_can.rxMsg); /*Init for RX Message*/
+    g_can.rxMsg.readFromRxFifo0 = TRUE; /*Read from FIFO0*/
 }
 
 /**

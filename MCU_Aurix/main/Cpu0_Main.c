@@ -80,6 +80,8 @@ void core0_main(void)
 
     uint8_t dataCAN[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
 
+    uint8_t dataUDS[] = {0x10, 0x01};
+
     uint8_t dataIsoSolo[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
     uint8_t dataIsoSolo2[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
 
@@ -100,7 +102,7 @@ void core0_main(void)
 
         iso->max_len_per_frame = 8;
 
-        isotp_send(iso, dataIsoSolo, sizeof(dataIsoSolo));
+        isotp_send(iso, dataUDS, sizeof(dataUDS));
 
     }
 }
