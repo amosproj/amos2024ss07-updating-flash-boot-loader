@@ -241,6 +241,7 @@ void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned
                 return;
             }
             //qInfo("Call of Starting Frame\n");
+            qInfo("Communication: Found ISO-TP MultiFrame. Waiting to receive other Frames");
 
             multiframe_still_receiving = 1;
             multiframe_curr_id = id;
@@ -284,9 +285,13 @@ void Communication::rxCANDataSlot(const unsigned int id, const QByteArray &ba){
     qInfo("Communication: Slot - Received RX CAN Data to be processed");
     uint8_t* data = (uint8_t*)calloc(ba.size(), sizeof(uint8_t));
     if(data != nullptr){
+        QString bytes_data = "";
         for(int i = 0; i < ba.size(); i++){
             data[i] = ba[i];
+            bytes_data.append(QString("%1").arg(uint8_t(data[i]), 2, 16, QLatin1Char( '0' )) + " ");
+
         }
+        qInfo() << "Communication: rxCANDataSlot extracted data"<<bytes_data.trimmed()<<" from ID"<<QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' ));
         this->handleCANEvent(id, sizeof(data), data);
         free(data);
     }

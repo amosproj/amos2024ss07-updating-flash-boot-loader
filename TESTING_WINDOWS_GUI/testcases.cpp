@@ -419,7 +419,7 @@ uint8_t Testcases::checkEqual(unsigned int recid, const QByteArray &rec, unsigne
 
     // Checking on IDs
     if(recid != checkid){
-        out << ">> Testcase - ERROR - ID is different. Rec=" << QString("0x%1").arg(recid, 8, 16, QLatin1Char( '0' )) << "vs Check=" <<QString("0x%1").arg(checkid, 8, 16, QLatin1Char( '0' )) << "\n";
+        out << ">> Testcase - ERROR - ID is different. Rec=" << QString("0x%1").arg(uint32_t(recid), 8, 16, QLatin1Char( '0' )) << "vs Check=" <<QString("0x%1").arg(uint32_t(checkid), 8, 16, QLatin1Char( '0' )) << "\n";
         result = 0;
     }
 
@@ -434,20 +434,20 @@ uint8_t Testcases::checkEqual(unsigned int recid, const QByteArray &rec, unsigne
     uint8_t error = 0;
     for(auto i = 0; i < rec.size(); i++){
         if(rec[i] != check[i]){
-            out << ">> Testcase - ERROR - Content is different at index " << i<<", Received:"<<QString("0x%1").arg(rec[i], 2, 16, QLatin1Char( '0' ))<<" != Check: "<< QString("0x%1").arg(check[i], 2, 16, QLatin1Char( '0' ))<< "\n";
+            out << ">> Testcase - ERROR - Content is different at index " << i<<", Received: "<<QString("0x%1").arg(uint8_t(rec[i]), 2, 16, QLatin1Char( '0' ))<<" != Check: "<< QString("0x%1").arg(uint8_t(check[i]), 2, 16, QLatin1Char( '0' ))<< "\n";
             error=1;
         }
         else {
-            out << ">> Testcase - PASSED - Content is same at index " << i<<", Received:"<<QString("0x%1").arg(rec[i], 2, 16, QLatin1Char( '0' ))<<" == Check: "<< QString("0x%1").arg(check[i], 2, 16, QLatin1Char( '0' ))<< "\n";
+            out << ">> Testcase - PASSED - Content is same at index " << i<<", Received: "<<QString("0x%1").arg(uint8_t(rec[i]), 2, 16, QLatin1Char( '0' ))<<" == Check: "<< QString("0x%1").arg(uint8_t(check[i]), 2, 16, QLatin1Char( '0' ))<< "\n";
         }
     }
     if(error){
-        emit toConsole(*out.string());
+        emit toConsole(*out.string() + "\n");
         result = 0;
     }
 
     if(result == 1)
-        out << ">> Testcase - Passed!";
+        out << ">> Testcase - PASSED COMPLETELY!\n";
 
     emit toConsole(*out.string());
     return result == 1;

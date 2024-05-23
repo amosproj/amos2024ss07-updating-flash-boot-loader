@@ -35,18 +35,16 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint8_t no_bytes){
 
     QString s;
     QTextStream out(&s);
-    /*
-    qInfo() << ">> UDS: Received Msg from ID" << QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' )) << "Need to interpret. ";
+
     QString console = ">> UDS Received from ID: ";
     console.append(QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' )));
     console.append(" - Data=");
 
     for(auto i = 0; i < no_bytes; i++){
-        console.append(" " + QString("0x%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+        console.append(" " + QString("%1").arg(uint8_t(data[i]), 2, 16, QLatin1Char( '0' )));
     }
     qInfo() << console.toStdString();
-    emit toConsole(console);
-    */
+    //emit toConsole(console);
 
     if(no_bytes == 0) {
         out << "UDS: No data passed";
