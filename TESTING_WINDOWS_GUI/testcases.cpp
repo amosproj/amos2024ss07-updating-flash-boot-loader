@@ -34,7 +34,7 @@ Testcases::Testcases(){
     // Connect the signals and slots
 
     // Comm RX Signal to Testcases RX Slot
-    connect(comm, SIGNAL(rxDataReceived(unsigned int, QByteArray)), this, SLOT(rxDataReceiverSlot(unsigned int, QByteArray)), Qt::DirectConnection);
+    connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), this, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
 
     // UDS TX Signals to Comm TX Slots
     connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
