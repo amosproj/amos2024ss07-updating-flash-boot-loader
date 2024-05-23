@@ -63,28 +63,28 @@ void Testcases::startTests(){
     emit toConsole("Start of TX Section");
 
     // Sending out broadcast for tester present
-	testReqIdentification(); 
+    testReqIdentification();
 
 	// Specification for Diagnostic and Communication Management
-	testDiagnosticSessionControl();
-	testEcuReset();
-	testSecurityAccessRequestSEED();
+    testDiagnosticSessionControl();
+    testEcuReset();
+    testSecurityAccessRequestSEED();
 	testSecurityAccessVerifyKey();
-	testTesterPresent();
+    testTesterPresent();
 
 	// Specification for Data Transmission
-	testReadDataByIdentifier();
-	testReadMemoryByAddress();
-	testWriteDataByIdentifier();
+    testReadDataByIdentifier();
+    testReadMemoryByAddress();
+    testWriteDataByIdentifier();
 
 	// Specification for Upload | Download
-	testRequestDownload();
-	testRequestUpload();
-	testTransferData();
-	testRequestTransferExit();
+    testRequestDownload();
+    testRequestUpload();
+    testTransferData();
+    testRequestTransferExit();
 
 	// Supported Common Response Codes
-	testNegativeResponse();
+    testNegativeResponse();
     emit toConsole("End of TX Section\n");
 
     emit toConsole("Start of RX Section");
@@ -419,16 +419,23 @@ uint8_t Testcases::checkEqual(unsigned int recid, const QByteArray &rec, unsigne
 
     // Checking on IDs
     if(recid != checkid){
-        out << ">> Testcase - ERROR - ID is different. Rec=" << QString("0x%1").arg(uint32_t(recid), 8, 16, QLatin1Char( '0' )) << "vs Check=" <<QString("0x%1").arg(uint32_t(checkid), 8, 16, QLatin1Char( '0' )) << "\n";
+        out << ">> Testcase - ERROR - ID is different. Rec=" << QString("0x%1").arg(uint32_t(recid), 8, 16, QLatin1Char( '0' )) << "!= Check=" <<QString("0x%1").arg(uint32_t(checkid), 8, 16, QLatin1Char( '0' )) << "\n";
         result = 0;
+    }
+    else{
+        out << ">> Testcase - PASSED - ID is equal. Rec=" << QString("0x%1").arg(uint32_t(recid), 8, 16, QLatin1Char( '0' )) << "== Check=" <<QString("0x%1").arg(uint32_t(checkid), 8, 16, QLatin1Char( '0' )) << "\n";
+
     }
 
     // Extract messages
 
     if(rec.size() != check.size()){
-        out << ">> Testcase - ERROR - Length is different. Rec=" << rec.size() << "vs Check=" <<check.size()<< "\n";
+        out << ">> Testcase - ERROR - Length is different. Rec=" << rec.size() << "!= Check=" <<check.size()<< "\n";
         emit toConsole(*out.string());
         result = 0;
+    }
+    else{
+        out << ">> Testcase - PASSED - Length is equal. Rec=" << rec.size() << "== Check=" <<check.size()<< "\n";
     }
 
     uint8_t error = 0;
@@ -438,7 +445,7 @@ uint8_t Testcases::checkEqual(unsigned int recid, const QByteArray &rec, unsigne
             error=1;
         }
         else {
-            out << ">> Testcase - PASSED - Content is same at index " << i<<", Received: "<<QString("0x%1").arg(uint8_t(rec[i]), 2, 16, QLatin1Char( '0' ))<<" == Check: "<< QString("0x%1").arg(uint8_t(check[i]), 2, 16, QLatin1Char( '0' ))<< "\n";
+            out << ">> Testcase - PASSED - Content is equal at index " << i<<", Received: "<<QString("0x%1").arg(uint8_t(rec[i]), 2, 16, QLatin1Char( '0' ))<<" == Check: "<< QString("0x%1").arg(uint8_t(check[i]), 2, 16, QLatin1Char( '0' ))<< "\n";
         }
     }
     if(error){

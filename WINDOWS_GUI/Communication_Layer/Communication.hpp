@@ -63,6 +63,9 @@ public:
     // Testing
     void setTestMode();
 
+private:
+    void _debug_printf_isotp_buffer();
+
 signals:
     /**
      * @brief Signals that RX Data is received from pre selected interface
