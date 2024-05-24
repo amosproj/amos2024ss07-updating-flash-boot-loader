@@ -35,7 +35,6 @@ IFX_INTERRUPT(canIsrRxFifo0Handler, 0, INTERRUPT_PRIO_RX);
 
 void canIsrTxHandler(void){
       IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_transmissionCompleted);
-
 }
 
 /**
@@ -44,16 +43,9 @@ void canIsrTxHandler(void){
  * @param processDataFunction Pointer to function that processes Data read in CAN Message
 */
 void canIsrRxFifo0Handler(){
-    
-     //Read Message
-    if (processDataFunction != NULL)
-    {
-        //Callback
-    }
-    
         IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_rxFifo0NewMessage); /*Clear Message Stored Flag*/
         IfxCan_Can_readMessage(&g_can.canTXandRXNode, &g_can.rxMsg, (uint32*)g_can.rxData);
-        toggle_led_activity(LED2);
+        processDataFunction(g_can.rxData); //has to be casted in ISO-Tp
 
 }
 
@@ -111,7 +103,7 @@ void initTXandRXNode(void){
 /**
  * Initialize CAN Module and Node
 */
-void canInitDriver(void){
+void canInitDriver(void (*processData)(void*)){
     IfxCan_Can_initModuleConfig(&g_can.canConfig, &MODULE_CAN0); /*LoadsDefault Config*/
     IfxCan_Can_initModule(&g_can.canModule, &g_can.canConfig); /*Init with default config*/
 

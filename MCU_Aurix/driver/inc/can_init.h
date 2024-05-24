@@ -52,4 +52,4 @@ typedef struct msg
     uint32 Data[MAXIMUM_CAN_DATA_PAYLOAD];
 }msg;
 
-void canInitDriver(void);
+void canInitDriver(void (*processData)(void*));
