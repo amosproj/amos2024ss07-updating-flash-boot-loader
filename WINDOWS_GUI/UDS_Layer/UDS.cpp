@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>, Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : UDS.cpp
-// Author      : Michael Bauer
-// Version     : 0.2
+// Author      : Michael Bauer, Wiktor Pilarczyk
+// Version     : 0.3
 // Copyright   : MIT
 // Description : Qt UDS Layer implementation
 //============================================================================
@@ -71,6 +71,8 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint8_t no_bytes){
             out << info + "UDS Service: Diagnostic Session Control\n";
             break;
         case FBL_ECU_RESET:
+            if(info == "Response for ")
+                emit resetResponseReceived();
             out << info + "UDS Service: ECU Reset\n";
             break;
         case FBL_SECURITY_ACCESS:

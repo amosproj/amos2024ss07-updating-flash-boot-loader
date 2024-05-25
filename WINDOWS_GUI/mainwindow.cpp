@@ -3,6 +3,7 @@
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "./UDS_Spec/uds_comm_spec.h"
 #include "editableComboBox.h"
 
 static inline void dummy_function(QByteArray data) {
@@ -40,6 +41,9 @@ MainWindow::MainWindow(QWidget *parent)
     // UDS TX Signals to Comm TX Slots
     connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
     connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
+
+    // UDS reset message response to handler
+    connect(uds, SIGNAL(resetResponseReceived()), this, SLOT(resetResponseSlot()));
     //=====================================================================
 
     // GUI Console Print
@@ -70,6 +74,14 @@ MainWindow::MainWindow(QWidget *parent)
         QTableWidgetItem *item = ui->table_ECU->selectedItems().at(0);
         ui->label_selected_ECU->setText("Selected: " + item->text());
     });
+
+    connect(ui->button_reset, &QPushButton::clicked, this, [=]() {
+        if(ui->label_selected_ECU->text() != "") {
+            ui->label_reset_status->setText("Reset status: In progress");
+            uds->ecuReset(0x001, FBL_ECU_RESET_WARM_POWERON);
+        }
+    });
+
     connect(ui->button_flash, &QPushButton::clicked, this, [=]() {
         if(ui->label_selected_ECU->text() != "") {
             dummy_flash(ui->label_selected_ECU->text());
@@ -194,4 +206,8 @@ void MainWindow::comboBoxIndexChanged(int index)
 // Will write Text to console
 void MainWindow::appendTextToConsole(const QString &text){
     ui->Console->appendPlainText(text);
+}
+
+void MainWindow::resetResponseSlot() {
+    ui->label_reset_status->setText("Reset status: Completed");
 }

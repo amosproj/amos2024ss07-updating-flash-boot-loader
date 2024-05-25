@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>, Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : UDS.hpp
-// Author      : Michael Bauer
-// Version     : 0.2
+// Author      : Michael Bauer, Wiktor Pilarczyk
+// Version     : 0.3
 // Copyright   : MIT
 // Description : Qt UDS Layer implementation
 //============================================================================
@@ -78,6 +78,8 @@ signals:
      * @brief Signals a Text to be print to GUI console
      */
     void toConsole(const QString &);
+
+    void resetResponseReceived();
 
 public slots:
     /**

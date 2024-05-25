@@ -35,6 +35,7 @@ public:
 private slots:
     void comboBoxIndexChanged(int index);
     void appendTextToConsole(const QString &text);
+    void resetResponseSlot();
 
 private:
     Ui::MainWindow *ui;
