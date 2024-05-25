@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>, Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : testcases.cpp
-// Author      : Michael Bauer
+// Author      : Michael Bauer, Wiktor Pilarczyk
 // Version     : 0.1
 // Copyright   : MIT
 // Description : Testcases for UDS selftests, GUI tests and MCU tests
@@ -14,6 +14,8 @@
 #include "testcases.hpp"
 
 #include "../WINDOWS_GUI/UDS_Spec/uds_comm_spec.h"
+
+static const uint32_t addr = 0xA0090000;
 
 Testcases::Testcases(){
     this->gui_id = 0x7;
@@ -107,9 +109,8 @@ void Testcases::messageChecker(const unsigned int id, const QByteArray &rec){
 
         int len = 0;
         uint8_t *msg = nullptr;
-        unsigned int check_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, this->ecu_id) | 0x80000000; // 0x80000000 because of CAN Driver (to identify extended ID)
-        unsigned int broadcast_check_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, 0) | 0x80000000;
-
+        unsigned int check_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, this->ecu_id) | XL_CAN_EXT_MSG_ID; // because of CAN Driver (to identify extended ID)
+        unsigned int broadcast_check_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, 0) | XL_CAN_EXT_MSG_ID;
         if(rec[0] == FBL_DIAGNOSTIC_SESSION_CONTROL){
             emit toConsole(">> Received Diagnostic Session Control - Checking on content");
 
@@ -164,7 +165,7 @@ void Testcases::messageChecker(const unsigned int id, const QByteArray &rec){
             emit toConsole(">> Received Read Memory By Address - Checking on content");
 
             // Create the relevant message
-            msg = _create_read_memory_by_address(&len, 0, 0xA0090000, 1, 0, 0);
+            msg = _create_read_memory_by_address(&len, 0, addr, 1, 0, 0);
         }
 
         else if(rec[0] == FBL_WRITE_DATA_BY_IDENTIFIER){
@@ -179,14 +180,14 @@ void Testcases::messageChecker(const unsigned int id, const QByteArray &rec){
             emit toConsole(">> Received Request Download - Checking on content");
 
             // Create the relevant message
-            msg = _create_request_download(&len, 0, 0xA0090000, 127);
+            msg = _create_request_download(&len, 0, addr, 127);
         }
 
         else if(rec[0] == FBL_REQUEST_UPLOAD){
             emit toConsole(">> Received Request Upload - Checking on content");
 
             // Create the relevant message
-            msg = _create_request_upload(&len, 0, 0xA0090000, 127);
+            msg = _create_request_upload(&len, 0, addr, 127);
         }
 
         else if(rec[0] == FBL_TRANSFER_DATA){
@@ -194,14 +195,14 @@ void Testcases::messageChecker(const unsigned int id, const QByteArray &rec){
 
             // Create the relevant message
             uint8_t transfer_data[] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5};
-            msg = _create_transfer_data(&len, 0xA0090000, transfer_data, sizeof(transfer_data));
+            msg = _create_transfer_data(&len, addr, transfer_data, sizeof(transfer_data));
         }
 
         else if(rec[0] == FBL_REQUEST_TRANSFER_EXIT){
             emit toConsole(">> Received Request Transfer Exit - Checking on content");
 
             // Create the relevant message
-            msg = _create_request_transfer_exit(&len, 0, 0xA0090000);
+            msg = _create_request_transfer_exit(&len, 0, addr);
         }
 
         else if(rec[0] == FBL_NEGATIVE_RESPONSE){
@@ -330,7 +331,7 @@ void Testcases::testReadMemoryByAddress(){
 
     //TBD: Fill Testcase for TX
     emit toConsole("Testcase: TX Check Read Memory By Address - Address 0xA0090000, 1 Byte");
-    uds->readMemoryByAddress(this->ecu_id, 0xA0090000, 1);
+    uds->readMemoryByAddress(this->ecu_id, addr, 1);
 
 }
 
@@ -351,7 +352,7 @@ void Testcases::testRequestDownload(){
 
     //TBD: Fill Testcase for TX
     emit toConsole("Testcase: TX Check Request Download - Address 0xA0090000, 127 Byte");
-    uds->requestDownload(this->ecu_id, 0xA0090000, 127);
+    uds->requestDownload(this->ecu_id, addr, 127);
 }
 
 void Testcases::testRequestUpload(){
@@ -360,7 +361,7 @@ void Testcases::testRequestUpload(){
 
     //TBD: Fill Testcase for TX
     emit toConsole("Testcase: TX Check Request Upload - Address 0xA0090000, 127 Byte");
-    uds->requestUpload(this->ecu_id, 0xA0090000, 127);
+    uds->requestUpload(this->ecu_id, addr, 127);
 }
 
 void Testcases::testTransferData(){
@@ -370,7 +371,7 @@ void Testcases::testTransferData(){
     //TBD: Fill Testcase for TX
     emit toConsole("Testcase: TX Check Transfer Data");
     uint8_t transfer_data[] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5};
-    uds->transferData(this->ecu_id, 0xA0090000, transfer_data, sizeof(transfer_data));
+    uds->transferData(this->ecu_id, addr, transfer_data, sizeof(transfer_data));
 }
 
 void Testcases::testRequestTransferExit(){
@@ -379,7 +380,7 @@ void Testcases::testRequestTransferExit(){
 
     //TBD: Fill Testcase for TX
     emit toConsole("Testcase: TX Check Request Transfer Exit");
-    uds->requestTransferExit(this->ecu_id, 0xA0090000);
+    uds->requestTransferExit(this->ecu_id, addr);
 }
 
 // Supported Common Response Codes
