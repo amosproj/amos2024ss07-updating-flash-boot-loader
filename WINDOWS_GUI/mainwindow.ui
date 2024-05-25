@@ -209,6 +209,20 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="button_reset">
+         <property name="text">
+          <string>Reset</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_reset_status">
+         <property name="text">
+          <string>Reset Status:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="button_flash">
          <property name="text">
           <string>Flash</string>
