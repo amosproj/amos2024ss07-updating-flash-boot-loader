@@ -159,37 +159,17 @@ void MainWindow::comboBoxIndexChanged(int index)
     // Check if the index corresponds to the desired options
     if (index == 1 || index == 2 || index == 3)
     {
+        QStringList speeds;
         // Populate the second QComboBox based on the selected index of the first QComboBox
         if (index == 1) // Example condition, replace with your own logic
-        {
-            editComboBox_speed->addItem("33.3");
-            editComboBox_speed->addItem("50");
-            editComboBox_speed->addItem("83.3");
-            editComboBox_speed->addItem("83.3");
-            editComboBox_speed->addItem("100");
-            editComboBox_speed->addItem("125");
-            editComboBox_speed->addItem("250");
-            editComboBox_speed->addItem("500");
-            editComboBox_speed->addItem("1000");
-        }
+            speeds = {"33.3", "50", "83.3", "100", "125", "250", "500", "1000"};
         else if (index == 2) // Example condition, replace with your own logic
-        {
-            editComboBox_speed->addItem("1000");
-            editComboBox_speed->addItem("2000");
-            editComboBox_speed->addItem("3000");
-            editComboBox_speed->addItem("4000");
-            editComboBox_speed->addItem("5000");
-            editComboBox_speed->addItem("6000");
-            editComboBox_speed->addItem("7000");
-            editComboBox_speed->addItem("8000");
-
-        }
+            speeds = {"1000", "2000", "3000", "4000", "5000", "6000", "7000", "8000"};
         else if (index == 3) // Example condition, replace with your own logic
-        {
-            editComboBox_speed->addItem("Option A");
-            editComboBox_speed->addItem("Option B");
-            editComboBox_speed->addItem("Option C");
-        }
+            speeds = {"Option A", "Option B", "Option C"};
+
+        for (const QString &speed : speeds)
+                editComboBox_speed->addItem(speed);
 
         comboBox_speedUnit->addItem("kBit/s");
         comboBox_speedUnit->addItem("MBit/s");
