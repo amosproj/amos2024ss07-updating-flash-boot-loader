@@ -14,6 +14,7 @@
 #include "testcases.hpp"
 
 #include "../WINDOWS_GUI/UDS_Spec/uds_comm_spec.h"
+#include "../WINDOWS_GUI/Communication_Layer/Communication.hpp";
 
 static const uint32_t addr = 0xA0090000;
 
@@ -25,9 +26,9 @@ Testcases::Testcases(){
 
     qInfo("Main: Create Communication Layer");
     comm = new Communication();
-    comm->setCommunicationType(1); // Set to CAN
+    comm->setCommunicationType(COMM_INTERFACE_CAN);
     comm->setTestMode(); // Explicitly set testMode
-    comm->init(1); // Set to CAN
+    comm->init(COMM_INTERFACE_CAN);
 
     qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
     uds = new UDS(this->gui_id);
