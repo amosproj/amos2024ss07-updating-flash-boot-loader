@@ -29,6 +29,6 @@ void uds_request_download(void);
 void uds_request_upload(void);
 void uds_transfer_data(uint8* data);
 void uds_request_transfer_exit();
-void uds_neg_response(uint8* data);
+void uds_neg_response(uint8 reg_sid, uint8 neg_code);
 
 #endif /* BOOTLOADER_INC_UDS_H_ */

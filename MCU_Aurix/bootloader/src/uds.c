@@ -155,6 +155,16 @@ void uds_neg_response(uint8_t reg_sid ,uint8_t neg_code){
 
 }
 
+void uds_tester_present(void){
+    isoTP* iso = isotp_init();
+    iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
+    int len;
+    uint8_t *msg = _create_tester_present(&len, RESPONSE, FBL_TESTER_PRES_WITH_RESPONSE);
+    isotp_send(iso, msg, len);
+    free(msg);
+    isotp_free(iso);
+}
+
 void uds_handleRX(uint8* data, uint32 data_len){
     uint8 array[data_len + sizeof(uint32)]; // TODO change if incoming data format is different
 
@@ -213,6 +223,18 @@ void uds_handleRX(uint8* data, uint32 data_len){
             break;
 
         case FBL_TESTER_PRESENT:
+            uint8_t response_type = msg->data[1];
+            if (response_type == FBL_TESTER_PRES_WITH_RESPONSE){
+                uds_tester_present();
+            }
+            else if (response_type == FBL_TESTER_PRES_WITHOUT_RESPONSE){
+                //TODO do nothing?
+            }
+            else
+            {
+                //TODO Error handling
+            }
+            
             break;
         case FBL_READ_DATA_BY_IDENTIFIER:
             did = getDID(msg);
