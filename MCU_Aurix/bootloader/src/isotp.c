@@ -22,13 +22,15 @@ isoTP* isotp_init(){
     iso->frame_idx = 0;
     iso->data_out_idx_ctr = 0;
 
-
-    //Depending to the protcol change this
-    iso->max_len_per_frame = 0;
     iso->flow_flag = 0;          // Flow control flags
     iso->bs = 0;                 // Block Size
     iso->stmin = 0;              // Separation Time Minimum
     iso->timer = 0;             // Timer for separation time
+
+
+    //Depending to the protcol change this
+    iso->max_len_per_frame = 0;
+
 
     return iso;
 }
