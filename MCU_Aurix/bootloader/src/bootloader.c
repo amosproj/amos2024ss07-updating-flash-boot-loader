@@ -30,7 +30,8 @@ void show_can(void)
 {
     init_led_driver();
 
-    canInitDriver(handleRXUDS);
+    void (*processData)(void*); // TODO correct function
+    canInitDriver(processData);
 
     /*
      * ------------------------------------------------------------------------
@@ -83,5 +84,5 @@ void show_uds_rx_read_data(void)
 {
     int len;
     uint8* data = _create_read_data_by_ident(&len, 0, FBL_DID_SYSTEM_NAME, 0, 0);
-    handleRXUDS(data, len);
+    uds_handleRX(data, len);
 }

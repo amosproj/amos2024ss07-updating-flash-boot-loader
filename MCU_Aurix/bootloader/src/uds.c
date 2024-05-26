@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
+// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>, Sebastian Rodriguez <r99@melao.de>
 
 //============================================================================
 // Name        : uds.c
-// Author      : Dorothea Ehrl
+// Author      : Dorothea Ehrl, Sebastian Rodriguez
 // Version     : 0.1
 // Copyright   : MIT
-// Description : Handles UDS messages from CAN bus
+// Description : UDS Layer implementation
 //============================================================================
 
 #include <string.h>
 #include <stdio.h>
 
 #include "uds.h"
+#include "isotp.h"
+#include "session_manager.h"
 
 #define REQUEST                                                 0
 #define RESPONSE                                                1
@@ -67,16 +69,28 @@ void debug_print(uint8 *data, uint32 len){
     fclose(f3);
 }
 
-static void diagnosticSessionControl(void){
-    int response_len;
+void uds_diagnostic_session_control(void){
+    isoTP* iso = isotp_init();
+    iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
+    int len;
     uint8 session = getSession();
-    uint8* response_msg = _create_diagnostic_session_control(&response_len, RESPONSE, session);
-    // TODO send response_msg
-    debug_print(response_msg, response_len);
-    free(response_msg);
+    uint8_t *msg = _create_diagnostic_session_control(&len, 1, session);
+    isotp_send(iso, msg, len);
+    free(msg);
+    isotp_free(iso);
 }
 
-static void readDataByIdentifier(uint16 did){
+void uds_ecu_reset(uint8 reset_type){
+    isoTP* iso = isotp_init();
+    iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
+    int len;
+    uint8_t *msg = _create_ecu_reset(&len, 1, reset_type);
+    isotp_send(iso, msg, len);
+    free(msg);
+    isotp_free(iso);
+}
+
+void uds_read_data_by_identifier(uint16 did){
 	uint8 name[] = "AMOS FBL 24"; // TODO which name? And global var etc.?
 	uint8 *data;
     int data_len = 0;
@@ -131,7 +145,7 @@ static void readDataByIdentifier(uint16 did){
 //void requestTransferExit();
 //void negativeResponse(data);
 
-void handleRXUDS(uint8* data, uint32 data_len){
+void uds_handleRX(uint8* data, uint32 data_len){
     uint8 array[data_len + sizeof(uint32)]; // TODO change if incoming data format is different
 
     UDS_Msg* msg = (UDS_Msg*) array;
@@ -140,15 +154,19 @@ void handleRXUDS(uint8* data, uint32 data_len){
     debug_print(msg->data, msg->len);
 
     uint16 did; // only needed for data by identifier, but cannot be declared inside switch statement
+    uint8 reset_type;
 
     // parse incoming data by SID and call function for SID
     uint8 SID = getSID(msg);
     switch (SID)
     {
         case FBL_DIAGNOSTIC_SESSION_CONTROL:
-            diagnosticSessionControl();
+            uds_diagnostic_session_control();
             break;
         case FBL_ECU_RESET:
+            reset_type = 0; // TODO reset type
+            // TODO call reset_ecu function
+            uds_ecu_reset(reset_type);
             break;
         case FBL_SECURITY_ACCESS:
             break;
@@ -156,7 +174,7 @@ void handleRXUDS(uint8* data, uint32 data_len){
             break;
         case FBL_READ_DATA_BY_IDENTIFIER:
             did = getDID(msg);
-            readDataByIdentifier(did);
+            uds_read_data_by_identifier(did);
             break;
         case FBL_READ_MEMORY_BY_ADDRESS:
             break;

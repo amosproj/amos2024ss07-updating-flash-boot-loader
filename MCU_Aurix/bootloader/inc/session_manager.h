@@ -15,10 +15,10 @@
 #include "Ifx_Types.h"
 
 // TODO should not all return void
-void setSession();
-void authenticate();
-uint8 getSession();
-void sessionControl();
-void resetECU();
+void setSession(void);
+void authenticate(void);
+uint8 getSession(void);
+void sessionControl(void);
+void resetECU(void);
 
 #endif /* BOOTLOADER_INC_SESSION_MANAGER_H_ */

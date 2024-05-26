@@ -73,14 +73,15 @@ void core0_main(void)
     init_led_driver();
     //show_flash();
 
-    canInitDriver(handleRXUDS);
+    void (*processData)(void*); // TODO correct function
+    canInitDriver(processData);
 
     led_off(LED1);
     led_off(LED2);
 
     int len;
     uint8* data = _create_read_data_by_ident(&len, 0, FBL_DID_SYSTEM_NAME, 0, 0);
-    handleRXUDS(data, len);
+    uds_handleRX(data, len);
 
     //isotp_init(&ctx);
 
