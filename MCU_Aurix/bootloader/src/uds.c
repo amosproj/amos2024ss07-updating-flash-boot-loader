@@ -15,6 +15,8 @@
 #include "uds.h"
 #include "isotp.h"
 #include "session_manager.h"
+#include "memory.h"
+#include "flashing.h"
 
 #define REQUEST                                                 0
 #define RESPONSE                                                1
@@ -165,6 +167,35 @@ void uds_tester_present(void){
     isotp_free(iso);
 }
 
+uds_read_memory_by_address(){
+    uint8_t session = getSession();
+    if (session == FBL_DIAG_SESSION_DEFAULT){
+        uds_neg_response(FBL_READ_MEMORY_BY_ADDRESS, FBL_RC_SERVICE_NOT_SUPPORTED_IN_ACTIVE_SESSION);
+    }
+    else if (session == FBL_DIAG_SESSION_PROGRAMMING)
+    {
+        if (isAuthorized())
+        {
+            isoTP* iso = isotp_init();
+            iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
+            int len;
+            uint8_t adress = 0x00; //TODO which address?
+
+            uint8_t no_bytes = readMemory(address); //TODO implement readMemory
+            uint8_t *msg = _create_read_memory_by_address(&len, RESPONSE, adress, ); //TODO which address?
+            isotp_send(iso, msg, len);
+            free(msg);
+            isotp_free(iso);
+        }
+        else
+        {
+            uds_neg_response(FBL_READ_MEMORY_BY_ADDRESS, FBL_RC_SECURITY_ACCESS_DENIED);
+        }
+        
+        
+    }
+    
+}
 void uds_handleRX(uint8* data, uint32 data_len){
     uint8 array[data_len + sizeof(uint32)]; // TODO change if incoming data format is different
 
@@ -241,6 +272,7 @@ void uds_handleRX(uint8* data, uint32 data_len){
             uds_read_data_by_identifier(did);
             break;
         case FBL_READ_MEMORY_BY_ADDRESS:
+            
             break;
         case FBL_WRITE_DATA_BY_IDENTIFIER:
             break;
