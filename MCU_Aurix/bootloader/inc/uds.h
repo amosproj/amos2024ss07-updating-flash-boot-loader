@@ -20,7 +20,7 @@ void uds_handleRX(uint8* data, uint32 data_len);
 
 void uds_diagnostic_session_control(void);
 void uds_ecu_reset(uint8 reset_type);
-void uds_security_access(void);
+void uds_security_access(u_int8_t reset_type);
 void uds_tester_present(void);
 void uds_read_data_by_identifier(uint16 did);
 void uds_read_memory_by_address(uint8* address);

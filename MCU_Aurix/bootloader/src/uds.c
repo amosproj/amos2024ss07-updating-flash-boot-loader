@@ -74,7 +74,7 @@ void uds_diagnostic_session_control(void){
     iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
     int len;
     uint8 session = getSession();
-    uint8_t *msg = _create_diagnostic_session_control(&len, 1, session);
+    uint8_t *msg = _create_diagnostic_session_control(&len, RESPONSE, session);
     isotp_send(iso, msg, len);
     free(msg);
     isotp_free(iso);
@@ -133,17 +133,27 @@ void uds_read_data_by_identifier(uint16 did){
     free(response_msg);
 }
 
-//void ecuReset();
-//void securityAccess();
-//void testerPresent();
+void uds_security_access(u_int8_t request_type, uint8_t *key, uint8_t key_len){
+    isoTP* iso = isotp_init();
+    iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
+    int len;
+    uint8_t *msg = _create_security_access(&len, RESPONSE, request_type, key, key_len);
+    isotp_send(iso, msg, len);
+    free(msg);
+    isotp_free(iso);
+}
 
-//void readMemoryByAddress(address);
-//void writeDataByIdentifier(data);
-//void requestDownload();
-//void requestUpload();
-//void transferData(data);
-//void requestTransferExit();
-//void negativeResponse(data);
+void uds_neg_response(uint8_t reg_sid ,uint8_t neg_code){
+    isoTP* iso = isotp_init();
+    iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
+    int len;
+
+    uint8_t *msg = _create_neg_response(&len, reg_sid, neg_code);
+    isotp_send(iso, msg, len);
+    free(msg);
+    isotp_free(iso);
+
+}
 
 void uds_handleRX(uint8* data, uint32 data_len){
     uint8 array[data_len + sizeof(uint32)]; // TODO change if incoming data format is different
@@ -163,13 +173,45 @@ void uds_handleRX(uint8* data, uint32 data_len){
         case FBL_DIAGNOSTIC_SESSION_CONTROL:
             uds_diagnostic_session_control();
             break;
+
         case FBL_ECU_RESET:
-            reset_type = 0; // TODO reset type
-            // TODO call reset_ecu function
-            uds_ecu_reset(reset_type);
+            reset_type = msg->data[1];
+            if (reset_type == FBL_ECU_RESET_POWERON || reset_type == FBL_ECU_RESET_COLD_POWERON || reset_type == FBL_ECU_RESET_WARM_POWERON){
+                uds_ecu_reset(reset_type);
+                //TODO call reset function
+                }
+            else
+            {
+                //TODO Error handling
+            }
             break;
+
         case FBL_SECURITY_ACCESS:
+            reset_type = msg->data[1];
+            if(reset_type == FBL_SEC_ACCESS_SEED){
+                int key_len;
+                uint8_t *key = getKey(&key_len); //TODO implement getKey or is it Authenticate()?
+                uds_security_access(reset_type, key, key_len);
+            }
+            else if (reset_type == FBL_SEC_ACCESS_VERIFY_KEY)
+            {   
+                uint8_t access_granted = verifyKey(msg->data + 2, msg->len - 2); //TODO implement verifyKey
+                if (access_granted)
+                {
+                    uds_security_access(reset_type, NULL, 0);
+                }
+                else
+                {
+                    uds_neg_response(FBL_SECURITY_ACCESS, FBL_RC_INVALID_KEY);
+                }
+                
+            }
+            else
+            {
+                //TODO Error handling auch neg_response?
+            }
             break;
+
         case FBL_TESTER_PRESENT:
             break;
         case FBL_READ_DATA_BY_IDENTIFIER:
