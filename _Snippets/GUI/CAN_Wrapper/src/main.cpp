@@ -50,9 +50,9 @@ public:
 		if (id == 0)
 			return;
 
-		printf("Main: Received id=%d, dlc=%d, data=", id, dlc);
+		printf("Main: Received id=0x%08X, dlc=%d, data=", id, dlc);
 		for(auto i = 0; i < dlc; i++){
-			printf("%d ", data[i]);
+			printf("0x%02X ", data[i]);
 		}
 		printf("\n");
 	}

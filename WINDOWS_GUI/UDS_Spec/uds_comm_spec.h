@@ -4,7 +4,7 @@
 //============================================================================
 // Name        : uds_comm_spec.h
 // Author      : Michael Bauer
-// Version     : 0.1
+// Version     : 0.2
 // Copyright   : MIT
 // Description : UDS communication specification for AMOS Flashbootloader
 //============================================================================
@@ -19,6 +19,8 @@ extern "C" {
 #include "stdint.h"
 
 #define MAX_FRAME_LEN_CAN											(0x08)
+#define FBLCAN_IDENTIFIER_MASK								  		(0x0F24FFFF)
+#define FBLCAN_BASE_ADDRESS											(FBLCAN_IDENTIFIER_MASK & 0xFFFF0000)
 
 //////////////////////////////////////////////////////////////////////////////
 // Supported Service Overview (SID)
@@ -132,9 +134,14 @@ extern "C" {
 //////////////////////////////////////////////////////////////////////////////
 
 
-uint8_t *starting_frame(int *len, int *has_next, uint8_t max_len_per_frame, uint8_t* data, uint32_t data_len, uint32_t* ptr_ctr);
-uint8_t *consecutive_frame(int *len, int *has_next, uint8_t max_len_per_frame, uint8_t* data, uint32_t data_len, uint32_t* ptr_ctr, uint8_t* idx);
-uint8_t *flow_control_frame(int *len, uint8_t flag, uint8_t blocksize, uint8_t sep_time_millis, uint8_t sep_time_multi_millis);
+uint8_t *tx_starting_frame(int *data_out_len, int *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr);
+uint8_t *tx_consecutive_frame(int *data_out_len, int *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr, uint8_t* frame_idx);
+uint8_t *tx_flow_control_frame(int *data_out_len, uint8_t flag, uint8_t blocksize, uint8_t sep_time_millis, uint8_t sep_time_multi_millis);
+
+uint8_t rx_is_starting_frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_len_per_frame);
+uint8_t rx_is_consecutive_frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_len_per_frame);
+uint8_t *rx_starting_frame(int *data_out_len, int *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len);
+uint8_t rx_consecutive_frame(int *data_out_len, uint8_t *data_out, int *has_next, uint32_t data_in_len, uint8_t* data_in, uint32_t *idx); // TODO: Error Handling for correct order
 
 //////////////////////////////////////////////////////////////////////////////
 // Templates for UDS Messages

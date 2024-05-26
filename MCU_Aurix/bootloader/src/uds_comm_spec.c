@@ -4,7 +4,7 @@
 //============================================================================
 // Name        : uds_comm_spec.c
 // Author      : Michael Bauer, Leon Wilms
-// Version     : 0.2
+// Version     : 0.3
 // Copyright   : MIT
 // Description : UDS communication specification implementation
 //============================================================================
@@ -20,9 +20,12 @@ extern "C" {
 
 // TODO: Check on Error Handling for calloc -> Mainly relevant for MCU
 
+//TODO: Leon -> add uint32_t for int and check if this breaks something
+
 //TODO:
 /*
- * How about a struct with all the necessary information for the isoTP sending process?
+ * How about a struct with all the necessary information for the isoTP sending process? And corresponding init() function?
+ *
  * Like :
  *
  *  typedef struct canType
@@ -41,7 +44,8 @@ extern "C" {
 // ISO TP Handling - TX
 //////////////////////////////////////////////////////////////////////////////
 
-uint8_t *tx_starting_frame(int *data_out_len, int *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr){
+// TODO: I changed 'data_out_len' and 'has_next' to uint32_t. Will this still work?
+uint8_t *tx_starting_frame(uint32_t *data_out_len, uint32_t *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr){
     // Caller need to free the memory after processing
     uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
 
@@ -109,7 +113,8 @@ uint8_t *tx_starting_frame(int *data_out_len, int *has_next, uint8_t max_len_per
     }
 }
 
-uint8_t *tx_consecutive_frame(int *data_out_len, int *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr, uint8_t* frame_idx){
+// TODO: I changed 'data_out_len' and 'has_next' to uint32_t. Will this still work?
+uint8_t *tx_consecutive_frame(uint32_t *data_out_len, uint32_t *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr, uint8_t* frame_idx){
     // Caller need to free the memory after processing
     uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
 
@@ -154,7 +159,29 @@ uint8_t *tx_consecutive_frame(int *data_out_len, int *has_next, uint8_t max_len_
     return (uint8_t*)calloc(0, sizeof(uint8_t));
 }
 
-uint8_t *tx_flow_control_frame(int *data_out_len, uint8_t flag, uint8_t blocksize, uint8_t sep_time_millis, uint8_t sep_time_multi_millis){
+
+// TODO: think about a better solution with sep_time ~ Leon
+/*
+ * @brief                       This function creates the flow control message which has to be sent.
+ *                              Caller needs to free the memory after processing.
+ *
+ * @param data_out_len          Points to the final length of this message,
+ *                              will be set in the function.
+ * @param flag                  0x00 = Continue To Send, 0x01 = Wait, 0x02 = Overflow / Abort
+ *
+ * @param blocksize
+ *
+ * @param sep_time_millis       For values 0-127, will wait for 0-127 milli-seconds.
+ *
+ * @param sep_time_multi_micros For values 0x01-0x09, will wait for 1-9 x 100 micro-seconds
+ *                              and overshadow 'sep_time_millis'.
+ *                              If set to 0, this will be ignored. No values above 9.
+ *
+ * @return                      Returns dynamically allocated flow control frame.
+ *
+ */
+// TODO: I changed 'data_out_len' and 'has_next' to uint32_t. Will this still work?
+uint8_t *tx_flow_control_frame(uint32_t *data_out_len, uint8_t flag, uint8_t blocksize, uint8_t sep_time_millis, uint8_t sep_time_multi_micros){
     // Caller need to free the memory after processing
     *data_out_len = 3;
     uint8_t *msg = (uint8_t*)calloc(*data_out_len, sizeof(uint8_t));
@@ -168,10 +195,10 @@ uint8_t *tx_flow_control_frame(int *data_out_len, uint8_t flag, uint8_t blocksiz
     msg[0] |= (flag & 0x3);
     msg[1] = blocksize;
 
-    if(sep_time_multi_millis){
-        if(sep_time_multi_millis > 0x9)
-            sep_time_multi_millis = 0x9;
-        msg[2] = 0xF0 | sep_time_multi_millis;
+    if(sep_time_multi_micros){
+        if(sep_time_multi_micros > 0x9)
+            sep_time_multi_micros = 0x9;
+        msg[2] = 0xF0 | sep_time_multi_micros;
     }
     else {
         msg[2] = 0x7F & sep_time_millis;
@@ -183,6 +210,9 @@ uint8_t *tx_flow_control_frame(int *data_out_len, uint8_t flag, uint8_t blocksiz
 //////////////////////////////////////////////////////////////////////////////
 // ISO TP Handling - RX
 //////////////////////////////////////////////////////////////////////////////
+
+//TODO: add rx_is_flowcontrol_frame()
+//      add rx_flowcontrol_frame()
 
 uint8_t rx_is_starting_frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_len_per_frame){
     uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
@@ -216,7 +246,8 @@ uint8_t rx_is_consecutive_frame(uint8_t* data_in, uint32_t data_in_len, uint8_t 
     return 0xFF; // Error
 }
 
-uint8_t *rx_starting_frame(int *data_out_len, int *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len){
+// TODO: I changed 'data_out_len' and 'has_next' to uint32_t. Will this still work?
+uint8_t *rx_starting_frame(uint32_t *data_out_len, uint32_t *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len){
     // Caller need to free the memory after processing
     uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
 
@@ -275,7 +306,8 @@ uint8_t *rx_starting_frame(int *data_out_len, int *has_next, uint8_t max_len_per
     }
 }
 
-uint8_t rx_consecutive_frame(int *data_out_len, uint8_t *data_out, int *has_next, uint32_t data_in_len, uint8_t* data_in, uint32_t *idx){
+// TODO: I changed 'data_out_len' and 'has_next' to uint32_t. Will this still work?
+uint8_t rx_consecutive_frame(uint32_t *data_out_len, uint8_t *data_out, uint32_t *has_next, uint32_t data_in_len, uint8_t* data_in, uint32_t *idx){
 
     if (data_in_len == 0){
         *has_next = 0;

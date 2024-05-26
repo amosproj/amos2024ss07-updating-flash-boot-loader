@@ -32,25 +32,24 @@
 
 #include "bootloader.h"
 #include "led_driver.h"
+
 #include "can_driver.h"
 #include "can_init.h"
+#include "isotp.h"
+#include "uds.h"
 
 /*
  * ------------------------------------------------------------------------
- * TESTING
+ * For Temporary IsoTp sending
  * ------------------------------------------------------------------------
  */
 
-#include <stdio.h>
 #include <uds_comm_spec.h>
 #include "Bsp.h"
 
-//IsoTpContext ctx;
-
-
 /*
  * ------------------------------------------------------------------------
- * TESTING
+ * For Temporary IsoTp sending
  * ------------------------------------------------------------------------
  */
 
@@ -71,13 +70,10 @@ void core0_main(void)
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
 
-
-    //SerialASC.begin(9600);
-
     init_led_driver();
     //show_flash();
 
-    canInitDriver();
+    canInitDriver(handleRXUDS);
 
     led_off(LED1);
     led_off(LED2);
@@ -88,61 +84,27 @@ void core0_main(void)
 
     //isotp_init(&ctx);
 
-//    uint8_t dataCAN[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-//
-//    uint8_t dataIsoSolo[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
-//    uint8_t dataIsoMulti[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
-//
-//
-//
-//    uint32_t data_in_len = sizeof(dataIsoMulti);
-//    uint32_t data_out_idx_ctr = 0;
-//    uint8_t frame_idx = 0;
-//    int data_out_len;
-//    int has_next;
-//    uint8_t max_len_per_frame = 8;
+    uint8_t dataCAN[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
 
+    uint8_t dataUDS[] = {0x10, 0x01};
+
+    uint8_t dataIsoSolo[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+    uint8_t dataIsoSolo2[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
+
+    uint8_t dataIsoMulti[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+    
     while(1)
     {
-//        waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 1000));
-//
-//        toggle_led_activity(LED1);
-//
-//        //isotp_poll(&ctx);
-//
-//        //SerialASC.print("Test\n");
-//
-//        //printf("TESTING\n");
-//
-//        // Create and send the first frame
-//        uint8_t* first_frame = tx_starting_frame(&data_out_len,
-//                                                    &has_next,
-//                                                    max_len_per_frame,
-//                                                    dataIsoMulti,
-//                                                    data_in_len,
-//                                                    &data_out_idx_ctr);
-//
-//        canTransmitMessage(0x123, first_frame, data_out_len);
-//        free(first_frame);
-//
-//        // Send consecutive frames if necessary
-//        while (has_next) {
-//            uint8_t* consecutive_frame = tx_consecutive_frame(&data_out_len,
-//                                                                &has_next,
-//                                                                max_len_per_frame,
-//                                                                dataIsoMulti,
-//                                                                data_in_len,
-//                                                                &data_out_idx_ctr,
-//                                                                &frame_idx);
-//
-//            canTransmitMessage(0x123, consecutive_frame, data_out_len);
-//            free(consecutive_frame);
-//        }
-//
-//
-//
-//        //canTransmitMessage(0x123, dataCAN, sizeof(dataCAN));
 
+        waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 1000));
+
+        toggle_led_activity(LED1);
+
+        isoTP* iso = isotp_init();
+
+        iso->max_len_per_frame = 8;
+
+        isotp_send(iso, dataUDS, sizeof(dataUDS));
 
     }
 }

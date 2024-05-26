@@ -77,7 +77,7 @@ static void diagnosticSessionControl(void){
 }
 
 static void readDataByIdentifier(uint16 did){
-	uint8 name[] = "AMOS FBL 24";
+	uint8 name[] = "AMOS FBL 24"; // TODO which name? And global var etc.?
 	uint8 *data;
     int data_len = 0;
     switch(did)

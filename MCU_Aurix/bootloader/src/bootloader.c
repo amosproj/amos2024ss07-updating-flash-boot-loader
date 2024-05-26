@@ -30,7 +30,7 @@ void show_can(void)
 {
     init_led_driver();
 
-    canInitDriver();
+    canInitDriver(handleRXUDS);
 
     /*
      * ------------------------------------------------------------------------

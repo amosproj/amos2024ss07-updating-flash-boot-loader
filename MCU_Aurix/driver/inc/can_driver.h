@@ -28,9 +28,8 @@
 #include <stdint.h>
 #include "Bsp.h"
 
-//ISOTP: testing different headers
-//void canTransmitMessage(uint32_t canMessageID, uint32_t low_word, uint32_t high_word); //oder uint8_t*
-int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size); //oder uint8_t*
+
+int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size);
 void canDummyMessagePeriodicly(void);
 void canIsrRxHandler();
 
