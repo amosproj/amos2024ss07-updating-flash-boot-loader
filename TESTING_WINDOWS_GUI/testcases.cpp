@@ -428,6 +428,14 @@ uint32_t Testcases::createCommonID(uint32_t base_id, uint8_t gui_id, uint32_t ec
 	return send_id;
 }
 
+static inline QString testMessage(bool error, QString reason, QString rec, QString exp) {
+    QString start = ">> Testcase -";
+    if(error)
+        start += " ERROR - ";
+    else
+        start += " PASSED - ";
+    return start + reason + ". Rec=" + rec + "Exp=" + exp + "\n";
+}
 
 uint8_t Testcases::checkEqual(unsigned int recid, const QByteArray &rec, unsigned int checkid, QByteArray &check){
 
@@ -437,46 +445,33 @@ uint8_t Testcases::checkEqual(unsigned int recid, const QByteArray &rec, unsigne
     uint8_t result = 1;
 
     // Checking on IDs
-    if(recid != checkid){
-        out << ">> Testcase - ERROR - ID is different. Rec=" << QString("0x%1").arg(uint32_t(recid), 8, 16, QLatin1Char( '0' )) << "!= Check=" <<QString("0x%1").arg(uint32_t(checkid), 8, 16, QLatin1Char( '0' )) << "\n";
+    if(recid != checkid)
         result = 0;
-    }
-    else{
-        out << ">> Testcase - PASSED - ID is equal. Rec=" << QString("0x%1").arg(uint32_t(recid), 8, 16, QLatin1Char( '0' )) << "== Check=" <<QString("0x%1").arg(uint32_t(checkid), 8, 16, QLatin1Char( '0' )) << "\n";
-
-    }
+    out << testMessage(recid != checkid, "ID", QString("0x%1").arg(uint32_t(recid), 8, 16, QLatin1Char( '0' )), QString("0x%1").arg(uint32_t(checkid), 8, 16, QLatin1Char( '0' )));
 
     // Extract messages
-
-    if(rec.size() != check.size()){
-        out << ">> Testcase - ERROR - Length is different. Rec=" << rec.size() << "!= Check=" <<check.size()<< "\n";
+    out << testMessage(rec.size() != check.size(), "Message Length", QString::number(rec.size()), QString::number(check.size()));
+    if(rec.size() != check.size()) {
         emit toConsole(*out.string());
         result = 0;
     }
-    else{
-        out << ">> Testcase - PASSED - Length is equal. Rec=" << rec.size() << "== Check=" <<check.size()<< "\n";
-    }
 
     uint8_t error = 0;
-    for(auto i = 0; i < rec.size(); i++){
-        if(rec[i] != check[i]){
-            out << ">> Testcase - ERROR - Content is different at index " << i<<", Received: "<<QString("0x%1").arg(uint8_t(rec[i]), 2, 16, QLatin1Char( '0' ))<<" != Check: "<< QString("0x%1").arg(uint8_t(check[i]), 2, 16, QLatin1Char( '0' ))<< "\n";
+    for(auto i = 0; i < rec.size(); i++) {
+        if(rec[i] != check[i])
             error=1;
-        }
-        else {
-            out << ">> Testcase - PASSED - Content is equal at index " << i<<", Received: "<<QString("0x%1").arg(uint8_t(rec[i]), 2, 16, QLatin1Char( '0' ))<<" == Check: "<< QString("0x%1").arg(uint8_t(check[i]), 2, 16, QLatin1Char( '0' ))<< "\n";
-        }
+        out << testMessage(rec[i] != check[i], "Content at index " + QString::number(i), QString("0x%1").arg(uint8_t(rec[i]), 2, 16, QLatin1Char( '0' )), QString("0x%1").arg(uint8_t(check[i]), 2, 16, QLatin1Char( '0' )));
     }
-    if(error){
+    if(error) {
         emit toConsole(*out.string() + "\n");
         result = 0;
     }
 
-    if(result == 1)
+    if(result)
         out << ">> Testcase - PASSED COMPLETELY!\n";
 
     emit toConsole(*out.string());
-    return result == 1;
+    return result;
 }
 
 //============================================================================
