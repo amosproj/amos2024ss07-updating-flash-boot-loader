@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : testcases.cpp
-// Author      : Michael Bauer
+// Author      : Michael Bauer, Wiktor Pilarczyk
 // Version     : 0.2
 // Copyright   : MIT
 // Description : Testcases for UDS selftests, GUI tests and MCU tests
@@ -270,12 +271,12 @@ void Testcases::messageChecker(const unsigned int id, const QByteArray &rec){
 //////////////////////////////////////////////////////////////////////////////
 
 static inline bool dataTransmitting(Testcases::TESTMODES mode) {
-    return mode != Testcases::SELFTEST && mode != Testcases::MCUTEST;
+    return mode == Testcases::SELFTEST || mode == Testcases::MCUTEST;
 }
 
 void Testcases::testReqIdentification() // Sending out broadcast for tester present
 {
-    if(dataTransmitting(this->testmode))
+    if(!dataTransmitting(this->testmode))
         return;
 
     emit toConsole("Testcase: TX Check Request Identification for 1 ECU");
@@ -286,7 +287,7 @@ void Testcases::testReqIdentification() // Sending out broadcast for tester pres
 
 // Specification for Diagnostic and Communication Management
 void Testcases::testDiagnosticSessionControl(){
-    if(dataTransmitting(this->testmode))
+    if(!dataTransmitting(this->testmode))
         return;
 
     emit toConsole("Testcase: TX Check DiagnosticSessionControl with Default Session");
@@ -294,7 +295,7 @@ void Testcases::testDiagnosticSessionControl(){
 }
 
 void Testcases::testEcuReset(){
-    if(dataTransmitting(this->testmode))
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -303,7 +304,7 @@ void Testcases::testEcuReset(){
 }
 
 void Testcases::testSecurityAccessRequestSEED(){
-    if(dataTransmitting(this->testmode))
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -313,7 +314,7 @@ void Testcases::testSecurityAccessRequestSEED(){
 
 
 void Testcases::testSecurityAccessVerifyKey(){
-    if(dataTransmitting(this->testmode))
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -324,7 +325,7 @@ void Testcases::testSecurityAccessVerifyKey(){
 
 
 void Testcases::testTesterPresent(){
-    if(this->testmode != SELFTEST && this->testmode != MCUTEST && this->testmode != MCUISOTP) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode) && this->testmode != MCUISOTP)
         return;
 
     //TBD: Fill Testcase for TX
@@ -335,7 +336,7 @@ void Testcases::testTesterPresent(){
 
 // Specification for Data Transmission
 void Testcases::testReadDataByIdentifier(){
-    if(dataTransmitting(this->testmode))
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -344,7 +345,7 @@ void Testcases::testReadDataByIdentifier(){
 
 }
 void Testcases::testReadMemoryByAddress(){
-    if(dataTransmitting(this->testmode))
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -354,7 +355,7 @@ void Testcases::testReadMemoryByAddress(){
 }
 
 void Testcases::testWriteDataByIdentifier(){
-    if(this->testmode != SELFTEST && this->testmode != MCUTEST && this->testmode != MCUISOTP) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode) && this->testmode != MCUISOTP)
         return;
 
     //TBD: Fill Testcase for TX
@@ -365,7 +366,7 @@ void Testcases::testWriteDataByIdentifier(){
 
 // Specification for Upload | Download
 void Testcases::testRequestDownload(){
-    if(dataTransmitting(this->testmode))
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -374,7 +375,7 @@ void Testcases::testRequestDownload(){
 }
 
 void Testcases::testRequestUpload(){
-    if(dataTransmitting(this->testmode))
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -383,7 +384,7 @@ void Testcases::testRequestUpload(){
 }
 
 void Testcases::testTransferData(){
-    if(dataTransmitting(this->testmode))
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -393,7 +394,7 @@ void Testcases::testTransferData(){
 }
 
 void Testcases::testRequestTransferExit(){
-    if(dataTransmitting(this->testmode))
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -403,7 +404,7 @@ void Testcases::testRequestTransferExit(){
 
 // Supported Common Response Codes
 void Testcases::testNegativeResponse(){
-    if(dataTransmitting(this->testmode))
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
