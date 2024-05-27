@@ -352,7 +352,7 @@ uint8_t *_create_read_data_by_ident(int *len, uint8_t response, uint16_t did, ui
 }
 
 // Read Data By Address (SID 0x23)
-uint8_t *_create_read_memory_by_address(int *len, uint8_t response, uint32_t addr, uint16_t no_bytes, uint8_t* data, uint8_t data_len) {
+uint8_t *_create_read_memory_by_address(int *len, uint8_t response, uint32_t addr, uint16_t no_bytes, uint8_t* data, uint16_t data_len) {
 	// Caller need to free the memory after processing
 	*len = 7;
 	if(data_len)

@@ -4,7 +4,7 @@
 //============================================================================
 // Name        : UDS.hpp
 // Author      : Michael Bauer
-// Version     : 0.2
+// Version     : 0.3
 // Copyright   : MIT
 // Description : Qt UDS Layer implementation
 //============================================================================
@@ -13,6 +13,7 @@
 
 #include <QObject>
 #include <QByteArray>
+#include <QMutex>
 
 #include "stdint.h"
 
@@ -20,9 +21,27 @@
 class UDS : public QObject{
     Q_OBJECT
 
+public:
+    enum RESP {NO_INIT, STILL_BUSY, TX_FREE, RX_NO_RESPONSE, RX_ERROR, TX_RX_OK, TX_RX_NOK, TX_OK};
+
 private:
+    bool synchronized_rx_tx; // Flag to enable synchronized mode
+
 	uint8_t gui_id;
     uint8_t init;
+
+    // Timeout control
+    uint32_t tx_max_waittime_free_tx = 1000;    // ms - Wait time before TX aborts
+    uint32_t rx_max_waittime_general = 500;     // ms - Wait time before RX aborts
+    uint32_t rx_max_waittime_long    = 2000;    // ms - Long wait time before RX aborts
+
+    bool _comm;         // For communication usage, only synchronized TX+RX is possible
+    QMutex comm_mutex;  // Protects _comm
+
+    unsigned int rx_exp_id;  // ID to be expected for response of TX
+    uint8_t *rx_exp_data;    // Data to be expected from ECU, if possible
+    int rx_no_bytes;            // No bytes to be expected from ECU
+    bool rx_msg_valid;       // Indication of Message Interpreter if UDS Msg was valid
 
 
 public:
@@ -30,33 +49,37 @@ public:
     UDS(uint8_t gui_id);
 	virtual ~UDS();
 
-    void messageInterpreter(unsigned int id, uint8_t *data, uint8_t no_bytes);
+    void setSyncMode(bool synchronized);
 
-	void reqIdentification(); // Sending out broadcast for tester present
+    void messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes);
+
+    RESP reqIdentification(); // Sending out broadcast for tester present
 
 	// Specification for Diagnostic and Communication Management
-	void diagnosticSessionControl(uint32_t id, uint8_t session);
-	void ecuReset(uint32_t id, uint8_t session);
-	void securityAccessRequestSEED(uint32_t id);
-	void securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_len);
-	void testerPresent(uint32_t id);
+    RESP diagnosticSessionControl(uint32_t id, uint8_t session);
+    RESP ecuReset(uint32_t id, uint8_t session);
+    RESP securityAccessRequestSEED(uint32_t id);
+    RESP securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_len);
+    RESP testerPresent(uint32_t id);
 
 	// Specification for Data Transmission
-	void readDataByIdentifier(uint32_t id, uint16_t identifier);
-	void readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_bytes); // TODO: Check on Architecture
-	void writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* data, uint8_t data_len);
+    RESP readDataByIdentifier(uint32_t id, uint16_t identifier);
+    RESP readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_bytes); // TODO: Check on Architecture
+    RESP writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* data, uint8_t data_len);
 
 	// Specification for Upload | Download
-	void requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes); // TODO: Check on Architecture
-	void requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes); // TODO: Check on Architecture
-	void transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_t data_len); // TODO: Check on Architecture
-	void requestTransferExit(uint32_t id, uint32_t address);
+    RESP requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes); // TODO: Check on Architecture
+    RESP requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes); // TODO: Check on Architecture
+    RESP transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_t data_len); // TODO: Check on Architecture
+    RESP requestTransferExit(uint32_t id, uint32_t address);
 
 	// Supported Common Response Codes
-	void negativeResponse(uint32_t id, uint8_t reg_sid, uint8_t neg_resp_code);
+    RESP negativeResponse(uint32_t id, uint8_t reg_sid, uint8_t neg_resp_code);
 
 
 private:
+    RESP checkOnFreeTX();
+    RESP checkOnResponse(uint32_t waittime);
 	uint32_t createCommonID(uint32_t base_id, uint8_t gui_id, uint32_t ecu_id);
 
 

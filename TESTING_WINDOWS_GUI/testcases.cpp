@@ -4,7 +4,7 @@
 //============================================================================
 // Name        : testcases.cpp
 // Author      : Michael Bauer
-// Version     : 0.1
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Testcases for UDS selftests, GUI tests and MCU tests
 //============================================================================
@@ -29,6 +29,7 @@ Testcases::Testcases(){
 
     qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
     uds = new UDS(this->gui_id);
+    uds->setSyncMode(false);
 
     //=====================================================================
     // Connect the signals and slots
