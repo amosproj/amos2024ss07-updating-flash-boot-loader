@@ -72,17 +72,6 @@ uint16_t getNoBytes(UDS_Msg *msg){
     return bytes;
 }
 
-// TODO remove debug print
-void debug_print(uint8_t *data, uint32_t len){
-    FILE * f3 = fopen("terminal window 3", "rw");
-    fprintf(f3, "\nMessage:\n");
-    for(int i = 0; i < len; i++){
-        fprintf(f3, "[%x]", data[i]);
-    }
-    fprintf(f3, "\n");
-    fclose(f3);
-}
-
 uint8_t uds_session_access(uint8_t sid){
     uint8_t session = getSession();
     if (session == FBL_DIAG_SESSION_DEFAULT){
@@ -210,7 +199,6 @@ void uds_handleRX(uint8_t* data, uint32_t data_len){
     UDS_Msg* msg = (UDS_Msg*) array;
     msg->len = data_len;
     memcpy(msg->data, data, data_len);
-    debug_print(msg->data, msg->len);
 
     uint16_t did; // only needed for data by identifier, but cannot be declared inside switch statement
     uint8_t reset_type;
