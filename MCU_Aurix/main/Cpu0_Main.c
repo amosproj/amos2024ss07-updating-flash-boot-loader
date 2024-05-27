@@ -71,7 +71,6 @@ void core0_main(void)
     init_led_driver();
     //show_flash();
 
-    canInitDriver();
 
     led_off(LED1);
     led_off(LED2);
@@ -88,9 +87,12 @@ void core0_main(void)
     uint8_t dataIsoMulti[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
 
     //show_can();
-    init_led_driver();
-    canInitDriver();
+    //canInitDriver();
     
+    isoTP* iso = isotp_init();
+
+    iso->max_len_per_frame = 8;
+
     while(1)
     {
 
@@ -98,9 +100,7 @@ void core0_main(void)
 
         toggle_led_activity(LED1);
 
-        isoTP* iso = isotp_init();
 
-        iso->max_len_per_frame = 8;
 
         isotp_send(iso, dataUDS, sizeof(dataUDS));
 

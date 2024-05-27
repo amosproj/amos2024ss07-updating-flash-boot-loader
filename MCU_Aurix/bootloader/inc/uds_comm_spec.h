@@ -3,8 +3,8 @@
 
 //============================================================================
 // Name        : uds_comm_spec.h
-// Author      : Michael Bauer
-// Version     : 0.3
+// Author      : Michael Bauer, Leon Wilms
+// Version     : 0.4
 // Copyright   : MIT
 // Description : UDS communication specification for AMOS Flashbootloader
 //============================================================================
@@ -21,6 +21,7 @@ extern "C" {
 
 #define MAX_FRAME_LEN_CAN                                           (0x08)
 #define MAX_FRAME_LEN_CANFD                                         (0x40)
+#define MAX_ISOTP_MESSAGE_LEN                                       4096
 #define FBLCAN_IDENTIFIER_MASK                                      (0x0F24FFFF)
 #define FBLCAN_BASE_ADDRESS                                         (FBLCAN_IDENTIFIER_MASK & 0xFFFF0000)
 
@@ -135,10 +136,16 @@ extern "C" {
 // ISO TP Handling
 //////////////////////////////////////////////////////////////////////////////
 
+//TODO: add rx_is_flowcontrol_frame()
+//      add rx_flowcontrol_frame()
+
+
 // TODO: I changed 'data_out_len' and 'has_next' to uint32_t. Will this still work?
 //     ||                                                   ||
 //     ||                                                   ||
 //     \/                                                   \/
+
+
 
 uint8_t *tx_starting_frame(uint32_t *data_out_len, uint32_t *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr);
 uint8_t *tx_consecutive_frame(uint32_t *data_out_len, uint32_t *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr, uint8_t* frame_idx);

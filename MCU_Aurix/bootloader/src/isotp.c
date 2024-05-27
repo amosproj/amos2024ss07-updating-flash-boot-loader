@@ -7,8 +7,12 @@
 //============================================================================
 #include "isotp.h"
 
+isoTP_RX* iso_RX;
+
 
 isoTP* isotp_init(){
+
+    canInitDriver(&process_can_to_isotp());
 
     isoTP* iso = calloc(1, sizeof(isoTP));
     if (iso == NULL){
@@ -30,6 +34,27 @@ isoTP* isotp_init(){
 
     //Depending to the protcol change this
     iso->max_len_per_frame = 0;
+
+
+    isoTP_RX* isotp_RX = calloc(1, sizeof(isoTP_RX));
+    if (isotp_RX == NULL){
+
+        free(iso);
+
+        return NULL;
+    }
+
+    isotp_RX->data = calloc(MAX_ISOTP_MESSAGE_LEN, sizeof(uint8_t));
+    if (isotp_RX->data == NULL){
+
+        free(iso);
+        free(isotp_RX);
+
+        return NULL;
+    }
+
+    iso_RX = isotp_RX;
+    iso_RX->write_ptr = iso_RX->data;
 
 
     return iso;
@@ -95,9 +120,36 @@ void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len){
     }
 }
 
-void isotp_recv(){
+uint8_t* isotp_recv(uint32_t* total_length){
+
+    if (iso_RX == NULL || iso_RX->data == NULL || iso_RX->write_ptr == NULL) {
+
+        *total_length = 0;
+
+        return NULL;  // Error: iso_RX is not properly initialized
+    }
 
 
+
+
+
+    return NULL;
+}
+
+void process_can_to_isotp(uint32_t* rxData){
+
+    if(MAX_ISOTP_MESSAGE_LEN - (iso_RX->write_ptr - iso_RX->data) < 8){
+
+        //send error message that we cannot receive further can messages.
+
+        return;
+    }
+
+    memcpy(iso_RX->write_ptr, rxData, MAX_FRAME_LEN_CAN);
+
+    iso_RX->write_ptr += MAX_FRAME_LEN_CAN;
+
+    return;
 }
 
 // TODO: not ready
