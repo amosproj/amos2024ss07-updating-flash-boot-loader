@@ -79,33 +79,36 @@ void core0_main(void)
     led_off(LED1);
     led_off(LED2);
 
-    int len;
-    uint8* data = _create_read_data_by_ident(&len, 0, FBL_DID_SYSTEM_NAME, 0, 0);
-    uds_handleRX(data, len);
+
 
     //isotp_init(&ctx);
 
-    uint8_t dataCAN[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-
-    uint8_t dataUDS[] = {0x10, 0x01};
-
-    uint8_t dataIsoSolo[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
-    uint8_t dataIsoSolo2[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
-
-    uint8_t dataIsoMulti[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+//    uint8_t dataCAN[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+//
+//    uint8_t dataUDS[] = {0x10, 0x01};
+//
+//    uint8_t dataIsoSolo[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+//    uint8_t dataIsoSolo2[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
+//
+//    uint8_t dataIsoMulti[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
     
     while(1)
     {
 
-        waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 1000));
+        int len;
+        uint8* data = _create_read_data_by_ident(&len, 0, FBL_DID_SYSTEM_NAME, 0, 0);
+//        uint8_t* data = _create_tester_present(&len, 0, FBL_TESTER_PRES_WITH_RESPONSE);
+        uds_handleRX(data, len);
 
-        toggle_led_activity(LED1);
-
-        isoTP* iso = isotp_init();
-
-        iso->max_len_per_frame = 8;
-
-        isotp_send(iso, dataUDS, sizeof(dataUDS));
+        waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 5000));
+//
+//        toggle_led_activity(LED1);
+//
+//        isoTP* iso = isotp_init();
+//
+//        iso->max_len_per_frame = 8;
+//
+//        isotp_send(iso, dataUDS, sizeof(dataUDS));
 
     }
 }

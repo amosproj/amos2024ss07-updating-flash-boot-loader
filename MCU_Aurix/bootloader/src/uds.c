@@ -142,9 +142,11 @@ void uds_read_data_by_identifier(uint16_t did){
     }
     int response_len;
 	uint8_t* response_msg = _create_read_data_by_ident(&response_len, RESPONSE, did, data, data_len);
-    // TODO send response_msg
-    debug_print(response_msg, response_len);
+    isoTP* iso = isotp_init();
+    iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
+    isotp_send(iso, response_msg, response_len);
     free(response_msg);
+    isotp_free(iso);
 }
 
 void uds_security_access(uint8_t request_type, uint8_t *key, uint8_t key_len){
@@ -166,7 +168,6 @@ void uds_neg_response(uint8_t reg_sid ,uint8_t neg_code){
     isotp_send(iso, msg, len);
     free(msg);
     isotp_free(iso);
-
 }
 
 void uds_tester_present(void){
@@ -186,27 +187,23 @@ void uds_read_memory_by_address(uint32_t address, uint16_t noBytesToRead){
     }
     else if (session == FBL_DIAG_SESSION_PROGRAMMING)
     {
-        if (isAuthorized())
-        {
-            isoTP* iso = isotp_init();
-            iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
-            int len;
-
-            uint8_t data[noBytesToRead];
-            if(readMemory(address, noBytesToRead, data)){
-                // TODO error
-            }
-            uint8_t *msg = _create_read_memory_by_address(&len, RESPONSE, address, 0, data, noBytesToRead);
-            isotp_send(iso, msg, len);
-            free(msg);
-            isotp_free(iso);
-        }
-        else
+        if (!isAuthorized())
         {
             uds_neg_response(FBL_READ_MEMORY_BY_ADDRESS, FBL_RC_SECURITY_ACCESS_DENIED);
+            return;
         }
-        
-        
+        isoTP* iso = isotp_init();
+        iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
+        int len;
+
+        uint8_t data[noBytesToRead];
+        if(readMemory(address, noBytesToRead, data)){
+            // TODO error
+        }
+        uint8_t *msg = _create_read_memory_by_address(&len, RESPONSE, address, 0, data, noBytesToRead);
+        isotp_send(iso, msg, len);
+        free(msg);
+        isotp_free(iso);
     }
     
 }

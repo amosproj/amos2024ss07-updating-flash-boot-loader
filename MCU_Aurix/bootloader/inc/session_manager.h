@@ -21,7 +21,7 @@ void setSession(void);
 uint8_t generateSeed(uint8_t* seed);
 uint8_t verifyKey(uint8_t* key, uint8_t key_len);
 void authenticate(void);
-uint8_t isAuthorized();
+uint8_t isAuthorized(void);
 uint8_t getSession(void);
 void sessionControl(void);
 void resetECU(void);
