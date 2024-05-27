@@ -83,6 +83,23 @@ void debug_print(uint8_t *data, uint32_t len){
     fclose(f3);
 }
 
+uint8_t uds_session_access(uint8_t sid){
+    uint8_t session = getSession();
+    if (session == FBL_DIAG_SESSION_DEFAULT){
+        uds_neg_response(sid, FBL_RC_SERVICE_NOT_SUPPORTED_IN_ACTIVE_SESSION);
+        return 0;
+    }
+    else if (session == FBL_DIAG_SESSION_PROGRAMMING)
+    {
+        if (!isAuthorized())
+        {
+            uds_neg_response(sid, FBL_RC_SECURITY_ACCESS_DENIED);
+            return 0;
+        }
+    }
+    return 1;
+}
+
 void uds_diagnostic_session_control(void){
     isoTP* iso = isotp_init();
     iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
@@ -105,43 +122,14 @@ void uds_ecu_reset(uint8_t reset_type){
 }
 
 void uds_read_data_by_identifier(uint16_t did){
-	uint8_t name[] = "AMOS FBL 24"; // TODO which name? And global var etc.?
-	uint8_t *data;
-    int data_len = 0;
-    switch(did)
-    {
-        case FBL_DID_SYSTEM_NAME:
-            data = name;
-            data_len = sizeof(name);
-            break;
-        case FBL_DID_PROGRAMMING_DATE:
-            break;
-        case FBL_DID_BL_KEY_ADDRESS:
-            break;
-        case FBL_DID_BL_KEY_GOOD_VALUE:
-            break;
-        case FBL_DID_CAN_BASE_MASK:
-            break;
-        case FBL_DID_CAN_ID:
-            break;
-        case FBL_DID_BL_WRITE_START_ADD_CORE0:
-            break;
-        case FBL_DID_BL_WRITE_END_ADD_CORE0:
-            break;
-        case FBL_DID_BL_WRITE_START_ADD_CORE1:
-            break;
-        case FBL_DID_BL_WRITE_END_ADD_CORE1:
-            break;
-        case FBL_DID_BL_WRITE_START_ADD_CORE2:
-            break;
-        case FBL_DID_BL_WRITE_END_ADD_CORE2:
-            break;
-        default:
-            ;
-            // TODO send error message
+    uint8_t* data;
+    uint8_t* data_len;
+    if(!readData(did, data, data_len)){
+        uds_neg_response(FBL_READ_DATA_BY_IDENTIFIER, FBL_NEGATIVE_RESPONSE);
+        return;
     }
     int response_len;
-	uint8_t* response_msg = _create_read_data_by_ident(&response_len, RESPONSE, did, data, data_len);
+    uint8_t* response_msg = _create_read_data_by_ident(&response_len, RESPONSE, did, data, *data_len);
     isoTP* iso = isotp_init();
     iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
     isotp_send(iso, response_msg, response_len);
@@ -181,32 +169,41 @@ void uds_tester_present(void){
 }
 
 void uds_read_memory_by_address(uint32_t address, uint16_t noBytesToRead){
-    uint8_t session = getSession();
-    if (session == FBL_DIAG_SESSION_DEFAULT){
-        uds_neg_response(FBL_READ_MEMORY_BY_ADDRESS, FBL_RC_SERVICE_NOT_SUPPORTED_IN_ACTIVE_SESSION);
+    if(!uds_session_access(FBL_READ_MEMORY_BY_ADDRESS)){
+        return;
     }
-    else if (session == FBL_DIAG_SESSION_PROGRAMMING)
-    {
-        if (!isAuthorized())
-        {
-            uds_neg_response(FBL_READ_MEMORY_BY_ADDRESS, FBL_RC_SECURITY_ACCESS_DENIED);
-            return;
-        }
-        isoTP* iso = isotp_init();
-        iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
-        int len;
+    isoTP* iso = isotp_init();
+    iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
+    int len;
 
-        uint8_t data[noBytesToRead];
-        if(readMemory(address, noBytesToRead, data)){
-            // TODO error
-        }
-        uint8_t *msg = _create_read_memory_by_address(&len, RESPONSE, address, 0, data, noBytesToRead);
-        isotp_send(iso, msg, len);
-        free(msg);
-        isotp_free(iso);
+    uint8_t data[noBytesToRead];
+    if(readMemory(address, noBytesToRead, data)){
+        uds_neg_response(FBL_READ_MEMORY_BY_ADDRESS, FBL_NEGATIVE_RESPONSE);
+        return;
     }
-    
+    uint8_t *msg = _create_read_memory_by_address(&len, RESPONSE, address, 0, data, noBytesToRead);
+    isotp_send(iso, msg, len);
+    free(msg);
+    isotp_free(iso);
 }
+
+void uds_write_data_by_identifier(uint16_t did, uint8_t* data, uint8_t data_len){
+    if(!uds_session_access(FBL_WRITE_DATA_BY_IDENTIFIER)){
+        return;
+    }
+    if(!writeData(did, data, data_len)){
+        uds_neg_response(FBL_WRITE_DATA_BY_IDENTIFIER, FBL_NEGATIVE_RESPONSE);
+        return;
+    }
+    isoTP* iso = isotp_init();
+    iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
+    int len;
+    uint8_t *msg = _create_write_data_by_ident(&len, RESPONSE, did, 0, 0);
+    isotp_send(iso, msg, len);
+    free(msg);
+    isotp_free(iso);
+}
+
 void uds_handleRX(uint8_t* data, uint32_t data_len){
     uint8_t array[data_len + sizeof(uint32_t)]; // TODO change if incoming data format is different
 
@@ -231,11 +228,11 @@ void uds_handleRX(uint8_t* data, uint32_t data_len){
             reset_type = msg->data[1];
             if (reset_type == FBL_ECU_RESET_POWERON || reset_type == FBL_ECU_RESET_COLD_POWERON || reset_type == FBL_ECU_RESET_WARM_POWERON){
                 uds_ecu_reset(reset_type);
-                //TODO call reset function
-                }
+                resetECU();
+            }
             else
             {
-                //TODO Error handling
+                uds_neg_response(FBL_ECU_RESET, FBL_RC_INVALID_KEY);
             }
             break;
 
@@ -257,11 +254,10 @@ void uds_handleRX(uint8_t* data, uint32_t data_len){
                 {
                     uds_neg_response(FBL_SECURITY_ACCESS, FBL_RC_INVALID_KEY);
                 }
-                
             }
             else
             {
-                //TODO Error handling auch neg_response?
+                uds_neg_response(FBL_SECURITY_ACCESS, FBL_NEGATIVE_RESPONSE);
             }
             break;
 
@@ -275,7 +271,7 @@ void uds_handleRX(uint8_t* data, uint32_t data_len){
             }
             else
             {
-                //TODO Error handling
+                uds_neg_response(FBL_TESTER_PRESENT, FBL_NEGATIVE_RESPONSE);
             }
             
             break;
@@ -287,6 +283,8 @@ void uds_handleRX(uint8_t* data, uint32_t data_len){
             uds_read_memory_by_address(getMemoryAddress(msg), getNoBytes(msg));
             break;
         case FBL_WRITE_DATA_BY_IDENTIFIER:
+            did = getDID(msg);
+            uds_write_data_by_identifier(did, msg->data + 3, msg->len - 3);
             break;
         case FBL_REQUEST_DOWNLOAD:
             break;
@@ -300,6 +298,5 @@ void uds_handleRX(uint8_t* data, uint32_t data_len){
             // TODO send error tx
             ;
     }
-
 }
 

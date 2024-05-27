@@ -26,7 +26,7 @@ void uds_security_access(uint8_t request_type, uint8_t *key, uint8_t key_len);
 void uds_tester_present(void);
 void uds_read_data_by_identifier(uint16_t did);
 void uds_read_memory_by_address(uint32_t address, uint16_t noBytesToRead);
-void uds_write_data_by_identifier(uint8_t* data);
+void uds_write_data_by_identifier(uint16_t did, uint8_t* data, uint8_t data_len);
 void uds_request_download(void);
 void uds_request_upload(void);
 void uds_transfer_data(uint8_t* data);

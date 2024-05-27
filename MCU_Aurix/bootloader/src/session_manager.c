@@ -34,3 +34,8 @@ uint8_t getSession(void){
     // TODO getSession just a mockup, not really implemented yet!
     return FBL_DIAG_SESSION_DEFAULT;
 }
+
+void resetECU(void){
+    // TODO implement
+}
+

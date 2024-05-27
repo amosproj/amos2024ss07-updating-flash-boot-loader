@@ -96,8 +96,8 @@ void core0_main(void)
     {
 
         int len;
-        uint8* data = _create_read_data_by_ident(&len, 0, FBL_DID_SYSTEM_NAME, 0, 0);
-//        uint8_t* data = _create_tester_present(&len, 0, FBL_TESTER_PRES_WITH_RESPONSE);
+//        uint8* data = _create_read_data_by_ident(&len, 0, FBL_DID_SYSTEM_NAME, 0, 0);
+        uint8_t* data = _create_tester_present(&len, 0, FBL_TESTER_PRES_WITH_RESPONSE);
         uds_handleRX(data, len);
 
         waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 5000));

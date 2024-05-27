@@ -16,13 +16,16 @@
 
 #include "Ifx_Types.h"
 
+// TODO just for now name is global var. other solution for read data by identifier must be implemented
+#define SYSTEM_NAME "AMOS FBL 24"
+
 // TODO not all of them should return void and datatype might be wrong
 void getWriteableMemory();
 void getIdentification();
 void setID(uint8 id);
-void readData(uint8 identifier);
 uint8_t readMemory(uint32_t address, uint16_t len, uint8_t* data);
-void writeData(uint8 identifier, uint8 data);
+uint8_t readData(uint8_t identifier, uint8_t* data, uint8_t* len);
+uint8_t writeData(uint8_t identifier, uint8_t* data, uint8_t len);
 
 
 #endif /* BOOTLOADER_INC_MEMORY_H_ */
