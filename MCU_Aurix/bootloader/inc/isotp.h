@@ -41,6 +41,8 @@ typedef struct isoTp_RX
     uint8_t* data;
     uint8_t* write_ptr;
 
+    uint16_t data_in_len;
+    uint8_t ready_to_read; // bool that will be set to =! 0 if message can be read.
 
 }isoTP_RX;
 

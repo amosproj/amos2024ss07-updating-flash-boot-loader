@@ -9,7 +9,11 @@
 
 isoTP_RX* iso_RX;
 
-
+/*
+ * @brief                       This function initializes the isoTP layer.
+ *
+ * @return                      Returns a isoTP struct used in the sending logic.
+ */
 isoTP* isotp_init(){
 
     canInitDriver(&process_can_to_isotp());
@@ -29,7 +33,7 @@ isoTP* isotp_init(){
     iso->flow_flag = 0;          // Flow control flags
     iso->bs = 0;                 // Block Size
     iso->stmin = 0;              // Separation Time Minimum
-    iso->timer = 0;             // Timer for separation time
+    iso->timer = 0;              // Timer for separation time
 
 
     //Depending to the protcol change this
@@ -60,6 +64,17 @@ isoTP* isotp_init(){
     return iso;
 }
 
+/*
+ * @brief                       This function sends data from the isoTP layer.
+ *
+ * @param iso                   This is a pointer the isoTP struct, which is used for sending.
+ *                              Please edit the value iso->max_len_per_frame depending on used transmission protocol.
+ *
+ * @param data                  Pointer to the data.
+ *
+ * @param data_in_len           Length of the data to be sent.
+ *
+ */
 void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len){
 
     uint8_t* first_frame = tx_starting_frame(&iso->data_out_len,
@@ -120,65 +135,139 @@ void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len){
     }
 }
 
-uint8_t* isotp_recv(uint32_t* total_length){
+/*
+ * @brief                       This function returns the received isoTP message if it is ready.
+ *
+ * @param total_length          This is a pointer to the total length of the isoTP message.
+ *
+ * @return                      Returns the isoTP message, else NULL.
+ *
+ *                              Will also set total_length in special cases:
+ *                              -1: ERROR.
+ *                              0:  Buffer is not ready to be read.
+ *
+ *
+ */
+//TODO: Add flow control logic
+uint8_t* isotp_recv(int16_t* total_length){
+    //Caller has to free the returned message
 
+
+    // Error: iso_RX is not properly initialized
     if (iso_RX == NULL || iso_RX->data == NULL || iso_RX->write_ptr == NULL) {
+
+        *total_length = -1;
+
+        return NULL;
+    }
+
+    // isoTP message still not ready to be read
+    if (iso_RX->ready_to_read == 0){
 
         *total_length = 0;
 
-        return NULL;  // Error: iso_RX is not properly initialized
+        return NULL;
     }
 
+    // Get message size of whole isoTP message
+    *total_length = iso_RX->write_ptr - iso_RX->data;
+
+    // Create and write buffer for the specific isoTP message received.
+    uint8_t* iso_message = calloc(*total_length, sizeof(uint8_t));
+    memcpy(iso_message, iso_RX->data, *total_length);
+
+    rx_reset_isotp_buffer();
 
 
-
-
-    return NULL;
+    return iso_message;
 }
 
-void process_can_to_isotp(uint32_t* rxData){
+/*
+ * @brief                       This function extracts the isoTP message from multiple CAN messages.
+ *                              It is called inside the receive interrupt 'canIsrRxFifo0Handler' of the CAN driver.
+ *
+ * @param rxData                This is a pointer to the received data.
+ *
+ * @param dlc                   Data Length Code, this represents the length of the currently received CAN message.
+ *
+ */
+void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc){
 
-    if(MAX_ISOTP_MESSAGE_LEN - (iso_RX->write_ptr - iso_RX->data) < 8){
+    //TODO: Discuss with sebastian that we would like to set the dlc for all messages.
 
-        //send error message that we cannot receive further can messages.
+    if(MAX_ISOTP_MESSAGE_LEN - (iso_RX->write_ptr - iso_RX->data) < dlc || iso_RX->ready_to_read != 0){
+
+        // TODO: send error message that we cannot receive further can messages.
 
         return;
     }
 
-    memcpy(iso_RX->write_ptr, rxData, MAX_FRAME_LEN_CAN);
 
-    iso_RX->write_ptr += MAX_FRAME_LEN_CAN;
+    //TODO: Check for flow control and handle  (in case we send data)
+    // Single Frame get length of whole isoTP message
+    if(((0xF0 & rxData[0]) >> 4) == 0){
+
+        iso_RX->data_in_len = 0xF & iso_RX->write_ptr[0];
+
+        memcpy(iso_RX->write_ptr, (uint8_t*)rxData[1], dlc);
+    }
+    // First Frame get length of whole isoTP message
+    else if(((0xF0 & rxData[0]) >> 4) == 1){
+
+        iso_RX->data_in_len = ((iso_RX->write_ptr[0] & 0x0F) << 4) | iso_RX->write_ptr[1];
+
+        memcpy(iso_RX->write_ptr, (uint8_t*)rxData[2], dlc);
+    }
+    // Consecutive Frame
+    else if(((0xF0 & rxData[0]) >> 4) == 2){
+
+        memcpy(iso_RX->write_ptr, (uint8_t*)rxData[1], dlc);
+    }
+    // Flow Control
+    else if(((0xF0 & rxData[0]) >> 4) == 3){
+
+        memcpy(iso_RX->write_ptr, (uint8_t*)rxData[1], dlc);
+    }
+    // ERROR
+    else{
+
+        // Not implemented
+    }
+
+    // Move pointer accordingly
+    iso_RX->write_ptr += dlc;
+
+    // Set ready_to_read if all bytes have been received for one isoTP message
+    if(iso_RX->write_ptr - iso_RX->data >= iso_RX->data_in_len){
+
+        iso_RX->ready_to_read = 1;
+    }
 
     return;
 }
 
-// TODO: not ready
-void handle_flow_control_frame(isoTP* iso, uint8_t* flow_control_frame) {
-    // Extract PCI type from the flow control frame
-    uint8_t pci = flow_control_frame[0];
+/*
+ * @brief                       This function resets the receive buffer for isoTP.
+ *
+ */
+void rx_reset_isotp_buffer(){
 
-    // Update Block Size and Separation Time from the flow control frame
-    iso->bs = flow_control_frame[1];
-    iso->stmin = flow_control_frame[2];
+    memset(iso_RX->data, 0, MAX_ISOTP_MESSAGE_LEN);
 
-    switch (pci) {
-        case 0x30: // Continue to Send
-            iso->flow_flag = 0x00;
-            break;
-        case 0x31: // Wait
-            iso->flow_flag = 0x01;
-            break;
-        case 0x32: // Overflow/Abort
-            iso->flow_flag = 0x02;
-            break;
-        default:
-            // Invalid or unknown PCI type
-            iso->flow_flag = 0x02;
-            break;
-    }
+    iso_RX->write_ptr = iso_RX->data;
+    iso_RX->data_in_len = 0;
+    iso_RX->ready_to_read = 0;
 }
 
-void isotp_free(isoTP* iso){
+/*
+ * @brief                       This function free's all the allocated data on the isoTP layer,
+ *                              effectively closing the isoTP layer.
+ *
+ */
+void close_isoTP(isoTP* iso){
 
     free(iso);
+
+    free(iso_RX->data);
+    free(iso_RX);
 }

@@ -45,7 +45,7 @@ void canIsrTxHandler(void){
 void canIsrRxFifo0Handler(){
         IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_rxFifo0NewMessage); /*Clear Message Stored Flag*/
         IfxCan_Can_readMessage(&g_can.canTXandRXNode, &g_can.rxMsg, (uint32*)g_can.rxData);
-        processDataFunction(g_can.rxData); //has to be casted in ISO-Tp
+        processDataFunction(g_can.rxData, g_can.rxMsg.dataLengthCode); //has to be casted in ISO-Tp
 
 }
 
@@ -113,6 +113,8 @@ void canInitDriver(void (*processData)(void*)){
     
     IfxCan_Can_initMessage(&g_can.rxMsg); /*Init for RX Message*/
     g_can.rxMsg.readFromRxFifo0 = TRUE; /*Read from FIFO0*/
+
+    processDataFunction = processData;
 }
 
 /**
