@@ -23,9 +23,9 @@ Testcases::Testcases(){
 
     qInfo("Main: Create Communication Layer");
     comm = new Communication();
-    comm->setCommunicationType(1); // Set to CAN
+    comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
     comm->setTestMode(); // Explicitly set testMode
-    comm->init(1); // Set to CAN
+    comm->init(Communication::CAN_DRIVER); // Set to CAN
 
     qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
     uds = new UDS(this->gui_id);

@@ -18,7 +18,7 @@
 #include "../UDS_Spec/uds_comm_spec.h"
 
 Communication::Communication(){
-    curr_interface_type = 0; // Initial with Virtual Driver
+    curr_interface_type = VIRTUAL_DRIVER; // Initial with Virtual Driver
 
     multiframe_curr_id = 0; // Init receiving ID
     multiframe_curr_uds_msg = NULL;
@@ -50,7 +50,15 @@ Communication::~Communication() {
     canDriver->stopRX();
 }
 
-void Communication::init(uint8_t comm_interface_type){
+//////////////////////////////////////////////////////////////////////////////
+// Public
+//////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Method to initialize a given Interface Type
+ * @param comm_interface_type
+ */
+void Communication::init(INTERFACE comm_interface_type){
 
 	uint8_t init_status = 0;
 
@@ -83,24 +91,37 @@ void Communication::init(uint8_t comm_interface_type){
 	return;
 }
 
-void Communication::setCommunicationType(uint8_t comm_interface_type){
+/**
+ * @brief Method to set a specific Communication interface to be used
+ * @param comm_interface_type
+ */
+void Communication::setCommunicationType(INTERFACE comm_interface_type){
 
 	this->curr_interface_type = comm_interface_type;
     qInfo() << "Communication: Set interface to type " << comm_interface_type;
 }
 
+/**
+ * @brief Method to set the Target ID of the currently set Communication interface
+ * @param id
+ */
 void Communication::setID(uint32_t id){
-	if(curr_interface_type == COMM_INTERFACE_VIRTUAL){ // VirtualDriver
+    if(curr_interface_type == VIRTUAL_DRIVER){ // VirtualDriver
         virtualDriver->setID(id);
 	}
-	else if(curr_interface_type == COMM_INTERFACE_CAN){ // CANDriver
+    else if(curr_interface_type == CAN_DRIVER){ // CANDriver
         canDriver->setID(id);
 	}
 }
 
+/**
+ * @brief Method to transmit data via the currently set Communication interface
+ * @param data Data to be transmitted
+ * @param no_bytes Number of bytes of the given data
+ */
 void Communication::txData(uint8_t *data, uint32_t no_bytes){
 
-	if(curr_interface_type == COMM_INTERFACE_VIRTUAL){ // Using Virtual Driver
+    if(curr_interface_type == VIRTUAL_DRIVER){ // Using Virtual Driver
         qInfo("Communication TX: Sending out Data via Virtual Driver interface");
 		uint8_t *send_msg;
 		int send_len;
@@ -142,7 +163,7 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes){
 		}
 	}
 
-	else if(curr_interface_type == COMM_INTERFACE_CAN){ // Using CAN
+    else if(curr_interface_type == CAN_DRIVER){ // Using CAN
         qInfo("Communication TX: Sending out Data via CAN Driver - Started!");
 		uint8_t *send_msg;
 		int send_len;
@@ -184,6 +205,26 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes){
     qInfo("Communication TX: Sending out Data via CAN Driver - Finished!");
 }
 
+
+/**
+ * @brief Method to set the Test Mode for the currently set Communication interface - Used for Testing only
+ */
+void Communication::setTestMode(){
+    if(curr_interface_type == VIRTUAL_DRIVER){ // Virtual Driver
+        // No changes for Testing necessary
+    }
+    else if(curr_interface_type == CAN_DRIVER){ // CAN Driver
+        canDriver->setTestingAppname();
+    }
+}
+
+//============================================================================
+// Private
+//============================================================================
+
+/**
+ * @brief Internal Method to process ISO TP data for Multiframe Data (Starting Frame + Consecutive Frames)
+ */
 void Communication::dataReceiveHandleMulti(){
 
     if(multiframe_still_receiving == 1 && multiframe_next_msg_available == 0 && multiframe_curr_uds_msg != NULL){
@@ -209,19 +250,24 @@ void Communication::dataReceiveHandleMulti(){
     }
 }
 
-
+/**
+ * @brief Internal Method to process the RX data of the CAN Driver. Is used by the rxCANDataSlot
+ * @param id Sender ID
+ * @param dlc Sender Data Length Code of the data
+ * @param data Sender Data
+ */
 void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned char data[]){
 
-	// Real processing
-    if(curr_interface_type != COMM_INTERFACE_CAN) // CAN is not allowed to forward messages
-		return;
+    // Real processing
+    if(curr_interface_type != CAN_DRIVER) // CAN is not allowed to forward messages
+        return;
 
     if(dlc == 0){ // Ignoring Empty Messages
         return;
     }
 
-	uint8_t starting_frame = rx_is_starting_frame(data, dlc, MAX_FRAME_LEN_CAN);
-	if(starting_frame){
+    uint8_t starting_frame = rx_is_starting_frame(data, dlc, MAX_FRAME_LEN_CAN);
+    if(starting_frame){
         int temp_uds_msg_len = 0;
         int temp_next_msg_available = 0;
         uint8_t* temp_uds_msg = rx_starting_frame(&temp_uds_msg_len, &temp_next_msg_available, MAX_FRAME_LEN_CAN, data, dlc);
@@ -259,8 +305,8 @@ void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned
         return;
     }
 
-	uint8_t consecutive_frame = rx_is_consecutive_frame(data, dlc, MAX_FRAME_LEN_CAN);
-	if(consecutive_frame){
+    uint8_t consecutive_frame = rx_is_consecutive_frame(data, dlc, MAX_FRAME_LEN_CAN);
+    if(consecutive_frame){
         if(multiframe_curr_id != 0 && id != multiframe_curr_id){ // Ignore other IDs
             qInfo()<<"Communication RX: Ignoring ID"<<id<<". Still processing communication with "<<multiframe_curr_id;
             return;
@@ -271,23 +317,12 @@ void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned
         rx_consecutive_frame(&multiframe_curr_uds_msg_len, multiframe_curr_uds_msg, &multiframe_next_msg_available, dlc, data, &multiframe_curr_uds_msg_idx);
         this->dataReceiveHandleMulti();
         return;
-	}
-}
-
-void Communication::setTestMode(){
-    if(curr_interface_type == COMM_INTERFACE_VIRTUAL){ // Virtual Driver
-        // No changes for Testing necessary
-    }
-    else if(curr_interface_type == COMM_INTERFACE_CAN){ // CAN Driver
-        canDriver->setTestingAppname();
     }
 }
 
-//============================================================================
-// Private
-//============================================================================
-
-
+/**
+ * @brief Internal Method to print the current ISO TP buffer content
+ */
 void Communication::_debug_printf_isotp_buffer(){
     if(multiframe_curr_uds_msg != NULL && multiframe_curr_uds_msg_len > 0){
         QString s = "Communication RX: Current ISO-TP Data:";

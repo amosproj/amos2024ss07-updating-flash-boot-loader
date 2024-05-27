@@ -241,6 +241,10 @@ uint8_t CAN_Wrapper::txData(uint8_t *data, uint8_t no_bytes) {
 // Private
 //============================================================================
 
+/**
+ * @brief Opens the Port
+ * @return
+ */
 XLstatus CAN_Wrapper::openPort(){
 
 	XLstatus status;
@@ -255,6 +259,10 @@ XLstatus CAN_Wrapper::openPort(){
 	return status;
 }
 
+/**
+ * @brief Closes the Port
+ * @return
+ */
 XLstatus CAN_Wrapper::closePort(){
 	XLstatus status = XL_SUCCESS;
 
@@ -268,6 +276,11 @@ XLstatus CAN_Wrapper::closePort(){
 	return status;
 }
 
+/**
+ * @brief Sets the Baudrate for the opened channel
+ * @param baudrate to be set
+ * @return
+ */
 XLstatus CAN_Wrapper::setBaudrate(unsigned int baudrate){
 
 	XLstatus status;
@@ -281,6 +294,10 @@ XLstatus CAN_Wrapper::setBaudrate(unsigned int baudrate){
 
 }
 
+/**
+ * @brief Activates the channel with Bus Type CAN
+ * @return
+ */
 XLstatus CAN_Wrapper::actChannels(){
 	XLstatus status;
 
@@ -292,6 +309,10 @@ XLstatus CAN_Wrapper::actChannels(){
 	return status;
 }
 
+/**
+ * @brief Sets the notification for every message
+ * @return
+ */
 XLstatus CAN_Wrapper::setNotification(){
 	XLstatus status;
 
@@ -307,6 +328,9 @@ XLstatus CAN_Wrapper::setNotification(){
 // Public RX Thread
 //============================================================================
 
+/**
+ * @brief Method for RX Thread. Receiving loop of the CAN Wrapper
+ */
 void CAN_Wrapper::doRX(){
 	XLstatus status;
 
