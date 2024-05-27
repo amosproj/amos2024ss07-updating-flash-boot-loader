@@ -258,7 +258,7 @@ void Testcases::messageChecker(const unsigned int id, const QByteArray &rec){
         log.append(" - Data=");
 
         for(auto i = 0; i < rec.size(); i++){
-            log.append(" " + QString("0x%1").arg(rec[i], 2, 16, QLatin1Char( '0' )));
+            log.append(" " + QString("0x%1").arg(uint8_t(rec[i]), 2, 16, QLatin1Char( '0' )));
         }
         emit toConsole(log);
     }
