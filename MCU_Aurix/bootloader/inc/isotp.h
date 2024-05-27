@@ -32,11 +32,11 @@ typedef struct isoTp
 }isoTP;
 
 
-isoTP* isotp_init();
+isoTP* isotp_init(void);
 
 void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len);
 
-void isotp_recv();
+void isotp_recv(void);
 
 void isotp_free(isoTP* iso);
 
