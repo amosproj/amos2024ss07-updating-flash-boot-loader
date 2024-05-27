@@ -30,6 +30,16 @@
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
+     <item row="2" column="0">
+      <widget class="QPushButton" name="StartUDSListening">
+       <property name="text">
+        <string>Start UDS Listening</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QPlainTextEdit" name="consoleOut"/>
+     </item>
      <item row="1" column="0">
       <widget class="QPushButton" name="StartECUTest">
        <property name="text">
@@ -45,12 +55,9 @@
       </widget>
      </item>
      <item row="3" column="0">
-      <widget class="QPlainTextEdit" name="consoleOut"/>
-     </item>
-     <item row="2" column="0">
-      <widget class="QPushButton" name="StartUDSListening">
+      <widget class="QPushButton" name="ECUISOTPTx">
        <property name="text">
-        <string>Start UDS Listening</string>
+        <string>ECU Send ISO TP</string>
        </property>
       </widget>
      </item>

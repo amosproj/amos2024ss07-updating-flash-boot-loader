@@ -19,7 +19,7 @@ Testcases::Testcases(){
     this->gui_id = 0x7;
     this->no_gui_id = 0x0;
     this->ecu_id = 0x1;
-    this->testmode = 0;
+    this->testmode = SELFTEST;
 
     qInfo("Main: Create Communication Layer");
     comm = new Communication();
@@ -53,7 +53,7 @@ Testcases::~Testcases() {
 //////////////////////////////////////////////////////////////////////////////
 // Public - Testcases Interfaces
 //////////////////////////////////////////////////////////////////////////////
-void Testcases::setTestMode(uint8_t mode){
+void Testcases::setTestMode(Testcases::TESTMODES mode){
     // Setting Appname is found in CAN_Wrapper
     emit toConsole("\tInfo: Using AMOS TESTING as Appname (see Vector Hardware Manager)\n");
 
@@ -61,35 +61,49 @@ void Testcases::setTestMode(uint8_t mode){
 }
 
 void Testcases::startTests(){
-    emit toConsole("Start of TX Section");
+    if(this->testmode == SELFTEST || this->testmode == GUITEST){
+        emit toConsole("Start of TX Section");
 
-    // Sending out broadcast for tester present
-    testReqIdentification();
+        // Sending out broadcast for tester present
+        testReqIdentification();
 
-	// Specification for Diagnostic and Communication Management
-    testDiagnosticSessionControl();
-    testEcuReset();
-    testSecurityAccessRequestSEED();
-	testSecurityAccessVerifyKey();
-    testTesterPresent();
+        // Specification for Diagnostic and Communication Management
+        testDiagnosticSessionControl();
+        testEcuReset();
+        testSecurityAccessRequestSEED();
+        testSecurityAccessVerifyKey();
+        testTesterPresent();
 
-	// Specification for Data Transmission
-    testReadDataByIdentifier();
-    testReadMemoryByAddress();
-    testWriteDataByIdentifier();
+        // Specification for Data Transmission
+        testReadDataByIdentifier();
+        testReadMemoryByAddress();
+        testWriteDataByIdentifier();
 
-	// Specification for Upload | Download
-    testRequestDownload();
-    testRequestUpload();
-    testTransferData();
-    testRequestTransferExit();
+        // Specification for Upload | Download
+        testRequestDownload();
+        testRequestUpload();
+        testTransferData();
+        testRequestTransferExit();
 
-	// Supported Common Response Codes
-    testNegativeResponse();
-    emit toConsole("End of TX Section\n");
+        // Supported Common Response Codes
+        testNegativeResponse();
+        emit toConsole("End of TX Section\n");
 
-    emit toConsole("Start of RX Section");
-    // RX will come in asynchronous
+        emit toConsole("Start of RX Section");
+        // RX will come in asynchronous
+    }
+
+    else if(this->testmode == MCUISOTP){
+        emit toConsole("Start of TX Section");
+
+        emit toConsole("Sending Single Frame UDS Message");
+        testTesterPresent();
+
+        emit toConsole("Sending Multi Frame UDS Message");
+        testWriteDataByIdentifier();
+
+        emit toConsole("End of TX Section\n");
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -103,7 +117,7 @@ void Testcases::messageChecker(const unsigned int id, const QByteArray &rec){
     }
 
 
-    if(this->testmode == 0){ // Selftests
+    if(this->testmode == SELFTEST){
         emit toConsole("Seftest: Checking on received UDS Message with "+QString::number(rec.size())+" bytes");
 
         int len = 0;
@@ -225,20 +239,20 @@ void Testcases::messageChecker(const unsigned int id, const QByteArray &rec){
         }
     }
 
-    else if(this->testmode == 1) { // GUI-Tests
+    else if(this->testmode == GUITEST) {
         emit toConsole("GUI Test: Checking on received UDS Message with "+QString::number(rec.size())+" bytes");
 
         emit toConsole(">> NOT YET IMPLEMENTED!");
 
     }
 
-    else if(this->testmode == 2){ // ECU-Tests
+    else if(this->testmode == MCUTEST){
         emit toConsole("ECU Test: Checking on received UDS Message with "+QString::number(rec.size())+" bytes");
 
         emit toConsole(">> NOT YET IMPLEMENTED!");
 
     }
-    else {
+    else { // Listening only
         QString log = ">> UDS Received from ID: ";
         log.append(QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' )));
         log.append(" - Data=");
@@ -257,7 +271,7 @@ void Testcases::messageChecker(const unsigned int id, const QByteArray &rec){
 
 void Testcases::testReqIdentification() // Sending out broadcast for tester present
 {
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(this->testmode != SELFTEST && this->testmode != MCUTEST) // Only Seltests and ECU-Tests are transmitting data
         return;
 
     emit toConsole("Testcase: TX Check Request Identification for 1 ECU");
@@ -268,7 +282,7 @@ void Testcases::testReqIdentification() // Sending out broadcast for tester pres
 
 // Specification for Diagnostic and Communication Management
 void Testcases::testDiagnosticSessionControl(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(this->testmode != SELFTEST && this->testmode != MCUTEST) // Only Seltests and ECU-Tests are transmitting data
         return;
 
     emit toConsole("Testcase: TX Check DiagnosticSessionControl with Default Session");
@@ -276,7 +290,7 @@ void Testcases::testDiagnosticSessionControl(){
 }
 
 void Testcases::testEcuReset(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(this->testmode != SELFTEST && this->testmode != MCUTEST) // Only Seltests and ECU-Tests are transmitting data
         return;
 
     //TBD: Fill Testcase for TX
@@ -285,7 +299,7 @@ void Testcases::testEcuReset(){
 }
 
 void Testcases::testSecurityAccessRequestSEED(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(this->testmode != SELFTEST && this->testmode != MCUTEST) // Only Seltests and ECU-Tests are transmitting data
         return;
 
     //TBD: Fill Testcase for TX
@@ -295,7 +309,7 @@ void Testcases::testSecurityAccessRequestSEED(){
 
 
 void Testcases::testSecurityAccessVerifyKey(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(this->testmode != SELFTEST && this->testmode != MCUTEST) // Only Seltests and ECU-Tests are transmitting data
         return;
 
     //TBD: Fill Testcase for TX
@@ -306,7 +320,7 @@ void Testcases::testSecurityAccessVerifyKey(){
 
 
 void Testcases::testTesterPresent(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(this->testmode != SELFTEST && this->testmode != MCUTEST && this->testmode != MCUISOTP) // Only Seltests and ECU-Tests are transmitting data
         return;
 
     //TBD: Fill Testcase for TX
@@ -317,7 +331,7 @@ void Testcases::testTesterPresent(){
 
 // Specification for Data Transmission
 void Testcases::testReadDataByIdentifier(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(this->testmode != SELFTEST && this->testmode != MCUTEST) // Only Seltests and ECU-Tests are transmitting data
         return;
 
     //TBD: Fill Testcase for TX
@@ -326,7 +340,7 @@ void Testcases::testReadDataByIdentifier(){
 
 }
 void Testcases::testReadMemoryByAddress(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(this->testmode != SELFTEST && this->testmode != MCUTEST) // Only Seltests and ECU-Tests are transmitting data
         return;
 
     //TBD: Fill Testcase for TX
@@ -336,7 +350,7 @@ void Testcases::testReadMemoryByAddress(){
 }
 
 void Testcases::testWriteDataByIdentifier(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(this->testmode != SELFTEST && this->testmode != MCUTEST && this->testmode != MCUISOTP) // Only Seltests and ECU-Tests are transmitting data
         return;
 
     //TBD: Fill Testcase for TX
@@ -347,7 +361,7 @@ void Testcases::testWriteDataByIdentifier(){
 
 // Specification for Upload | Download
 void Testcases::testRequestDownload(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(this->testmode != SELFTEST && this->testmode != MCUTEST) // Only Seltests and ECU-Tests are transmitting data
         return;
 
     //TBD: Fill Testcase for TX
@@ -356,7 +370,7 @@ void Testcases::testRequestDownload(){
 }
 
 void Testcases::testRequestUpload(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(this->testmode != SELFTEST && this->testmode != MCUTEST) // Only Seltests and ECU-Tests are transmitting data
         return;
 
     //TBD: Fill Testcase for TX
@@ -365,7 +379,7 @@ void Testcases::testRequestUpload(){
 }
 
 void Testcases::testTransferData(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(this->testmode != SELFTEST && this->testmode != MCUTEST) // Only Seltests and ECU-Tests are transmitting data
         return;
 
     //TBD: Fill Testcase for TX
@@ -375,7 +389,7 @@ void Testcases::testTransferData(){
 }
 
 void Testcases::testRequestTransferExit(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(this->testmode != SELFTEST && this->testmode != MCUTEST) // Only Seltests and ECU-Tests are transmitting data
         return;
 
     //TBD: Fill Testcase for TX
@@ -385,7 +399,7 @@ void Testcases::testRequestTransferExit(){
 
 // Supported Common Response Codes
 void Testcases::testNegativeResponse(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(this->testmode != SELFTEST && this->testmode != MCUTEST) // Only Seltests and ECU-Tests are transmitting data
         return;
 
     //TBD: Fill Testcase for TX
