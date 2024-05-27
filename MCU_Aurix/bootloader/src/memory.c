@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
+// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>, Sebastian Rodriguez <r99@melao.de>
 
 //============================================================================
 // Name        : memory.c
-// Author      : Dorothea Ehrl
+// Author      : Dorothea Ehrl, Sebastian Rodriguez
 // Version     : 0.1
 // Copyright   : MIT
 // Description : Manages writing and returning data in memory
 //============================================================================
+
+#include <string.h>
 
 #include "memory.h"
 
@@ -26,8 +28,6 @@ uint8_t readMemory(uint32_t address, uint16_t len, uint8_t* data){
 uint8_t readData(uint8_t identifier, uint8_t* data, uint8_t* len){
     // TODO implement
     // return 0 on success, else error
-    data = SYSTEM_NAME;
-    *len = sizeof(SYSTEM_NAME);
     return 0;
 }
 

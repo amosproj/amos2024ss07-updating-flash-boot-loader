@@ -113,10 +113,14 @@ void uds_ecu_reset(uint8_t reset_type){
 void uds_read_data_by_identifier(uint16_t did){
     uint8_t* data;
     uint8_t* data_len;
-    if(!readData(did, data, data_len)){
+    if(readData(did, data, data_len)){
         uds_neg_response(FBL_READ_DATA_BY_IDENTIFIER, FBL_NEGATIVE_RESPONSE);
         return;
     }
+    // TODO data initialized because readData is not implemented yet
+    data = "AMOS FBL 24";
+    *data_len = sizeof("AMOS FBL 24");
+
     int response_len;
     uint8_t* response_msg = _create_read_data_by_ident(&response_len, RESPONSE, did, data, *data_len);
     isoTP* iso = isotp_init();
@@ -124,6 +128,7 @@ void uds_read_data_by_identifier(uint16_t did){
     isotp_send(iso, response_msg, response_len);
     free(response_msg);
     isotp_free(iso);
+    free(data);
 }
 
 void uds_security_access(uint8_t request_type, uint8_t *key, uint8_t key_len){
@@ -191,6 +196,28 @@ void uds_write_data_by_identifier(uint16_t did, uint8_t* data, uint8_t data_len)
     isotp_send(iso, msg, len);
     free(msg);
     isotp_free(iso);
+}
+
+void uds_request_download(void){
+    if(!uds_session_access(FBL_REQUEST_DOWNLOAD)){
+        return;
+    }
+    // TODO needs to be implemented
+}
+
+void uds_request_upload(void){
+    if(!uds_session_access(FBL_REQUEST_UPLOAD)){
+        return;
+    }
+    // TODO needs to be implemented
+}
+
+void uds_transfer_data(uint8_t* data){
+    // TODO needs to be implemented
+}
+
+void uds_request_transfer_exit(void){
+    // TODO needs to be implemented
 }
 
 void uds_handleRX(uint8_t* data, uint32_t data_len){
@@ -275,16 +302,19 @@ void uds_handleRX(uint8_t* data, uint32_t data_len){
             uds_write_data_by_identifier(did, msg->data + 3, msg->len - 3);
             break;
         case FBL_REQUEST_DOWNLOAD:
+            uds_request_download();
             break;
         case FBL_REQUEST_UPLOAD:
+            uds_request_upload();
             break;
         case FBL_TRANSFER_DATA:
+            uds_transfer_data(data);
             break;
         case FBL_REQUEST_TRANSFER_EXIT:
+            uds_request_transfer_exit();
             break;
         default:
-            // TODO send error tx
-            ;
+            uds_neg_response(SID, FBL_NEGATIVE_RESPONSE);
     }
 }
 

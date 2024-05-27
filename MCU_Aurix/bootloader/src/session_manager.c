@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
+// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>, Sebastian Rodriguez <r99@melao.de>
 
 //============================================================================
 // Name        : session_manager.h
-// Author      : Dorothea Ehrl
+// Author      : Dorothea Ehrl, Sebastian Rodriguez
 // Version     : 0.1
 // Copyright   : MIT
 // Description : Manages bootloader session including auth

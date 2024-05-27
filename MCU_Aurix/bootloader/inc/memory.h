@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
+// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>, Sebastian Rodriguez <r99@melao.de>
 
 //============================================================================
 // Name        : memory.h
-// Author      : Dorothea Ehrl
+// Author      : Dorothea Ehrl, Sebastian Rodriguez
 // Version     : 0.1
 // Copyright   : MIT
 // Description : Manages writing and returning data in memory
@@ -16,8 +16,6 @@
 
 #include "Ifx_Types.h"
 
-// TODO just for now name is global var. other solution for read data by identifier must be implemented
-#define SYSTEM_NAME "AMOS FBL 24"
 
 // TODO not all of them should return void and datatype might be wrong
 void getWriteableMemory();

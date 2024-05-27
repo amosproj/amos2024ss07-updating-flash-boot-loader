@@ -30,7 +30,7 @@ void uds_write_data_by_identifier(uint16_t did, uint8_t* data, uint8_t data_len)
 void uds_request_download(void);
 void uds_request_upload(void);
 void uds_transfer_data(uint8_t* data);
-void uds_request_transfer_exit();
+void uds_request_transfer_exit(void);
 void uds_neg_response(uint8_t reg_sid, uint8_t neg_code);
 
 #endif /* BOOTLOADER_INC_UDS_H_ */
