@@ -54,19 +54,21 @@ public:
 
     void init(INTERFACE ct);
     void setCommunicationType(INTERFACE ct);
-	void setID(uint32_t id); // TODO: Check on Architecture
-
-	void txData(uint8_t *data, uint32_t no_bytes);
 
     // Testing
     void setTestMode();
 
 private:
-    void dataReceiveHandleMulti();
+    // TX Section
+    void setID(uint32_t id);
+    void txData(uint8_t *data, uint32_t no_bytes);
 
+    // RX Section
+    void dataReceiveHandleMulti();
     // CAN Event Received
     void handleCANEvent(unsigned int id, unsigned short dlc, unsigned char data[]);
 
+    // Debugging
     void _debug_printf_isotp_buffer();
 
 signals:

@@ -57,24 +57,24 @@ public:
 
 	// Specification for Diagnostic and Communication Management
     RESP diagnosticSessionControl(uint32_t id, uint8_t session);
-    RESP ecuReset(uint32_t id, uint8_t session);
+    RESP ecuReset(uint32_t id, uint8_t reset_type);
     RESP securityAccessRequestSEED(uint32_t id);
     RESP securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_len);
     RESP testerPresent(uint32_t id);
 
 	// Specification for Data Transmission
     RESP readDataByIdentifier(uint32_t id, uint16_t identifier);
-    RESP readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_bytes); // TODO: Check on Architecture
+    RESP readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_bytes);
     RESP writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* data, uint8_t data_len);
 
 	// Specification for Upload | Download
-    RESP requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes); // TODO: Check on Architecture
-    RESP requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes); // TODO: Check on Architecture
-    RESP transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_t data_len); // TODO: Check on Architecture
+    RESP requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes);
+    RESP requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes);
+    RESP transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_t data_len);
     RESP requestTransferExit(uint32_t id, uint32_t address);
 
 	// Supported Common Response Codes
-    RESP negativeResponse(uint32_t id, uint8_t reg_sid, uint8_t neg_resp_code);
+    RESP negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_code);
 
 
 private:
