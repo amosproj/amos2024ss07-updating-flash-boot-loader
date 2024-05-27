@@ -25,6 +25,5 @@ void test_request_upload(void);
 void test_transfer_data(void);
 void test_request_transfer_exit(void);
 void test_neg_response(void);
-void test_all(void);
 
 #endif /* BOOTLOADER_INC_TEST_H_ */
