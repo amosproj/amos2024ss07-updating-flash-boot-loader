@@ -38,6 +38,10 @@ UDS::~UDS() {
 
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// Public
+//////////////////////////////////////////////////////////////////////////////
+
 /**
  * @brief Enables or Disables of the synchronized Mode for TX <-> RX
  * @param synchronized Switch to turn on sync mode or not
@@ -47,71 +51,157 @@ void UDS::setSyncMode(bool synchronized){
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// Public - Receiving UDS Messages
+// Private - Receiving UDS Messages
 //////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Internal method to interpret incoming messages. The messages are checked based on setup during UDS TX methods
+ * @param id Received ID of the Sender
+ * @param data Received Data of the Sender
+ * @param no_bytes Received number of bytes of the data
+ */
 void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
+
+    // Initialize the Msg flags
+    rx_msg_valid = false;
+    rx_msg_neg_resp = false;
 
     QString s;
     QTextStream out(&s);
 
-    rx_msg_valid = false;
-
     if(no_bytes == 0) {
         out << "UDS: No data passed";
+        emit toConsole(*out.string());
         return;
     }
 
-    // Checking on Negative Response
+    // 1. Checking on Negative Response
     uint8_t SID = data[0];
-    out << "UDS: SID = " <<  QString("0x%1").arg(SID, 2, 16, QLatin1Char( '0' )) << " - ";
-    if(SID == FBL_NEGATIVE_RESPONSE) {
-            out << "UDS Service: Negative Response\n";
-            emit toConsole(*out.string());
-            return;
+    bool neg_resp = false;
+    QString neg_resp_code = "";
+    if(SID == FBL_NEGATIVE_RESPONSE && no_bytes >= 3) {
+        neg_resp = true;
+        rx_msg_neg_resp = true;
+        SID = data[1];
+        neg_resp_code = translateNegResp(data[2]);
+        out << "Negative Response (Negative Response Code:" << neg_resp_code << ")\n";
     }
+
+    // 2. Do a precheck of the message, Ignore if SID does not fit
+    if((!neg_resp) && ((rx_no_bytes <= 0) || data[0] != rx_exp_data[0])){
+        qInfo() << "Ignoring message - Received SID "<<QString("0x%1").arg(uint8_t(data[0]), 2, 16, QLatin1Char( '0' )) << " does not fit to expected SID "<< QString("0x%1").arg(uint8_t(rx_exp_data[0]), 2, 16, QLatin1Char( '0' ));
+        emit toConsole(*out.string());
+        return;
+    }
+
+    // 3. Check on the actual message
     bool response = (SID & FBL_SID_ACK);
     QString info = "";
     if(response) {
         info = "Response for ";
         SID -= FBL_SID_ACK;
     }
+    out << "UDS: SID = " <<  QString("0x%1").arg(SID, 2, 16, QLatin1Char( '0' )) << " - ";
 
     switch(SID) {
         case FBL_DIAGNOSTIC_SESSION_CONTROL:
             out << info + "UDS Service: Diagnostic Session Control\n";
+
+            // Check on the relevant message - Session is correct
+            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1]){
+                rx_msg_valid = true;
+            }
             break;
+
         case FBL_ECU_RESET:
             out << info + "UDS Service: ECU Reset\n";
+            // Check on the relevant message - ECU Reset Type is correct
+            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1]){
+                rx_msg_valid = true;
+            }
             break;
+
         case FBL_SECURITY_ACCESS:
             out << info + "UDS Service: Security Access\n";
+            // Check on the relevant message - Request Type is correct
+            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1]){
+                rx_msg_valid = true;
+            }
             break;
+
         case FBL_TESTER_PRESENT:
             out << info + "UDS Service: Tester Present\n";
+            // Check on the relevant message - Response Type is correct
+            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1]){
+                rx_msg_valid = true;
+            }
             break;
+
         case FBL_READ_DATA_BY_IDENTIFIER:
             out << info + "UDS Service: Read Data By Identifier\n";
             out << "DID: " << QString("0x%1").arg(data[1], 2, 16, QLatin1Char( '0' )) << QString("0x%1").arg(data[2], 2, 16, QLatin1Char( '0' )) << "\n";
             if(response)
                 out << "Data: " << QString::fromLocal8Bit(&data[3]) << "\n";
+
+            // Check on the relevant message - Data is included, DID is correct
+            if(!neg_resp && rx_no_bytes < no_bytes && rx_exp_data[1] == data[1] && rx_exp_data[2] == data[2]){
+                rx_msg_valid = true;
+            }
             break;
+
         case FBL_READ_MEMORY_BY_ADDRESS:
             out << info + "UDS Service: Read Memory By Address\n";
+
+            // Check on the relevant message - Data is included, Adress is correct
+            if(!neg_resp && rx_no_bytes < no_bytes && rx_exp_data[1] == data[1] && rx_exp_data[2] == data[2] && rx_exp_data[3] == data[3] && rx_exp_data[4] == data[4]){
+                rx_msg_valid = true;
+            }
+
             break;
+
         case FBL_WRITE_DATA_BY_IDENTIFIER:
             out << info + "UDS Service: Write Data By Identifier\n";
+
+            // Check on the relevant message - DID is correct
+            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1] && rx_exp_data[2] == data[2]){
+                rx_msg_valid = true;
+            }
+
             break;
+
         case FBL_REQUEST_DOWNLOAD:
             out << info + "UDS Service: Request Download\n";
+
+            // Check on the relevant message - Adress is correct
+            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1] && rx_exp_data[2] == data[2] && rx_exp_data[3] == data[3] && rx_exp_data[4] == data[4]){
+                rx_msg_valid = true;
+            }
+
             break;
+
         case FBL_REQUEST_UPLOAD:
             out << info + "UDS Service: Request Upload\n";
+
+            // Check on the relevant message - Adress is correct
+            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1] && rx_exp_data[2] == data[2] && rx_exp_data[3] == data[3] && rx_exp_data[4] == data[4]){
+                rx_msg_valid = true;
+            }
+
             break;
+
         case FBL_TRANSFER_DATA:
             out << info + "UDS Service: Transfer Data\n";
+
+            // Info: There is no response for it
+            rx_msg_valid = true;
+
             break;
         case FBL_REQUEST_TRANSFER_EXIT:
             out << info + "UDS Service: Request Transfer Exit\n";
+
+            // Info: Response includes the end address. There is no content check here
+            rx_msg_valid = true;
+
             break;
         default:
             out << info << "UDS Service: ERROR UNRECOGNIZED SID\n";
@@ -120,10 +210,13 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
 
     emit toConsole(*out.string());
 
-    // Free the communication flag
-    comm_mutex.lock();
-    _comm = false;
-    comm_mutex.unlock();
+    // Only release
+    if (rx_msg_valid){
+        // Release the communication flag
+        comm_mutex.lock();
+        _comm = false;
+        comm_mutex.unlock();
+    }
 }
 
 
@@ -131,7 +224,10 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
 // Public - Sending TX UDS Messages
 //////////////////////////////////////////////////////////////////////////////
 
-
+/**
+ * @brief Method to send a broadcast to all ECUs on the bus, so that they respond with Tester Present
+ * @return UDS::RESP accordingly
+ */
 UDS::RESP UDS::reqIdentification() // Sending out broadcast for tester present
 {
     if(!init){
@@ -195,6 +291,12 @@ UDS::RESP UDS::reqIdentification() // Sending out broadcast for tester present
 
 
 // Specification for Diagnostic and Communication Management
+/**
+ * @brief Method to switch the Diagnostic Session of a given ECU ID to a given Session
+ * @param id Target ID
+ * @param session Target Session
+ * @return UDS::RESP accordingly
+ */
 UDS::RESP UDS::diagnosticSessionControl(uint32_t id, uint8_t session){
     if(!init){
         return NO_INIT;
@@ -256,6 +358,12 @@ UDS::RESP UDS::diagnosticSessionControl(uint32_t id, uint8_t session){
         return res;
 }
 
+/**
+ * @brief Method to request a reset with the given type for the given ECU ID
+ * @param id Target ID
+ * @param reset_type Target Reset Type
+ * @return UDS::RESP accordingly
+ */
 UDS::RESP UDS::ecuReset(uint32_t id, uint8_t reset_type){
     if(!init){
         return NO_INIT;
@@ -317,6 +425,11 @@ UDS::RESP UDS::ecuReset(uint32_t id, uint8_t reset_type){
         return res;
 }
 
+/**
+ * @brief Method to request a security access SEED from the given ECU ID. First step for Security Access
+ * @param id Target ID
+ * @return UDS::RESP accordingly
+ */
 UDS::RESP UDS::securityAccessRequestSEED(uint32_t id){
     if(!init){
         return NO_INIT;
@@ -378,6 +491,13 @@ UDS::RESP UDS::securityAccessRequestSEED(uint32_t id){
         return res;
 }
 
+/**
+ * @brief Method to send the calculated Key with given Len to the given ECU ID. Second step for Security Access
+ * @param id Target ID
+ * @param key Calculated key to be transmitted
+ * @param key_len Length of the calculated key
+ * @return UDS::RESP accordingly
+ */
 UDS::RESP UDS::securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_len){
     if(!init){
         return NO_INIT;
@@ -439,7 +559,11 @@ UDS::RESP UDS::securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_le
         return res;
 }
 
-
+/**
+ * @brief Method to send a Tester Present to the given ECU ID. Message is send without any expected response
+ * @param id Target ID
+ * @return UDS::RESP accordingly
+ */
 UDS::RESP UDS::testerPresent(uint32_t id){
     if(!init){
         return NO_INIT;
@@ -483,7 +607,7 @@ UDS::RESP UDS::testerPresent(uint32_t id){
     rx_exp_data = nullptr;
     rx_no_bytes = 0;
 
-    // Free the communication flag
+    // Release the communication flag
     comm_mutex.lock();
     _comm = false;
     comm_mutex.unlock();
@@ -494,6 +618,12 @@ UDS::RESP UDS::testerPresent(uint32_t id){
 }
 
 // Specification for Data Transmission
+/**
+ * @brief Method to request Data by a given Identifier
+ * @param id Target ID
+ * @param identifier Data Identifier
+ * @return UDS::RESP accordingly
+ */
 UDS::RESP UDS::readDataByIdentifier(uint32_t id, uint16_t identifier){
     if(!init){
         return NO_INIT;
@@ -555,6 +685,13 @@ UDS::RESP UDS::readDataByIdentifier(uint32_t id, uint16_t identifier){
         return res;
 }
 
+/**
+ * @brief Method to request Data by a given address from a given ECU ID. The number of bytes is specified with the parameter no_bytes
+ * @param id Target ID
+ * @param address Memory Address to be read
+ * @param no_bytes Number of bytes to be read from given Memory Address
+ * @return UDS::RESP accordingly
+ */
 UDS::RESP UDS::readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_bytes){
     if(!init){
         return NO_INIT;
@@ -615,6 +752,14 @@ UDS::RESP UDS::readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_by
         return res;
 }
 
+/**
+ * @brief Method to write Data by a given Identifier
+ * @param id Target ID
+ * @param identifier Data Identifier
+ * @param data Given Data to be written
+ * @param data_len Length of the given data
+ * @return UDS::RESP accordingly
+ */
 UDS::RESP UDS::writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* data, uint8_t data_len){
     if(!init){
         return NO_INIT;
@@ -677,6 +822,13 @@ UDS::RESP UDS::writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* 
 }
 
 // Specification for Upload | Download
+/**
+ * @brief Method to request a Download for the given Memory Address for the given number of byte. First Step for Data Transfer
+ * @param id Target ID
+ * @param address Target Memory Address
+ * @param no_bytes Number of bytes to be downloaded to ECU ID
+ * @return UDS::RESP accordingly
+ */
 UDS::RESP UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes){
     if(!init){
         return NO_INIT;
@@ -738,6 +890,13 @@ UDS::RESP UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes)
         return res;
 }
 
+/**
+ * @brief Method to request a Upload for the given Memory Address for the given number of bytes. First Step for Data Transfer
+ * @param id Target ID
+ * @param address Target Memory Address
+ * @param no_bytes Number of bytes to be uploaded from ECU ID
+ * @return UDS::RESP accordingly
+ */
 UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes){
     if(!init){
         return NO_INIT;
@@ -799,6 +958,14 @@ UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes){
         return res;
 }
 
+/**
+ * @brief Method to transfer the given data to the given ECU ID. Second step for Data Transmission
+ * @param id Target ID
+ * @param address Target Memory Address
+ * @param data Data to be transferred
+ * @param data_len Number of bytes of the data
+ * @return UDS::RESP accordingly
+ */
 UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_t data_len){
     if(!init){
         return NO_INIT;
@@ -842,7 +1009,7 @@ UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_
     rx_exp_data = nullptr;
     rx_no_bytes = 0;
 
-    // Free the communication flag
+    // Release the communication flag
     comm_mutex.lock();
     _comm = false;
     comm_mutex.unlock();
@@ -852,6 +1019,12 @@ UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_
     return TX_OK;
 }
 
+/**
+ * @brief Method to exit the transfer to the given ECU ID. Third and last step for Data Transmission
+ * @param id Target ID
+ * @param address Target Memory Address
+ * @return UDS::RESP accordingly
+ */
 UDS::RESP UDS::requestTransferExit(uint32_t id, uint32_t address){
     if(!init){
         return NO_INIT;
@@ -914,7 +1087,14 @@ UDS::RESP UDS::requestTransferExit(uint32_t id, uint32_t address){
 }
 
 // Supported Common Response Codes
-UDS::RESP UDS::negativeResponse(uint32_t id, uint8_t reg_sid, uint8_t neg_resp_code){
+/**
+ * @brief Method to send a Negative Response to the given ECU ID. This is used as response to a request
+ * @param id Target ID
+ * @param rej_sid Rejected SID
+ * @param neg_resp_code Negative Response Code (NRC)
+ * @return UDS::RESP accordingly
+ */
+UDS::RESP UDS::negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_code){
     if(!init){
         return NO_INIT;
     }
@@ -940,7 +1120,7 @@ UDS::RESP UDS::negativeResponse(uint32_t id, uint8_t reg_sid, uint8_t neg_resp_c
 
     // 3b. Create the relevant message
 	int len;
-	uint8_t *msg = _create_neg_response(&len, reg_sid, neg_resp_code);
+    uint8_t *msg = _create_neg_response(&len, rej_sid, neg_resp_code);
     // Wrap data into QByteArray
     QByteArray qbdata;
     qbdata.resize(len);
@@ -957,7 +1137,7 @@ UDS::RESP UDS::negativeResponse(uint32_t id, uint8_t reg_sid, uint8_t neg_resp_c
     rx_exp_data = nullptr;
     rx_no_bytes = 0;
 
-    // Free the communication flag
+    // Release the communication flag
     comm_mutex.lock();
     _comm = false;
     comm_mutex.unlock();
@@ -1010,8 +1190,13 @@ UDS::RESP UDS::checkOnFreeTX(){
     return TX_FREE;
 }
 
+/**
+ * @brief Checks if the response is available in time
+ * @param waittime Time to wait for receiving the correct response
+ * @return TX_OK if async, RX_NO_RESPONSE if no response in time, TX_RX_OK if response is received in time
+ */
 UDS::RESP UDS::checkOnResponse(uint32_t waittime){
-    // No synchronizing of TX to RX
+    // No synchronization of TX to RX
     if(!synchronized_rx_tx){
         comm_mutex.lock();
         _comm = false;
@@ -1028,7 +1213,7 @@ UDS::RESP UDS::checkOnResponse(uint32_t waittime){
         comm_mutex.unlock();
 
         if (start.msecsTo(QDateTime::currentDateTime()) > waittime){
-            // Free the communication flag
+            // Release the communication flag
             comm_mutex.lock();
             _comm = false;
             comm_mutex.unlock();
@@ -1038,6 +1223,59 @@ UDS::RESP UDS::checkOnResponse(uint32_t waittime){
     } while(isCommBusy);
 
     return TX_RX_OK;
+}
+
+
+/**
+ * @brief Translates a given Negative Response Code into a String representation according to UDS Communication documentation
+ * @param nrc Given Negative Response Code for translation
+ * @return
+ */
+QString UDS::translateNegResp(uint8_t nrc){
+    switch(nrc){
+        case FBL_RC_GENERAL_REJECT:
+            return QString("General reject"); break;
+        case FBL_RC_SERVICE_NOT_SUPPORTED:
+            return QString("Service not supported"); break;
+        case FBL_RC_SUB_FUNC_NOT_SUPPORTED:
+            return QString("Sub-Function not supported"); break;
+        case FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT:
+            return QString("Incorrect msg len or invalid format"); break;
+        case FBL_RC_RESPONSE_TOO_LONG:
+            return QString("Response too long"); break;
+        case FBL_RC_BUSY_REPEAT_REQUEST:
+            return QString("Busy repeat request"); break;
+        case FBL_RC_CONDITIONS_NOT_CORRECT:
+            return QString("Conditions not correct"); break;
+        case FBL_RC_REQUEST_SEQUENCE_ERROR:
+            return QString("Request sequence error"); break;
+        case FBL_RC_FAILURE_PREVENTS_EXEC_OF_REQUESTED_ACTION:
+            return QString("Failure prevents execution of requested action"); break;
+        case FBL_RC_REQUEST_OUT_OF_RANGE:
+            return QString("Request out of range"); break;
+        case FBL_RC_SECURITY_ACCESS_DENIED:
+            return QString("Security access denied"); break;
+        case FBL_RC_INVALID_KEY:
+            return QString("Invalid key"); break;
+        case FBL_RC_EXCEEDED_NUMBER_OF_ATTEMPTS:
+            return QString("Exceeded number of attempts"); break;
+        case FBL_RC_REQUIRED_TIME_DELAY_NOT_EXPIRED:
+            return QString("Required time delay not expired"); break;
+        case FBL_RC_UPLOAD_DOWNLOAD_NOT_ACCEPTED:
+            return QString("Upload/Download not accepted"); break;
+        case FBL_RC_TRANSFER_DATA_SUSPENDED:
+            return QString("Transfer data suspended"); break;
+        case FBL_RC_GENERAL_PROGRAMMING_FAILURE:
+            return QString("General programming failure"); break;
+        case FBL_RC_WRONG_BLOCK_SEQUENCE_COUNTER:
+            return QString("Wrong Block Sequence Counter"); break;
+        case FBL_RC_SUB_FUNC_NOT_SUPPORTED_IN_ACTIVE_SESSION:
+            return QString("Sub-Function not supported in active session"); break;
+        case FBL_RC_SERVICE_NOT_SUPPORTED_IN_ACTIVE_SESSION:
+            return QString("Service not supported in active session"); break;
+        default:
+            return QString("Negative Response Code unknown");
+    }
 }
 
 //============================================================================
