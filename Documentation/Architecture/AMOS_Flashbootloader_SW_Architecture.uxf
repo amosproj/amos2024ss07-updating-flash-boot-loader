@@ -1,21 +1,65 @@
-<diagram program="umletino" version="15.1"><zoom_level>11</zoom_level><element><id>UMLClass</id><coordinates><x>47</x><y>297</y><w>198</w><h>110</h></coordinates><panel_attributes>Flash
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>9</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>0</x>
+      <y>324</y>
+      <w>162</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>Flash
 bg=#FFFF33
 --
 #init()
 #writeData(address, data)
 #readData(address)
---</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>300</x><y>473</y><w>187</w><h>110</h></coordinates><panel_attributes>LED (UI)
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>207</x>
+      <y>468</y>
+      <w>153</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>LED (UI)
 bg=#FFFF33
 --
 #init()
 #setOpMode()
 #cyclicProcessing()
---</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>300</x><y>143</y><w>187</w><h>88</h></coordinates><panel_attributes>Reset
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>207</x>
+      <y>198</y>
+      <w>153</w>
+      <h>72</h>
+    </coordinates>
+    <panel_attributes>Reset
 bg=#FFFF33
 --
 #softReset()
 #hardReset()
---</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>850</x><y>264</y><w>286</w><h>319</h></coordinates><panel_attributes>UDS
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>657</x>
+      <y>297</y>
+      <w>270</w>
+      <h>261</h>
+    </coordinates>
+    <panel_attributes>UDS
 Layer
 bg=#90EE90
 --
@@ -34,103 +78,291 @@ bg=#90EE90
 #requestTransferExit()
 #negativeResponse(sid, code)
 --
-</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1543</x><y>209</y><w>209</w><h>121</h></coordinates><panel_attributes>CAN
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1224</x>
+      <y>252</y>
+      <w>171</w>
+      <h>99</h>
+    </coordinates>
+    <panel_attributes>CAN
 bg=#FFFF33
 --
 #initDriver()
 #setID(id)
 #txCAN(data, no_bytes)
 #setRxHandle(handle)
---</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1543</x><y>363</y><w>209</w><h>121</h></coordinates><panel_attributes>CAN FD
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1224</x>
+      <y>378</y>
+      <w>171</w>
+      <h>99</h>
+    </coordinates>
+    <panel_attributes>CAN FD
 bg=#FFFF33
 --
 #initDriver()
 #setID(id)
 #txCAN(data, no_bytes)
 #setRxHandle(handle)
---</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1543</x><y>495</y><w>209</w><h>121</h></coordinates><panel_attributes>Ethernet
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1224</x>
+      <y>486</y>
+      <w>171</w>
+      <h>99</h>
+    </coordinates>
+    <panel_attributes>Ethernet
 bg=#FFFF33
 --
 #initDriver()
 #setID(id)
 #txEthernet(data, no_bytes)
 #setRxHandle(handle) 
---</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1884</x><y>209</y><w>209</w><h>143</h></coordinates><panel_attributes>CAN
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1503</x>
+      <y>252</y>
+      <w>171</w>
+      <h>153</h>
+    </coordinates>
+    <panel_attributes>CAN : CommInterface
 bg=#ADD8E6
 --
 #CAN(baudrate)
-#initDriver()
-#setID(id)
-#txCAN(data, no_bytes)
-#startRXThread(handle) 
---
-group=group-1</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1884</x><y>363</y><w>209</w><h>121</h></coordinates><panel_attributes>CAN FD
-bg=#ADD8E6
---
-#initDriver()
-#setID(id)
-#txCANFD(data, no_bytes)
-#startRXThread(handle) 
---
-group=group-1</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1884</x><y>495</y><w>209</w><h>121</h></coordinates><panel_attributes>Ethernet
-bg=#ADD8E6
---
-#initDriver()
-#setID(id)
-#txEthernet(data, no_bytes)
-#startRXThread(handle) 
---
 
-group=group-1</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>2511</x><y>297</y><w>297</w><h>352</h></coordinates><panel_attributes>UDS
+#startRX()
+#stopRX()
+#initDriver()
+#setID(id)
+#txData(data, no_bytes)
+#doRX()
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1503</x>
+      <y>432</y>
+      <w>171</w>
+      <h>126</h>
+    </coordinates>
+    <panel_attributes>CAN FD : CommInterface
+bg=#ADD8E6
+--
+#startRX()
+#stopRX()
+#initDriver()
+#setID(id)
+#txData(data, no_bytes)
+#doRX() 
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1503</x>
+      <y>585</y>
+      <w>171</w>
+      <h>126</h>
+    </coordinates>
+    <panel_attributes>Ethernet : CommInterface
+bg=#ADD8E6
+--
+#startRX()
+#stopRX()
+#initDriver()
+#setID(id)
+#txData(data, no_bytes)
+#doRX() 
+--
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2016</x>
+      <y>261</y>
+      <w>297</w>
+      <h>351</h>
+    </coordinates>
+    <panel_attributes>UDS
 Layer
 bg=#90EE90
 --
-#messageInterpreter(uds_msg)
+#UDS(gui_id)
 
+#setSyncMode(syncMode)
 #reqIdentification()
-
 #diagnosticSessionControl(id, session)
-#ecuReset(id)
-#securityAccess(id)
+#ecuReset(id, reset_type)
+#securityAccessRequestSEED(id)
+#securityAccessVerifyKey(id, key, key_len)
 #testerPresent(id)
 #readDataByIdentifier(id, identifier)
-#readMemoryByAddress(id, address)
-#writeDataByIdentifier(id, data)
-#requestDownload(id)
-#requestUpload(id)
-#transferData(id, data)
-#requestTransferExit(id)
-#negativeResponse(id, data)
---
-group=group-1</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>2962</x><y>693</y><w>704</w><h>187</h></coordinates><panel_attributes>halign=left
+#readMemoryByAddress(id, address, no_bytes)
+#writeDataByIdentifier(id, identifier, data, data_len)
+#requestDownload(id, address, no_bytes)
+#requestUpload(id, address, no_bytes)
+#transferData(id, address, data, data_len)
+#requestTransferExit(id, address)
+#negativeResponse(id, rej_sid, neg_resp_code)
+
+slots:
+# rxDataReceiverSlot(id, data)
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2385</x>
+      <y>648</y>
+      <w>576</w>
+      <h>153</h>
+    </coordinates>
+    <panel_attributes>halign=left
 UI Flashing App
-bg=#ADD8E6
-group=group-1</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>2181</x><y>693</y><w>253</w><h>132</h></coordinates><panel_attributes>Interface
+bg=#ADD8E6</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1746</x>
+      <y>648</y>
+      <w>207</w>
+      <h>108</h>
+    </coordinates>
+    <panel_attributes>Interface
 Configuration
 bg=#ADD8E6
 --
 #readInterfaceConfiguration()
 #listInterfaces()
 #changeInterface(interface)
---
-group=group-1</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>2181</x><y>330</y><w>253</w><h>154</h></coordinates><panel_attributes>Communication
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1746</x>
+      <y>351</y>
+      <w>207</w>
+      <h>189</h>
+    </coordinates>
+    <panel_attributes>Communication
 Layer
 bg=#90EE90
 --
+#Communication()
+
 #init(interface)
 #setCommunicationType(interface)
-#setID(id)
-#txData(data, no_bytes)
-#dataReceiveHandleMulti()
-#handleCANEvent(id, dlc, data)
---
-group=group-1</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>2082</x><y>275</y><w>121</w><h>143</h></coordinates><panel_attributes>lt=&lt;-&gt;
-group=group-1</panel_attributes><additional_attributes>10;10;50;10;50;110;90;110</additional_attributes></element><element><id>Relation</id><coordinates><x>2082</x><y>407</y><w>121</w><h>33</h></coordinates><panel_attributes>lt=&lt;-&gt;
-group=group-1</panel_attributes><additional_attributes>10;10;90;10</additional_attributes></element><element><id>Relation</id><coordinates><x>2082</x><y>429</y><w>121</w><h>143</h></coordinates><panel_attributes>lt=&lt;-&gt;
-group=group-1</panel_attributes><additional_attributes>10;110;50;110;50;10;90;10</additional_attributes></element><element><id>Relation</id><coordinates><x>2423</x><y>396</y><w>110</w><h>33</h></coordinates><panel_attributes>lt=&lt;-&gt;
-group=group-1</panel_attributes><additional_attributes>10;10;80;10</additional_attributes></element><element><id>Relation</id><coordinates><x>2423</x><y>748</y><w>561</w><h>33</h></coordinates><panel_attributes>lt=&lt;-
-group=group-1</panel_attributes><additional_attributes>10;10;490;10</additional_attributes></element><element><id>Relation</id><coordinates><x>2291</x><y>473</y><w>33</w><h>242</h></coordinates><panel_attributes>lt=&lt;-
-group=group-1</panel_attributes><additional_attributes>10;10;10;200</additional_attributes></element><element><id>UMLClass</id><coordinates><x>1191</x><y>341</y><w>253</w><h>154</h></coordinates><panel_attributes>Communication
+
+slots:
+#rxCANDataSlot(id, data)
+#txDataSlot(data)
+#setIDSlot(id)
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1665</x>
+      <y>306</y>
+      <w>99</w>
+      <h>117</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;50.0;10.0;50.0;110.0;90.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1665</x>
+      <y>414</y>
+      <w>99</w>
+      <h>81</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>10.0;70.0;30.0;70.0;30.0;10.0;90.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1665</x>
+      <y>432</y>
+      <w>99</w>
+      <h>216</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>10.0;220.0;50.0;220.0;50.0;10.0;90.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1944</x>
+      <y>405</y>
+      <w>90</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;80.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1944</x>
+      <y>693</y>
+      <w>459</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;490.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1836</x>
+      <y>531</y>
+      <w>27</w>
+      <h>135</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;130.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>963</x>
+      <y>360</y>
+      <w>207</w>
+      <h>126</h>
+    </coordinates>
+    <panel_attributes>Communication
 Layer
 bg=#90EE90
 --
@@ -140,15 +372,168 @@ bg=#90EE90
 #txData(data, no_bytes)
 #dataReceiveHandle()
 --
-</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>1433</x><y>275</y><w>132</w><h>143</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>100;10;60;10;60;110;10;110</additional_attributes></element><element><id>Relation</id><coordinates><x>1433</x><y>407</y><w>132</w><h>33</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>100;10;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>1433</x><y>429</y><w>132</w><h>143</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>100;110;60;110;60;10;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>1125</x><y>418</y><w>88</w><h>33</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>60;10;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>476</x><y>143</y><w>110</w><h>187</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>80;10;40;10;40;150;10;150</additional_attributes></element><element><id>Relation</id><coordinates><x>476</x><y>341</y><w>110</w><h>33</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>80;10;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>1510</x><y>165</y><w>275</w><h>473</h></coordinates><panel_attributes>Communication</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1851</x><y>165</y><w>275</w><h>473</h></coordinates><panel_attributes>Communication
-group=group-1</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>1741</x><y>275</y><w>165</w><h>33</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>10;10;130;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>1587</x><y>44</y><w>451</w><h>77</h></coordinates><panel_attributes>Legend - SW Architecture
-group=group-0</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1598</x><y>77</y><w>132</w><h>33</h></coordinates><panel_attributes>Platform Agnostic
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1161</x>
+      <y>306</y>
+      <w>81</w>
+      <h>117</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>70.0;10.0;30.0;10.0;30.0;110.0;10.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1161</x>
+      <y>414</y>
+      <w>81</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>70.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1161</x>
+      <y>432</y>
+      <w>81</w>
+      <h>117</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>70.0;110.0;30.0;110.0;30.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>918</x>
+      <y>423</y>
+      <w>63</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>50.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>351</x>
+      <y>198</y>
+      <w>90</w>
+      <h>153</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>80.0;10.0;40.0;10.0;40.0;150.0;10.0;150.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>351</x>
+      <y>360</y>
+      <w>90</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>80.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1197</x>
+      <y>216</y>
+      <w>225</w>
+      <h>387</h>
+    </coordinates>
+    <panel_attributes>Communication</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1476</x>
+      <y>216</y>
+      <w>225</w>
+      <h>513</h>
+    </coordinates>
+    <panel_attributes>Communication</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1386</x>
+      <y>306</y>
+      <w>135</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;130.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1260</x>
+      <y>117</y>
+      <w>369</w>
+      <h>63</h>
+    </coordinates>
+    <panel_attributes>Legend - SW Architecture
+group=group-0</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1269</x>
+      <y>144</y>
+      <w>108</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>Platform Agnostic
 bg=#90EE90
-group=group-0</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1741</x><y>77</y><w>132</w><h>33</h></coordinates><panel_attributes>MCU / Aurix
+group=group-0</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1386</x>
+      <y>144</y>
+      <w>108</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>MCU / Aurix
 bg=#FFFF33
-group=group-0</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1884</x><y>77</y><w>132</w><h>33</h></coordinates><panel_attributes>Windows
+group=group-0</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1503</x>
+      <y>144</y>
+      <w>108</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>Windows
 bg=#ADD8E6
-group=group-0</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>2962</x><y>176</y><w>308</w><h>198</h></coordinates><panel_attributes>ECUCommManager
+group=group-0</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2385</x>
+      <y>225</y>
+      <w>252</w>
+      <h>162</h>
+    </coordinates>
+    <panel_attributes>ECUCommManager
 bg=#90EE90
 --
 #requestList()
@@ -160,9 +545,29 @@ bg=#90EE90
 #securityAccess(id)
 #handleECUCommunication()
 --
-
-group=group-1</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>2797</x><y>231</y><w>187</w><h>187</h></coordinates><panel_attributes>lt=&lt;-&gt;
-group=group-1</panel_attributes><additional_attributes>10;150;80;150;80;10;150;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>2962</x><y>418</y><w>308</w><h>143</h></coordinates><panel_attributes>FlashManager
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2304</x>
+      <y>270</y>
+      <w>99</w>
+      <h>153</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>10.0;150.0;60.0;150.0;60.0;10.0;90.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2385</x>
+      <y>423</y>
+      <w>252</w>
+      <h>117</h>
+    </coordinates>
+    <panel_attributes>FlashManager
 bg=#90EE90
 --
 #FlashManager(id)
@@ -171,10 +576,40 @@ bg=#90EE90
 #verifyData(file)
 #readData()
 --
-
-group=group-1</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>2797</x><y>495</y><w>187</w><h>33</h></coordinates><panel_attributes>lt=&lt;-&gt;
-group=group-1</panel_attributes><additional_attributes>10;10;150;10</additional_attributes></element><element><id>Relation</id><coordinates><x>3105</x><y>363</y><w>33</w><h>77</h></coordinates><panel_attributes>lt=&lt;-&gt;
-group=group-1</panel_attributes><additional_attributes>10;50;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>3402</x><y>429</y><w>253</w><h>121</h></coordinates><panel_attributes>FlashFileHandler
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2304</x>
+      <y>486</y>
+      <w>99</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;90.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2502</x>
+      <y>378</y>
+      <w>27</w>
+      <h>63</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>10.0;50.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2745</x>
+      <y>432</y>
+      <w>207</w>
+      <h>99</h>
+    </coordinates>
+    <panel_attributes>FlashFileHandler
 bg=#90EE90
 --
 #readFile(path)
@@ -182,45 +617,177 @@ bg=#90EE90
 #validateFile(file)
 #checkECUforFile(id, file)
 --
-
-group=group-1</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>3259</x><y>484</y><w>165</w><h>33</h></coordinates><panel_attributes>lt=-&gt;
-group=group-1</panel_attributes><additional_attributes>130;10;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>2181</x><y>847</y><w>253</w><h>110</h></coordinates><panel_attributes>GUIConfigurationManager
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2628</x>
+      <y>477</y>
+      <w>135</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;</panel_attributes>
+    <additional_attributes>130.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1746</x>
+      <y>774</y>
+      <w>207</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>GUIConfigurationManager
 bg=#ADD8E6
 --
 #readConfiguration()
 #getValue(key)
 #storeValue(key)
---
-group=group-1</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>3446</x><y>737</y><w>198</w><h>121</h></coordinates><panel_attributes>FlashFileUI
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2781</x>
+      <y>684</y>
+      <w>162</w>
+      <h>99</h>
+    </coordinates>
+    <panel_attributes>FlashFileUI
 bg=#ADD8E6
 --
 #selectFile()
 #validateFile()
 #showFileInformation()
 
---
-group=group-1</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>3534</x><y>539</y><w>33</w><h>220</h></coordinates><panel_attributes>lt=&lt;-
-group=group-1</panel_attributes><additional_attributes>10;10;10;180</additional_attributes></element><element><id>UMLClass</id><coordinates><x>3226</x><y>737</y><w>198</w><h>121</h></coordinates><panel_attributes>ECUListingUI
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2853</x>
+      <y>522</y>
+      <w>27</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;180.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2601</x>
+      <y>684</y>
+      <w>162</w>
+      <h>99</h>
+    </coordinates>
+    <panel_attributes>ECUListingUI
 bg=#ADD8E6
 --
 #showAvailableECUs()
 #selectECU()
 #showDetailsForECU()
 #checkFlashfileForECU()
---
-group=group-1</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>3006</x><y>737</y><w>198</w><h>121</h></coordinates><panel_attributes>FlashProcessingUI
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2421</x>
+      <y>684</y>
+      <w>162</w>
+      <h>99</h>
+    </coordinates>
+    <panel_attributes>FlashProcessingUI
 bg=#ADD8E6
 --
 #startFlashing()
 #verifyFlashing()
 
 
---
-group=group-1</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>3259</x><y>275</y><w>88</w><h>484</h></coordinates><panel_attributes>lt=&lt;-
-group=group-1</panel_attributes><additional_attributes>10;10;60;10;60;420</additional_attributes></element><element><id>Relation</id><coordinates><x>2423</x><y>781</y><w>561</w><h>143</h></coordinates><panel_attributes>lt=&lt;-
-group=group-1</panel_attributes><additional_attributes>10;110;270;110;270;10;490;10</additional_attributes></element><element><id>Relation</id><coordinates><x>3336</x><y>506</y><w>88</w><h>253</h></coordinates><panel_attributes>lt=&lt;-
-group=group-1</panel_attributes><additional_attributes>60;10;10;10;10;210</additional_attributes></element><element><id>Relation</id><coordinates><x>3105</x><y>550</y><w>33</w><h>209</h></coordinates><panel_attributes>lt=&lt;-
-group=group-1</panel_attributes><additional_attributes>10;10;10;170</additional_attributes></element><element><id>Relation</id><coordinates><x>1741</x><y>407</y><w>165</w><h>33</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>10;10;130;10</additional_attributes></element><element><id>Relation</id><coordinates><x>1741</x><y>539</y><w>165</w><h>33</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>10;10;130;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>564</x><y>275</y><w>209</w><h>154</h></coordinates><panel_attributes>Memory
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2628</x>
+      <y>306</y>
+      <w>72</w>
+      <h>396</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;60.0;10.0;60.0;420.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1944</x>
+      <y>720</y>
+      <w>459</w>
+      <h>117</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;110.0;270.0;110.0;270.0;10.0;490.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2691</x>
+      <y>495</y>
+      <w>72</w>
+      <h>207</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>60.0;10.0;10.0;10.0;10.0;210.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2502</x>
+      <y>531</y>
+      <w>27</w>
+      <h>171</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;170.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1386</x>
+      <y>414</y>
+      <w>135</w>
+      <h>81</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;80.0;10.0;80.0;70.0;130.0;70.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1386</x>
+      <y>522</y>
+      <w>135</w>
+      <h>126</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;60.0;10.0;60.0;120.0;130.0;120.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>423</x>
+      <y>306</y>
+      <w>171</w>
+      <h>126</h>
+    </coordinates>
+    <panel_attributes>Memory
 bg=#90EE90
 --
 #getWriteableMemory()
@@ -229,7 +796,29 @@ bg=#90EE90
 #readData(identifier, len, data)
 #readMemory(adress, len, data)
 #writeData(identifier, data, len)
---</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>762</x><y>374</y><w>110</w><h>33</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>80;10;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>564</x><y>77</y><w>209</w><h>165</h></coordinates><panel_attributes>SessionManager
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>585</x>
+      <y>387</y>
+      <w>90</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>80.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>423</x>
+      <y>144</y>
+      <w>171</w>
+      <h>135</h>
+    </coordinates>
+    <panel_attributes>SessionManager
 bg=#90EE90
 --
 #setSession()
@@ -239,13 +828,90 @@ bg=#90EE90
 #getSession()
 #sessionControl()
 #resetECU()
---</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>663</x><y>231</y><w>33</w><h>66</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>10;40;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>762</x><y>154</y><w>110</w><h>198</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>80;160;40;160;40;10;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>564</x><y>462</y><w>209</w><h>110</h></coordinates><panel_attributes>Flashing
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>504</x>
+      <y>270</y>
+      <w>27</w>
+      <h>54</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>10.0;40.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>585</x>
+      <y>207</y>
+      <w>90</w>
+      <h>162</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>80.0;160.0;40.0;160.0;40.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>423</x>
+      <y>459</y>
+      <w>171</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>Flashing
 bg=#90EE90
 --
 #getFlashConfiguration()
 #writeToFlash(data)
 #getDataFromFlash()
---</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>762</x><y>429</y><w>110</w><h>110</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>80;10;40;10;40;80;10;80</additional_attributes></element><element><id>Relation</id><coordinates><x>663</x><y>418</y><w>33</w><h>66</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>10;10;10;40</additional_attributes></element><element><id>Relation</id><coordinates><x>531</x><y>165</y><w>55</w><h>363</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>30;10;10;10;10;310;30;310</additional_attributes></element><element><id>UMLClass</id><coordinates><x>300</x><y>264</y><w>187</w><h>176</h></coordinates><panel_attributes>MCU Firmware
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>585</x>
+      <y>432</y>
+      <w>90</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>80.0;10.0;40.0;10.0;40.0;80.0;10.0;80.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>504</x>
+      <y>423</y>
+      <w>27</w>
+      <h>54</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;40.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>396</x>
+      <y>216</y>
+      <w>45</w>
+      <h>297</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>30.0;10.0;10.0;10.0;10.0;310.0;30.0;310.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>207</x>
+      <y>297</y>
+      <w>153</w>
+      <h>144</h>
+    </coordinates>
+    <panel_attributes>MCU Firmware
 bg=#FFFF33
 --
 #init()
@@ -254,4 +920,51 @@ bg=#FFFF33
 #readMemory(address)
 #setOperationMode()
 #reset()
-</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>476</x><y>385</y><w>110</w><h>176</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>80;140;40;140;40;10;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>366</x><y>220</y><w>33</w><h>66</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>10;40;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>234</x><y>341</y><w>88</w><h>33</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>10;10;60;10</additional_attributes></element><element><id>Relation</id><coordinates><x>366</x><y>429</y><w>33</w><h>66</h></coordinates><panel_attributes>lt=&lt;-&gt;</panel_attributes><additional_attributes>10;40;10;10</additional_attributes></element></diagram>
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>351</x>
+      <y>396</y>
+      <w>90</w>
+      <h>144</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>80.0;140.0;40.0;140.0;40.0;10.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>261</x>
+      <y>261</y>
+      <w>27</w>
+      <h>54</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>10.0;40.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>153</x>
+      <y>360</y>
+      <w>72</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;60.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>261</x>
+      <y>432</y>
+      <w>27</w>
+      <h>54</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-&gt;</panel_attributes>
+    <additional_attributes>10.0;40.0;10.0;10.0</additional_attributes>
+  </element>
+</diagram>
