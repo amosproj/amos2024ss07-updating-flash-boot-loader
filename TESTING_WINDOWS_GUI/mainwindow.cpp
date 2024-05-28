@@ -36,7 +36,7 @@ void MainWindow::on_StartSelfTest_clicked()
     // Start GUI Test
     this->ui->consoleOut->appendPlainText("Starting Self Tests\n\tMake sure that the CAN Interface is connected to Virtual CAN Bus (Vector Hardware Manager)\n");
 
-    tests->setTestMode(0); // Selftests
+    tests->setTestMode(Testcases::SELFTEST); // Selftests
     tests->startTests();
 }
 
@@ -48,7 +48,7 @@ void MainWindow::on_StartECUTest_clicked()
     this->ui->consoleOut->appendPlainText("Starting ECU Tests\n\tMake sure that the CAN Interface is connected to CAN Bus with ECU connected (Vector Hardware Manager)\n");
 
 
-    tests->setTestMode(2);
+    tests->setTestMode(Testcases::MCUTEST);
     tests->startTests();
 }
 
@@ -59,6 +59,16 @@ void MainWindow::on_StartUDSListening_clicked()
     // Start UDS Listening Mode
     this->ui->consoleOut->appendPlainText("Starting UDS Listening Mode\n\tMake sure that the CAN Interface is connected a CAN network that contains the UDS Message to be received\n");
 
-    tests->setTestMode(3);
+    tests->setTestMode(Testcases::LISTENING);
+}
+
+
+void MainWindow::on_ECUISOTPTx_clicked()
+{
+    this->ui->consoleOut->clear();
+    this->ui->consoleOut->appendPlainText("Send some ISO TP Frames to ECU\n\tMake sure that the CAN Interface is connected a CAN network that contains the UDS Message to be received\n");
+
+    tests->setTestMode(Testcases::MCUISOTP);
+    tests->startTests();
 }
 

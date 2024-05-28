@@ -22,10 +22,13 @@
 class Testcases : public QObject{
     Q_OBJECT
 
+public:
+    enum TESTMODES {SELFTEST, GUITEST, MCUTEST, LISTENING, MCUISOTP};
+
 private:
     uint32_t ecu_id;
     uint8_t gui_id, no_gui_id;
-    uint8_t testmode; // 0 = self test, 1 = GUI Test, 2 = MCU Test
+    Testcases::TESTMODES testmode;
 
     Communication *comm;
     UDS *uds;
@@ -35,7 +38,7 @@ public:
     Testcases();
 	virtual ~Testcases();
 
-    void setTestMode(uint8_t mode);
+    void setTestMode(Testcases::TESTMODES mode);
     void startTests();
     void messageChecker(const unsigned int id, const QByteArray &rec);
 

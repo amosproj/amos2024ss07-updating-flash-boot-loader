@@ -26,6 +26,8 @@ private slots:
 
     void on_StartUDSListening_clicked();
 
+    void on_ECUISOTPTx_clicked();
+
 private:
     Ui::MainWindow *ui;
     Testcases *tests;

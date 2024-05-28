@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>, Wiktor Pilarczyk <wiktorpilar99@gmail.com>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : testcases.cpp
 // Author      : Michael Bauer, Wiktor Pilarczyk
-// Version     : 0.1
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Testcases for UDS selftests, GUI tests and MCU tests
 //============================================================================
@@ -22,22 +23,23 @@ Testcases::Testcases(){
     this->gui_id = 0x7;
     this->no_gui_id = 0x0;
     this->ecu_id = 0x1;
-    this->testmode = 0;
+    this->testmode = SELFTEST;
 
     qInfo("Main: Create Communication Layer");
     comm = new Communication();
-    comm->setCommunicationType(COMM_INTERFACE_CAN);
+    comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
     comm->setTestMode(); // Explicitly set testMode
-    comm->init(COMM_INTERFACE_CAN);
+    comm->init(Communication::CAN_DRIVER); // Set to CAN
 
     qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
     uds = new UDS(this->gui_id);
+    uds->setSyncMode(false);
 
     //=====================================================================
     // Connect the signals and slots
 
     // Comm RX Signal to Testcases RX Slot
-    connect(comm, SIGNAL(rxDataReceived(unsigned int, QByteArray)), this, SLOT(rxDataReceiverSlot(unsigned int, QByteArray)), Qt::DirectConnection);
+    connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), this, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
 
     // UDS TX Signals to Comm TX Slots
     connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
@@ -55,7 +57,7 @@ Testcases::~Testcases() {
 //////////////////////////////////////////////////////////////////////////////
 // Public - Testcases Interfaces
 //////////////////////////////////////////////////////////////////////////////
-void Testcases::setTestMode(uint8_t mode){
+void Testcases::setTestMode(Testcases::TESTMODES mode){
     // Setting Appname is found in CAN_Wrapper
     emit toConsole("\tInfo: Using AMOS TESTING as Appname (see Vector Hardware Manager)\n");
 
@@ -63,35 +65,49 @@ void Testcases::setTestMode(uint8_t mode){
 }
 
 void Testcases::startTests(){
-    emit toConsole("Start of TX Section");
+    if(this->testmode == SELFTEST || this->testmode == GUITEST){
+        emit toConsole("Start of TX Section");
 
-    // Sending out broadcast for tester present
-	testReqIdentification(); 
+        // Sending out broadcast for tester present
+        testReqIdentification();
 
-	// Specification for Diagnostic and Communication Management
-	testDiagnosticSessionControl();
-	testEcuReset();
-	testSecurityAccessRequestSEED();
-	testSecurityAccessVerifyKey();
-	testTesterPresent();
+        // Specification for Diagnostic and Communication Management
+        testDiagnosticSessionControl();
+        testEcuReset();
+        testSecurityAccessRequestSEED();
+        testSecurityAccessVerifyKey();
+        testTesterPresent();
 
-	// Specification for Data Transmission
-	testReadDataByIdentifier();
-	testReadMemoryByAddress();
-	testWriteDataByIdentifier();
+        // Specification for Data Transmission
+        testReadDataByIdentifier();
+        testReadMemoryByAddress();
+        testWriteDataByIdentifier();
 
-	// Specification for Upload | Download
-	testRequestDownload();
-	testRequestUpload();
-	testTransferData();
-	testRequestTransferExit();
+        // Specification for Upload | Download
+        testRequestDownload();
+        testRequestUpload();
+        testTransferData();
+        testRequestTransferExit();
 
-	// Supported Common Response Codes
-	testNegativeResponse();
-    emit toConsole("End of TX Section\n");
+        // Supported Common Response Codes
+        testNegativeResponse();
+        emit toConsole("End of TX Section\n");
 
-    emit toConsole("Start of RX Section");
-    // RX will come in asynchronous
+        emit toConsole("Start of RX Section");
+        // RX will come in asynchronous
+    }
+
+    else if(this->testmode == MCUISOTP){
+        emit toConsole("Start of TX Section");
+
+        emit toConsole("Sending Single Frame UDS Message");
+        testTesterPresent();
+
+        emit toConsole("Sending Multi Frame UDS Message");
+        testWriteDataByIdentifier();
+
+        emit toConsole("End of TX Section\n");
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -105,7 +121,7 @@ void Testcases::messageChecker(const unsigned int id, const QByteArray &rec){
     }
 
 
-    if(this->testmode == 0){ // Selftests
+    if(this->testmode == SELFTEST){
         emit toConsole("Seftest: Checking on received UDS Message with "+QString::number(rec.size())+" bytes");
 
         int len = 0;
@@ -226,26 +242,26 @@ void Testcases::messageChecker(const unsigned int id, const QByteArray &rec){
         }
     }
 
-    else if(this->testmode == 1) { // GUI-Tests
+    else if(this->testmode == GUITEST) {
         emit toConsole("GUI Test: Checking on received UDS Message with "+QString::number(rec.size())+" bytes");
 
         emit toConsole(">> NOT YET IMPLEMENTED!");
 
     }
 
-    else if(this->testmode == 2){ // ECU-Tests
+    else if(this->testmode == MCUTEST){
         emit toConsole("ECU Test: Checking on received UDS Message with "+QString::number(rec.size())+" bytes");
 
         emit toConsole(">> NOT YET IMPLEMENTED!");
 
     }
-    else {
+    else { // Listening only
         QString log = ">> UDS Received from ID: ";
         log.append(QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' )));
         log.append(" - Data=");
 
         for(auto i = 0; i < rec.size(); i++){
-            log.append(" " + QString("0x%1").arg(rec[i], 2, 16, QLatin1Char( '0' )));
+            log.append(" " + QString("0x%1").arg(uint8_t(rec[i]), 2, 16, QLatin1Char( '0' )));
         }
         emit toConsole(log);
     }
@@ -256,9 +272,13 @@ void Testcases::messageChecker(const unsigned int id, const QByteArray &rec){
 // Public - Testcases TX Creation
 //////////////////////////////////////////////////////////////////////////////
 
+static inline bool dataTransmitting(Testcases::TESTMODES mode) {
+    return mode == Testcases::SELFTEST || mode == Testcases::MCUTEST;
+}
+
 void Testcases::testReqIdentification() // Sending out broadcast for tester present
 {
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode))
         return;
 
     emit toConsole("Testcase: TX Check Request Identification for 1 ECU");
@@ -269,7 +289,7 @@ void Testcases::testReqIdentification() // Sending out broadcast for tester pres
 
 // Specification for Diagnostic and Communication Management
 void Testcases::testDiagnosticSessionControl(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode))
         return;
 
     emit toConsole("Testcase: TX Check DiagnosticSessionControl with Default Session");
@@ -277,7 +297,7 @@ void Testcases::testDiagnosticSessionControl(){
 }
 
 void Testcases::testEcuReset(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -286,7 +306,7 @@ void Testcases::testEcuReset(){
 }
 
 void Testcases::testSecurityAccessRequestSEED(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -296,7 +316,7 @@ void Testcases::testSecurityAccessRequestSEED(){
 
 
 void Testcases::testSecurityAccessVerifyKey(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -307,7 +327,7 @@ void Testcases::testSecurityAccessVerifyKey(){
 
 
 void Testcases::testTesterPresent(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode) && this->testmode != MCUISOTP)
         return;
 
     //TBD: Fill Testcase for TX
@@ -318,7 +338,7 @@ void Testcases::testTesterPresent(){
 
 // Specification for Data Transmission
 void Testcases::testReadDataByIdentifier(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -327,7 +347,7 @@ void Testcases::testReadDataByIdentifier(){
 
 }
 void Testcases::testReadMemoryByAddress(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -337,7 +357,7 @@ void Testcases::testReadMemoryByAddress(){
 }
 
 void Testcases::testWriteDataByIdentifier(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode) && this->testmode != MCUISOTP)
         return;
 
     //TBD: Fill Testcase for TX
@@ -348,7 +368,7 @@ void Testcases::testWriteDataByIdentifier(){
 
 // Specification for Upload | Download
 void Testcases::testRequestDownload(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -357,7 +377,7 @@ void Testcases::testRequestDownload(){
 }
 
 void Testcases::testRequestUpload(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -366,7 +386,7 @@ void Testcases::testRequestUpload(){
 }
 
 void Testcases::testTransferData(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -376,7 +396,7 @@ void Testcases::testTransferData(){
 }
 
 void Testcases::testRequestTransferExit(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -386,7 +406,7 @@ void Testcases::testRequestTransferExit(){
 
 // Supported Common Response Codes
 void Testcases::testNegativeResponse(){
-    if(this->testmode != 0 && this->testmode != 2) // Only Seltests and ECU-Tests are transmitting data
+    if(!dataTransmitting(this->testmode))
         return;
 
     //TBD: Fill Testcase for TX
@@ -411,6 +431,14 @@ uint32_t Testcases::createCommonID(uint32_t base_id, uint8_t gui_id, uint32_t ec
 	return send_id;
 }
 
+static inline QString testMessage(bool error, QString reason, QString rec, QString exp) {
+    QString start = ">> Testcase -";
+    if(error)
+        start += " ERROR - ";
+    else
+        start += " PASSED - ";
+    return start + reason + ". Rec=" + rec + "Exp=" + exp + "\n";
+}
 
 uint8_t Testcases::checkEqual(unsigned int recid, const QByteArray &rec, unsigned int checkid, QByteArray &check){
 
@@ -420,39 +448,33 @@ uint8_t Testcases::checkEqual(unsigned int recid, const QByteArray &rec, unsigne
     uint8_t result = 1;
 
     // Checking on IDs
-    if(recid != checkid){
-        out << ">> Testcase - ERROR - ID is different. Rec=" << QString("0x%1").arg(recid, 8, 16, QLatin1Char( '0' )) << "vs Check=" <<QString("0x%1").arg(checkid, 8, 16, QLatin1Char( '0' )) << "\n";
+    if(recid != checkid)
         result = 0;
-    }
+    out << testMessage(recid != checkid, "ID", QString("0x%1").arg(uint32_t(recid), 8, 16, QLatin1Char( '0' )), QString("0x%1").arg(uint32_t(checkid), 8, 16, QLatin1Char( '0' )));
 
     // Extract messages
-
-    if(rec.size() != check.size()){
-        out << ">> Testcase - ERROR - Length is different. Rec=" << rec.size() << "vs Check=" <<check.size()<< "\n";
+    out << testMessage(rec.size() != check.size(), "Message Length", QString::number(rec.size()), QString::number(check.size()));
+    if(rec.size() != check.size()) {
         emit toConsole(*out.string());
         result = 0;
     }
 
     uint8_t error = 0;
-    for(auto i = 0; i < rec.size(); i++){
-        if(rec[i] != check[i]){
-            out << ">> Testcase - ERROR - Content is different at index " << i<<", Received:"<<QString("0x%1").arg(rec[i], 2, 16, QLatin1Char( '0' ))<<" != Check: "<< QString("0x%1").arg(check[i], 2, 16, QLatin1Char( '0' ))<< "\n";
+    for(auto i = 0; i < rec.size(); i++) {
+        if(rec[i] != check[i])
             error=1;
-        }
-        else {
-            out << ">> Testcase - PASSED - Content is same at index " << i<<", Received:"<<QString("0x%1").arg(rec[i], 2, 16, QLatin1Char( '0' ))<<" == Check: "<< QString("0x%1").arg(check[i], 2, 16, QLatin1Char( '0' ))<< "\n";
-        }
+        out << testMessage(rec[i] != check[i], "Content at index " + QString::number(i), QString("0x%1").arg(uint8_t(rec[i]), 2, 16, QLatin1Char( '0' )), QString("0x%1").arg(uint8_t(check[i]), 2, 16, QLatin1Char( '0' )));
     }
-    if(error){
-        emit toConsole(*out.string());
+    if(error) {
+        emit toConsole(*out.string() + "\n");
         result = 0;
     }
 
-    if(result == 1)
-        out << ">> Testcase - Passed!";
+    if(result)
+        out << ">> Testcase - PASSED COMPLETELY!\n";
 
     emit toConsole(*out.string());
-    return result == 1;
+    return result;
 }
 
 //============================================================================

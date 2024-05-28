@@ -201,6 +201,7 @@ uint8_t CAN_Wrapper::txData(uint8_t *data, uint8_t no_bytes) {
 	XLstatus status;
 	XLaccess chanMaskTx = channelMask;
 	unsigned int msgCount = 1;
+    QString bytes_data = "";
 
     qInfo() << "CAN_Wrapper: txData - Sending of " << no_bytes << "bytes is requested";
 
@@ -224,12 +225,12 @@ uint8_t CAN_Wrapper::txData(uint8_t *data, uint8_t no_bytes) {
 	event.tagData.msg.flags = 0;
 	for (unsigned int i = 0; i < no_bytes; i++){
 		event.tagData.msg.data[i] = data[i];
-        //qInfo() << "CAN_Wrapper: Setting byte "<<i<<"to "<<data[i];
+        bytes_data.append(QString("%1").arg(uint8_t(data[i]), 2, 16, QLatin1Char( '0' )) + " ");
 	}
 
 	// Transmit the message
 	status = xlCanTransmit(portHandle, chanMaskTx, &msgCount, &event);
-    qInfo() << "<< CAN_Wrapper: Transmitting "<<no_bytes<<" byte CAN message with CM("<<chanMaskTx<<") - Info: " <<xlGetErrorString(status);
+    qInfo() << "<< CAN_Wrapper: Transmitting "<<no_bytes<<" byte CAN message (Data=" << bytes_data.trimmed().toStdString() << ") with CM("<<chanMaskTx<<") - Info: " <<xlGetErrorString(status);
 
     qInfo("CAN_Wrapper: Sending Signal txDataSentStatus");
     emit txDataSentStatus(xlGetErrorString(status));
@@ -240,6 +241,10 @@ uint8_t CAN_Wrapper::txData(uint8_t *data, uint8_t no_bytes) {
 // Private
 //============================================================================
 
+/**
+ * @brief Opens the Port
+ * @return
+ */
 XLstatus CAN_Wrapper::openPort(){
 
 	XLstatus status;
@@ -254,6 +259,10 @@ XLstatus CAN_Wrapper::openPort(){
 	return status;
 }
 
+/**
+ * @brief Closes the Port
+ * @return
+ */
 XLstatus CAN_Wrapper::closePort(){
 	XLstatus status = XL_SUCCESS;
 
@@ -267,6 +276,11 @@ XLstatus CAN_Wrapper::closePort(){
 	return status;
 }
 
+/**
+ * @brief Sets the Baudrate for the opened channel
+ * @param baudrate to be set
+ * @return
+ */
 XLstatus CAN_Wrapper::setBaudrate(unsigned int baudrate){
 
 	XLstatus status;
@@ -280,6 +294,10 @@ XLstatus CAN_Wrapper::setBaudrate(unsigned int baudrate){
 
 }
 
+/**
+ * @brief Activates the channel with Bus Type CAN
+ * @return
+ */
 XLstatus CAN_Wrapper::actChannels(){
 	XLstatus status;
 
@@ -291,6 +309,10 @@ XLstatus CAN_Wrapper::actChannels(){
 	return status;
 }
 
+/**
+ * @brief Sets the notification for every message
+ * @return
+ */
 XLstatus CAN_Wrapper::setNotification(){
 	XLstatus status;
 
@@ -306,6 +328,9 @@ XLstatus CAN_Wrapper::setNotification(){
 // Public RX Thread
 //============================================================================
 
+/**
+ * @brief Method for RX Thread. Receiving loop of the CAN Wrapper
+ */
 void CAN_Wrapper::doRX(){
 	XLstatus status;
 
@@ -334,12 +359,14 @@ void CAN_Wrapper::doRX(){
                 status = xlReceive(this->portHandle, &msgrx, &event);
 
 				if(status != XL_ERR_QUEUE_IS_EMPTY){
-                    qInfo() << ">> CAN_Wrapper: Received"<<event.tagData.msg.dlc<<"byte CAN message";
-
+                    QString bytes_data = "";
                     QByteArray ba;
                     ba.resize(event.tagData.msg.dlc);
-                    for(int i = 0; i < event.tagData.msg.dlc; i++)
+                    for(int i = 0; i < event.tagData.msg.dlc; i++){
                         ba[i] = event.tagData.msg.data[i];
+                        bytes_data.append(QString("%1").arg(uint8_t(ba[i]), 2, 16, QLatin1Char( '0' )) + " ");
+                    }
+                    qInfo() << ">> CAN_Wrapper: Received"<<event.tagData.msg.dlc<<"byte CAN message with Data: " << bytes_data.trimmed().toStdString();
                     qInfo() << "CAN_Wrapper: Sending Signal rxDataReceived for ID" << QString("0x%1").arg(event.tagData.msg.id, 8, 16, QLatin1Char( '0' ));
                     const unsigned int id = event.tagData.msg.id;
                     emit rxDataReceived(id, ba);
