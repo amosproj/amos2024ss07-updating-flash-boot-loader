@@ -25,16 +25,18 @@
  * IN THE SOFTWARE.
  *********************************************************************************************************************/
 
+#include <bootloader.h>
 #include "Ifx_Types.h"
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
 
-#include "loader.h"
+#include "bootloader.h"
 #include "led_driver.h"
 
 #include "can_driver.h"
 #include "can_init.h"
 #include "isotp.h"
+#include "uds.h"
 
 /*
  * ------------------------------------------------------------------------
@@ -71,9 +73,16 @@ void core0_main(void)
     init_led_driver();
     //show_flash();
 
+    //show_can();
+    //void (*processData)(void*); // TODO correct function
+    //canInitDriver(processData);
+    //canInitDriver(process_can_to_isotp);
+
 
     led_off(LED1);
     led_off(LED2);
+
+
 
     //isotp_init(&ctx);
 
@@ -85,9 +94,6 @@ void core0_main(void)
     uint8_t dataIsoSolo2[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
 
     uint8_t dataIsoMulti[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
-
-    //show_can();
-    //canInitDriver(process_can_to_isotp);
     
     //isoTP* iso = isotp_init();
 
@@ -101,6 +107,7 @@ void core0_main(void)
 
     while(1)
     {
+
 
         waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 1000));
 

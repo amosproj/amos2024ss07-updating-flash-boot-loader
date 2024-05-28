@@ -109,7 +109,7 @@ void canInitDriver(void (*processData)(uint32_t*, IfxCan_DataLengthCode)){
 
     initTXandRXNode();
     // canAcceptAllMessagesFilter();
-
+    processDataFunction = processData;
     
     IfxCan_Can_initMessage(&g_can.rxMsg); /*Init for RX Message*/
     g_can.rxMsg.readFromRxFifo0 = TRUE; /*Read from FIFO0*/
