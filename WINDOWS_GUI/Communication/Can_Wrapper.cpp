@@ -47,9 +47,19 @@ CAN_Wrapper::CAN_Wrapper(unsigned int baudrate /*= 500000*/){
 CAN_Wrapper::~CAN_Wrapper(){
     stopRX();
 
+    bool waitOnStop = true;
+    do{
+        mutex.lock();
+        waitOnStop = _working;
+        mutex.unlock();
+    } while(waitOnStop);
+
 	// Close the port and the driver
 	closePort();
-	xlCloseDriver();
+    xlCloseDriver();
+
+    while(portHandle != XL_INVALID_PORTHANDLE){}
+    qInfo() << "CAN_Wrapper: Destructor of CAN_Wrapper finished";
 }
 
 
@@ -349,11 +359,10 @@ void CAN_Wrapper::doRX(){
             if(abort)
                 break;
 
-
             WaitForSingleObject(this->msgEvent, 10);
 
 			status = XL_SUCCESS;
-			while(!status){
+            while(!status && this->_working){
 
 				msgrx = RECEIVE_EVENT_SIZE;
                 status = xlReceive(this->portHandle, &msgrx, &event);
@@ -378,13 +387,13 @@ void CAN_Wrapper::doRX(){
         qInfo("CAN_Wrapper: Could not start RX since Porthandle is missing. Init was not successfull");
     }
 
+    qDebug("CAN_Wrapper: RX Thread stopped");
+    emit rxThreadFinished();
+
     // Set _working to false, meaning the process can't be aborted anymore.
     mutex.lock();
     _working = false;
     mutex.unlock();
-
-    qDebug("CAN_Wrapper: RX Thread stopped");
-    emit rxThreadFinished();
 }
 
 //============================================================================

@@ -47,7 +47,21 @@ Communication::Communication(){
 
 Communication::~Communication() {
     virtualDriver->stopRX();
+    threadVD->wait();
+
     canDriver->stopRX();
+    threadCAN->wait();
+
+    // Disconnect everything
+    disconnect(virtualDriver, nullptr, nullptr, nullptr);
+    disconnect(threadVD, nullptr, nullptr, nullptr);
+    disconnect(canDriver, nullptr, nullptr, nullptr);
+    disconnect(threadCAN, nullptr, nullptr, nullptr);
+
+    delete virtualDriver;
+    delete canDriver;
+
+    qInfo() << "Communication: Destructor finished";
 }
 
 //////////////////////////////////////////////////////////////////////////////
