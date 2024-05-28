@@ -59,12 +59,12 @@ uint8_t CommInterface::txData(uint8_t *data, uint8_t no_bytes){
  * @brief Method that is called by the startRX Thread. Here comes the RX receiving loop. Need to be overwritten in the inheriting class.
  */
 void CommInterface::doRX(){
+    qWarning("No usage of derived CommInterface doRX. Stopped RX Thread\n");
+    emit rxThreadFinished();
+
     mutex.lock();
     _working = false;
     mutex.unlock();
-
-    qWarning("No usage of derived CommInterface doRX. Stopped RX Thread\n");
-    emit rxThreadFinished();
 }
 
 //============================================================================

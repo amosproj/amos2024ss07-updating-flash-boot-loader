@@ -25,16 +25,18 @@
  * IN THE SOFTWARE.
  *********************************************************************************************************************/
 
+#include <bootloader.h>
 #include "Ifx_Types.h"
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
 
-#include "loader.h"
+#include "bootloader.h"
 #include "led_driver.h"
 
 #include "can_driver.h"
 #include "can_init.h"
 #include "isotp.h"
+#include "uds.h"
 
 /*
  * ------------------------------------------------------------------------
@@ -71,10 +73,16 @@ void core0_main(void)
     init_led_driver();
     //show_flash();
 
-    canInitDriver();
+    //show_can();
+    //void (*processData)(void*); // TODO correct function
+    //canInitDriver(processData);
+    //canInitDriver(process_can_to_isotp);
+
 
     led_off(LED1);
     led_off(LED2);
+
+
 
     //isotp_init(&ctx);
 
@@ -86,23 +94,51 @@ void core0_main(void)
     uint8_t dataIsoSolo2[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
 
     uint8_t dataIsoMulti[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
-
-    //show_can();
-    init_led_driver();
-    canInitDriver();
     
+    //isoTP* iso = isotp_init();
+
+    //iso->max_len_per_frame = 8;
+
+    //uint8_t* iso_message;
+
+    isoTP* iso = isotp_init();
+
+    uint8_t* iso_message;
+
     while(1)
     {
+
 
         waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 1000));
 
         toggle_led_activity(LED1);
 
-        isoTP* iso = isotp_init();
+
+
+
 
         iso->max_len_per_frame = 8;
 
         isotp_send(iso, dataUDS, sizeof(dataUDS));
 
+        int16_t total_length = 0;
+
+        iso_message = isotp_rcv(&total_length);
+
+        if(total_length != 0){
+
+            printf("length: %d \n", total_length);
+
+            for(int i = 0; i < total_length; i++){
+
+                printf("iso_message[%d]: %d\n", i, iso_message[i]);
+            }
+
+            printf("\n");
+        }
+
+
     }
+
+    close_isoTP(iso);
 }

@@ -23,7 +23,16 @@ VirtualDriver::VirtualDriver() {
 }
 
 VirtualDriver::~VirtualDriver() {
+    stopRX();
 
+    bool waitOnStop = true;
+    do{
+        mutex.lock();
+        waitOnStop = _working;
+        mutex.unlock();
+    } while(waitOnStop);
+
+    qInfo() << "Virtual Driver: Destructor finished";
 }
 
 void VirtualDriver::setID(uint32_t id){
