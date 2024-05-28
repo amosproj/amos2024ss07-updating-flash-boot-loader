@@ -213,6 +213,8 @@ uint8_t *tx_flow_control_frame(uint32_t *data_out_len, uint8_t flag, uint8_t blo
 
 //TODO: add rx_is_flowcontrol_frame()
 //      add rx_flowcontrol_frame()
+//      maybe add rx_is_single_frame()
+//      maybe add rx_is_first_frame()
 
 uint8_t rx_is_starting_frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_len_per_frame){
     uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
@@ -299,7 +301,7 @@ uint8_t *rx_starting_frame(uint32_t *data_out_len, uint32_t *has_next, uint8_t m
     }
     // Other, e.g. CAN FD
     else {
-        printf("TODO: Not yet implemented!");
+        printf("TODO: Not yet implemented!\n");
         *data_out_len = 0;
         *has_next = 0;
         return (uint8_t*)calloc(0, sizeof(uint8_t));

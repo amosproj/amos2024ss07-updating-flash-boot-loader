@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 
-#include "testcases.hpp"
+#include "testcasecontroller.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -20,17 +20,13 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_StartSelfTest_clicked();
+    void on_startTest_clicked();
 
-    void on_StartECUTest_clicked();
-
-    void on_StartUDSListening_clicked();
-
-    void on_ECUISOTPTx_clicked();
+    void on_testSelectionBox_currentTextChanged(const QString &arg1);
 
 private:
     Ui::MainWindow *ui;
-    Testcases *tests;
+    Testcasecontroller *tests;
 };
 
 #endif // MAINWINDOW_H

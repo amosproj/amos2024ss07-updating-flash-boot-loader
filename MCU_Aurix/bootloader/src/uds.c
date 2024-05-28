@@ -97,7 +97,7 @@ void uds_diagnostic_session_control(void){
     uint8_t *msg = _create_diagnostic_session_control(&len, RESPONSE, session);
     isotp_send(iso, msg, len);
     free(msg);
-    isotp_free(iso);
+    close_isoTP(iso);
 }
 
 void uds_ecu_reset(uint8_t reset_type){
@@ -107,7 +107,7 @@ void uds_ecu_reset(uint8_t reset_type){
     uint8_t *msg = _create_ecu_reset(&len, 1, reset_type);
     isotp_send(iso, msg, len);
     free(msg);
-    isotp_free(iso);
+    close_isoTP(iso);
 }
 
 void uds_read_data_by_identifier(uint16_t did){
@@ -127,7 +127,7 @@ void uds_read_data_by_identifier(uint16_t did){
     iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
     isotp_send(iso, response_msg, response_len);
     free(response_msg);
-    isotp_free(iso);
+    close_isoTP(iso);
     free(data);
 }
 
@@ -138,7 +138,7 @@ void uds_security_access(uint8_t request_type, uint8_t *key, uint8_t key_len){
     uint8_t *msg = _create_security_access(&len, RESPONSE, request_type, key, key_len);
     isotp_send(iso, msg, len);
     free(msg);
-    isotp_free(iso);
+    close_isoTP(iso);
 }
 
 void uds_neg_response(uint8_t reg_sid ,uint8_t neg_code){
@@ -149,7 +149,7 @@ void uds_neg_response(uint8_t reg_sid ,uint8_t neg_code){
     uint8_t *msg = _create_neg_response(&len, reg_sid, neg_code);
     isotp_send(iso, msg, len);
     free(msg);
-    isotp_free(iso);
+    close_isoTP(iso);
 }
 
 void uds_tester_present(void){
@@ -159,7 +159,7 @@ void uds_tester_present(void){
     uint8_t *msg = _create_tester_present(&len, RESPONSE, FBL_TESTER_PRES_WITH_RESPONSE);
     isotp_send(iso, msg, len);
     free(msg);
-    isotp_free(iso);
+    close_isoTP(iso);
 }
 
 void uds_read_memory_by_address(uint32_t address, uint16_t noBytesToRead){
@@ -178,7 +178,7 @@ void uds_read_memory_by_address(uint32_t address, uint16_t noBytesToRead){
     uint8_t *msg = _create_read_memory_by_address(&len, RESPONSE, address, 0, data, noBytesToRead);
     isotp_send(iso, msg, len);
     free(msg);
-    isotp_free(iso);
+    close_isoTP(iso);
 }
 
 void uds_write_data_by_identifier(uint16_t did, uint8_t* data, uint8_t data_len){
@@ -195,7 +195,7 @@ void uds_write_data_by_identifier(uint16_t did, uint8_t* data, uint8_t data_len)
     uint8_t *msg = _create_write_data_by_ident(&len, RESPONSE, did, 0, 0);
     isotp_send(iso, msg, len);
     free(msg);
-    isotp_free(iso);
+    close_isoTP(iso);
 }
 
 void uds_request_download(void){

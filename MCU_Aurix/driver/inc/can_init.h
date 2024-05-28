@@ -8,6 +8,8 @@
 // Copyright   : MIT
 // Description : Header for CAN Driver with AURIX Includes
 //============================================================================
+#ifndef CAN_INIT_H
+#define CAN_INIT_H
 
 #include "Ifx_types.h"
 #include "IfxCan_Can.h"
@@ -52,4 +54,6 @@ typedef struct msg
     uint32 Data[MAXIMUM_CAN_DATA_PAYLOAD];
 }msg;
 
-void canInitDriver(void (*processData)(void*));
+void canInitDriver(void (*processData)(uint32_t*, IfxCan_DataLengthCode));
+
+#endif /* CAN_INIT_H */

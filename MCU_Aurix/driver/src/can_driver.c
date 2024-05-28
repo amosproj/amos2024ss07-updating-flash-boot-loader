@@ -14,7 +14,7 @@
 #include "led_driver.h"
 #include "led_driver_TC375_LK.h"
 
-void (*processDataFunction)(void*);
+void (*processDataFunction)(uint32_t*, IfxCan_DataLengthCode);
 
 //TODO: Implement the processDataFunction we want to use
 
@@ -45,7 +45,7 @@ void canIsrTxHandler(void){
 void canIsrRxFifo0Handler(){
         IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_rxFifo0NewMessage); /*Clear Message Stored Flag*/
         IfxCan_Can_readMessage(&g_can.canTXandRXNode, &g_can.rxMsg, (uint32*)g_can.rxData);
-        processDataFunction(g_can.rxData); //has to be casted in ISO-Tp
+        processDataFunction(g_can.rxData, g_can.rxMsg.dataLengthCode); //has to be casted in ISO-Tp
 
 }
 
@@ -103,7 +103,7 @@ void initTXandRXNode(void){
 /**
  * Initialize CAN Module and Node
 */
-void canInitDriver(void (*processData)(void*)){
+void canInitDriver(void (*processData)(uint32_t*, IfxCan_DataLengthCode)){
     IfxCan_Can_initModuleConfig(&g_can.canConfig, &MODULE_CAN0); /*LoadsDefault Config*/
     IfxCan_Can_initModule(&g_can.canModule, &g_can.canConfig); /*Init with default config*/
 
@@ -113,6 +113,8 @@ void canInitDriver(void (*processData)(void*)){
     
     IfxCan_Can_initMessage(&g_can.rxMsg); /*Init for RX Message*/
     g_can.rxMsg.readFromRxFifo0 = TRUE; /*Read from FIFO0*/
+
+    processDataFunction = processData;
 }
 
 /**
