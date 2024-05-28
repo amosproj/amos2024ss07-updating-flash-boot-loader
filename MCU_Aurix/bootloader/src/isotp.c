@@ -5,9 +5,186 @@
 // Copyright   : MIT
 // Description : ISO-TP stack
 //============================================================================
+//TODO: Move isoTPRX buffer as global variable~LEON
 #include "isotp.h"
 
 isoTP_RX* iso_RX;
+
+
+
+/*
+ * @brief                       This function initializes the isoTP layer.
+ *
+ * @return                      Returns a isoTP struct used in the sending logic.
+ */
+isoTP* isotp_init(){
+
+    canInitDriver(process_can_to_isotp);
+
+    isoTP* iso = malloc(sizeof(isoTP));
+    if (iso == NULL){
+
+        return NULL;
+    }
+
+    // Do not change these;
+    iso->data_out_len = 0;
+    iso->has_next = 0;
+    iso->frame_idx = 0;
+    iso->data_out_idx_ctr = 0;
+
+    iso->flow_flag = 0;          // Flow control flags
+    iso->bs = 0;                 // Block Size
+    iso->stmin = 0;              // Separation Time Minimum
+    iso->timer = 0;              // Timer for separation time
+
+
+    //Depending to the protcol change this
+    iso->max_len_per_frame = 0;
+
+
+    isoTP_RX* isotp_RX = malloc(sizeof(isoTP_RX));
+    if (isotp_RX == NULL){
+
+        free(iso);
+
+        return NULL;
+    }
+
+    // TODO: 2000 bytes is too big to allocate, find out how much we can allocate
+    isotp_RX->data = malloc(500 * sizeof(uint8_t));
+    if (isotp_RX->data == NULL){
+
+        free(iso);
+        free(isotp_RX);
+
+        return NULL;
+    }
+
+    isotp_RX->write_ptr = isotp_RX->data;
+
+    iso_RX = isotp_RX;
+
+    return iso;
+}
+
+/*
+ * @brief                       This function sends data from the isoTP layer.
+ *
+ * @param iso                   This is a pointer the isoTP struct, which is used for sending.
+ *                              Please edit the value iso->max_len_per_frame depending on used transmission protocol.
+ *
+ * @param data                  Pointer to the data.
+ *
+ * @param data_in_len           Length of the data to be sent.
+ *
+ */
+//TODO: How will we assign ID's for canTransmitMessage?
+void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len){
+
+    uint8_t* first_frame = tx_starting_frame(&iso->data_out_len,
+                                                &iso->has_next,
+                                                iso->max_len_per_frame,
+                                                data,
+                                                data_in_len,
+                                                &iso->data_out_idx_ctr);
+
+    if (first_frame == NULL) {
+        // error handling
+
+        return;
+    }
+
+    canTransmitMessage(0x123, first_frame, iso->data_out_len);
+    free(first_frame);
+
+    //implement flow control
+
+    // Send consecutive frames if necessary
+    while (iso->has_next) {
+
+        // Wait for flow control if needed
+        while (iso->flow_flag == 0x01) {
+
+            waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 1)); // Wait 1 ms
+        }
+
+
+        uint8_t* consecutive_frame = tx_consecutive_frame(&iso->data_out_len,
+                                                            &iso->has_next,
+                                                            iso->max_len_per_frame,
+                                                            data,
+                                                            data_in_len,
+                                                            &iso->data_out_idx_ctr,
+                                                            &iso->frame_idx);
+
+        if (consecutive_frame == NULL) {
+            // error handling
+
+            return;
+        }
+
+        canTransmitMessage(0x123, consecutive_frame, iso->data_out_len);
+        free(consecutive_frame);
+
+        // Handle block size (BS)
+        if (iso->bs > 0 && iso->frame_idx % iso->bs == 0) {
+            iso->flow_flag = 0x01; // Wait for flow control
+        }
+
+        //TODO: cleanup
+        // Handle separation time (STmin)
+        if (iso->stmin > 0) {
+            waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, iso->stmin)); // Wait STmin milliseconds
+        }
+    }
+}
+
+/*
+ * @brief                       This function returns the received isoTP message if it is ready.
+ *
+ * @param total_length          This is a pointer to the total length of the isoTP message.
+ *
+ * @return                      Returns the isoTP message, else NULL.
+ *
+ *                              Will also set total_length in special cases:
+ *                              -1: ERROR.
+ *                              0:  Buffer is not ready to be read.
+ *
+ *
+ */
+//TODO: Add flow control logic
+uint8_t* isotp_rcv(int16_t* total_length){
+    //Caller has to free the returned message
+
+
+    // Error: iso_RX is not properly initialized
+    if (iso_RX == NULL || iso_RX->data == NULL || iso_RX->write_ptr == NULL) {
+
+        *total_length = -1;
+
+        return NULL;
+    }
+
+    // isoTP message still not ready to be read
+    if (iso_RX->ready_to_read == 0){
+
+        *total_length = 0;
+
+        return NULL;
+    }
+
+    // Get message size of whole isoTP message
+    *total_length = iso_RX->write_ptr - iso_RX->data;
+
+    // Create and write buffer for the specific isoTP message received.
+    uint8_t* iso_message = calloc(*total_length, sizeof(uint8_t));
+    memcpy(iso_message, iso_RX->data, *total_length);
+
+    rx_reset_isotp_buffer();
+
+    return iso_message;
+}
 
 /*
  * @brief                       This function extracts the isoTP message from multiple CAN messages.
@@ -78,169 +255,6 @@ void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc){
     }
 
     return;
-}
-
-/*
- * @brief                       This function initializes the isoTP layer.
- *
- * @return                      Returns a isoTP struct used in the sending logic.
- */
-isoTP* isotp_init(){
-
-    canInitDriver(process_can_to_isotp);
-
-    isoTP* iso = malloc(sizeof(isoTP));
-    if (iso == NULL){
-
-        return NULL;
-    }
-
-    // Do not change these;
-    iso->data_out_len = 0;
-    iso->has_next = 0;
-    iso->frame_idx = 0;
-    iso->data_out_idx_ctr = 0;
-
-    iso->flow_flag = 0;          // Flow control flags
-    iso->bs = 0;                 // Block Size
-    iso->stmin = 0;              // Separation Time Minimum
-    iso->timer = 0;              // Timer for separation time
-
-
-    //Depending to the protcol change this
-    iso->max_len_per_frame = 0;
-
-
-    isoTP_RX* isotp_RX = malloc(sizeof(isoTP_RX));
-    if (isotp_RX == NULL){
-
-        free(iso);
-
-        return NULL;
-    }
-
-    // TODO: 2000 bytes is too big to allocate, find out how much we can allocate
-    isotp_RX->data = malloc(500 * sizeof(uint8_t));
-    if (isotp_RX->data == NULL){
-
-        free(iso);
-        free(isotp_RX);
-
-        return NULL;
-    }
-
-    isotp_RX->write_ptr = isotp_RX->data;
-
-    iso_RX = isotp_RX;
-
-    return iso;
-}
-
-/*
- * @brief                       This function sends data from the isoTP layer.
- *
- * @param iso                   This is a pointer the isoTP struct, which is used for sending.
- *                              Please edit the value iso->max_len_per_frame depending on used transmission protocol.
- *
- * @param data                  Pointer to the data.
- *
- * @param data_in_len           Length of the data to be sent.
- *
- */
-void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len){
-
-    uint8_t* first_frame = tx_starting_frame(&iso->data_out_len, &iso->has_next, iso->max_len_per_frame, data, data_in_len, &iso->data_out_idx_ctr);
-
-    if (first_frame == NULL) {
-        // error handling
-
-        return;
-    }
-
-    canTransmitMessage(0x123, first_frame, iso->data_out_len);
-    free(first_frame);
-
-    //implement flow control
-
-    // Send consecutive frames if necessary
-    while (iso->has_next) {
-
-        // Wait for flow control if needed
-        while (iso->flow_flag == 0x01) {
-
-            waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 1)); // Wait 1 ms
-        }
-
-
-        uint8_t* consecutive_frame = tx_consecutive_frame(&iso->data_out_len, &iso->has_next, iso->max_len_per_frame, data, data_in_len, &iso->data_out_idx_ctr, &iso->frame_idx);
-
-        if (consecutive_frame == NULL) {
-            // error handling
-
-            return;
-        }
-
-        canTransmitMessage(0x123, consecutive_frame, iso->data_out_len);
-        free(consecutive_frame);
-
-        // Handle block size (BS)
-        if (iso->bs > 0 && iso->frame_idx % iso->bs == 0) {
-            iso->flow_flag = 0x01; // Wait for flow control
-        }
-
-        //TODO: cleanup
-        // Handle separation time (STmin)
-        if (iso->stmin > 0) {
-            waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, iso->stmin)); // Wait STmin milliseconds
-        }
-    }
-}
-
-/*
- * @brief                       This function returns the received isoTP message if it is ready.
- *
- * @param total_length          This is a pointer to the total length of the isoTP message.
- *
- * @return                      Returns the isoTP message, else NULL.
- *
- *                              Will also set total_length in special cases:
- *                              -1: ERROR.
- *                              0:  Buffer is not ready to be read.
- *
- *
- */
-//TODO: Add flow control logic
-uint8_t* isotp_rcv(int16_t* total_length){
-    //Caller has to free the returned message
-
-
-    // Error: iso_RX is not properly initialized
-    if (iso_RX == NULL || iso_RX->data == NULL || iso_RX->write_ptr == NULL) {
-
-        *total_length = -1;
-
-        return NULL;
-    }
-
-    // isoTP message still not ready to be read
-    if (iso_RX->ready_to_read == 0){
-
-        *total_length = 0;
-
-        return NULL;
-    }
-
-    // Get message size of whole isoTP message
-    *total_length = iso_RX->write_ptr - iso_RX->data;
-
-    // Create and write buffer for the specific isoTP message received.
-    uint8_t* iso_message = calloc(*total_length, sizeof(uint8_t));
-    memcpy(iso_message, iso_RX->data, *total_length);
-
-    rx_reset_isotp_buffer();
-
-
-    return iso_message;
 }
 
 

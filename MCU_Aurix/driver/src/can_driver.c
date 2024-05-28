@@ -54,8 +54,20 @@ void canAcceptAllMessagesFilter(void){
     g_can.canFilter.number = 0;
     g_can.canFilter.elementConfiguration = IfxCan_FilterElementConfiguration_storeInRxFifo0;
     g_can.canFilter.type = IfxCan_FilterType_classic;
-    g_can.canFilter.id1 = 0x0FF;
-    g_can.canFilter.id2 = 0x700;
+
+
+    //TESTING
+
+    // Original lines
+    //g_can.canFilter.id1 = 0x0FF;
+    //g_can.canFilter.id2 = 0x700;
+
+    // Testing lines
+    g_can.canFilter.id1 = 0xFFFFFFFF;
+    g_can.canFilter.id2 = 0xFFFFFFFF;
+
+    //TESTING
+
     //g_can.canFilter.rxBufferOffset = IfxCan_RxBufferId_0;
     IfxCan_Can_setStandardFilter(&g_can.canTXandRXNode, &g_can.canFilter);
 }
@@ -80,7 +92,18 @@ void initTXandRXNode(void){
     g_can.canNodeConfig.filterConfig.standardListSize = 0;
     g_can.canNodeConfig.filterConfig.extendedListSize = 0;
     g_can.canNodeConfig.filterConfig.standardFilterForNonMatchingFrames = IfxCan_NonMatchingFrame_acceptToRxFifo0;
-    g_can.canNodeConfig.filterConfig.extendedFilterForNonMatchingFrames = IfxCan_NonMatchingFrame_reject;
+
+    //TESTING
+
+    // Original Line
+    //g_can.canNodeConfig.filterConfig.extendedFilterForNonMatchingFrames = IfxCan_NonMatchingFrame_reject;
+
+    //Testing line
+    g_can.canNodeConfig.filterConfig.extendedFilterForNonMatchingFrames = IfxCan_NonMatchingFrame_acceptToRxFifo0;
+
+    //TESTING
+
+
     g_can.canNodeConfig.filterConfig.rejectRemoteFramesWithStandardId = TRUE;
     g_can.canNodeConfig.filterConfig.rejectRemoteFramesWithExtendedId = TRUE;
 
@@ -109,7 +132,7 @@ void canInitDriver(void (*processData)(uint32_t*, IfxCan_DataLengthCode)){
 
     initTXandRXNode();
     // canAcceptAllMessagesFilter();
-    processDataFunction = processData;
+    //processDataFunction = processData;
     
     IfxCan_Can_initMessage(&g_can.rxMsg); /*Init for RX Message*/
     g_can.rxMsg.readFromRxFifo0 = TRUE; /*Read from FIFO0*/

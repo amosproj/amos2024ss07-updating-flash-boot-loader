@@ -103,25 +103,27 @@ void core0_main(void)
 
     isoTP* iso = isotp_init();
 
+    iso->max_len_per_frame = 8;
+
     uint8_t* iso_message;
+
+    int16_t total_length = 0;
 
     while(1)
     {
 
 
-        waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 1000));
+        //waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 1000));
 
-        toggle_led_activity(LED1);
+        //toggle_led_activity(LED1);
+
+        //isotp_send(iso, dataUDS, sizeof(dataUDS));
 
 
 
+        total_length = 0;
 
-
-        iso->max_len_per_frame = 8;
-
-        isotp_send(iso, dataUDS, sizeof(dataUDS));
-
-        int16_t total_length = 0;
+        //ECHO for CAN WRAPPER
 
         iso_message = isotp_rcv(&total_length);
 
@@ -135,7 +137,11 @@ void core0_main(void)
             }
 
             printf("\n");
+
+            isotp_send(iso, iso_message, total_length);
         }
+
+        //ECHO for CAN WRAPPER
 
 
     }
