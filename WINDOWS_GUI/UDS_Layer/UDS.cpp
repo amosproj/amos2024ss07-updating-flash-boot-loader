@@ -63,7 +63,7 @@ void UDS::setSyncMode(bool synchronized){
 
 static inline const bool rxMsgValid(const bool neg_resp, const bool eq, const uint32_t rx_no_bytes, const uint32_t no_bytes,  const uint8_t* const rx_exp_data,const uint8_t* const data, const size_t n) {
     bool ans = !neg_resp;
-    ans &=  eq ? rx_no_bytes == no_bytes : rx_no_bytes == no_bytes;
+    ans &= eq ? rx_no_bytes == no_bytes : rx_no_bytes < no_bytes;
     for(size_t i = 1; i < n + 1; ++i) 
         ans &= rx_exp_data[i] == data[i];
     return ans;

@@ -150,48 +150,71 @@ void Communication::setID(uint32_t id){
  * @param data Data to be transmitted
  * @param no_bytes Number of bytes of the given data
  */
-void Communication::txData(uint8_t *data, uint32_t no_bytes){
-    int send_len;
-    int has_next;
-    uint8_t max_len_per_frame = MAX_FRAME_LEN_CAN; // Also use CAN Message Length
-    uint32_t data_ptr = 0;
-    uint8_t idx = 0;
-    uint8_t *send_msg = tx_starting_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr);
-    // Wrap data into QByteArray for signaling
-    QByteArray qbdata;
-    qbdata.resize(send_len);
-    for(int i=0; i < qbdata.size(); i++)
-        qbdata[i] = send_msg[i];
-    // Free the allocated memory of msg
-    free(send_msg);
-
+void Communication::txData(uint8_t *data, uint32_t no_bytes) {
     if(curr_interface_type == VIRTUAL_DRIVER) {
+        int send_len;
+        int has_next;
+        uint8_t max_len_per_frame = MAX_FRAME_LEN_CAN; // Also use CAN Message Length
+        uint32_t data_ptr = 0;
+        uint8_t idx = 0;
+        uint8_t *send_msg = tx_starting_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr);
+        // Wrap data into QByteArray for signaling
+        QByteArray qbdata;
+        qbdata.resize(send_len);
+        for(int i=0; i < qbdata.size(); i++)
+            qbdata[i] = send_msg[i];
+        // Free the allocated memory of msg
+        free(send_msg);
         qInfo("Communication TX: Sending out Data via Virtual Driver interface - Started!");
         qInfo("Communication TX: Sending Signal txVirtualDataSignal with payload (Single/First Frame)");
         emit txVirtualDataSignal(qbdata);
+        if (has_next) { // Check in flow control and continue sending
+            // TODO: Wait on flow control...
+
+            while(has_next) {
+                send_msg = tx_consecutive_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr, &idx);
+                // Wrap data into QByteArray for signaling
+                qbdata.clear();
+                qbdata.resize(send_len);
+                for(int i=0; i < qbdata.size(); i++)
+                    qbdata[i] = send_msg[i];
+                // Free the allocated memory of msg
+                free(send_msg);
+
+                qInfo("Communication TX: Sending Signal txVirtualDataSignal with payload (Consecutive Frame)");
+                emit txVirtualDataSignal(qbdata);
+            }
+        }
     } else if(curr_interface_type == CAN_DRIVER) {
+        int send_len;
+        int has_next;
+        uint8_t max_len_per_frame = MAX_FRAME_LEN_CAN; // Also use CAN Message Length
+        uint32_t data_ptr = 0;
+        uint8_t idx = 0;
+        uint8_t *send_msg = tx_starting_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr);
+        // Wrap data into QByteArray for signaling
+        QByteArray qbdata;
+        qbdata.resize(send_len);
+        for(int i=0; i < qbdata.size(); i++)
+            qbdata[i] = send_msg[i];
+        // Free the allocated memory of msg
+        free(send_msg);
         qInfo("Communication TX: Sending out Data via CAN Driver - Started!");
         qInfo("Communication TX: Sending Signal txCANDataSignal with payload (Single/First Frame)");
         emit txCANDataSignal(qbdata);
-    }
+        if (has_next) { // Check in flow control and continue sending
+            // TODO: Wait on flow control...
 
-    if (has_next){ // Check in flow control and continue sending
-    // TODO: Wait on flow control...
+            while(has_next) {
+                send_msg = tx_consecutive_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr, &idx);
+                // Wrap data into QByteArray for signaling
+                qbdata.clear();
+                qbdata.resize(send_len);
+                for(int i=0; i < qbdata.size(); i++)
+                    qbdata[i] = send_msg[i];
+                // Free the allocated memory of msg
+                free(send_msg);
 
-        while(has_next){
-            send_msg = tx_consecutive_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr, &idx);
-            // Wrap data into QByteArray for signaling
-            qbdata.clear();
-            qbdata.resize(send_len);
-            for(int i=0; i < qbdata.size(); i++)
-                qbdata[i] = send_msg[i];
-            // Free the allocated memory of msg
-            free(send_msg);
-
-            if(curr_interface_type == VIRTUAL_DRIVER) {
-                qInfo("Communication TX: Sending Signal txVirtualDataSignal with payload (Consecutive Frame)");
-                emit txVirtualDataSignal(qbdata);
-            } else if(curr_interface_type == VIRTUAL_DRIVER) {
                 qInfo("Communication TX: Sending Signal txCANDataSignal with payload (Consecutive Frame)");
                 emit txCANDataSignal(qbdata);
             }
