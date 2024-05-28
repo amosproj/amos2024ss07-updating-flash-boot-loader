@@ -60,6 +60,15 @@ void UDS::setSyncMode(bool synchronized){
  * @param data Received Data of the Sender
  * @param no_bytes Received number of bytes of the data
  */
+
+static inline const bool rxMsgValid(const bool neg_resp, const bool eq, const uint32_t rx_no_bytes, const uint32_t no_bytes,  const uint8_t* const rx_exp_data,const uint8_t* const data, const size_t n) {
+    bool ans = !neg_resp;
+    ans &=  eq ? rx_no_bytes == no_bytes : rx_no_bytes == no_bytes;
+    for(size_t i = 1; i < n + 1; ++i) 
+        ans &= rx_exp_data[i] == data[i];
+    return ans;
+}
+
 void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
 
     // Initialize the Msg flags
@@ -108,33 +117,25 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
             out << info + "UDS Service: Diagnostic Session Control\n";
 
             // Check on the relevant message - Session is correct
-            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1]){
-                rx_msg_valid = true;
-            }
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 1);
             break;
 
         case FBL_ECU_RESET:
             out << info + "UDS Service: ECU Reset\n";
             // Check on the relevant message - ECU Reset Type is correct
-            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1]){
-                rx_msg_valid = true;
-            }
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 1);
             break;
 
         case FBL_SECURITY_ACCESS:
             out << info + "UDS Service: Security Access\n";
             // Check on the relevant message - Request Type is correct
-            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1]){
-                rx_msg_valid = true;
-            }
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 1);
             break;
 
         case FBL_TESTER_PRESENT:
             out << info + "UDS Service: Tester Present\n";
             // Check on the relevant message - Response Type is correct
-            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1]){
-                rx_msg_valid = true;
-            }
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 1);
             break;
 
         case FBL_READ_DATA_BY_IDENTIFIER:
@@ -144,49 +145,35 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
                 out << "Data: " << QString::fromLocal8Bit(&data[3]) << "\n";
 
             // Check on the relevant message - Data is included, DID is correct
-            if(!neg_resp && rx_no_bytes < no_bytes && rx_exp_data[1] == data[1] && rx_exp_data[2] == data[2]){
-                rx_msg_valid = true;
-            }
+            rx_msg_valid = rxMsgValid(neg_resp, false, rx_no_bytes, no_bytes, rx_exp_data, data, 2);
             break;
 
         case FBL_READ_MEMORY_BY_ADDRESS:
             out << info + "UDS Service: Read Memory By Address\n";
 
             // Check on the relevant message - Data is included, Adress is correct
-            if(!neg_resp && rx_no_bytes < no_bytes && rx_exp_data[1] == data[1] && rx_exp_data[2] == data[2] && rx_exp_data[3] == data[3] && rx_exp_data[4] == data[4]){
-                rx_msg_valid = true;
-            }
-
+            rx_msg_valid = rxMsgValid(neg_resp, false, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
             break;
 
         case FBL_WRITE_DATA_BY_IDENTIFIER:
             out << info + "UDS Service: Write Data By Identifier\n";
 
             // Check on the relevant message - DID is correct
-            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1] && rx_exp_data[2] == data[2]){
-                rx_msg_valid = true;
-            }
-
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 2);
             break;
 
         case FBL_REQUEST_DOWNLOAD:
             out << info + "UDS Service: Request Download\n";
 
             // Check on the relevant message - Adress is correct
-            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1] && rx_exp_data[2] == data[2] && rx_exp_data[3] == data[3] && rx_exp_data[4] == data[4]){
-                rx_msg_valid = true;
-            }
-
+            rx_msg_valid = rxMsgValid(neg_resp, false, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
             break;
 
         case FBL_REQUEST_UPLOAD:
             out << info + "UDS Service: Request Upload\n";
 
             // Check on the relevant message - Adress is correct
-            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1] && rx_exp_data[2] == data[2] && rx_exp_data[3] == data[3] && rx_exp_data[4] == data[4]){
-                rx_msg_valid = true;
-            }
-
+            rx_msg_valid = rxMsgValid(neg_resp, false, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
             break;
 
         case FBL_TRANSFER_DATA:
@@ -194,15 +181,15 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
 
             // Info: There is no response for it
             rx_msg_valid = true;
-
             break;
+
         case FBL_REQUEST_TRANSFER_EXIT:
             out << info + "UDS Service: Request Transfer Exit\n";
 
             // Info: Response includes the end address. There is no content check here
             rx_msg_valid = true;
-
             break;
+
         default:
             out << info << "UDS Service: ERROR UNRECOGNIZED SID\n";
             break;
@@ -211,7 +198,7 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
     emit toConsole(*out.string());
 
     // Only release
-    if (rx_msg_valid){
+    if (rx_msg_valid) {
         // Release the communication flag
         comm_mutex.lock();
         _comm = false;
