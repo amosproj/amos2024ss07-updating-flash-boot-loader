@@ -29,39 +29,47 @@
 class Communication : public QObject{
     Q_OBJECT
 
-private:
-    QThread *threadVD;
-    VirtualDriver* virtualDriver;
-    QThread *threadCAN;
-    CAN_Wrapper* canDriver;
+public:
+    enum INTERFACE {VIRTUAL_DRIVER = COMM_INTERFACE_VIRTUAL, CAN_DRIVER = COMM_INTERFACE_CAN};
 
-	uint8_t curr_interface_type;
+private:
+    QThread *threadVD;                          // Thread for the Virtual Driver
+    VirtualDriver* virtualDriver;               // Instance of the Virtual Driver
+    QThread *threadCAN;                         // Thread for the CAN Driver
+    CAN_Wrapper* canDriver;                     // Instance of the CAN Driver
+
+    INTERFACE curr_interface_type;
 
     // Used for consecutive frames
-    uint32_t multiframe_curr_id;
-    uint8_t *multiframe_curr_uds_msg;
-    int multiframe_curr_uds_msg_len;
-    uint32_t multiframe_curr_uds_msg_idx;
-    int multiframe_next_msg_available;
-    uint8_t multiframe_still_receiving;
+    uint32_t multiframe_curr_id;                // ECU ID of the currently processed Multiframe
+    uint8_t *multiframe_curr_uds_msg;           // Pointer to currently process UDS Multiframe message
+    int multiframe_curr_uds_msg_len;            // Length of the UDS Multiframe message
+    uint32_t multiframe_curr_uds_msg_idx;       // UDS Multiframe message index of the data, starting idx for writing to multiframe_curr_uds_msg
+    int multiframe_next_msg_available;          // Indicates if next frame is available
+    uint8_t multiframe_still_receiving;         // Indicates that Multiframe receiving is still ongoing, used as Trigger for final Frame of the Multiframe message
 
 public:
 	Communication();
 	~Communication();
 
-	void init(uint8_t ct);
-	void setCommunicationType(uint8_t ct);
-	void setID(uint32_t id); // TODO: Check on Architecture
-
-	void txData(uint8_t *data, uint32_t no_bytes);
-
-    void dataReceiveHandleMulti();
-
-    // CAN Event Received
-    void handleCANEvent(unsigned int id, unsigned short dlc, unsigned char data[]);
+    void init(INTERFACE ct);
+    void setCommunicationType(INTERFACE ct);
 
     // Testing
     void setTestMode();
+
+private:
+    // TX Section
+    void setID(uint32_t id);
+    void txData(uint8_t *data, uint32_t no_bytes);
+
+    // RX Section
+    void dataReceiveHandleMulti();
+    // CAN Event Received
+    void handleCANEvent(unsigned int id, unsigned short dlc, unsigned char data[]);
+
+    // Debugging
+    void _debug_printf_isotp_buffer();
 
 signals:
     /**

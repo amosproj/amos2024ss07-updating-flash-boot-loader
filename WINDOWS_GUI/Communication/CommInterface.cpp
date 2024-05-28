@@ -31,29 +31,40 @@ CommInterface::~CommInterface(){
     this->stopRX();
 }
 
-
-
 //============================================================================
 // Public Method
 //============================================================================
 
+/**
+ * @brief Method to init the Driver. Need to be overwritten in inheriting class.
+ * @return
+ */
 uint8_t CommInterface::initDriver(){
     qWarning("No usage of derived CommInterface initDriver\n");
 	return 1;
 }
 
+/**
+ * @brief Method to send given Data with given number of Bytes. Need to be overwritten in inheriting class.
+ * @param data Given Data
+ * @param no_bytes Number of Bytes of the data
+ * @return
+ */
 uint8_t CommInterface::txData(uint8_t *data, uint8_t no_bytes){
     qWarning("No usage of derived CommInterface txData\n");
 	return 0;
 }
 
+/**
+ * @brief Method that is called by the startRX Thread. Here comes the RX receiving loop. Need to be overwritten in the inheriting class.
+ */
 void CommInterface::doRX(){
+    qWarning("No usage of derived CommInterface doRX. Stopped RX Thread\n");
+    emit rxThreadFinished();
+
     mutex.lock();
     _working = false;
     mutex.unlock();
-
-    qWarning("No usage of derived CommInterface doRX. Stopped RX Thread\n");
-    emit rxThreadFinished();
 }
 
 //============================================================================

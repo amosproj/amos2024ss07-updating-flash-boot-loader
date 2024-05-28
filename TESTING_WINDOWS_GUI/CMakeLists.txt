@@ -18,8 +18,16 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
-        testcases.cpp
-        testcases.hpp
+        testcasecontroller.cpp
+        testcasecontroller.hpp
+        testcase.cpp
+        testcase.hpp
+        Testcases/selftest.cpp
+        Testcases/selftest.hpp
+        Testcases/uds_listening.cpp
+        Testcases/uds_listening.hpp
+        Testcases/ecu_isotp.cpp
+        Testcases/ecu_isotp.hpp
         ../WINDOWS_GUI/Communication/CommInterface.cpp
         ../WINDOWS_GUI/Communication/CommInterface.hpp
         ../WINDOWS_GUI/Communication/Can_Wrapper.cpp

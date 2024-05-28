@@ -25,8 +25,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     qInfo("Main: Create Communication Layer");
     comm = new Communication();
-    comm->setCommunicationType(1); // Set to CAN
-    comm->init(1); // Set to CAN
+    comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
+    comm->init(Communication::CAN_DRIVER); // Set to CAN
 
     qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
     uds = new UDS(0x001);
@@ -82,7 +82,25 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     connect(ui->button_can_message, &QPushButton::clicked, this, [=]{
-        uds->testerPresent(0x001);
+        //uds->testerPresent(0x001);
+        UDS::RESP resp = uds->diagnosticSessionControl(0x001, 0x01);
+
+        switch(resp){
+        case UDS::RX_NO_RESPONSE:
+            appendTextToConsole("RX No Response"); break;
+        case UDS::NO_INIT:
+            appendTextToConsole("No Init"); break;
+        case UDS::STILL_BUSY:
+            appendTextToConsole("Still Busy"); break;
+        case UDS::TX_FREE:
+            appendTextToConsole("TX Free"); break;
+        case UDS::RX_ERROR:
+            appendTextToConsole("RX Error"); break;
+        case UDS::TX_RX_OK:
+            appendTextToConsole("TX + RX OK"); break;
+        case UDS::TX_RX_NOK:
+            appendTextToConsole("TX + RX Not OK"); break;
+        }
     });
 
     // Create both QComboBoxes for later

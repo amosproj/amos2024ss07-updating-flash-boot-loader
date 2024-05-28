@@ -30,27 +30,22 @@
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="1" column="0">
-      <widget class="QPushButton" name="StartECUTest">
-       <property name="text">
-        <string>Start ECU Test</string>
-       </property>
-      </widget>
-     </item>
      <item row="0" column="0">
-      <widget class="QPushButton" name="StartSelfTest">
-       <property name="text">
-        <string>Start Self Test</string>
-       </property>
+      <widget class="QComboBox" name="testSelectionBox">
+       <item>
+        <property name="text">
+         <string>List of Testcases</string>
+        </property>
+       </item>
       </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QPlainTextEdit" name="consoleOut"/>
      </item>
      <item row="2" column="0">
-      <widget class="QPushButton" name="StartUDSListening">
+      <widget class="QPlainTextEdit" name="consoleOut"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QPushButton" name="startTest">
        <property name="text">
-        <string>Start UDS Listening</string>
+        <string>Start Selected Test</string>
        </property>
       </widget>
      </item>

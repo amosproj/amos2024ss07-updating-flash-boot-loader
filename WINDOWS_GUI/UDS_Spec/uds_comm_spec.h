@@ -156,7 +156,7 @@ uint8_t *_create_tester_present(int *len, uint8_t response, uint8_t response_typ
 
 // Specification for Data Transmission
 uint8_t *_create_read_data_by_ident(int *len, uint8_t response, uint16_t did, uint8_t* data, uint8_t data_len);
-uint8_t *_create_read_memory_by_address(int *len, uint8_t response, uint32_t add, uint16_t no_bytes, uint8_t* data, uint8_t data_len);
+uint8_t *_create_read_memory_by_address(int *len, uint8_t response, uint32_t add, uint16_t no_bytes, uint8_t* data, uint16_t data_len);
 uint8_t *_create_write_data_by_ident(int *len, uint8_t response, uint16_t did, uint8_t* data, uint8_t data_len);
 
 // Specification for Upload | Download
