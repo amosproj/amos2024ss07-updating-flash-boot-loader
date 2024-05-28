@@ -80,6 +80,7 @@ public:
 private:
     void messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes);
 
+    const RESP txMessageStart();
     RESP checkOnFreeTX();
     RESP checkOnResponse(uint32_t waittime);
 	uint32_t createCommonID(uint32_t base_id, uint8_t gui_id, uint32_t ecu_id);

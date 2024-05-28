@@ -211,13 +211,8 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
 // Public - Sending TX UDS Messages
 //////////////////////////////////////////////////////////////////////////////
 
-/**
- * @brief Method to send a broadcast to all ECUs on the bus, so that they respond with Tester Present
- * @return UDS::RESP accordingly
- */
-UDS::RESP UDS::reqIdentification() // Sending out broadcast for tester present
-{
-    if(!init){
+const UDS::RESP UDS::txMessageStart() {
+    if(!init) {
         return NO_INIT;
     }
 
@@ -229,6 +224,17 @@ UDS::RESP UDS::reqIdentification() // Sending out broadcast for tester present
     comm_mutex.lock();
     _comm = true;
     comm_mutex.unlock();
+    return TX_OK;
+}
+
+/**
+ * @brief Method to send a broadcast to all ECUs on the bus, so that they respond with Tester Present
+ * @return UDS::RESP accordingly
+ */
+UDS::RESP UDS::reqIdentification() { // Sending out broadcast for tester present
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Request for Identification to all ECUs\n");
@@ -284,19 +290,10 @@ UDS::RESP UDS::reqIdentification() // Sending out broadcast for tester present
  * @param session Target Session
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::diagnosticSessionControl(uint32_t id, uint8_t session){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::diagnosticSessionControl(uint32_t id, uint8_t session) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Diagnostic Session Control\n");
@@ -351,19 +348,10 @@ UDS::RESP UDS::diagnosticSessionControl(uint32_t id, uint8_t session){
  * @param reset_type Target Reset Type
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::ecuReset(uint32_t id, uint8_t reset_type){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::ecuReset(uint32_t id, uint8_t reset_type) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out for ECU Reset\n");
@@ -417,19 +405,10 @@ UDS::RESP UDS::ecuReset(uint32_t id, uint8_t reset_type){
  * @param id Target ID
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::securityAccessRequestSEED(uint32_t id){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::securityAccessRequestSEED(uint32_t id) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Security Access for Seed\n");
@@ -485,19 +464,10 @@ UDS::RESP UDS::securityAccessRequestSEED(uint32_t id){
  * @param key_len Length of the calculated key
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_len){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_len) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Security Access for Verify Key\n");
@@ -551,19 +521,10 @@ UDS::RESP UDS::securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_le
  * @param id Target ID
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::testerPresent(uint32_t id){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::testerPresent(uint32_t id) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Tester Present\n");
@@ -611,19 +572,10 @@ UDS::RESP UDS::testerPresent(uint32_t id){
  * @param identifier Data Identifier
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::readDataByIdentifier(uint32_t id, uint16_t identifier){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::readDataByIdentifier(uint32_t id, uint16_t identifier) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Read Data By Identifier\n");
@@ -679,19 +631,10 @@ UDS::RESP UDS::readDataByIdentifier(uint32_t id, uint16_t identifier){
  * @param no_bytes Number of bytes to be read from given Memory Address
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_bytes){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_bytes) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Read Memory By Address\n");
@@ -747,19 +690,10 @@ UDS::RESP UDS::readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_by
  * @param data_len Length of the given data
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* data, uint8_t data_len){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* data, uint8_t data_len) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Write Data By Identifier\n");
@@ -816,19 +750,10 @@ UDS::RESP UDS::writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* 
  * @param no_bytes Number of bytes to be downloaded to ECU ID
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Request Download\n");
@@ -884,19 +809,10 @@ UDS::RESP UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes)
  * @param no_bytes Number of bytes to be uploaded from ECU ID
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending Request Upload \n");
@@ -953,19 +869,10 @@ UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes){
  * @param data_len Number of bytes of the data
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_t data_len){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_t data_len) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Transfer Data\n");
@@ -1012,19 +919,10 @@ UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_
  * @param address Target Memory Address
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::requestTransferExit(uint32_t id, uint32_t address){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::requestTransferExit(uint32_t id, uint32_t address) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Request Transfer Exit\n");
@@ -1081,19 +979,10 @@ UDS::RESP UDS::requestTransferExit(uint32_t id, uint32_t address){
  * @param neg_resp_code Negative Response Code (NRC)
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_code){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_code) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Negative Response\n");
