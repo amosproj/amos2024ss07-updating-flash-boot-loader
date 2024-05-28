@@ -39,5 +39,6 @@
 void show_led(void);
 void show_can(void);
 void show_flash(void);
+void show_uds_rx_read_data(void);
 
 #endif /* BOOTLOADER_INC_LOADER_H_ */

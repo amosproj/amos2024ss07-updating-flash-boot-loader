@@ -20,6 +20,7 @@ void (*processDataFunction)(void*);
 
 
 canType g_can; //Global control struct
+
 IfxCan_Can_Pins canPins = {
     .padDriver = IfxPort_PadDriver_cmosAutomotiveSpeed2,
     .rxPin = CAN_RX_PIN,
@@ -34,7 +35,6 @@ IFX_INTERRUPT(canIsrRxFifo0Handler, 0, INTERRUPT_PRIO_RX);
 
 void canIsrTxHandler(void){
       IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_transmissionCompleted);
-
 }
 
 /**
@@ -43,15 +43,9 @@ void canIsrTxHandler(void){
  * @param processDataFunction Pointer to function that processes Data read in CAN Message
 */
 void canIsrRxFifo0Handler(){
-    
-     //Read Message
-    if (processDataFunction != NULL)
-    {
-        //Callback
-    }
-    
         IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_rxFifo0NewMessage); /*Clear Message Stored Flag*/
         IfxCan_Can_readMessage(&g_can.canTXandRXNode, &g_can.rxMsg, (uint32*)g_can.rxData);
+        processDataFunction(g_can.rxData); //has to be casted in ISO-Tp
 
 }
 
@@ -109,15 +103,16 @@ void initTXandRXNode(void){
 /**
  * Initialize CAN Module and Node
 */
-void canInitDriver(void){
+void canInitDriver(void (*processData)(void*)){
     IfxCan_Can_initModuleConfig(&g_can.canConfig, &MODULE_CAN0); /*LoadsDefault Config*/
     IfxCan_Can_initModule(&g_can.canModule, &g_can.canConfig); /*Init with default config*/
 
     initTXandRXNode();
     // canAcceptAllMessagesFilter();
-
+    processDataFunction = processData;
     
     IfxCan_Can_initMessage(&g_can.rxMsg); /*Init for RX Message*/
+    g_can.rxMsg.readFromRxFifo0 = TRUE; /*Read from FIFO0*/
 }
 
 /**

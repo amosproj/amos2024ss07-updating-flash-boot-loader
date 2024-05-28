@@ -9,12 +9,13 @@
 // Description : Loader initial file
 //============================================================================
 
-#include "loader.h"
+#include "bootloader.h"
 
 #include "can_driver.h"
 #include "can_init.h"
 #include "flash.h"
 #include "led_driver.h"
+#include "uds.h"
 
 void show_led(void)
 {
@@ -29,7 +30,8 @@ void show_can(void)
 {
     init_led_driver();
 
-    canInitDriver();
+    void (*processData)(void*); // TODO correct function
+    canInitDriver(processData);
 
     /*
      * ------------------------------------------------------------------------
@@ -76,4 +78,11 @@ void show_flash(void)
     {
         led_on(LED1);
     }
+}
+
+void show_uds_rx_read_data(void)
+{
+    int len;
+    uint8* data = _create_read_data_by_ident(&len, 0, FBL_DID_SYSTEM_NAME, 0, 0);
+    uds_handleRX(data, len);
 }
