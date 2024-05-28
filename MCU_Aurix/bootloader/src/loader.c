@@ -29,7 +29,7 @@ void show_can(void)
 {
     init_led_driver();
 
-    canInitDriver();
+    //canInitDriver();
 
     /*
      * ------------------------------------------------------------------------
@@ -40,7 +40,7 @@ void show_can(void)
     //uint8_t debugMessage = CAN_DEBUG_DATA2;
     //canTransmitMessage(CAN_DEBUG_ID, &debugMessage, 1);
 
-    canTransmitMessage(CAN_DEBUG_ID,CAN_DEBUG_DATA, 1);
+    //canTransmitMessage(CAN_DEBUG_ID,CAN_DEBUG_DATA, 1);
 
 
     /*

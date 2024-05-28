@@ -87,11 +87,17 @@ void core0_main(void)
     uint8_t dataIsoMulti[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
 
     //show_can();
-    //canInitDriver();
+    //canInitDriver(process_can_to_isotp);
     
+    //isoTP* iso = isotp_init();
+
+    //iso->max_len_per_frame = 8;
+
+    //uint8_t* iso_message;
+
     isoTP* iso = isotp_init();
 
-    iso->max_len_per_frame = 8;
+    uint8_t* iso_message;
 
     while(1)
     {
@@ -102,7 +108,30 @@ void core0_main(void)
 
 
 
+
+
+        iso->max_len_per_frame = 8;
+
         isotp_send(iso, dataUDS, sizeof(dataUDS));
 
+        int16_t total_length = 0;
+
+        iso_message = isotp_rcv(&total_length);
+
+        if(total_length != 0){
+
+            printf("length: %d \n", total_length);
+
+            for(int i = 0; i < total_length; i++){
+
+                printf("iso_message[%d]: %d\n", i, iso_message[i]);
+            }
+
+            printf("\n");
+        }
+
+
     }
+
+    close_isoTP(iso);
 }

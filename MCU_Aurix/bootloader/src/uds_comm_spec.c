@@ -301,7 +301,7 @@ uint8_t *rx_starting_frame(uint32_t *data_out_len, uint32_t *has_next, uint8_t m
     }
     // Other, e.g. CAN FD
     else {
-        printf("TODO: Not yet implemented!");
+        printf("TODO: Not yet implemented!\n");
         *data_out_len = 0;
         *has_next = 0;
         return (uint8_t*)calloc(0, sizeof(uint8_t));
