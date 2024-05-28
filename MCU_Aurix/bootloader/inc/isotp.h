@@ -53,12 +53,14 @@ void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len);
 
 uint8_t* isotp_rcv(int16_t* total_length);
 
-void close_isoTP(isoTP* iso);
+
 
 void rx_reset_isotp_buffer();
 
 void tx_reset_isotp_buffer(isoTP* iso);
 
 void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc);
+
+void close_isoTP(isoTP* iso);
 
 #endif /* BOOTLOADER_INC_ISOTP_H_ */

@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-#include "stdint.h"
+#include <stdint.h>
 #include <stdlib.h>
 
 #define MAX_FRAME_LEN_CAN                                           (0x08)

@@ -32,7 +32,6 @@ void show_can(void)
 
     void (*processData)(void*); // TODO correct function
     canInitDriver(processData);
-
 }
 
 void show_flash(void)
