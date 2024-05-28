@@ -3,6 +3,7 @@
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "./UDS_Spec/uds_comm_spec.h"
 #include "editableComboBox.h"
 
 static inline void dummy_function(QByteArray data) {
@@ -70,6 +71,17 @@ MainWindow::MainWindow(QWidget *parent)
         QTableWidgetItem *item = ui->table_ECU->selectedItems().at(0);
         ui->label_selected_ECU->setText("Selected: " + item->text());
     });
+
+    connect(ui->button_reset, &QPushButton::clicked, this, [=]() {
+        if(ui->label_selected_ECU->text() != "") {
+            ui->label_reset_status->setText("Reset status: In progress");
+            if(uds->ecuReset(0x001, FBL_ECU_RESET_WARM_POWERON) == UDS::TX_RX_OK) 
+                ui->label_reset_status->setText("Reset status: Succeeded");
+            else
+                ui->label_reset_status->setText("Reset status: Failed");
+        }
+    });
+
     connect(ui->button_flash, &QPushButton::clicked, this, [=]() {
         if(ui->label_selected_ECU->text() != "") {
             dummy_flash(ui->label_selected_ECU->text());
@@ -179,35 +191,11 @@ void MainWindow::comboBoxIndexChanged(int index)
     {
         // Populate the second QComboBox based on the selected index of the first QComboBox
         if (index == 1) // Example condition, replace with your own logic
-        {
-            editComboBox_speed->addItem("33.3");
-            editComboBox_speed->addItem("50");
-            editComboBox_speed->addItem("83.3");
-            editComboBox_speed->addItem("83.3");
-            editComboBox_speed->addItem("100");
-            editComboBox_speed->addItem("125");
-            editComboBox_speed->addItem("250");
-            editComboBox_speed->addItem("500");
-            editComboBox_speed->addItem("1000");
-        }
+            editComboBox_speed->addItems({"33.3", "50", "83.3", "100", "125", "250", "500", "1000"});
         else if (index == 2) // Example condition, replace with your own logic
-        {
-            editComboBox_speed->addItem("1000");
-            editComboBox_speed->addItem("2000");
-            editComboBox_speed->addItem("3000");
-            editComboBox_speed->addItem("4000");
-            editComboBox_speed->addItem("5000");
-            editComboBox_speed->addItem("6000");
-            editComboBox_speed->addItem("7000");
-            editComboBox_speed->addItem("8000");
-
-        }
+            editComboBox_speed->addItems({"1000", "2000", "3000", "4000", "5000", "6000", "7000", "8000"});
         else if (index == 3) // Example condition, replace with your own logic
-        {
-            editComboBox_speed->addItem("Option A");
-            editComboBox_speed->addItem("Option B");
-            editComboBox_speed->addItem("Option C");
-        }
+            editComboBox_speed->addItems({"Option A", "Option B", "Option C"});
 
         comboBox_speedUnit->addItem("kBit/s");
         comboBox_speedUnit->addItem("MBit/s");
