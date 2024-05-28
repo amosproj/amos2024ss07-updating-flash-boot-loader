@@ -222,11 +222,6 @@ void Communication::dataReceiveHandleMulti(){
  * @param data Sender Data
  */
 void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned char data[]){
-
-    // Real processing
-    if(curr_interface_type != CAN_DRIVER) // CAN is not allowed to forward messages
-        return;
-
     if(dlc == 0){ // Ignoring Empty Messages
         return;
     }
@@ -306,6 +301,10 @@ void Communication::_debug_printf_isotp_buffer(){
 //============================================================================
 
 void Communication::rxCANDataSlot(const unsigned int id, const QByteArray &ba){
+    // Real processing
+    if(curr_interface_type != CAN_DRIVER) // CAN_DRIVER message are ignored if a diff interface is selected
+        return;
+
     qInfo("Communication RX: Slot - Received RX CAN Data to be processed");
     uint8_t* data = (uint8_t*)calloc(ba.size(), sizeof(uint8_t));
     if(data != nullptr){
