@@ -60,6 +60,15 @@ void UDS::setSyncMode(bool synchronized){
  * @param data Received Data of the Sender
  * @param no_bytes Received number of bytes of the data
  */
+
+static inline const bool rxMsgValid(const bool neg_resp, const bool eq, const uint32_t rx_no_bytes, const uint32_t no_bytes,  const uint8_t* const rx_exp_data,const uint8_t* const data, const size_t n) {
+    bool ans = !neg_resp;
+    ans &= eq ? rx_no_bytes == no_bytes : rx_no_bytes < no_bytes;
+    for(size_t i = 1; i < n + 1; ++i) 
+        ans &= rx_exp_data[i] == data[i];
+    return ans;
+}
+
 void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
 
     // Initialize the Msg flags
@@ -108,33 +117,25 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
             out << info + "UDS Service: Diagnostic Session Control\n";
 
             // Check on the relevant message - Session is correct
-            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1]){
-                rx_msg_valid = true;
-            }
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 1);
             break;
 
         case FBL_ECU_RESET:
             out << info + "UDS Service: ECU Reset\n";
             // Check on the relevant message - ECU Reset Type is correct
-            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1]){
-                rx_msg_valid = true;
-            }
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 1);
             break;
 
         case FBL_SECURITY_ACCESS:
             out << info + "UDS Service: Security Access\n";
             // Check on the relevant message - Request Type is correct
-            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1]){
-                rx_msg_valid = true;
-            }
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 1);
             break;
 
         case FBL_TESTER_PRESENT:
             out << info + "UDS Service: Tester Present\n";
             // Check on the relevant message - Response Type is correct
-            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1]){
-                rx_msg_valid = true;
-            }
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 1);
             break;
 
         case FBL_READ_DATA_BY_IDENTIFIER:
@@ -144,49 +145,35 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
                 out << "Data: " << QString::fromLocal8Bit(&data[3]) << "\n";
 
             // Check on the relevant message - Data is included, DID is correct
-            if(!neg_resp && rx_no_bytes < no_bytes && rx_exp_data[1] == data[1] && rx_exp_data[2] == data[2]){
-                rx_msg_valid = true;
-            }
+            rx_msg_valid = rxMsgValid(neg_resp, false, rx_no_bytes, no_bytes, rx_exp_data, data, 2);
             break;
 
         case FBL_READ_MEMORY_BY_ADDRESS:
             out << info + "UDS Service: Read Memory By Address\n";
 
             // Check on the relevant message - Data is included, Adress is correct
-            if(!neg_resp && rx_no_bytes < no_bytes && rx_exp_data[1] == data[1] && rx_exp_data[2] == data[2] && rx_exp_data[3] == data[3] && rx_exp_data[4] == data[4]){
-                rx_msg_valid = true;
-            }
-
+            rx_msg_valid = rxMsgValid(neg_resp, false, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
             break;
 
         case FBL_WRITE_DATA_BY_IDENTIFIER:
             out << info + "UDS Service: Write Data By Identifier\n";
 
             // Check on the relevant message - DID is correct
-            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1] && rx_exp_data[2] == data[2]){
-                rx_msg_valid = true;
-            }
-
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 2);
             break;
 
         case FBL_REQUEST_DOWNLOAD:
             out << info + "UDS Service: Request Download\n";
 
             // Check on the relevant message - Adress is correct
-            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1] && rx_exp_data[2] == data[2] && rx_exp_data[3] == data[3] && rx_exp_data[4] == data[4]){
-                rx_msg_valid = true;
-            }
-
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
             break;
 
         case FBL_REQUEST_UPLOAD:
             out << info + "UDS Service: Request Upload\n";
 
             // Check on the relevant message - Adress is correct
-            if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1] && rx_exp_data[2] == data[2] && rx_exp_data[3] == data[3] && rx_exp_data[4] == data[4]){
-                rx_msg_valid = true;
-            }
-
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
             break;
 
         case FBL_TRANSFER_DATA:
@@ -194,15 +181,15 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
 
             // Info: There is no response for it
             rx_msg_valid = true;
-
             break;
+
         case FBL_REQUEST_TRANSFER_EXIT:
             out << info + "UDS Service: Request Transfer Exit\n";
 
             // Info: Response includes the end address. There is no content check here
             rx_msg_valid = true;
-
             break;
+
         default:
             out << info << "UDS Service: ERROR UNRECOGNIZED SID\n";
             break;
@@ -211,7 +198,7 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
     emit toConsole(*out.string());
 
     // Only release
-    if (rx_msg_valid){
+    if (rx_msg_valid) {
         // Release the communication flag
         comm_mutex.lock();
         _comm = false;
@@ -224,13 +211,8 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
 // Public - Sending TX UDS Messages
 //////////////////////////////////////////////////////////////////////////////
 
-/**
- * @brief Method to send a broadcast to all ECUs on the bus, so that they respond with Tester Present
- * @return UDS::RESP accordingly
- */
-UDS::RESP UDS::reqIdentification() // Sending out broadcast for tester present
-{
-    if(!init){
+const UDS::RESP UDS::txMessageStart() {
+    if(!init) {
         return NO_INIT;
     }
 
@@ -242,20 +224,15 @@ UDS::RESP UDS::reqIdentification() // Sending out broadcast for tester present
     comm_mutex.lock();
     _comm = true;
     comm_mutex.unlock();
+    return TX_OK;
+}
 
-    // Info to Console
-    qInfo("<< UDS: Sending out Request for Identification to all ECUs\n");
-    emit toConsole("UDS: Sending out Request for Identification to all ECUs");
-
-    // 3a. Setup the Communication Interface for Sending Message
-	uint32_t id = (uint32_t)(FBLCAN_BASE_ADDRESS | this->gui_id);
-	// First set the right ID to be used for transmitting
+void UDS::txMessageSend(uint32_t id, uint8_t *msg, int len) {
+    // 3. Setup the Communication Interface for Sending Message
+	// Set the right ID to be used for transmitting
     qInfo("UDS: Sending Signal setID");
     emit setID(id); // TODO: Check Architecture how to handle interface
 
-    // 3b. Create the relevant message
-	int len;  
-    uint8_t *msg = _create_tester_present(&len, 0, 1); // Request Tester present from ECUs
     // Wrap data into QByteArray
     QByteArray qbdata;
     qbdata.resize(len);
@@ -267,16 +244,13 @@ UDS::RESP UDS::reqIdentification() // Sending out broadcast for tester present
     // 4. Transmit the data on the bus
     qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
     emit txData(qbdata);
+}
 
-    // 5. Create the data that is expected
-    rx_exp_data = nullptr;
-    rx_no_bytes = 0;
-    rx_exp_data = _create_tester_present(&rx_no_bytes, 1, 1);
-
+const UDS::RESP UDS::txMessageValid() {
     if(rx_exp_data == nullptr || rx_no_bytes == 0)
         return RX_ERROR;
 
-    // 6. Wait on RX message interpreter
+    // 5. Wait on RX message interpreter
     RESP res = checkOnResponse(rx_max_waittime_long);
     if( res == TX_RX_OK){
         // Check on result of message interpreter
@@ -289,6 +263,29 @@ UDS::RESP UDS::reqIdentification() // Sending out broadcast for tester present
         return res;
 }
 
+/**
+ * @brief Method to send a broadcast to all ECUs on the bus, so that they respond with Tester Present
+ * @return UDS::RESP accordingly
+ */
+UDS::RESP UDS::reqIdentification() { // Sending out broadcast for tester present
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
+
+    // Info to Console
+    qInfo("<< UDS: Sending out Request for Identification to all ECUs\n");
+    emit toConsole("UDS: Sending out Request for Identification to all ECUs");
+
+	uint32_t id = (uint32_t)(FBLCAN_BASE_ADDRESS | this->gui_id);
+    int len;  
+    uint8_t *msg = _create_tester_present(&len, 0, 1); // Request Tester present from ECUs
+    txMessageSend(id, msg, len);    
+
+    rx_no_bytes = 0;
+    rx_exp_data = _create_tester_present(&rx_no_bytes, 1, 1);
+    return txMessageValid();
+}
+
 
 // Specification for Diagnostic and Communication Management
 /**
@@ -297,65 +294,23 @@ UDS::RESP UDS::reqIdentification() // Sending out broadcast for tester present
  * @param session Target Session
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::diagnosticSessionControl(uint32_t id, uint8_t session){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::diagnosticSessionControl(uint32_t id, uint8_t session) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Diagnostic Session Control\n");
     emit toConsole("<< UDS: Sending out Diagnostic Session Control");
 
-    // 3a. Setup the Communication Interface for Sending Message
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
-	// Set the right ID to be used for transmitting
-    qInfo("UDS: Sending Signal setID");
-    emit setID(send_id);
-
-    // 3b. Create the relevant message
 	int len;
 	uint8_t *msg = _create_diagnostic_session_control(&len, 0, session);
-    // Wrap data into QByteArray
-    QByteArray qbdata;
-    qbdata.resize(len);
-    for(int i=0; i < qbdata.size(); i++)
-        qbdata[i] = msg[i];
-    // Free the allocated memory of msg
-    free(msg);
+    txMessageSend(send_id, msg, len);
 
-    // 4. Transmit the data on the bus
-    qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
-    emit txData(qbdata);
-
-    // 5. Create the data that is expected
-    rx_exp_data = nullptr;
     rx_no_bytes = 0;
     rx_exp_data = _create_diagnostic_session_control(&rx_no_bytes, 1, session);
-
-    if(rx_exp_data == nullptr || rx_no_bytes == 0)
-        return RX_ERROR;
-
-
-    // 6. Wait on RX message interpreter
-    RESP res = checkOnResponse(rx_max_waittime_general);
-    if(res == TX_RX_OK){
-        // Check on result of message interpreter
-        if (rx_msg_valid)
-            return TX_RX_OK;
-        else
-            return TX_RX_NOK;
-    }
-    else
-        return res;
+    return txMessageValid();
 }
 
 /**
@@ -364,65 +319,23 @@ UDS::RESP UDS::diagnosticSessionControl(uint32_t id, uint8_t session){
  * @param reset_type Target Reset Type
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::ecuReset(uint32_t id, uint8_t reset_type){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::ecuReset(uint32_t id, uint8_t reset_type) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out for ECU Reset\n");
     emit toConsole("<< UDS: Sending out for ECU Reset");
 
-    // 3a. Setup the Communication Interface for Sending Message
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
-	// Set the right ID to be used for transmitting
-    qInfo("UDS: Sending Signal setID");
-    emit setID(send_id);
-
-    // 3b. Create the relevant message
     int len;
 	uint8_t *msg = _create_ecu_reset(&len, 0, reset_type);
-    // Wrap data into QByteArray
-    QByteArray qbdata;
-    qbdata.resize(len);
-    for(int i=0; i < qbdata.size(); i++)
-        qbdata[i] = msg[i];
-    // Free the allocated memory of msg
-    free(msg);
+    txMessageSend(send_id, msg, len);
 
-    // 4. Transmit the data on the bus
-    qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
-    emit txData(qbdata);
-
-    // 5. Create the data that is expected
-    rx_exp_data = nullptr;
     rx_no_bytes = 0;
     rx_exp_data = _create_ecu_reset(&rx_no_bytes, 1, reset_type);
-
-    if(rx_exp_data == nullptr || rx_no_bytes == 0)
-        return RX_ERROR;
-
-
-    // 6. Wait on RX message interpreter
-    RESP res = checkOnResponse(rx_max_waittime_general);
-    if(res == TX_RX_OK){
-        // Check on result of message interpreter
-        if (rx_msg_valid)
-            return TX_RX_OK;
-        else
-            return TX_RX_NOK;
-    }
-    else
-        return res;
+    return txMessageValid();
 }
 
 /**
@@ -430,65 +343,23 @@ UDS::RESP UDS::ecuReset(uint32_t id, uint8_t reset_type){
  * @param id Target ID
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::securityAccessRequestSEED(uint32_t id){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::securityAccessRequestSEED(uint32_t id) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Security Access for Seed\n");
 
     emit toConsole("<< UDS: Sending out Security Access for Seed");
-    // 3a. Setup the Communication Interface for Sending Message
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
-	// Set the right ID to be used for transmitting
-    qInfo("UDS: Sending Signal setID");
-    emit setID(send_id);
-
-    // 3b. Create the relevant message
 	int len;
 	uint8_t *msg = _create_security_access(&len, 0, FBL_SEC_ACCESS_SEED, 0, 0);
-    // Wrap data into QByteArray
-    QByteArray qbdata;
-    qbdata.resize(len);
-    for(int i=0; i < qbdata.size(); i++)
-        qbdata[i] = msg[i];
-    // Free the allocated memory of msg
-    free(msg);
+    txMessageSend(send_id, msg, len);
 
-    // 4. Transmit the data on the bus
-    qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
-    emit txData(qbdata);
-
-    // 5. Create the data that is expected - Here: without any data included
-    rx_exp_data = nullptr;
     rx_no_bytes = 0;
     rx_exp_data = _create_security_access(&rx_no_bytes, 1, FBL_SEC_ACCESS_SEED, 0, 0);
-
-    if(rx_exp_data == nullptr || rx_no_bytes == 0)
-        return RX_ERROR;
-
-
-    // 6. Wait on RX message interpreter
-    RESP res = checkOnResponse(rx_max_waittime_general);
-    if(res == TX_RX_OK){
-        // Check on result of message interpreter
-        if (rx_msg_valid)
-            return TX_RX_OK;
-        else
-            return TX_RX_NOK;
-    }
-    else
-        return res;
+    return txMessageValid();
 }
 
 /**
@@ -498,65 +369,23 @@ UDS::RESP UDS::securityAccessRequestSEED(uint32_t id){
  * @param key_len Length of the calculated key
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_len){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_len) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Security Access for Verify Key\n");
     emit toConsole("<< UDS: Sending out Security Access for Verify Key");
 
-    // 3a. Setup the Communication Interface for Sending Message
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
-	// Set the right ID to be used for transmitting
-    qInfo("UDS: Sending Signal setID");
-    emit setID(send_id);
-
-    // 3b. Create the relevant message
 	int len;
 	uint8_t *msg = _create_security_access(&len, 0, FBL_SEC_ACCESS_VERIFY_KEY, key, key_len);
-    // Wrap data into QByteArray
-    QByteArray qbdata;
-    qbdata.resize(len);
-    for(int i=0; i < qbdata.size(); i++)
-        qbdata[i] = msg[i];
-    // Free the allocated memory of msg
-    free(msg);
+    txMessageSend(send_id, msg, len);
 
-    // 4. Transmit the data on the bus
-    qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
-    emit txData(qbdata);
-
-    // 5. Create the data that is expected -> Here: As response data is not filled, but is expected in the response
-    rx_exp_data = nullptr;
     rx_no_bytes = 0;
     rx_exp_data = _create_security_access(&rx_no_bytes, 1, FBL_SEC_ACCESS_VERIFY_KEY, 0, 0);
-
-    if(rx_exp_data == nullptr || rx_no_bytes == 0)
-        return RX_ERROR;
-
-
-    // 6. Wait on RX message interpreter
-    RESP res = checkOnResponse(rx_max_waittime_general);
-    if(res == TX_RX_OK){
-        // Check on result of message interpreter
-        if (rx_msg_valid)
-            return TX_RX_OK;
-        else
-            return TX_RX_NOK;
-    }
-    else
-        return res;
+    return txMessageValid();
 }
 
 /**
@@ -564,46 +393,21 @@ UDS::RESP UDS::securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_le
  * @param id Target ID
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::testerPresent(uint32_t id){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::testerPresent(uint32_t id) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Tester Present\n");
     emit toConsole("<< UDS: Sending out Tester Present");
 
-    // 3a. Setup the Communication Interface for Sending Message
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
-	// Set the right ID to be used for transmitting
-    qInfo("UDS: Sending Signal setID");
-    emit setID(send_id);
-
-    // 3b. Create the relevant message
 	int len;
 	uint8_t *msg = _create_tester_present(&len, 0, FBL_TESTER_PRES_WITHOUT_RESPONSE);
-   // Wrap data into QByteArray
-    QByteArray qbdata;
-    qbdata.resize(len);
-    for(int i=0; i < qbdata.size(); i++)
-        qbdata[i] = msg[i];
-    // Free the allocated memory of msg
-    free(msg);
+    txMessageSend(send_id, msg, len);
 
-    // 4. Transmit the data on the bus
-    qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
-    emit txData(qbdata);
-
-    // 5. Create the data that is expected, here: Mainly no response is expected.
+    // Create the data that is expected, here: Mainly no response is expected.
     rx_exp_data = nullptr;
     rx_no_bytes = 0;
 
@@ -624,65 +428,25 @@ UDS::RESP UDS::testerPresent(uint32_t id){
  * @param identifier Data Identifier
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::readDataByIdentifier(uint32_t id, uint16_t identifier){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::readDataByIdentifier(uint32_t id, uint16_t identifier) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Read Data By Identifier\n");
     emit toConsole("<< UDS: Sending out Read Data By Identifier");
 
-    // 3a. Setup the Communication Interface for Sending Message
     uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
-	// Set the right ID to be used for transmitting
-    qInfo("UDS: Sending Signal setID");
-    emit setID(send_id);
-
-    // 3b. Create the relevant message
+    
 	int len;
 	uint8_t *msg = _create_read_data_by_ident(&len, 0, identifier, 0, 0);
-    // Wrap data into QByteArray
-    QByteArray qbdata;
-    qbdata.resize(len);
-    for(int i=0; i < qbdata.size(); i++)
-        qbdata[i] = msg[i];
-    // Free the allocated memory of msg
-    free(msg);
-
-    // 4. Transmit the data on the bus
-    qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
-    emit txData(qbdata);
+    txMessageSend(send_id, msg, len);
 
     // 5. Create the data that is expected, Here: As response data is not filled, but is expected in the response
-    rx_exp_data = nullptr;
     rx_no_bytes = 0;
     rx_exp_data = _create_read_data_by_ident(&rx_no_bytes, 1, identifier, 0, 0);
-
-    if(rx_exp_data == nullptr || rx_no_bytes == 0)
-        return RX_ERROR;
-
-
-    // 6. Wait on RX message interpreter
-    RESP res = checkOnResponse(rx_max_waittime_general);
-    if(res == TX_RX_OK){
-        // Check on result of message interpreter
-        if (rx_msg_valid)
-            return TX_RX_OK;
-        else
-            return TX_RX_NOK;
-    }
-    else
-        return res;
+    return txMessageValid();
 }
 
 /**
@@ -692,64 +456,23 @@ UDS::RESP UDS::readDataByIdentifier(uint32_t id, uint16_t identifier){
  * @param no_bytes Number of bytes to be read from given Memory Address
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_bytes){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_bytes) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Read Memory By Address\n");
     emit toConsole("<< UDS: Sending out Read Memory By Address");
 
-    // 3a. Setup the Communication Interface for Sending Message
     uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
-	// Set the right ID to be used for transmitting
-    qInfo("UDS: Sending Signal setID");
-    emit setID(send_id);
-
-    // 3b. Create the relevant message
     int len;
 	uint8_t *msg = _create_read_memory_by_address(&len, 0, address, no_bytes, 0, 0);
-    // Wrap data into QByteArray
-    QByteArray qbdata;
-    qbdata.resize(len);
-    for(int i=0; i < qbdata.size(); i++)
-        qbdata[i] = msg[i];
-    // Free the allocated memory of msg
-    free(msg);
+    txMessageSend(send_id, msg, len);
 
-    // 4. Transmit the data on the bus
-    qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
-    emit txData(qbdata);
-
-    // 5. Create the data that is expected, Here: As response data is not filled, but is expected in the response
-    rx_exp_data = nullptr;
     rx_no_bytes = 0;
     rx_exp_data = _create_read_memory_by_address(&rx_no_bytes, 1, address, no_bytes, 0, 0);
-
-    if(rx_exp_data == nullptr || rx_no_bytes == 0)
-        return RX_ERROR;
-
-    // 6. Wait on RX message interpreter
-    RESP res = checkOnResponse(rx_max_waittime_general);
-    if(res == TX_RX_OK){
-        // Check on result of message interpreter
-        if (rx_msg_valid)
-            return TX_RX_OK;
-        else
-            return TX_RX_NOK;
-    }
-    else
-        return res;
+    return txMessageValid();
 }
 
 /**
@@ -760,65 +483,23 @@ UDS::RESP UDS::readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_by
  * @param data_len Length of the given data
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* data, uint8_t data_len){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* data, uint8_t data_len) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Write Data By Identifier\n");
     emit toConsole("<< UDS: Sending out Write Data By Identifier");
 
-    // 3a. Setup the Communication Interface for Sending Message
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
-	// Set the right ID to be used for transmitting
-    qInfo("UDS: Sending Signal setID");
-    emit setID(send_id);
-
-    // 3b. Create the relevant message
 	int len;
 	uint8_t *msg = _create_write_data_by_ident(&len, 0, identifier, data, data_len);
-    // Wrap data into QByteArray
-    QByteArray qbdata;
-    qbdata.resize(len);
-    for(int i=0; i < qbdata.size(); i++)
-        qbdata[i] = msg[i];
-    // Free the allocated memory of msg
-    free(msg);
+    txMessageSend(send_id, msg, len);  
 
-    // 4. Transmit the data on the bus
-    qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
-    emit txData(qbdata);
-
-    // 5. Create the data that is expected, Here: No data is expected as response
-    rx_exp_data = nullptr;
     rx_no_bytes = 0;
     rx_exp_data = _create_write_data_by_ident(&rx_no_bytes, 1, identifier, 0, 0);
-
-    if(rx_exp_data == nullptr || rx_no_bytes == 0)
-        return RX_ERROR;
-
-
-    // 6. Wait on RX message interpreter
-    RESP res = checkOnResponse(rx_max_waittime_general);
-    if(res == TX_RX_OK){
-        // Check on result of message interpreter
-        if (rx_msg_valid)
-            return TX_RX_OK;
-        else
-            return TX_RX_NOK;
-    }
-    else
-        return res;
+    return txMessageValid();
 }
 
 // Specification for Upload | Download
@@ -829,65 +510,23 @@ UDS::RESP UDS::writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* 
  * @param no_bytes Number of bytes to be downloaded to ECU ID
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Request Download\n");
     emit toConsole("<< UDS: Sending out Request Download");
 
-    // 3a. Setup the Communication Interface for Sending Message
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
-	// Set the right ID to be used for transmitting
-    qInfo("UDS: Sending Signal setID");
-    emit setID(send_id);
-
-    // 3b. Create the relevant message
 	int len;
 	uint8_t *msg = _create_request_download(&len, 0, address, no_bytes);
-    // Wrap data into QByteArray
-    QByteArray qbdata;
-    qbdata.resize(len);
-    for(int i=0; i < qbdata.size(); i++)
-        qbdata[i] = msg[i];
-    // Free the allocated memory of msg
-    free(msg);
+    txMessageSend(send_id, msg, len);  
 
-    // 4. Transmit the data on the bus
-    qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
-    emit txData(qbdata);
-
-    // 5. Create the data that is expected
-    rx_exp_data = nullptr;
     rx_no_bytes = 0;
     rx_exp_data = _create_request_download(&rx_no_bytes, 1, address, no_bytes);
-
-    if(rx_exp_data == nullptr || rx_no_bytes == 0)
-        return RX_ERROR;
-
-
-    // 6. Wait on RX message interpreter
-    RESP res = checkOnResponse(rx_max_waittime_general);
-    if(res == TX_RX_OK){
-        // Check on result of message interpreter
-        if (rx_msg_valid)
-            return TX_RX_OK;
-        else
-            return TX_RX_NOK;
-    }
-    else
-        return res;
+    return txMessageValid();
 }
 
 /**
@@ -897,65 +536,23 @@ UDS::RESP UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes)
  * @param no_bytes Number of bytes to be uploaded from ECU ID
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending Request Upload \n");
     emit toConsole("<< UDS: Sending Request Upload");
 
-    // 3a. Setup the Communication Interface for Sending Message
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
-	// Set the right ID to be used for transmitting
-    qInfo("UDS: Sending Signal setID");
-    emit setID(send_id);
-
-    // 3b. Create the relevant message
 	int len;
 	uint8_t *msg = _create_request_upload(&len, 0, address, no_bytes);
-    // Wrap data into QByteArray
-    QByteArray qbdata;
-    qbdata.resize(len);
-    for(int i=0; i < qbdata.size(); i++)
-        qbdata[i] = msg[i];
-    // Free the allocated memory of msg
-    free(msg);
+    txMessageSend(send_id, msg, len);  
 
-    // 4. Transmit the data on the bus
-    qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
-    emit txData(qbdata);
-
-    // 5. Create the data that is expected
-    rx_exp_data = nullptr;
     rx_no_bytes = 0;
     rx_exp_data = _create_request_upload(&rx_no_bytes, 1, address, no_bytes);
-
-    if(rx_exp_data == nullptr || rx_no_bytes == 0)
-        return RX_ERROR;
-
-
-    // 6. Wait on RX message interpreter
-    RESP res = checkOnResponse(rx_max_waittime_general);
-    if(res == TX_RX_OK){
-        // Check on result of message interpreter
-        if (rx_msg_valid)
-            return TX_RX_OK;
-        else
-            return TX_RX_NOK;
-    }
-    else
-        return res;
+    return txMessageValid();
 }
 
 /**
@@ -966,46 +563,21 @@ UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes){
  * @param data_len Number of bytes of the data
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_t data_len){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_t data_len) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Transfer Data\n");
     emit toConsole("<< UDS: Sending out Transfer Data");
 
-    // 3a. Setup the Communication Interface for Sending Message
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
-	// Set the right ID to be used for transmitting
-    qInfo("UDS: Sending Signal setID");
-    emit setID(send_id);
-
-    // 3b. Create the relevant message
 	int len;
     uint8_t *msg = _create_transfer_data(&len, address, data, data_len);
-    // Wrap data into QByteArray
-    QByteArray qbdata;
-    qbdata.resize(len);
-    for(int i=0; i < qbdata.size(); i++)
-        qbdata[i] = msg[i];
-    // Free the allocated memory of msg
-    free(msg);
+    txMessageSend(send_id, msg, len);  
 
-    // 4. Transmit the data on the bus
-    qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
-    emit txData(qbdata);
-
-    // 5. Create the data that is expected, here: Mainly no response is expected.
+    // Create the data that is expected, here: Mainly no response is expected.
     rx_exp_data = nullptr;
     rx_no_bytes = 0;
 
@@ -1025,65 +597,23 @@ UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_
  * @param address Target Memory Address
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::requestTransferExit(uint32_t id, uint32_t address){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::requestTransferExit(uint32_t id, uint32_t address) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Request Transfer Exit\n");
     emit toConsole("<< UDS: Sending out Request Transfer Exit");
 
-    // 3a. Setup the Communication Interface for Sending Message
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
-	// Set the right ID to be used for transmitting
-    qInfo("UDS: Sending Signal setID");
-    emit setID(send_id);
-
-    // 3b. Create the relevant message
 	int len;
 	uint8_t *msg = _create_request_transfer_exit(&len, 0, address);
-    // Wrap data into QByteArray
-    QByteArray qbdata;
-    qbdata.resize(len);
-    for(int i=0; i < qbdata.size(); i++)
-        qbdata[i] = msg[i];
-    // Free the allocated memory of msg
-    free(msg);
+    txMessageSend(send_id, msg, len);  
 
-    // 4. Transmit the data on the bus
-    qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
-    emit txData(qbdata);
-
-    // 5. Create the data that is expected
-    rx_exp_data = nullptr;
     rx_no_bytes = 0;
     rx_exp_data = _create_request_transfer_exit(&rx_no_bytes, 1, address);
-
-    if(rx_exp_data == nullptr || rx_no_bytes == 0)
-        return RX_ERROR;
-
-
-    // 6. Wait on RX message interpreter
-    RESP res = checkOnResponse(rx_max_waittime_general);
-    if(res == TX_RX_OK){
-        // Check on result of message interpreter
-        if (rx_msg_valid)
-            return TX_RX_OK;
-        else
-            return TX_RX_NOK;
-    }
-    else
-        return res;
+    return txMessageValid();
 }
 
 // Supported Common Response Codes
@@ -1094,19 +624,10 @@ UDS::RESP UDS::requestTransferExit(uint32_t id, uint32_t address){
  * @param neg_resp_code Negative Response Code (NRC)
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_code){
-    if(!init){
-        return NO_INIT;
-    }
-
-    // 1. Check on Free TX
-    if(checkOnFreeTX() != TX_FREE) // Directly return if TX is still busy after wait time
-        return STILL_BUSY;
-
-    // 2. Lock the TX for own usage
-    comm_mutex.lock();
-    _comm = true;
-    comm_mutex.unlock();
+UDS::RESP UDS::negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_code) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK)
+        return resp;
 
     // Info to Console
     qInfo("<< UDS: Sending out Negative Response\n");
@@ -1121,17 +642,7 @@ UDS::RESP UDS::negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_c
     // 3b. Create the relevant message
 	int len;
     uint8_t *msg = _create_neg_response(&len, rej_sid, neg_resp_code);
-    // Wrap data into QByteArray
-    QByteArray qbdata;
-    qbdata.resize(len);
-    for(int i=0; i < qbdata.size(); i++)
-        qbdata[i] = msg[i];
-    // Free the allocated memory of msg
-    free(msg);
-
-    // 4. Transmit the data on the bus
-    qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
-    emit txData(qbdata);
+    txMessageSend(send_id, msg, len);  
 
     // 5. Create the data that is expected, here: Mainly no response is expected.
     rx_exp_data = nullptr;

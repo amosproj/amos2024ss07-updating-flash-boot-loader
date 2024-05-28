@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : Communication.cpp
-// Author      : Michael Bauer
+// Author      : Michael Bauer Wiktor Pilarczyk
 // Version     : 0.2
 // Copyright   : MIT
 // Description : Qt Communication Layer implementation
@@ -149,19 +150,14 @@ void Communication::setID(uint32_t id){
  * @param data Data to be transmitted
  * @param no_bytes Number of bytes of the given data
  */
-void Communication::txData(uint8_t *data, uint32_t no_bytes){
-
-    if(curr_interface_type == VIRTUAL_DRIVER){ // Using Virtual Driver
-        qInfo("Communication TX: Sending out Data via Virtual Driver interface");
-        uint8_t *send_msg;
+void Communication::txData(uint8_t *data, uint32_t no_bytes) {
+    if(curr_interface_type == VIRTUAL_DRIVER) {
         int send_len;
         int has_next;
-        //int max_len_per_frame = 8; // Also use CAN Message Length
-        uint8_t max_len_per_frame = 8; // Also use CAN Message Length
+        uint8_t max_len_per_frame = MAX_FRAME_LEN_CAN; // Also use CAN Message Length
         uint32_t data_ptr = 0;
         uint8_t idx = 0;
-
-        send_msg = tx_starting_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr);
+        uint8_t *send_msg = tx_starting_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr);
         // Wrap data into QByteArray for signaling
         QByteArray qbdata;
         qbdata.resize(send_len);
@@ -169,16 +165,14 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes){
             qbdata[i] = send_msg[i];
         // Free the allocated memory of msg
         free(send_msg);
-
+        qInfo("Communication TX: Sending out Data via Virtual Driver interface - Started!");
         qInfo("Communication TX: Sending Signal txVirtualDataSignal with payload (Single/First Frame)");
         emit txVirtualDataSignal(qbdata);
-
-        if (has_next){ // Check in flow control and continue sending
+        if (has_next) { // Check in flow control and continue sending
             // TODO: Wait on flow control...
 
-            while(has_next){
+            while(has_next) {
                 send_msg = tx_consecutive_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr, &idx);
-
                 // Wrap data into QByteArray for signaling
                 qbdata.clear();
                 qbdata.resize(send_len);
@@ -191,18 +185,13 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes){
                 emit txVirtualDataSignal(qbdata);
             }
         }
-    }
-
-    else if(curr_interface_type == CAN_DRIVER){ // Using CAN
-        qInfo("Communication TX: Sending out Data via CAN Driver - Started!");
-        uint8_t *send_msg;
+    } else if(curr_interface_type == CAN_DRIVER) {
         int send_len;
         int has_next;
-        uint8_t max_len_per_frame = 8; // CAN Message Length
+        uint8_t max_len_per_frame = MAX_FRAME_LEN_CAN; // Also use CAN Message Length
         uint32_t data_ptr = 0;
         uint8_t idx = 0;
-
-        send_msg = tx_starting_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr);
+        uint8_t *send_msg = tx_starting_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr);
         // Wrap data into QByteArray for signaling
         QByteArray qbdata;
         qbdata.resize(send_len);
@@ -210,14 +199,13 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes){
             qbdata[i] = send_msg[i];
         // Free the allocated memory of msg
         free(send_msg);
-
+        qInfo("Communication TX: Sending out Data via CAN Driver - Started!");
         qInfo("Communication TX: Sending Signal txCANDataSignal with payload (Single/First Frame)");
         emit txCANDataSignal(qbdata);
-
-        if (has_next){ // Check in flow control and continue sending
+        if (has_next) { // Check in flow control and continue sending
             // TODO: Wait on flow control...
 
-            while(has_next){
+            while(has_next) {
                 send_msg = tx_consecutive_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr, &idx);
                 // Wrap data into QByteArray for signaling
                 qbdata.clear();
@@ -241,7 +229,7 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes){
  */
 void Communication::dataReceiveHandleMulti(){
 
-    if(multiframe_still_receiving == 1 && multiframe_next_msg_available == 0 && multiframe_curr_uds_msg != NULL){
+    if(multiframe_still_receiving && !multiframe_next_msg_available && multiframe_curr_uds_msg != NULL){
         QByteArray ba;
         ba.resize(multiframe_curr_uds_msg_len);
         for(int i = 0; i < multiframe_curr_uds_msg_len; i++)
@@ -271,11 +259,6 @@ void Communication::dataReceiveHandleMulti(){
  * @param data Sender Data
  */
 void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned char data[]){
-
-    // Real processing
-    if(curr_interface_type != CAN_DRIVER) // CAN is not allowed to forward messages
-        return;
-
     if(dlc == 0){ // Ignoring Empty Messages
         return;
     }
@@ -321,7 +304,7 @@ void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned
 
     uint8_t consecutive_frame = rx_is_consecutive_frame(data, dlc, MAX_FRAME_LEN_CAN);
     if(consecutive_frame){
-        if(multiframe_curr_id != 0 && id != multiframe_curr_id){ // Ignore other IDs
+        if(multiframe_curr_id && id != multiframe_curr_id){ // Ignore other IDs
             qInfo()<<"Communication RX: Ignoring ID"<<id<<". Still processing communication with "<<multiframe_curr_id;
             return;
         }
@@ -355,6 +338,10 @@ void Communication::_debug_printf_isotp_buffer(){
 //============================================================================
 
 void Communication::rxCANDataSlot(const unsigned int id, const QByteArray &ba){
+    // Real processing
+    if(curr_interface_type != CAN_DRIVER) // CAN_DRIVER message are ignored if a diff interface is selected
+        return;
+
     qInfo("Communication RX: Slot - Received RX CAN Data to be processed");
     uint8_t* data = (uint8_t*)calloc(ba.size(), sizeof(uint8_t));
     if(data != nullptr){
