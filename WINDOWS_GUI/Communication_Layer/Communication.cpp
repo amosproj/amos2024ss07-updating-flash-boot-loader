@@ -4,7 +4,7 @@
 
 //============================================================================
 // Name        : Communication.cpp
-// Author      : Wiktor Pilarczyk
+// Author      : Michael Bauer Wiktor Pilarczyk
 // Version     : 0.2
 // Copyright   : MIT
 // Description : Qt Communication Layer implementation
