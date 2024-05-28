@@ -166,14 +166,14 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
             out << info + "UDS Service: Request Download\n";
 
             // Check on the relevant message - Adress is correct
-            rx_msg_valid = rxMsgValid(neg_resp, false, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
             break;
 
         case FBL_REQUEST_UPLOAD:
             out << info + "UDS Service: Request Upload\n";
 
             // Check on the relevant message - Adress is correct
-            rx_msg_valid = rxMsgValid(neg_resp, false, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
             break;
 
         case FBL_TRANSFER_DATA:
