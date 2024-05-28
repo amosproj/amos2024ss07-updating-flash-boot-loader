@@ -41,9 +41,6 @@ MainWindow::MainWindow(QWidget *parent)
     // UDS TX Signals to Comm TX Slots
     connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
     connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
-
-    // UDS reset message response to handler
-    connect(uds, SIGNAL(resetResponseReceived()), this, SLOT(resetResponseSlot()));
     //=====================================================================
 
     // GUI Console Print
@@ -78,7 +75,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->button_reset, &QPushButton::clicked, this, [=]() {
         if(ui->label_selected_ECU->text() != "") {
             ui->label_reset_status->setText("Reset status: In progress");
-            uds->ecuReset(0x001, FBL_ECU_RESET_WARM_POWERON);
+            if(uds->ecuReset(0x001, FBL_ECU_RESET_WARM_POWERON) == UDS::TX_RX_OK) 
+                ui->label_reset_status->setText("Reset status: Succeeded");
+            else
+                ui->label_reset_status->setText("Reset status: Failed");
         }
     });
 
@@ -224,8 +224,4 @@ void MainWindow::comboBoxIndexChanged(int index)
 // Will write Text to console
 void MainWindow::appendTextToConsole(const QString &text){
     ui->Console->appendPlainText(text);
-}
-
-void MainWindow::resetResponseSlot() {
-    ui->label_reset_status->setText("Reset status: Completed");
 }

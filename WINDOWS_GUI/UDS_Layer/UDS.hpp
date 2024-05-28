@@ -105,8 +105,6 @@ signals:
      */
     void toConsole(const QString &);
 
-    void resetResponseReceived();
-
 public slots:
     /**
      * @brief Slot for received UDS Message to be interpreted

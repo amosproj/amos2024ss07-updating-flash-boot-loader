@@ -114,8 +114,6 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
             break;
 
         case FBL_ECU_RESET:
-            if(info == "Response for ")
-                emit resetResponseReceived();
             out << info + "UDS Service: ECU Reset\n";
             // Check on the relevant message - ECU Reset Type is correct
             if(!neg_resp && rx_no_bytes == no_bytes && rx_exp_data[1] == data[1]){

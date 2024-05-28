@@ -199,7 +199,7 @@ To fully activate the programming session without any restrictions the following
 | Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x02][<span style="color:red">0x11</span>][0x02] |
 | Resp - ID: <span style="color:green">"0x0F24 0010"</span> | [0x02][<span style="color:red">0x51</span>][0x02] |
 
-#### Warm PowerOn Reset
+#### Warm PowerOn Reset (Soft Reset)
 | Type | Bytes |
 |---|---|
 | Req  - ID: <span style="color:yellow">"0x0F24 0011"</span>| [0x02][<span style="color:red">0x11</span>][0x03] |
