@@ -113,14 +113,9 @@ void core0_main(void)
     while(1)
     {
 
+        // UDS handling
 
-
-        //waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 1000));
-
-        //toggle_led_activity(LED1);
-
-        //isotp_send(iso, dataUDS, sizeof(dataUDS));
-
+        /*
         uds_message = isotp_rcv(&total_length);
 
         if(total_length != 0){
@@ -128,10 +123,15 @@ void core0_main(void)
             uds_handleRX(uds_message, total_length);
         }
 
+        */
 
-        //isoTP_echo(iso);
+        // UDS handling
 
-        //ECHO for CAN WRAPPER
+        //ECHO for isoTP layer
+
+        isoTP_echo(iso);
+
+        //ECHO for isoTP layer
 
 
     }
