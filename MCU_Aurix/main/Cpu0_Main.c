@@ -99,15 +99,20 @@ void core0_main(void)
 
     //iso->max_len_per_frame = 8;
 
-    //uint8_t* iso_message;
+    uint8_t* uds_message;
+
+    uint32_t total_length = 0;
+
 
     isoTP* iso = isotp_init();
 
     iso->max_len_per_frame = 8;
 
 
+
     while(1)
     {
+
 
 
         //waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 1000));
@@ -116,9 +121,15 @@ void core0_main(void)
 
         //isotp_send(iso, dataUDS, sizeof(dataUDS));
 
+        uds_message = isotp_rcv(&total_length);
+
+        if(total_length != 0){
+
+            uds_handleRX(uds_message, total_length);
+        }
 
 
-        isoTP_echo(iso);
+        //isoTP_echo(iso);
 
         //ECHO for CAN WRAPPER
 

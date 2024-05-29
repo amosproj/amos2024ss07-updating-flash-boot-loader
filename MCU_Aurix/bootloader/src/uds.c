@@ -9,6 +9,8 @@
 // Description : UDS Layer implementation
 //============================================================================
 
+//TODO: change isoTP handling and discuss with Leon
+
 #include <string.h>
 #include <stdio.h>
 
@@ -103,10 +105,11 @@ void uds_diagnostic_session_control(void){
 void uds_ecu_reset(uint8_t reset_type){
     isoTP* iso = isotp_init();
     iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
-    int len;
+    uint32_t len;
     uint8_t *msg = _create_ecu_reset(&len, 1, reset_type);
     isotp_send(iso, msg, len);
     free(msg);
+
     close_isoTP(iso);
 }
 

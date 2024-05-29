@@ -162,14 +162,14 @@ void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len){
  *
  */
 //TODO: Add flow control logic
-uint8_t* isotp_rcv(int16_t* total_length){
+uint8_t* isotp_rcv(uint32_t* total_length){
     //Caller has to free the returned message
 
 
     // Error: iso_RX is not properly initialized
     if (iso_RX == NULL || iso_RX->data == NULL || iso_RX->write_ptr == NULL) {
 
-        *total_length = -1;
+        *total_length = 0;
 
         return NULL;
     }
@@ -186,12 +186,12 @@ uint8_t* isotp_rcv(int16_t* total_length){
     *total_length = iso_RX->write_ptr - iso_RX->data;
 
     // Create and write buffer for the specific isoTP message received.
-    uint8_t* iso_message = calloc(*total_length, sizeof(uint8_t));
-    memcpy(iso_message, iso_RX->data, *total_length);
+    uint8_t* uds_message = calloc(*total_length, sizeof(uint8_t));
+    memcpy(uds_message, iso_RX->data, *total_length);
 
     rx_reset_isotp_buffer();
 
-    return iso_message;
+    return uds_message;
 }
 
 /*
@@ -304,20 +304,21 @@ void isoTP_echo(isoTP* iso){
 
     //ECHO for CAN WRAPPER
 
-    uint8_t* iso_message = isotp_rcv(&total_length);
+    uint8_t* uds_message = isotp_rcv(&total_length);
 
+    //TODO: Add case for error in rcv function
     if(total_length != 0){
 
         printf("length: %d \n", total_length);
 
         for(int i = 0; i < total_length; i++){
 
-            printf("iso_message[%d]: %d\n", i, iso_message[i]);
+            printf("iso_message[%d]: %d\n", i, uds_message[i]);
         }
 
         printf("\n");
 
-        isotp_send(iso, iso_message, total_length);
+        isotp_send(iso, uds_message, total_length);
 
         tx_reset_isotp_buffer(iso);
     }
