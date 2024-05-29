@@ -3,11 +3,11 @@
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
 
 //============================================================================
-// Name        : bootloader.c
+// Name        : loader.c
 // Author      : Dorothea Ehrl, Michael Bauer
 // Version     : 0.2
 // Copyright   : MIT
-// Description : Bootloader initial file
+// Description : Loader initial file
 //============================================================================
 
 #include "bootloader.h"

@@ -19,12 +19,30 @@
 
 #define SEED_LENGTH     5
 
+struct UDS_Msg {
+    uint32_t len;
+    uint8_t data[]; // flexible array member
+};
+typedef struct UDS_Msg UDS_Msg;
+
+//============================================================================
+// Init
+//============================================================================
+
 void uds_init(void);
 void uds_close(void);
 
+//============================================================================
+// RX
+//============================================================================
+
 void uds_handleRX(uint8_t* data, uint32_t data_len);
 
-void uds_diagnostic_session_control(void);
+//============================================================================
+// TX
+//============================================================================
+
+void uds_diagnostic_session_control(uint8_t session);
 void uds_ecu_reset(uint8_t reset_type);
 void uds_security_access(uint8_t request_type, uint8_t *key, uint8_t key_len);
 void uds_tester_present(void);

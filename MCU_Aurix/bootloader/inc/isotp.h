@@ -16,7 +16,7 @@
 #include "uds_comm_spec.h"
 #include "can_init.h"
 
-// TODO: I changed 'data_out_len' and 'has_next' to uint32_t. Will this still work?
+// Struct that is used for TX
 typedef struct isoTp
 {
     // uds_comm_spec fields
@@ -36,9 +36,9 @@ typedef struct isoTp
 
 }isoTP;
 
+// Struct that is used for RX buffer
 typedef struct isoTp_RX
 {
-
     uint8_t* data;
     uint8_t* write_ptr;
 

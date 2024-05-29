@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>, Sebastian Rodriguez <r99@melao.de>
-
+// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
+// SPDX-FileCopyrightText: 2024 Sebastian Rodriguez <r99@melao.de>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
 //============================================================================
 // Name        : session_manager.h
-// Author      : Dorothea Ehrl, Sebastian Rodriguez
-// Version     : 0.1
+// Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Manages bootloader session including auth
 //============================================================================
@@ -16,14 +17,35 @@
 
 #include "Ifx_Types.h"
 
-// TODO should not all return void
-void setSession(void);
+//============================================================================
+// Init
+//============================================================================
+
+void init(void);
+
+//============================================================================
+// Session Handling
+//============================================================================
+
+boolean setSession(uint8_t session);
+uint8_t getSession(void);
+void sessionControl(void);
+uint8_t SIDallowedInCurrentSession(uint8_t SID);
+
+//============================================================================
+// Authentification
+//============================================================================
+
 uint8_t generateSeed(uint8_t* seed);
 uint8_t verifyKey(uint8_t* key, uint8_t key_len);
 void authenticate(void);
-uint8_t isAuthorized(void);
-uint8_t getSession(void);
-void sessionControl(void);
-void resetECU(void);
+boolean isAuthorized(void);
+
+//============================================================================
+// Reset
+//============================================================================
+
+boolean isResetTypeAvailable(uint8_t reset_type);
+void resetECU(uint8_t reset_type);
 
 #endif /* BOOTLOADER_INC_SESSION_MANAGER_H_ */

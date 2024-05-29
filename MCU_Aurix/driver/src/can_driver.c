@@ -56,7 +56,7 @@ void canAcceptAllMessagesFilter(void){
     g_can.canFilter.type = IfxCan_FilterType_classic;
 
     // Testing lines
-    g_can.canFilter.id1 = 0x0F24;
+    g_can.canFilter.id1 = 0x0F24; // TODO: Change based on Memory DID
     g_can.canFilter.id2 = 0xFFFFFFFF;
 
     //TESTING
