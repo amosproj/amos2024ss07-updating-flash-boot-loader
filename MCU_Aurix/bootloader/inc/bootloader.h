@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
 
 //============================================================================
-// Name        : loader.h
-// Author      : Dorothea Ehrl
-// Version     : 0.1
+// Name        : bootloader.h
+// Author      : Dorothea Ehrl, Michael Bauer
+// Version     : 0.2
 // Copyright   : MIT
-// Description : Loader initial file
+// Description : Bootloader initial file
 //============================================================================
 
 #ifndef BOOTLOADER_INC_LOADER_H_
@@ -36,9 +37,10 @@
 /*------------------------------------------------Function Prototypes------------------------------------------------*/
 /*********************************************************************************************************************/
 
-void show_led(void);
-void show_can(void);
+void init_bootloader(void);
+void cyclicProcessing(void);
+void deinit_bootloader(void);
+
 void show_flash(void);
-void show_uds_rx_read_data(void);
 
 #endif /* BOOTLOADER_INC_LOADER_H_ */

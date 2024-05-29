@@ -30,30 +30,6 @@
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
 
-#include "bootloader.h"
-#include "led_driver.h"
-
-#include "can_driver.h"
-#include "can_init.h"
-#include "isotp.h"
-#include "uds.h"
-
-/*
- * ------------------------------------------------------------------------
- * For Temporary IsoTp sending
- * ------------------------------------------------------------------------
- */
-
-#include <uds_comm_spec.h>
-#include "Bsp.h"
-
-/*
- * ------------------------------------------------------------------------
- * For Temporary IsoTp sending
- * ------------------------------------------------------------------------
- */
-
-
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
 void core0_main(void)
@@ -70,45 +46,12 @@ void core0_main(void)
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
 
-    init_led_driver();
-    //show_flash();
-
-    //show_can();
-    //void (*processData)(void*); // TODO correct function
-    //canInitDriver(processData);
-    //canInitDriver(process_can_to_isotp);
-
-    led_off(LED1);
-    led_off(LED2);
-
-    //isotp_init(&ctx);
-
-    uint8_t dataCAN[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-
-    uint8_t dataUDS[] = {0x10, 0x01};
-
-    uint8_t dataIsoSolo[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
-    uint8_t dataIsoSolo2[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
-
-    uint8_t dataIsoMulti[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
-    
-    //isoTP* iso = isotp_init();
-
-    //iso->max_len_per_frame = 8;
-
-    uint8_t* uds_message;
-    uint32_t total_length = 0;
-
-    uds_init();
+    init_bootloader();
 
     while(1)
     {
-        // UDS handling
-        uds_message = isotp_rcv(&total_length);
-        if(total_length != 0){
-            uds_handleRX(uds_message, total_length);
-        }
+        cyclicProcessing();
     }
 
-    uds_close();
+    deinit_bootloader();
 }

@@ -55,15 +55,8 @@ void canAcceptAllMessagesFilter(void){
     g_can.canFilter.elementConfiguration = IfxCan_FilterElementConfiguration_storeInRxFifo0;
     g_can.canFilter.type = IfxCan_FilterType_classic;
 
-
-    //TESTING
-
-    // Original lines
-    //g_can.canFilter.id1 = 0x0FF;
-    //g_can.canFilter.id2 = 0x700;
-
     // Testing lines
-    g_can.canFilter.id1 = 0xFFFFFFFF;
+    g_can.canFilter.id1 = 0x0F24;
     g_can.canFilter.id2 = 0xFFFFFFFF;
 
     //TESTING
@@ -92,18 +85,7 @@ void initTXandRXNode(void){
     g_can.canNodeConfig.filterConfig.standardListSize = 0;
     g_can.canNodeConfig.filterConfig.extendedListSize = 0;
     g_can.canNodeConfig.filterConfig.standardFilterForNonMatchingFrames = IfxCan_NonMatchingFrame_acceptToRxFifo0;
-
-    //TESTING
-
-    // Original Line
-    //g_can.canNodeConfig.filterConfig.extendedFilterForNonMatchingFrames = IfxCan_NonMatchingFrame_reject;
-
-    //Testing line
     g_can.canNodeConfig.filterConfig.extendedFilterForNonMatchingFrames = IfxCan_NonMatchingFrame_acceptToRxFifo0;
-
-    //TESTING
-
-
     g_can.canNodeConfig.filterConfig.rejectRemoteFramesWithStandardId = TRUE;
     g_can.canNodeConfig.filterConfig.rejectRemoteFramesWithExtendedId = TRUE;
 
@@ -131,8 +113,7 @@ void canInitDriver(void (*processData)(uint32_t*, IfxCan_DataLengthCode)){
     IfxCan_Can_initModule(&g_can.canModule, &g_can.canConfig); /*Init with default config*/
 
     initTXandRXNode();
-    // canAcceptAllMessagesFilter();
-    //processDataFunction = processData;
+    canAcceptAllMessagesFilter();
     
     IfxCan_Can_initMessage(&g_can.rxMsg); /*Init for RX Message*/
     g_can.rxMsg.readFromRxFifo0 = TRUE; /*Read from FIFO0*/
@@ -149,6 +130,7 @@ void canInitDriver(void (*processData)(uint32_t*, IfxCan_DataLengthCode)){
 int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
     IfxCan_Can_initMessage(&g_can.txMsg);
     g_can.txMsg.messageId = canMessageID;
+    g_can.txMsg.messageIdLength = IfxCan_MessageIdLength_extended;
 
     //Not sure if necessary ~Leon
     // Ensure that the size of data does not exceed 8 bytes (32 bits)
@@ -172,13 +154,7 @@ int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
            IfxCan_Can_sendMessage(&g_can.canTXandRXNode, &g_can.txMsg, &g_can.txData[0]))
     {
 
-
     }
 
     return 0;
-}
-
-void canDummyMessagePeriodicly(void){
-    canTransmitMessage(0x123, 0x12345678, 0x87654321);
-    waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 500)); 
 }

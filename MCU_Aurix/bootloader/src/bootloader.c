@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
 
 //============================================================================
-// Name        : loader.c
-// Author      : Dorothea Ehrl
-// Version     : 0.1
+// Name        : bootloader.c
+// Author      : Dorothea Ehrl, Michael Bauer
+// Version     : 0.2
 // Copyright   : MIT
-// Description : Loader initial file
+// Description : Bootloader initial file
 //============================================================================
 
 #include "bootloader.h"
@@ -15,23 +16,44 @@
 #include "can_init.h"
 #include "flash.h"
 #include "led_driver.h"
+#include "isotp.h"
 #include "uds.h"
 
-void show_led(void)
-{
-    toggle_led_activity(LED1);
-    toggle_led_activity(LED1);
+uint8_t* rx_uds_message;
+uint32_t rx_total_length;
 
-    led_on(LED2);
+/**
+ * @brief: Function to init the bootloader logic
+ */
+void init_bootloader(void){
+
+    // Init the LED
+    init_led_driver();
+    led_off(LED1);
     led_off(LED2);
+
+    // Init UDS and CAN
+    rx_total_length = 0;
+    uds_init();
+
 }
 
-void show_can(void)
-{
-    init_led_driver();
+/**
+ * @brief: Function to process the cyclic tasks
+ */
+void cyclicProcessing (void){
+    // UDS RX Handling
+    rx_uds_message = isotp_rcv(&rx_total_length);
+    if(rx_total_length != 0){
+        uds_handleRX(rx_uds_message, rx_total_length);
+    }
+}
 
-    void (*processData)(void*); // TODO correct function
-    canInitDriver(processData);
+/**
+ * @brieg: Function to deinit the bootloader logic
+ */
+void deinit_bootloader(void){
+    uds_close();
 }
 
 void show_flash(void)
@@ -62,9 +84,3 @@ void show_flash(void)
     }
 }
 
-void show_uds_rx_read_data(void)
-{
-    int len;
-    uint8* data = _create_read_data_by_ident(&len, 0, FBL_DID_SYSTEM_NAME, 0, 0);
-    uds_handleRX(data, len);
-}

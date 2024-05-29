@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>, Sebastian Rodriguez <r99@melao.de>
-
+// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
+// SPDX-FileCopyrightText: 2024 Sebastian Rodriguez <r99@melao.de>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
 //============================================================================
 // Name        : uds.h
-// Author      : Dorothea Ehrl, Sebastian Rodriguez
-// Version     : 0.1
+// Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Handles UDS messages from CAN bus
 //============================================================================

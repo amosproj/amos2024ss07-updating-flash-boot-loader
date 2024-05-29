@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>, Sebastian Rodriguez <r99@melao.de>
+// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
+// SPDX-FileCopyrightText: 2024 Sebastian Rodriguez <r99@melao.de>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@faud.de>
 
 //============================================================================
 // Name        : memory.c
-// Author      : Dorothea Ehrl, Sebastian Rodriguez
-// Version     : 0.1
+// Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Manages writing and returning data in memory
 //============================================================================
@@ -12,6 +14,13 @@
 #include <string.h>
 
 #include "memory.h"
+#include "uds_comm_spec.h"
+
+uint32_t getID(){
+    uint8_t ecu_id = 0x001; // To be read from memory
+
+    return (uint32_t)(FBLCAN_BASE_ADDRESS) | (ecu_id<<4);
+}
 
 uint8_t readMemory(uint32_t address, uint16_t len, uint8_t* data){
     // TODO implement
