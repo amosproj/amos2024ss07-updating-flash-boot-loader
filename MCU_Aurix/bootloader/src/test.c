@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText:  Sebastian Rodriguez <r99@melao.de>, 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
+// SPDX-FileCopyrightText: 2024 Sebastian Rodriguez <r99@melao.de>
+// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : test.c
-// Author      : Sebastian Rodriguez, Dorothea Ehrl
-// Version     : 0.1
+// Author      : Sebastian Rodriguez, Dorothea Ehrl, Wiktor Pilarczyk
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Test implementation
 //============================================================================
@@ -26,7 +28,7 @@ void test_diagnostic_session_control(void){
 
 void test_ecu_reset(void){
     int len;
-    uint8_t* data = _create_ecu_reset(&len, 0, FBL_ECU_RESET_POWERON);
+    uint8_t* data = _create_ecu_reset(&len, 0, FBL_ECU_RESET_HARD);
     uds_handleRX(data, len);
     free(data);
 }
