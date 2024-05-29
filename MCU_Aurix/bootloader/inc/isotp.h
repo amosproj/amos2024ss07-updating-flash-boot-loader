@@ -48,7 +48,7 @@ typedef struct isoTp_RX
 
 void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc);
 
-void rx_reset_isotp_buffer();
+void rx_reset_isotp_buffer(void);
 
 void tx_reset_isotp_buffer(isoTP* iso);
 

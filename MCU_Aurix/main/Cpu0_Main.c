@@ -78,11 +78,8 @@ void core0_main(void)
     //canInitDriver(processData);
     //canInitDriver(process_can_to_isotp);
 
-
     led_off(LED1);
     led_off(LED2);
-
-
 
     //isotp_init(&ctx);
 
@@ -100,41 +97,18 @@ void core0_main(void)
     //iso->max_len_per_frame = 8;
 
     uint8_t* uds_message;
-
     uint32_t total_length = 0;
 
-
-    isoTP* iso = isotp_init();
-
-    iso->max_len_per_frame = 8;
-
-
+    uds_init();
 
     while(1)
     {
-
         // UDS handling
-
-        /*
         uds_message = isotp_rcv(&total_length);
-
         if(total_length != 0){
-
             uds_handleRX(uds_message, total_length);
         }
-
-        */
-
-        // UDS handling
-
-        //ECHO for isoTP layer
-
-        isoTP_echo(iso);
-
-        //ECHO for isoTP layer
-
-
     }
 
-    close_isoTP(iso);
+    uds_close();
 }

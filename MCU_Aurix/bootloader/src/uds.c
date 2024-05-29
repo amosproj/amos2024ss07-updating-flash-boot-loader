@@ -23,6 +23,7 @@
 #define REQUEST                                                 0
 #define RESPONSE                                                1
 
+static isoTP* iso;
 
 // TODO should I add these UDS_Msg functions to the header?
 struct UDS_Msg {
@@ -74,6 +75,14 @@ uint16_t getNoBytes(UDS_Msg *msg){
     return bytes;
 }
 
+void uds_init(void){
+    iso = isotp_init();
+}
+
+void uds_close(void){
+    close_isoTP(iso);
+}
+
 uint8_t uds_session_access(uint8_t sid){
     uint8_t session = getSession();
     if (session == FBL_DIAG_SESSION_DEFAULT){
@@ -92,25 +101,22 @@ uint8_t uds_session_access(uint8_t sid){
 }
 
 void uds_diagnostic_session_control(void){
-    isoTP* iso = isotp_init();
+    tx_reset_isotp_buffer(iso);
     iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
     int len;
     uint8_t session = getSession();
     uint8_t *msg = _create_diagnostic_session_control(&len, RESPONSE, session);
     isotp_send(iso, msg, len);
     free(msg);
-    close_isoTP(iso);
 }
 
 void uds_ecu_reset(uint8_t reset_type){
-    isoTP* iso = isotp_init();
+    tx_reset_isotp_buffer(iso);
     iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
     uint32_t len;
     uint8_t *msg = _create_ecu_reset(&len, 1, reset_type);
     isotp_send(iso, msg, len);
     free(msg);
-
-    close_isoTP(iso);
 }
 
 void uds_read_data_by_identifier(uint16_t did){
@@ -124,52 +130,47 @@ void uds_read_data_by_identifier(uint16_t did){
     data = "AMOS FBL 24";
     *data_len = sizeof("AMOS FBL 24");
 
+    tx_reset_isotp_buffer(iso);
     int response_len;
     uint8_t* response_msg = _create_read_data_by_ident(&response_len, RESPONSE, did, data, *data_len);
-    isoTP* iso = isotp_init();
     iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
     isotp_send(iso, response_msg, response_len);
     free(response_msg);
-    close_isoTP(iso);
     free(data);
 }
 
 void uds_security_access(uint8_t request_type, uint8_t *key, uint8_t key_len){
-    isoTP* iso = isotp_init();
+    tx_reset_isotp_buffer(iso);
     iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
     int len;
     uint8_t *msg = _create_security_access(&len, RESPONSE, request_type, key, key_len);
     isotp_send(iso, msg, len);
     free(msg);
-    close_isoTP(iso);
 }
 
 void uds_neg_response(uint8_t reg_sid ,uint8_t neg_code){
-    isoTP* iso = isotp_init();
+    tx_reset_isotp_buffer(iso);
     iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
     int len;
-
     uint8_t *msg = _create_neg_response(&len, reg_sid, neg_code);
     isotp_send(iso, msg, len);
     free(msg);
-    close_isoTP(iso);
 }
 
 void uds_tester_present(void){
-    isoTP* iso = isotp_init();
+    tx_reset_isotp_buffer(iso);
     iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
     int len;
     uint8_t *msg = _create_tester_present(&len, RESPONSE, FBL_TESTER_PRES_WITH_RESPONSE);
     isotp_send(iso, msg, len);
     free(msg);
-    close_isoTP(iso);
 }
 
 void uds_read_memory_by_address(uint32_t address, uint16_t noBytesToRead){
     if(!uds_session_access(FBL_READ_MEMORY_BY_ADDRESS)){
         return;
     }
-    isoTP* iso = isotp_init();
+    tx_reset_isotp_buffer(iso);
     iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
     int len;
 
@@ -181,7 +182,6 @@ void uds_read_memory_by_address(uint32_t address, uint16_t noBytesToRead){
     uint8_t *msg = _create_read_memory_by_address(&len, RESPONSE, address, 0, data, noBytesToRead);
     isotp_send(iso, msg, len);
     free(msg);
-    close_isoTP(iso);
 }
 
 void uds_write_data_by_identifier(uint16_t did, uint8_t* data, uint8_t data_len){
@@ -192,13 +192,12 @@ void uds_write_data_by_identifier(uint16_t did, uint8_t* data, uint8_t data_len)
         uds_neg_response(FBL_WRITE_DATA_BY_IDENTIFIER, FBL_NEGATIVE_RESPONSE);
         return;
     }
-    isoTP* iso = isotp_init();
+    tx_reset_isotp_buffer(iso);
     iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
     int len;
     uint8_t *msg = _create_write_data_by_ident(&len, RESPONSE, did, 0, 0);
     isotp_send(iso, msg, len);
     free(msg);
-    close_isoTP(iso);
 }
 
 void uds_request_download(void){

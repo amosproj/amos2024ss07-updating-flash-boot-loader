@@ -18,6 +18,9 @@
 
 #define SEED_LENGTH     5
 
+void uds_init(void);
+void uds_close(void);
+
 void uds_handleRX(uint8_t* data, uint32_t data_len);
 
 void uds_diagnostic_session_control(void);
