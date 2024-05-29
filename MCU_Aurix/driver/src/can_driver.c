@@ -161,6 +161,7 @@ int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
     g_can.txData[0] = 0;
     g_can.txData[1] = 0;
 
+    g_can.txMsg.dataLengthCode = size;
 
     // Copy up to 8 bytes of data into g_can.txData
     memcpy(g_can.txData, data, size);

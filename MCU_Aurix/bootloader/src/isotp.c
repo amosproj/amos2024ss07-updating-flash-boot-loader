@@ -10,7 +10,7 @@
 
 isoTP_RX* iso_RX;
 
-
+uint8_t isoTP_RX_data_buffer[MAX_ISOTP_MESSAGE_LEN];
 
 /*
  * @brief                       This function initializes the isoTP layer.
@@ -52,6 +52,7 @@ isoTP* isotp_init(){
     }
 
     // TODO: 2000 bytes is too big to allocate, find out how much we can allocate
+    /*
     isotp_RX->data = malloc(500 * sizeof(uint8_t));
     if (isotp_RX->data == NULL){
 
@@ -60,8 +61,11 @@ isoTP* isotp_init(){
 
         return NULL;
     }
+    */
 
-    isotp_RX->write_ptr = isotp_RX->data;
+    isotp_RX->data = isoTP_RX_data_buffer;
+
+    isotp_RX->write_ptr = isoTP_RX_data_buffer;
 
     iso_RX = isotp_RX;
 
@@ -95,6 +99,8 @@ void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len){
         return;
     }
 
+
+
     canTransmitMessage(0x123, first_frame, iso->data_out_len);
     free(first_frame);
 
@@ -124,7 +130,9 @@ void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len){
             return;
         }
 
-        canTransmitMessage(0x123, consecutive_frame, iso->data_out_len);
+        uint32_t temp_consec = iso->data_out_len;
+
+        canTransmitMessage(0x123, consecutive_frame, temp_consec);
         free(consecutive_frame);
 
         // Handle block size (BS)
@@ -154,14 +162,14 @@ void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len){
  *
  */
 //TODO: Add flow control logic
-uint8_t* isotp_rcv(int16_t* total_length){
+uint8_t* isotp_rcv(uint32_t* total_length){
     //Caller has to free the returned message
 
 
     // Error: iso_RX is not properly initialized
     if (iso_RX == NULL || iso_RX->data == NULL || iso_RX->write_ptr == NULL) {
 
-        *total_length = -1;
+        *total_length = 0;
 
         return NULL;
     }
@@ -178,12 +186,12 @@ uint8_t* isotp_rcv(int16_t* total_length){
     *total_length = iso_RX->write_ptr - iso_RX->data;
 
     // Create and write buffer for the specific isoTP message received.
-    uint8_t* iso_message = calloc(*total_length, sizeof(uint8_t));
-    memcpy(iso_message, iso_RX->data, *total_length);
+    uint8_t* uds_message = calloc(*total_length, sizeof(uint8_t));
+    memcpy(uds_message, iso_RX->data, *total_length);
 
     rx_reset_isotp_buffer();
 
-    return iso_message;
+    return uds_message;
 }
 
 /*
@@ -288,6 +296,32 @@ void tx_reset_isotp_buffer(isoTP* iso){
     iso->bs = 0;                 // Block Size
     iso->stmin = 0;              // Separation Time Minimum
     iso->timer = 0;              // Timer for separation time
+}
+
+void isoTP_echo(isoTP* iso){
+
+    int16_t total_length = 0;
+
+    //ECHO for CAN WRAPPER
+
+    uint8_t* uds_message = isotp_rcv(&total_length);
+
+    //TODO: Add case for error in rcv function
+    if(total_length != 0){
+
+        printf("length: %d \n", total_length);
+
+        for(int i = 0; i < total_length; i++){
+
+            printf("iso_message[%d]: %d\n", i, uds_message[i]);
+        }
+
+        printf("\n");
+
+        isotp_send(iso, uds_message, total_length);
+
+        tx_reset_isotp_buffer(iso);
+    }
 }
 
 /*

@@ -78,11 +78,8 @@ void core0_main(void)
     //canInitDriver(processData);
     //canInitDriver(process_can_to_isotp);
 
-
     led_off(LED1);
     led_off(LED2);
-
-
 
     //isotp_init(&ctx);
 
@@ -99,52 +96,19 @@ void core0_main(void)
 
     //iso->max_len_per_frame = 8;
 
-    //uint8_t* iso_message;
+    uint8_t* uds_message;
+    uint32_t total_length = 0;
 
-    isoTP* iso = isotp_init();
-
-    iso->max_len_per_frame = 8;
-
-    uint8_t* iso_message;
-
-    int16_t total_length = 0;
+    uds_init();
 
     while(1)
     {
-
-
-        //waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 1000));
-
-        //toggle_led_activity(LED1);
-
-        //isotp_send(iso, dataUDS, sizeof(dataUDS));
-
-
-
-        total_length = 0;
-
-        //ECHO for CAN WRAPPER
-
-        iso_message = isotp_rcv(&total_length);
-
+        // UDS handling
+        uds_message = isotp_rcv(&total_length);
         if(total_length != 0){
-
-            printf("length: %d \n", total_length);
-
-            for(int i = 0; i < total_length; i++){
-
-                printf("iso_message[%d]: %d\n", i, iso_message[i]);
-            }
-
-            printf("\n");
-
-            isotp_send(iso, iso_message, total_length);
+            uds_handleRX(uds_message, total_length);
         }
-
-        //ECHO for CAN WRAPPER
-
-
     }
 
-    close_isoTP(iso);
+    uds_close();
 }
