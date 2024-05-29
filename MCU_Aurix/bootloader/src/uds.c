@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>, Sebastian Rodriguez <r99@melao.de>
+// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
+// SPDX-FileCopyrightText: 2024 Sebastian Rodriguez <r99@melao.de>
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : uds.c
-// Author      : Dorothea Ehrl, Sebastian Rodriguez
-// Version     : 0.1
+// Author      : Dorothea Ehrl, Sebastian Rodriguez, Wiktor Pilarczyk
+// Version     : 0.2
 // Copyright   : MIT
 // Description : UDS Layer implementation
 //============================================================================
@@ -241,9 +243,9 @@ void uds_handleRX(uint8_t* data, uint32_t data_len){
 
         case FBL_ECU_RESET:
             reset_type = msg->data[1];
-            if (reset_type == FBL_ECU_RESET_POWERON || reset_type == FBL_ECU_RESET_COLD_POWERON || reset_type == FBL_ECU_RESET_WARM_POWERON){
+            if (reset_type == FBL_ECU_RESET_HARD || reset_type == FBL_ECU_RESET_SOFT){
                 uds_ecu_reset(reset_type);
-                resetECU();
+                resetECU(reset_type);
             }
             else
             {

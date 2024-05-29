@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>, Sebastian Rodriguez <r99@melao.de>
+// SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
+// SPDX-FileCopyrightText: 2024 Sebastian Rodriguez <r99@melao.de>
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : session_manager.h
-// Author      : Dorothea Ehrl, Sebastian Rodriguez
-// Version     : 0.1
+// Author      : Dorothea Ehrl, Sebastian Rodriguez, Wiktor Pilarczyk
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Manages bootloader session including auth
 //============================================================================
@@ -24,6 +26,6 @@ void authenticate(void);
 uint8_t isAuthorized(void);
 uint8_t getSession(void);
 void sessionControl(void);
-void resetECU(void);
+void resetECU(uint8_t reset_type);
 
 #endif /* BOOTLOADER_INC_SESSION_MANAGER_H_ */

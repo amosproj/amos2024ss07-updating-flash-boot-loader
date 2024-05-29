@@ -75,7 +75,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->button_reset, &QPushButton::clicked, this, [=]() {
         if(ui->label_selected_ECU->text() != "") {
             ui->label_reset_status->setText("Reset status: In progress");
-            if(uds->ecuReset(0x001, FBL_ECU_RESET_WARM_POWERON) == UDS::TX_RX_OK) 
+            if(uds->ecuReset(0x001, FBL_ECU_RESET_SOFT) == UDS::TX_RX_OK) 
                 ui->label_reset_status->setText("Reset status: Succeeded");
             else
                 ui->label_reset_status->setText("Reset status: Failed");

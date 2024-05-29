@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : uds_comm_spec.h
-// Author      : Michael Bauer, Leon Wilms
-// Version     : 0.4
+// Author      : Michael Bauer, Leon Wilms, Wiktor Pilarczyk
+// Version     : 0.5
 // Copyright   : MIT
 // Description : UDS communication specification for AMOS Flashbootloader
 //============================================================================
@@ -98,9 +99,8 @@ extern "C" {
 //////////////////////////////////////////////////////////////////////////////
 // ECU Reset (0x11)
 //////////////////////////////////////////////////////////////////////////////
-#define FBL_ECU_RESET_POWERON                                       (0x01)
-#define FBL_ECU_RESET_COLD_POWERON                                  (0x02)
-#define FBL_ECU_RESET_WARM_POWERON                                  (0x03)
+#define FBL_ECU_RESET_HARD                                          (0x01)
+#define FBL_ECU_RESET_SOFT                                          (0x03)
 
 //////////////////////////////////////////////////////////////////////////////
 // Security Access (0x27)
