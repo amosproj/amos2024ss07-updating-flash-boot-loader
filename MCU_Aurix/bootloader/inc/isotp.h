@@ -60,6 +60,8 @@ uint8_t* isotp_rcv(int16_t* total_length);
 
 void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc);
 
+void isoTP_echo(isoTP* iso);
+
 void close_isoTP(isoTP* iso);
 
 #endif /* BOOTLOADER_INC_ISOTP_H_ */

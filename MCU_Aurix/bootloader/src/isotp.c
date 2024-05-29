@@ -10,7 +10,7 @@
 
 isoTP_RX* iso_RX;
 
-
+uint8_t isoTP_RX_data_buffer[MAX_ISOTP_MESSAGE_LEN];
 
 /*
  * @brief                       This function initializes the isoTP layer.
@@ -52,6 +52,7 @@ isoTP* isotp_init(){
     }
 
     // TODO: 2000 bytes is too big to allocate, find out how much we can allocate
+    /*
     isotp_RX->data = malloc(500 * sizeof(uint8_t));
     if (isotp_RX->data == NULL){
 
@@ -60,8 +61,11 @@ isoTP* isotp_init(){
 
         return NULL;
     }
+    */
 
-    isotp_RX->write_ptr = isotp_RX->data;
+    isotp_RX->data = isoTP_RX_data_buffer;
+
+    isotp_RX->write_ptr = isoTP_RX_data_buffer;
 
     iso_RX = isotp_RX;
 
@@ -95,6 +99,8 @@ void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len){
         return;
     }
 
+
+
     canTransmitMessage(0x123, first_frame, iso->data_out_len);
     free(first_frame);
 
@@ -124,7 +130,9 @@ void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len){
             return;
         }
 
-        canTransmitMessage(0x123, consecutive_frame, iso->data_out_len);
+        uint32_t temp_consec = iso->data_out_len;
+
+        canTransmitMessage(0x123, consecutive_frame, temp_consec);
         free(consecutive_frame);
 
         // Handle block size (BS)
@@ -288,6 +296,31 @@ void tx_reset_isotp_buffer(isoTP* iso){
     iso->bs = 0;                 // Block Size
     iso->stmin = 0;              // Separation Time Minimum
     iso->timer = 0;              // Timer for separation time
+}
+
+void isoTP_echo(isoTP* iso){
+
+    int16_t total_length = 0;
+
+    //ECHO for CAN WRAPPER
+
+    uint8_t* iso_message = isotp_rcv(&total_length);
+
+    if(total_length != 0){
+
+        printf("length: %d \n", total_length);
+
+        for(int i = 0; i < total_length; i++){
+
+            printf("iso_message[%d]: %d\n", i, iso_message[i]);
+        }
+
+        printf("\n");
+
+        isotp_send(iso, iso_message, total_length);
+
+        tx_reset_isotp_buffer(iso);
+    }
 }
 
 /*

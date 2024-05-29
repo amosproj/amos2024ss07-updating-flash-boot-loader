@@ -105,9 +105,6 @@ void core0_main(void)
 
     iso->max_len_per_frame = 8;
 
-    uint8_t* iso_message;
-
-    int16_t total_length = 0;
 
     while(1)
     {
@@ -121,25 +118,7 @@ void core0_main(void)
 
 
 
-        total_length = 0;
-
-        //ECHO for CAN WRAPPER
-
-        iso_message = isotp_rcv(&total_length);
-
-        if(total_length != 0){
-
-            printf("length: %d \n", total_length);
-
-            for(int i = 0; i < total_length; i++){
-
-                printf("iso_message[%d]: %d\n", i, iso_message[i]);
-            }
-
-            printf("\n");
-
-            isotp_send(iso, iso_message, total_length);
-        }
+        isoTP_echo(iso);
 
         //ECHO for CAN WRAPPER
 
