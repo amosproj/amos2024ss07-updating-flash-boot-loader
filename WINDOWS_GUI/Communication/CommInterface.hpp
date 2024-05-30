@@ -77,6 +77,24 @@ protected:
 signals:
 
     /**
+     * @brief Signals that DEBUG text is available for printing to console
+     * @param text To be printed
+     */
+    void debugPrint(const QString &text);
+
+    /**
+     * @brief Signals that INFO text is available for printing to console
+     * @param text To be printed
+     */
+    void infoPrint(const QString &text);
+
+    /**
+     * @brief Signals that ERROR text is available for printing to console
+     * @param text To be printed
+     */
+    void errorPrint(const QString &text);
+
+    /**
      * @brief Signals the status of driver init
      * @param initstatus
      */
