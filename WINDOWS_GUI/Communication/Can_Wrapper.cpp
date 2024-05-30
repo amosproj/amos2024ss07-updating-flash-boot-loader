@@ -97,6 +97,7 @@ uint8_t CAN_Wrapper::initDriver(){
 	status = xlGetApplConfig(appName, CHAN01, &hwType, &hwIndex, &hwChannel, busType);
 
 	if (status == XL_SUCCESS) {
+        emit infoPrint("CAN Driver: Opened Driver and loaded Config for Appname "+QString(appName));
 		_printConfig();
 
         if (DEBUGGING) qInfo("----------------------------------------------------------------------------------------------");
@@ -118,6 +119,7 @@ uint8_t CAN_Wrapper::initDriver(){
 
 		// State Error if no assignment is given
 		if(!found){
+            emit errorPrint("CAN Driver: No assignment found in Configuration. Please assign the CAN Channel in Vector Hardware Config or Vector Hardware Manager and restart the application");
             qInfo() << "CAN_Wrapper: Please assign "<< MAX_USED_CHANNEL<<" CAN channel(s) in Vector Hardware Config or Vector Hardware Manager and restart the application";
 			status = XL_ERROR;
 		}
@@ -133,9 +135,11 @@ uint8_t CAN_Wrapper::initDriver(){
 		// Set the defined BaudRate
         qInfo("CAN_Wrapper: Set Baudrate");
 		if ((status == XL_SUCCESS) && (portHandle != XL_INVALID_PORTHANDLE)){
-			status = setBaudrate(baudrate);
+            emit infoPrint("CAN Driver: Successfully opened Port");
+            status = setBaudrate(baudrate);
 		}
 		else {
+            emit errorPrint("CAN Driver: Could not open Port");
 			xlClosePort(portHandle);
 			portHandle = XL_INVALID_PORTHANDLE;
 			status = XL_ERROR;
@@ -144,18 +148,26 @@ uint8_t CAN_Wrapper::initDriver(){
 		// Activate all channel on the bus
         qInfo("CAN_Wrapper: Activate all channel on the bus");
 		if (status == XL_SUCCESS){
+            emit infoPrint("CAN Driver: Successfully set the Baudrate for the opened Port");
 			status = actChannels();
 		}
+        else {
+            emit errorPrint("CAN Driver: Could not set the Baudrate rate for the Port");
+        }
 
 		// Get an event for every message
         qInfo("CAN_Wrapper: Get event for every message");
 		if (status == XL_SUCCESS){
+            emit infoPrint("CAN Driver: Successfully activated all Channel on the Bus");
 			status = setNotification();
 		}
 
-		if (status != XL_SUCCESS)
+        if (status != XL_SUCCESS){
+            emit errorPrint("CAN Driver: Error during initialization of the driver. Status Info: "+ QString(xlGetErrorString(status)));
             qInfo() << "CAN_Wrapper: Error during initialization of the driver! Info:"<<xlGetErrorString(status);
-        else{
+
+        }else{
+            emit infoPrint("CAN Driver: Init successfully");
             qInfo() << "CAN_Wrapper: Initialization of the driver finished! Info:"<<xlGetErrorString(status);
         }
         if (DEBUGGING) qInfo("----------------------------------------------------------------------------------------------\n");
@@ -179,6 +191,7 @@ uint8_t CAN_Wrapper::initDriver(){
 				appChannel++;
 			}
 		}
+        emit errorPrint("CAN Driver: No assignment found in Configuration. Please assign the CAN Channel in Vector Hardware Config or Vector Hardware Manager and restart the application");
         qInfo("CAN_Wrapper: No HW defined");
         qInfo() << "CAN_Wrapper: Please assign "<< MAX_USED_CHANNEL<<" CAN channel(s) in Vector Hardware Config or Vector Hardware Manager and restart the application";
         emit driverInit(xlGetErrorString(XL_ERR_INIT_ACCESS_MISSING));
