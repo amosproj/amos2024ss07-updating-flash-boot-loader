@@ -26,8 +26,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     qInfo("Main: Create Communication Layer");
     comm = new Communication();
-    comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
-    comm->init(Communication::CAN_DRIVER); // Set to CAN
 
     qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
     uds = new UDS(0x001);
@@ -45,6 +43,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     // GUI Console Print
     connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)));
+    connect(comm, SIGNAL(toConsole(QString)), this, SLOT(appendTextToConsole(QString)), Qt::DirectConnection);
+
+
+    // Init the Communication
+    comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
+    comm->init(Communication::CAN_DRIVER); // Set to CAN
+
 
     //=====================================================================
 
