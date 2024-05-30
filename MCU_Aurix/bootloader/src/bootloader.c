@@ -18,6 +18,8 @@
 #include "led_driver.h"
 #include "isotp.h"
 #include "uds.h"
+#include "session_manager.h"
+#include "memory.h"
 
 uint8_t* rx_uds_message;
 uint32_t rx_total_length;
@@ -31,6 +33,12 @@ void init_bootloader(void){
     init_led_driver();
     led_off(LED1);
     led_off(LED2);
+
+    // Memory
+    init_memory();
+
+    // Session Manager
+    init_session_manager();
 
     // Init UDS and CAN
     rx_total_length = 0;

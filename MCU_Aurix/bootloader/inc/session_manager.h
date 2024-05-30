@@ -13,6 +13,8 @@
 #ifndef BOOTLOADER_INC_SESSION_MANAGER_H_
 #define BOOTLOADER_INC_SESSION_MANAGER_H_
 
+#define SESSION_TIMEOUT_MS          (5000)
+
 #include <stdint.h>
 
 #include "Ifx_Types.h"
@@ -21,7 +23,7 @@
 // Init
 //============================================================================
 
-void init(void);
+void init_session_manager(void);
 
 //============================================================================
 // Session Handling
@@ -38,7 +40,7 @@ uint8_t SIDallowedInCurrentSession(uint8_t SID);
 
 uint8_t generateSeed(uint8_t* seed);
 uint8_t verifyKey(uint8_t* key, uint8_t key_len);
-void authenticate(void);
+void resetAuthentication(void);
 boolean isAuthorized(void);
 
 //============================================================================

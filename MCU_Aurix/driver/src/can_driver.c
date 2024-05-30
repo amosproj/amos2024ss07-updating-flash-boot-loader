@@ -45,6 +45,8 @@ void canIsrTxHandler(void){
 void canIsrRxFifo0Handler(){
         IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_rxFifo0NewMessage); /*Clear Message Stored Flag*/
         IfxCan_Can_readMessage(&g_can.canTXandRXNode, &g_can.rxMsg, (uint32*)g_can.rxData);
+
+        // TODO: Filter for Own ECU ID or Broadcast messages - Do not call processDataFunction if message is for other ECU
         processDataFunction(g_can.rxData, g_can.rxMsg.dataLengthCode); //has to be casted in ISO-Tp
 
 }

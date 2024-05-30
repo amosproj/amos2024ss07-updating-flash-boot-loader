@@ -20,7 +20,7 @@ boolean authenticated;
 // Init
 //============================================================================
 
-void init(){
+void init_session_manager(){
     session = FBL_DIAG_SESSION_DEFAULT;
     authenticated = 1; // Currently no authentification necessary
 }
@@ -28,10 +28,18 @@ void init(){
 //============================================================================
 // Session Handling
 //============================================================================
+/**
+ * This function returns the current session
+ */
 uint8_t getSession(void){
     return session;
 }
 
+/**
+ * This function sets the given session if it is available
+ * Return 0: if OK
+ * Return NRC: if not allowed, Negative Response Code can directly be forwarded
+ */
 uint8_t setSession(uint8_t session_to_set){
 
     if(session != FBL_DIAG_SESSION_DEFAULT && session != FBL_DIAG_SESSION_PROGRAMMING)
@@ -39,6 +47,17 @@ uint8_t setSession(uint8_t session_to_set){
 
     session = session_to_set;
     return 0;
+}
+
+/**
+ * This function checks on time based controlling of diagnostic session.
+ */
+void sessionControl(void){
+    // TODO: Check on timeout for Programming Session -> Change to Default Session after SESSION_TIMEOUT_MS + Reset the Security Access
+
+    // Check on Timeout
+    // setSession(FBL_DIAG_SESSION_DEFAULT);
+    // resetAuthentication();
 }
 
 /**
@@ -96,7 +115,12 @@ uint8_t verifyKey(uint8_t* key, uint8_t key_len){
     // TODO implement
 
     // returns 0: key matches, returns something else: key not matching key we calculated from seed
+    authenticated = 1;
     return 0;
+}
+
+void resetAuthentication(void){
+    authenticated = 0;
 }
 
 uint8_t isAuthorized(void){
