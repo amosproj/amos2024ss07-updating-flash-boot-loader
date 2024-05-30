@@ -292,7 +292,7 @@ void uds_read_memory_by_address(uint32_t address, uint16_t noBytesToRead){
  */
 void uds_write_data_by_identifier(uint16_t did, uint8_t* data, uint8_t data_len){
     uint8_t nrc = writeData(did, data, data_len);
-    if(!nrc){
+    if(nrc){
         uds_neg_response(FBL_WRITE_DATA_BY_IDENTIFIER, nrc);
         return;
     }

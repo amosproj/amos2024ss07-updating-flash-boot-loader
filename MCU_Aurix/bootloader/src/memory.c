@@ -17,18 +17,18 @@
 #include "uds_comm_spec.h"
 
 // TODO: Exchange hard coded variables with read via init()
-uint8_t did_system_name[FBL_DID_SYSTEM_NAME_BYTES_SIZE] = "AMOS FBL 24";
-uint8_t did_programming_date[FBL_DID_PROGRAMMING_DATE_BYTES_SIZE] = {0x30, 0x05, 0x24};
-uint8_t did_bl_key_address[FBL_DID_BL_KEY_ADDRESS_BYTES_SIZE] = {0xA0, 0x4F, 0x80, 0x09};
-uint8_t did_bl_key_good_value[FBL_DID_BL_KEY_GOOD_VALUE_BYTES_SIZE] = {0x93, 0x86, 0xC3, 0xA5};
-uint8_t did_can_base_mask[FBL_DID_CAN_BASE_MASK_BYTES_SIZE] = {0x0F, 0x24};
-uint8_t did_can_id[FBL_DID_CAN_ID_BYTES_SIZE] = {0x00, 0x01};
+uint8_t did_system_name[FBL_DID_SYSTEM_NAME_BYTES_SIZE] =                           "AMOS FBL 24";
+uint8_t did_programming_date[FBL_DID_PROGRAMMING_DATE_BYTES_SIZE] =                 {0x30, 0x05, 0x24};
+uint8_t did_bl_key_address[FBL_DID_BL_KEY_ADDRESS_BYTES_SIZE] =                     {0xA0, 0x4F, 0x80, 0x09};
+uint8_t did_bl_key_good_value[FBL_DID_BL_KEY_GOOD_VALUE_BYTES_SIZE] =               {0x93, 0x86, 0xC3, 0xA5};
+uint8_t did_can_base_mask[FBL_DID_CAN_BASE_MASK_BYTES_SIZE] =                       {0x0F, 0x24};
+uint8_t did_can_id[FBL_DID_CAN_ID_BYTES_SIZE] =                                     {0x00, 0x01};
 uint8_t did_bl_write_start_add_core0[FBL_DID_BL_WRITE_START_ADD_CORE0_BYTES_SIZE] = {0xA0, 0x09, 0x00, 0x00};
-uint8_t did_bl_write_end_add_core0[FBL_DID_BL_WRITE_END_ADD_CORE0_BYTES_SIZE] = {0xA0, 0x1F, 0xFF, 0xFF};
+uint8_t did_bl_write_end_add_core0[FBL_DID_BL_WRITE_END_ADD_CORE0_BYTES_SIZE] =     {0xA0, 0x1F, 0xFF, 0xFF};
 uint8_t did_bl_write_start_add_core1[FBL_DID_BL_WRITE_START_ADD_CORE1_BYTES_SIZE] = {0xA0, 0x30, 0x40, 0x00};
-uint8_t did_bl_write_end_add_core1[FBL_DID_BL_WRITE_END_ADD_CORE1_BYTES_SIZE]= {0xA0, 0x4F, 0xF7, 0xFF};
-uint8_t did_bl_write_start_add_core2[FBL_DID_BL_WRITE_START_ADD_CORE2_BYTES_SIZE]= {0xFF, 0xFF, 0xFF, 0xFF};
-uint8_t did_bl_write_end_add_core2[FBL_DID_BL_WRITE_END_ADD_CORE2_BYTES_SIZE]= {0xFF, 0xFF, 0xFF, 0xFF};
+uint8_t did_bl_write_end_add_core1[FBL_DID_BL_WRITE_END_ADD_CORE1_BYTES_SIZE]=      {0xA0, 0x4F, 0xF7, 0xFF};
+uint8_t did_bl_write_start_add_core2[FBL_DID_BL_WRITE_START_ADD_CORE2_BYTES_SIZE]=  {0xFF, 0xFF, 0xFF, 0xFF};
+uint8_t did_bl_write_end_add_core2[FBL_DID_BL_WRITE_END_ADD_CORE2_BYTES_SIZE]=      {0xFF, 0xFF, 0xFF, 0xFF};
 
 //============================================================================
 // Init
@@ -153,6 +153,13 @@ uint8_t* readData(uint16_t identifier, uint8_t* len, uint8_t* nrc){
     return 0; // return 0 on error
 }
 
+
+static inline void write_to_variable(uint8_t len, uint8_t *data, uint8_t* var){
+    for(int i = 0; i < len; i++){
+        var[i] = data[i];
+    }
+}
+
 uint8_t writeData(uint16_t identifier, uint8_t* data, uint8_t len){
     // TODO: Write to and Read from real memory
     // TBD: Store values to local variables if we have enough space to keep answer times short -> Write+Read in case of writeData
@@ -160,75 +167,75 @@ uint8_t writeData(uint16_t identifier, uint8_t* data, uint8_t len){
         case FBL_DID_SYSTEM_NAME:
             if(len > FBL_DID_SYSTEM_NAME_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
-            memcpy(data, did_system_name, len);
+            write_to_variable(len, data, did_system_name);
             break;
 
         case FBL_DID_PROGRAMMING_DATE:
             if(len != FBL_DID_PROGRAMMING_DATE_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
-            memcpy(data, did_programming_date, len);
+            write_to_variable(len, data, did_programming_date);
             break;
 
         case FBL_DID_BL_KEY_ADDRESS:
             if(len != FBL_DID_PROGRAMMING_DATE_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
-            memcpy(data, did_bl_key_address, len);
+            write_to_variable(len, data, did_bl_key_address);
             break;
 
         case FBL_DID_BL_KEY_GOOD_VALUE:
             if(len != FBL_DID_BL_KEY_GOOD_VALUE_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
-            memcpy(data, did_bl_key_good_value, len);
+            write_to_variable(len, data, did_bl_key_good_value);
             break;
 
         case FBL_DID_CAN_BASE_MASK:
             if(len != FBL_DID_CAN_BASE_MASK_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
-            memcpy(data, did_can_base_mask, len);
+            write_to_variable(len, data, did_can_base_mask);
             break;
 
         case FBL_DID_CAN_ID:
             if(len != FBL_DID_CAN_ID_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
-            memcpy(data, did_can_id, len);
+            write_to_variable(len, data, did_can_id);
             break;
 
         case FBL_DID_BL_WRITE_START_ADD_CORE0:
             if(len != FBL_DID_BL_WRITE_START_ADD_CORE0_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
-            memcpy(data, did_bl_write_start_add_core0, len);
+            write_to_variable(len, data, did_bl_write_start_add_core0);
             break;
 
         case FBL_DID_BL_WRITE_END_ADD_CORE0:
             if(len != FBL_DID_BL_WRITE_END_ADD_CORE0_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
-            memcpy(data, did_bl_write_end_add_core0, len);
+            write_to_variable(len, data, did_bl_write_end_add_core0);
             break;
 
 
         case FBL_DID_BL_WRITE_START_ADD_CORE1:
             if(len != FBL_DID_BL_WRITE_START_ADD_CORE1_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
-            memcpy(data, did_bl_write_start_add_core1, len);
+            write_to_variable(len, data, did_bl_write_start_add_core1);
             break;
 
         case FBL_DID_BL_WRITE_END_ADD_CORE1:
             if(len != FBL_DID_BL_WRITE_END_ADD_CORE1_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
-            memcpy(data, did_bl_write_end_add_core1, len);
+            write_to_variable(len, data, did_bl_write_end_add_core1);
             break;
 
 
         case FBL_DID_BL_WRITE_START_ADD_CORE2:
             if(len != FBL_DID_BL_WRITE_START_ADD_CORE2_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
-            memcpy(data, did_bl_write_start_add_core2, len);
+            write_to_variable(len, data, did_bl_write_start_add_core2);
             break;
 
         case FBL_DID_BL_WRITE_END_ADD_CORE2:
             if(len != FBL_DID_BL_WRITE_END_ADD_CORE2_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
-            memcpy(data, did_bl_write_end_add_core2, len);
+            write_to_variable(len, data, did_bl_write_end_add_core2);
             break;
 
         default: // Negative Response Code
