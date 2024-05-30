@@ -14,7 +14,7 @@
 #include "../../WINDOWS_GUI/UDS_Spec/uds_comm_spec.h"
 
 ECU_Test::ECU_Test(uint8_t gui_id) : Testcase(gui_id){
-
+    writing_test = true; // Change if writing test should be activated
 }
 
 ECU_Test::~ECU_Test(){
@@ -92,63 +92,134 @@ void ECU_Test::messageChecker(const unsigned int id, const QByteArray &rec){
         }
         emit toConsole(">> Received Read Data by Identifiert for DID " + QString("0x%1").arg(did, 2, 16, QLatin1Char( '0' )));
         if(did == FBL_DID_SYSTEM_NAME){
-            uint8_t check_data[] = "AMOS FBL 24";
-            msg = _create_read_data_by_ident(&len, 1, FBL_DID_SYSTEM_NAME, check_data, sizeof(check_data));
+            if(writing_test){
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_SYSTEM_NAME, did_system_name, sizeof(did_system_name));
+            }
+            else{
+                uint8_t check_data[] = "AMOS FBL 24";
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_SYSTEM_NAME, check_data, sizeof(check_data));
+            }
+
         }
 
         else if(did == FBL_DID_PROGRAMMING_DATE){
-            uint8_t check_data[] = {0x30, 0x05, 0x24};
-            msg = _create_read_data_by_ident(&len, 1, FBL_DID_PROGRAMMING_DATE, check_data, sizeof(check_data));
+            if(writing_test){
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_PROGRAMMING_DATE, did_programming_date, sizeof(did_programming_date));
+            }
+            else{
+                uint8_t check_data[] = {0x30, 0x05, 0x24};
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_PROGRAMMING_DATE, check_data, sizeof(check_data));
+            }
+
         }
 
         else if(did == FBL_DID_BL_KEY_ADDRESS){
-            uint8_t check_data[] = {0xA0, 0x4F, 0x80, 0x09};
-            msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_KEY_ADDRESS, check_data, sizeof(check_data));
+            if(writing_test){
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_KEY_ADDRESS, did_bl_key_address, sizeof(did_bl_key_address));
+            }
+            else{
+                uint8_t check_data[] = {0xA0, 0x4F, 0x80, 0x09};
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_KEY_ADDRESS, check_data, sizeof(check_data));
+            }
+
         }
 
         else if(did == FBL_DID_BL_KEY_GOOD_VALUE){
-            uint8_t check_data[] = {0x93, 0x86, 0xC3, 0xA5};
-            msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_KEY_GOOD_VALUE, check_data, sizeof(check_data));
+            if(writing_test){
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_KEY_GOOD_VALUE, did_bl_key_good_value, sizeof(did_bl_key_good_value));
+            }
+            else{
+                uint8_t check_data[] = {0x93, 0x86, 0xC3, 0xA5};
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_KEY_GOOD_VALUE, check_data, sizeof(check_data));
+            }
+
         }
 
         else if(did == FBL_DID_CAN_BASE_MASK){
-            uint8_t check_data[] = {0x0F, 0x24};
-            msg = _create_read_data_by_ident(&len, 1, FBL_DID_CAN_BASE_MASK, check_data, sizeof(check_data));
+            if(writing_test){
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_CAN_BASE_MASK, did_can_base_mask, sizeof(did_can_base_mask));
+            }
+            else{
+                uint8_t check_data[] = {0x0F, 0x24};
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_CAN_BASE_MASK, check_data, sizeof(check_data));
+            }
+
         }
 
         else if(did == FBL_DID_CAN_ID){
-            uint8_t check_data[] = {0x00, 0x01};
-            msg = _create_read_data_by_ident(&len, 1, FBL_DID_CAN_ID, check_data, sizeof(check_data));
+            if(writing_test){
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_CAN_ID, did_can_id, sizeof(did_can_id));
+            }
+            else{
+                uint8_t check_data[] = {0x00, 0x01};
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_CAN_ID, check_data, sizeof(check_data));
+            }
+
         }
 
         else if(did == FBL_DID_BL_WRITE_START_ADD_CORE0){
-            uint8_t check_data[] = {0xA0, 0x09, 0x00, 0x00};
-            msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_START_ADD_CORE0, check_data, sizeof(check_data));
+            if(writing_test){
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_START_ADD_CORE0, did_bl_write_start_add_core0, sizeof(did_bl_write_start_add_core0));
+            }
+            else{
+                uint8_t check_data[] = {0xA0, 0x09, 0x00, 0x00};
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_START_ADD_CORE0, check_data, sizeof(check_data));
+            }
+
         }
 
         else if(did == FBL_DID_BL_WRITE_END_ADD_CORE0){
-            uint8_t check_data[] = {0xA0, 0x1F, 0xFF, 0xFF};
-            msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_END_ADD_CORE0, check_data, sizeof(check_data));
+            if(writing_test){
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_END_ADD_CORE0, did_bl_write_end_add_core0, sizeof(did_bl_write_end_add_core0));
+            }
+            else{
+                uint8_t check_data[] = {0xA0, 0x1F, 0xFF, 0xFF};
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_END_ADD_CORE0, check_data, sizeof(check_data));
+            }
+
         }
 
         else if(did == FBL_DID_BL_WRITE_START_ADD_CORE1){
-            uint8_t check_data[] = {0xA0, 0x30, 0x40, 0x00};
-            msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_START_ADD_CORE1, check_data, sizeof(check_data));
+            if(writing_test){
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_START_ADD_CORE1, did_bl_write_start_add_core1, sizeof(did_bl_write_start_add_core1));
+            }
+            else{
+                uint8_t check_data[] = {0xA0, 0x30, 0x40, 0x00};
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_START_ADD_CORE1, check_data, sizeof(check_data));
+            }
+
         }
 
         else if(did == FBL_DID_BL_WRITE_END_ADD_CORE1){
-            uint8_t check_data[] = {0xA0, 0x4F, 0xF7, 0xFF};
-            msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_END_ADD_CORE1, check_data, sizeof(check_data));
+            if(writing_test){
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_END_ADD_CORE1, did_bl_write_end_add_core1, sizeof(did_bl_write_end_add_core1));
+            }
+            else{
+                uint8_t check_data[] = {0xA0, 0x4F, 0xF7, 0xFF};
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_END_ADD_CORE1, check_data, sizeof(check_data));
+            }
+
         }
 
         else if(did == FBL_DID_BL_WRITE_START_ADD_CORE2){
-            uint8_t check_data[] = {0xFF, 0xFF, 0xFF, 0xFF};
-            msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_START_ADD_CORE2, check_data, sizeof(check_data));
+            if(writing_test){
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_START_ADD_CORE2, did_bl_write_start_add_core2, sizeof(did_bl_write_start_add_core2));
+            }
+            else{
+                uint8_t check_data[] = {0xFF, 0xFF, 0xFF, 0xFF};
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_START_ADD_CORE2, check_data, sizeof(check_data));
+            }
+
         }
 
         else if(did == FBL_DID_BL_WRITE_END_ADD_CORE2){
-            uint8_t check_data[] = {0xFF, 0xFF, 0xFF, 0xFF};
-            msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_END_ADD_CORE2, check_data, sizeof(check_data));
+            if(writing_test){
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_END_ADD_CORE2, did_bl_write_end_add_core2, sizeof(did_bl_write_end_add_core2));
+            }
+            else{
+                uint8_t check_data[] = {0xFF, 0xFF, 0xFF, 0xFF};
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_BL_WRITE_END_ADD_CORE2, check_data, sizeof(check_data));
+            }
         }
     }
 
@@ -156,8 +227,14 @@ void ECU_Test::messageChecker(const unsigned int id, const QByteArray &rec){
         emit toConsole(">> Received Write Data By Identifier - Checking on content");
 
         // Create the relevant message
-        //uint8_t data[] = "AMOS FBL 24";
-        //msg = _create_write_data_by_ident(&len, 0, FBL_DID_SYSTEM_NAME, data, sizeof(data));
+
+        // Create the relevant message
+        uint16_t did = 0;
+        uint8_t max_idx = 2;
+        for(int i = max_idx; i >= 1; i--){
+            did |= ((uint8_t)(rec[i]) << (8*(max_idx-i)));
+        }
+        msg = _create_write_data_by_ident(&len, 1, did, 0, 0);
     }
 
     if(len > 0){
@@ -193,16 +270,17 @@ void ECU_Test::startTests(){
     emit toConsole("Start of TX Section");
 
     // Sending out broadcast for tester present
-    //testReqIdentification();
+    testReqIdentification();
 
     // Specification for Diagnostic and Communication Management
-    //testDiagnosticSessionControl();
-    //testEcuReset();
-    //testTesterPresent();
+    testDiagnosticSessionControl();
+    testEcuReset();
+    testTesterPresent();
 
     // Specification for Data Transmission
+    if(writing_test) // Test Writing - Programming session already activated
+        testWriteDataByIdentifier();
     testReadDataByIdentifier();
-    //testWriteDataByIdentifier();
 
     emit toConsole("End of TX Section\n");
 
@@ -294,8 +372,40 @@ void ECU_Test::testReadDataByIdentifier()
 void ECU_Test::testWriteDataByIdentifier()
 {
     emit toConsole("ECU Test: TX Check Write Data By Identifier");
-    uint8_t data[] = "BLA BLA BLA";
-    uds->writeDataByIdentifier(this->ecu_id, FBL_DID_SYSTEM_NAME, data, sizeof(data));
+    uds->writeDataByIdentifier(this->ecu_id, FBL_DID_SYSTEM_NAME, did_system_name, sizeof(did_system_name));
+
+    emit toConsole("ECU Test: TX Check Write Data By Identifier - Programming Date (0xF199)");
+    uds->writeDataByIdentifier(this->ecu_id, FBL_DID_PROGRAMMING_DATE, did_programming_date, sizeof(did_programming_date));
+
+    emit toConsole("ECU Test: TX Check Write Data By Identifier - Key Address (0xFD00)");
+    uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_KEY_ADDRESS, did_bl_key_address, sizeof(did_bl_key_address));
+
+    emit toConsole("ECU Test: TX Check Write Data By Identifier - Key Good Value (0xFD01)");
+    uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_KEY_GOOD_VALUE, did_bl_key_good_value, sizeof(did_bl_key_good_value));
+
+    emit toConsole("ECU Test: TX Check Write Data By Identifier - CAN Base Mask (0xFD02)");
+    uds->writeDataByIdentifier(this->ecu_id, FBL_DID_CAN_BASE_MASK, did_can_base_mask, sizeof(did_can_base_mask));
+
+    emit toConsole("ECU Test: TX Check Write Data By Identifier - CAN ID (0xFD03)");
+    uds->writeDataByIdentifier(this->ecu_id, FBL_DID_CAN_ID, did_can_id, sizeof(did_can_id));
+
+    emit toConsole("ECU Test: TX Check Write Data By Identifier - Write Start Address Core 0 (0xFD10)");
+    uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_WRITE_START_ADD_CORE0, did_bl_write_start_add_core0, sizeof(did_bl_write_start_add_core0));
+
+    emit toConsole("ECU Test: TX Check Write Data By Identifier - Write End Address Core 0 (0xFD11)");
+    uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_WRITE_END_ADD_CORE0, did_bl_write_end_add_core0, sizeof(did_bl_write_end_add_core0));
+
+    emit toConsole("ECU Test: TX Check Write Data By Identifier - Write Start Address Core 1 (0xFD12)");
+    uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_WRITE_START_ADD_CORE1, did_bl_write_start_add_core1, sizeof(did_bl_write_start_add_core1));
+
+    emit toConsole("ECU Test: TX Check Write Data By Identifier - Write End Address Core 1 (0xFD13)");
+    uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_WRITE_END_ADD_CORE1, did_bl_write_end_add_core1, sizeof(did_bl_write_end_add_core1));
+
+    emit toConsole("ECU Test: TX Check Write Data By Identifier - Write Start Address Core 2 (0xFD14)");
+    uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_WRITE_START_ADD_CORE2, did_bl_write_start_add_core2, sizeof(did_bl_write_start_add_core2));
+
+    emit toConsole("ECU Test: TX Check Write Data By Identifier - Write End Address Core 2 (0xFD15)");
+    uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_WRITE_END_ADD_CORE2, did_bl_write_end_add_core2, sizeof(did_bl_write_end_add_core2));
 }
 
 
