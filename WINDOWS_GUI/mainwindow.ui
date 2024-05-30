@@ -248,7 +248,35 @@ li.checked::marker { content: &quot;\2612&quot;; }
     </layout>
    </widget>
   </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1200</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuLicense">
+    <property name="title">
+     <string>License</string>
+    </property>
+    <addaction name="menuLicenseQT"/>
+    <addaction name="menuLicenseMIT"/>
+   </widget>
+   <addaction name="menuLicense"/>
+  </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="menuLicenseQT">
+   <property name="text">
+    <string>QT license</string>
+   </property>
+  </action>
+  <action name="menuLicenseMIT">
+   <property name="text">
+    <string>MIT license</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
