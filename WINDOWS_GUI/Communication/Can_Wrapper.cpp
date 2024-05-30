@@ -100,12 +100,12 @@ uint8_t CAN_Wrapper::initDriver(){
         emit infoPrint("CAN Driver: Opened Driver and loaded Config for Appname "+QString(appName));
 		_printConfig();
 
-        if (DEBUGGING) qInfo("----------------------------------------------------------------------------------------------");
+        if (DEBUGGING_CAN_DRIVER) qInfo("----------------------------------------------------------------------------------------------");
 
 		channelMask = 0;
 
 		// Check application configuration for the relevant channel
-        qInfo("CAN_Wrapper: Checking Channel Mask for th relevant channel");
+        if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Checking Channel Mask for th relevant channel");
 		channelMask = xlGetChannelMask(hwType, hwIndex, hwChannel);
 
 		for (i = 0; i < drvConfig.channelCount; i++){
@@ -123,19 +123,21 @@ uint8_t CAN_Wrapper::initDriver(){
             qInfo() << "CAN_Wrapper: Please assign "<< MAX_USED_CHANNEL<<" CAN channel(s) in Vector Hardware Config or Vector Hardware Manager and restart the application";
 			status = XL_ERROR;
 		}
-        else
-            qInfo("CAN_Wrapper: Found relevant assignment");
+        else {
+            if(VERBOSE_CAN_DRIVER)
+                qInfo("CAN_Wrapper: Found relevant assignment");
+        }
 
 		// Open one port including all channels
-        qInfo("CAN_Wrapper: Opening port");
+        if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Opening port");
         if (status == XL_SUCCESS){
 			status = openPort();
 		}
 
 		// Set the defined BaudRate
-        qInfo("CAN_Wrapper: Set Baudrate");
+        if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Set Baudrate");
 		if ((status == XL_SUCCESS) && (portHandle != XL_INVALID_PORTHANDLE)){
-            emit infoPrint("CAN Driver: Successfully opened Port");
+            if(VERBOSE_CAN_DRIVER) emit infoPrint("CAN Driver: Successfully opened Port");
             status = setBaudrate(baudrate);
 		}
 		else {
@@ -146,19 +148,16 @@ uint8_t CAN_Wrapper::initDriver(){
 		}
 
 		// Activate all channel on the bus
-        qInfo("CAN_Wrapper: Activate all channel on the bus");
+        if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Activate all channel on the bus");
 		if (status == XL_SUCCESS){
-            emit infoPrint("CAN Driver: Successfully set the Baudrate for the opened Port");
+            if(VERBOSE_CAN_DRIVER) emit infoPrint("CAN Driver: Successfully set the Baudrate for the opened Port");
 			status = actChannels();
 		}
-        else {
-            emit errorPrint("CAN Driver: Could not set the Baudrate rate for the Port");
-        }
 
 		// Get an event for every message
-        qInfo("CAN_Wrapper: Get event for every message");
+        if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Get event for every message");
 		if (status == XL_SUCCESS){
-            emit infoPrint("CAN Driver: Successfully activated all Channel on the Bus");
+            if(VERBOSE_CAN_DRIVER) emit infoPrint("CAN Driver: Successfully activated all Channel on the Bus");
 			status = setNotification();
 		}
 
@@ -170,7 +169,7 @@ uint8_t CAN_Wrapper::initDriver(){
             emit infoPrint("CAN Driver: Init successfully");
             qInfo() << "CAN_Wrapper: Initialization of the driver finished! Info:"<<xlGetErrorString(status);
         }
-        if (DEBUGGING) qInfo("----------------------------------------------------------------------------------------------\n");
+        if (DEBUGGING_CAN_DRIVER) qInfo("----------------------------------------------------------------------------------------------\n");
 
 	}
 
@@ -192,7 +191,7 @@ uint8_t CAN_Wrapper::initDriver(){
 			}
 		}
         emit errorPrint("CAN Driver: No assignment found in Configuration. Please assign the CAN Channel in Vector Hardware Config or Vector Hardware Manager and restart the application");
-        qInfo("CAN_Wrapper: No HW defined");
+        if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: No HW defined");
         qInfo() << "CAN_Wrapper: Please assign "<< MAX_USED_CHANNEL<<" CAN channel(s) in Vector Hardware Config or Vector Hardware Manager and restart the application";
         emit driverInit(xlGetErrorString(XL_ERR_INIT_ACCESS_MISSING));
         return XL_ERR_INIT_ACCESS_MISSING;
@@ -209,7 +208,7 @@ uint8_t CAN_Wrapper::initDriver(){
  */
 void CAN_Wrapper::setID(uint32_t id){
 	txID = id;
-    qInfo("CAN_Wrapper: TX ID is set to 0x%08X\n", txID);
+    if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: TX ID is set to 0x%08X\n", txID);
 }
 
 /**
@@ -226,14 +225,14 @@ uint8_t CAN_Wrapper::txData(uint8_t *data, uint8_t no_bytes) {
 	unsigned int msgCount = 1;
     QString bytes_data = "";
 
-    qInfo() << "CAN_Wrapper: txData - Sending of " << no_bytes << "bytes is requested";
+    if(VERBOSE_CAN_DRIVER) qInfo() << "CAN_Wrapper: txData - Sending of " << no_bytes << "bytes is requested";
 
 	// Error Handling
 	if (no_bytes > 8) {
         qInfo("CAN_Wrapper: Maximum number of Bytes is 8");
 		return false;
 	}
-    qInfo("CAN_Wrapper: Sending Signal txDataSentRequested");
+    if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Sending Signal txDataSentRequested");
     emit txDataSentRequested("CAN_Wrapper: TX requested");
 
 	// Message processing
@@ -253,9 +252,9 @@ uint8_t CAN_Wrapper::txData(uint8_t *data, uint8_t no_bytes) {
 
 	// Transmit the message
 	status = xlCanTransmit(portHandle, chanMaskTx, &msgCount, &event);
-    qInfo() << "<< CAN_Wrapper: Transmitting "<<no_bytes<<" byte CAN message (Data=" << bytes_data.trimmed().toStdString() << ") with CM("<<chanMaskTx<<") - Info: " <<xlGetErrorString(status);
+    qInfo() << "<< CAN_Wrapper: Transmitting "<<no_bytes<<" byte CAN message (Data=" << bytes_data.trimmed().toStdString() << ") with ID (" << QString("0x%1").arg(event.tagData.msg.id, 8, 16, QLatin1Char( '0' ))<<") and CM("<<chanMaskTx<<") - Info: " <<xlGetErrorString(status);
 
-    qInfo("CAN_Wrapper: Sending Signal txDataSentStatus");
+    if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Sending Signal txDataSentStatus");
     emit txDataSentStatus(xlGetErrorString(status));
 	return (status == XL_SUCCESS);
 }
@@ -275,7 +274,7 @@ XLstatus CAN_Wrapper::openPort(){
 	permissionMask = channelMask;
 
 	status = xlOpenPort(&portHandle, appName, channelMask, &permissionMask, RX_QUEUE_SIZE, XL_INTERFACE_VERSION, XL_BUS_TYPE_CAN);
-    if (DEBUGGING) {
+    if (DEBUGGING_CAN_DRIVER) {
         qInfo()<<"CAN_Wrapper: Opened Port with CM=" << channelMask << ", PM="<<permissionMask<<", PH="<<portHandle<<", Info: "<<xlGetErrorString(status);
     }
 
@@ -291,7 +290,7 @@ XLstatus CAN_Wrapper::closePort(){
 
 	if(portHandle != XL_INVALID_PORTHANDLE){
 		status = xlClosePort(portHandle);
-        if (DEBUGGING) {
+        if (DEBUGGING_CAN_DRIVER) {
             qInfo()<<"CAN_Wrapper: Closed Port with PH="<<portHandle<<", Info: "<< xlGetErrorString(status);
         }
 	}
@@ -309,7 +308,7 @@ XLstatus CAN_Wrapper::setBaudrate(unsigned int baudrate){
 	XLstatus status;
 
 	status = xlCanSetChannelBitrate(portHandle, channelMask, baudrate);
-    if (DEBUGGING) {
+    if (DEBUGGING_CAN_DRIVER) {
         qInfo()<<"CAN_Wrapper: CanSetChannelBitrate to BaudRate="<<baudrate<<", Info:"<< xlGetErrorString(status);
     }
 
@@ -325,7 +324,7 @@ XLstatus CAN_Wrapper::actChannels(){
 	XLstatus status;
 
 	status = xlActivateChannel(portHandle, channelMask, XL_BUS_TYPE_CAN, XL_ACTIVATE_RESET_CLOCK);
-    if (DEBUGGING) {
+    if (DEBUGGING_CAN_DRIVER) {
         qInfo()<<"CAN_Wrapper: ActivateChannel CM="<<channelMask<<", Info: "<<xlGetErrorString(status);
     }
 
@@ -340,7 +339,7 @@ XLstatus CAN_Wrapper::setNotification(){
 	XLstatus status;
 
 	status = xlSetNotification (portHandle, &msgEvent, 1);
-    if (DEBUGGING) {
+    if (DEBUGGING_CAN_DRIVER) {
         qInfo()<<"CAN_Wrapper: SetNotification for every message, Info: "<<xlGetErrorString(status);
     }
 
@@ -388,8 +387,8 @@ void CAN_Wrapper::doRX(){
                         ba[i] = event.tagData.msg.data[i];
                         bytes_data.append(QString("%1").arg(uint8_t(ba[i]), 2, 16, QLatin1Char( '0' )) + " ");
                     }
-                    qInfo() << ">> CAN_Wrapper: Received"<<event.tagData.msg.dlc<<"byte CAN message with Data: " << bytes_data.trimmed().toStdString();
-                    qInfo() << "CAN_Wrapper: Sending Signal rxDataReceived for ID" << QString("0x%1").arg(event.tagData.msg.id, 8, 16, QLatin1Char( '0' ));
+                    qInfo() << ">> CAN_Wrapper: Received"<<event.tagData.msg.dlc<<"byte CAN message with Data:" << bytes_data.trimmed().toStdString() << "from"<<QString("0x%1").arg(event.tagData.msg.id, 8, 16, QLatin1Char( '0' ));
+                    if(VERBOSE_CAN_DRIVER) qInfo() << "CAN_Wrapper: Sending Signal rxDataReceived for ID" << QString("0x%1").arg(event.tagData.msg.id, 8, 16, QLatin1Char( '0' ));
                     const unsigned int id = event.tagData.msg.id;
                     emit rxDataReceived(id, ba);
 				}
@@ -414,7 +413,7 @@ void CAN_Wrapper::doRX(){
 //============================================================================
 
 void CAN_Wrapper::_printConfig(){
-	if (!DEBUGGING) return;
+    if (!DEBUGGING_CAN_DRIVER) return;
 
     qInfo("----------------------------------------------------------------------------------------------");
     qInfo("HW Configuration");

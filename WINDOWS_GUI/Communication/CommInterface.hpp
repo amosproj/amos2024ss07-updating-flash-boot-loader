@@ -12,6 +12,8 @@
 #ifndef COMMUNICATION_LAYER_COMMINTERFACE_H_
 #define COMMUNICATION_LAYER_COMMINTERFACE_H_
 
+#define VERBOSE_COMMINTERFACE   0   // switch for verbose console information
+
 #include <QObject>
 #include <QMutex>
 #include <QByteArray>

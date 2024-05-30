@@ -11,6 +11,8 @@
 #ifndef UDS_LAYER_UDS_H_
 #define UDS_LAYER_UDS_H_
 
+#define VERBOSE_UDS     0                       // switch for verbose console information
+
 #include <QObject>
 #include <QByteArray>
 #include <QMutex>

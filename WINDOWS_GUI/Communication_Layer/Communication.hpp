@@ -20,7 +20,8 @@
 #include <stdint.h>
 
 #include "../Communication/Can_Wrapper.hpp"
-#include "../Communication/VirtualDriver.hpp"
+
+#define VERBOSE_COMMUNICATION               0       // switch for verbose console information
 
 #define COMM_INTERFACE_CAN					(0x1)
 
