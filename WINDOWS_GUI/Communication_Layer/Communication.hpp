@@ -22,7 +22,6 @@
 #include "../Communication/Can_Wrapper.hpp"
 #include "../Communication/VirtualDriver.hpp"
 
-#define COMM_INTERFACE_VIRTUAL				(0x0)
 #define COMM_INTERFACE_CAN					(0x1)
 
 
@@ -30,11 +29,9 @@ class Communication : public QObject{
     Q_OBJECT
 
 public:
-    enum INTERFACE {VIRTUAL_DRIVER = COMM_INTERFACE_VIRTUAL, CAN_DRIVER = COMM_INTERFACE_CAN};
+    enum INTERFACE {CAN_DRIVER = COMM_INTERFACE_CAN};
 
 private:
-    QThread *threadVD;                          // Thread for the Virtual Driver
-    VirtualDriver* virtualDriver;               // Instance of the Virtual Driver
     QThread *threadCAN;                         // Thread for the CAN Driver
     CAN_Wrapper* canDriver;                     // Instance of the CAN Driver
 
@@ -91,6 +88,11 @@ signals:
      */
     void txCANDataSignal(const QByteArray &data);
 
+    /**
+     * @brief Signals a Text to be print to GUI console
+     */
+    void toConsole(const QString &text);
+
 
 public slots:
 
@@ -112,6 +114,25 @@ public slots:
      * @param id ID to be set
      */
     void setIDSlot(uint32_t id);
+
+private slots:
+    /**
+     * @brief Slot for forwarding INFO messages from the drivers to the console
+     * @param text To be forwarded
+     */
+    void consoleForwardInfo(const QString &text);
+
+    /**
+     * @brief Slot for forwarding DEBUG messages from the drivers to the console
+     * @param text To be forwarded
+     */
+    void consoleForwardDebug(const QString &text);
+
+    /**
+     * @brief Slot for forwarding ERROR messages from the drivers to the console
+     * @param text To be forwarded
+     */
+    void consoleForwardError(const QString &text);
 
 };
 
