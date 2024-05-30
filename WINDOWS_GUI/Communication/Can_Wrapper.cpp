@@ -129,15 +129,17 @@ uint8_t CAN_Wrapper::initDriver(){
         }
 
 		// Open one port including all channels
-        if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Opening port");
         if (status == XL_SUCCESS){
+            if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Opening port");
 			status = openPort();
 		}
 
 		// Set the defined BaudRate
-        if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Set Baudrate");
+
 		if ((status == XL_SUCCESS) && (portHandle != XL_INVALID_PORTHANDLE)){
             if(VERBOSE_CAN_DRIVER) emit infoPrint("CAN Driver: Successfully opened Port");
+
+            if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Set Baudrate");
             status = setBaudrate(baudrate);
 		}
 		else {
@@ -148,16 +150,17 @@ uint8_t CAN_Wrapper::initDriver(){
 		}
 
 		// Activate all channel on the bus
-        if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Activate all channel on the bus");
 		if (status == XL_SUCCESS){
+            if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Activate all channel on the bus");
             if(VERBOSE_CAN_DRIVER) emit infoPrint("CAN Driver: Successfully set the Baudrate for the opened Port");
 			status = actChannels();
 		}
 
 		// Get an event for every message
-        if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Get event for every message");
 		if (status == XL_SUCCESS){
             if(VERBOSE_CAN_DRIVER) emit infoPrint("CAN Driver: Successfully activated all Channel on the Bus");
+
+            if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Get event for every message");
 			status = setNotification();
 		}
 
@@ -310,6 +313,12 @@ XLstatus CAN_Wrapper::setBaudrate(unsigned int baudrate){
 	status = xlCanSetChannelBitrate(portHandle, channelMask, baudrate);
     if (DEBUGGING_CAN_DRIVER) {
         qInfo()<<"CAN_Wrapper: CanSetChannelBitrate to BaudRate="<<baudrate<<", Info:"<< xlGetErrorString(status);
+    }
+
+    // Bugfix for "CAN-Bus not opening, when already in use by other app, e.g. CANoe"
+    // Info: Baudrate can not be set twice, so the invalid access is ignored. Using the already set baudrate
+    if(status == XL_ERR_INVALID_ACCESS){
+        status = XL_SUCCESS;
     }
 
 	return status;
