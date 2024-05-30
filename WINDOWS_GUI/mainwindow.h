@@ -16,24 +16,14 @@ QT_END_NAMESPACE
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
+    
 public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
-
     enum status {
         UPDATE,
         INFO,
         ERR,
         RESET
     };
-
-    void updateStatus(MainWindow::status s, QString str);
-
-private slots:
-    void comboBoxIndexChanged(int index);
-    void appendTextToConsole(const QString &text);
-
 private:
     Ui::MainWindow *ui;
     EditableComboBox *editComboBox_speed;
@@ -41,5 +31,18 @@ private:
 
     Communication *comm;
     UDS *uds;
+
+public:
+    MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
+
+    void updateStatus(MainWindow::status s, QString str);
+
+private:
+    void connectSignalSlots();
+
+private slots:
+    void comboBoxIndexChanged(int index);
+    void appendTextToConsole(const QString &text);
 };
 #endif // MAINWINDOW_H

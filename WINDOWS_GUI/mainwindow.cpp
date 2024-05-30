@@ -1,5 +1,6 @@
 #include <QFileDialog>
 #include <QThread>
+#include <QAction>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -12,6 +13,68 @@ static inline void dummy_function(QByteArray data) {
 
 static inline void dummy_flash(QString dev) {
     qDebug() << "Flash " << dev;
+}
+
+void MainWindow::connectSignalSlots() {
+    // Comm RX Signal to UDS RX Slot
+    connect(comm, SIGNAL(rxDataReceived(unsigned int, QByteArray)), uds, SLOT(rxDataReceiverSlot(unsigned int, QByteArray)), Qt::DirectConnection);
+
+    // UDS TX Signals to Comm TX Slots
+    connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
+    connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
+
+    // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
+    connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            &MainWindow::comboBoxIndexChanged);
+
+    // GUI Console Print
+    connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)));
+
+    // GUI choose file
+    connect(ui->button_file, &QPushButton::clicked, this, [=]() {
+        QString path = QFileDialog::getOpenFileName(nullptr, "Choose File");
+        if(!path.isEmpty()) {
+            QFile file(path);
+            if(!file.open(QFile::ReadOnly)) {
+                qDebug() << "Couldn't open file " + path + " " + file.errorString();
+                return;
+            }
+            ui->label_size->setText("File size: " + QString::number(file.size()));
+            QByteArray data = file.readAll();
+            ui->label_content->setText("File content: " + data.left(16).toHex());
+            dummy_function(data);
+            file.close();
+        }
+    });
+
+    // GUI select ECU
+    connect(ui->table_ECU, &QTableWidget::itemSelectionChanged, this, [=]() {
+        QTableWidgetItem *item = ui->table_ECU->selectedItems().at(0);
+        ui->label_selected_ECU->setText("Selected: " + item->text());
+    });
+
+    // GUI reset
+    connect(ui->button_reset, &QPushButton::clicked, this, [=]() {
+        if(ui->label_selected_ECU->text() != "") {
+            ui->label_reset_status->setText("Reset status: In progress");
+            if(uds->ecuReset(0x001, FBL_ECU_RESET_WARM_POWERON) == UDS::TX_RX_OK) 
+                ui->label_reset_status->setText("Reset status: Succeeded");
+            else
+                ui->label_reset_status->setText("Reset status: Failed");
+        }
+    });
+
+    // GUI flash
+    connect(ui->button_flash, &QPushButton::clicked, this, [=]() {
+        if(ui->label_selected_ECU->text() != "") {
+            dummy_flash(ui->label_selected_ECU->text());
+            // Just for demonstration purposes
+            updateStatus(RESET, "");
+            updateStatus(UPDATE, "Flashing started for " + ui->label_selected_ECU->text());
+            updateStatus(INFO, "It may take a while");
+            updateStatus(UPDATE, "Already did X");
+        }
+    });
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -32,66 +95,11 @@ MainWindow::MainWindow(QWidget *parent)
     qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
     uds = new UDS(0x001);
 
-    //=====================================================================
-    // Connect the signals and slots
-
-    // Comm RX Signal to UDS RX Slot
-    connect(comm, SIGNAL(rxDataReceived(unsigned int, QByteArray)), uds, SLOT(rxDataReceiverSlot(unsigned int, QByteArray)), Qt::DirectConnection);
-
-    // UDS TX Signals to Comm TX Slots
-    connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
-    connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
-    //=====================================================================
-
-    // GUI Console Print
-    connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)));
-
-    //=====================================================================
-
-    connect(ui->button_file, &QPushButton::clicked, this, [=]() {
-        QString path = QFileDialog::getOpenFileName(nullptr, "Choose File");
-        if(!path.isEmpty()) {
-            QFile file(path);
-            if(!file.open(QFile::ReadOnly)) {
-                qDebug() << "Couldn't open file " + path + " " + file.errorString();
-                return;
-            }
-            ui->label_size->setText("File size: " + QString::number(file.size()));
-            QByteArray data = file.readAll();
-            ui->label_content->setText("File content: " + data.left(16).toHex());
-            dummy_function(data);
-            file.close();
-        }
-    });
-
     ui->table_ECU->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->table_ECU->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->table_ECU->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    connect(ui->table_ECU, &QTableWidget::itemSelectionChanged, this, [=]() {
-        QTableWidgetItem *item = ui->table_ECU->selectedItems().at(0);
-        ui->label_selected_ECU->setText("Selected: " + item->text());
-    });
 
-    connect(ui->button_reset, &QPushButton::clicked, this, [=]() {
-        if(ui->label_selected_ECU->text() != "") {
-            ui->label_reset_status->setText("Reset status: In progress");
-            if(uds->ecuReset(0x001, FBL_ECU_RESET_WARM_POWERON) == UDS::TX_RX_OK) 
-                ui->label_reset_status->setText("Reset status: Succeeded");
-            else
-                ui->label_reset_status->setText("Reset status: Failed");
-        }
-    });
-
-    connect(ui->button_flash, &QPushButton::clicked, this, [=]() {
-        if(ui->label_selected_ECU->text() != "") {
-            dummy_flash(ui->label_selected_ECU->text());
-            // Just for demonstration purposes
-            updateStatus(RESET, "");
-            updateStatus(UPDATE, "Flashing started for " + ui->label_selected_ECU->text());
-            updateStatus(INFO, "It may take a while");
-            updateStatus(UPDATE, "Already did X");
-        }
-    });
+    connectSignalSlots();
 
     // Create both QComboBoxes for later
     editComboBox_speed = new EditableComboBox(this);
@@ -103,10 +111,6 @@ MainWindow::MainWindow(QWidget *parent)
     // Initially hide the other QComboBoxes
     editComboBox_speed->hide();
     comboBox_speedUnit->hide();
-
-    // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
-    connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
-            &MainWindow::comboBoxIndexChanged);
 
     ui->Console->setReadOnly(true);
 }
