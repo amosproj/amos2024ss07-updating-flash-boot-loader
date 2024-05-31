@@ -248,6 +248,22 @@ uint8_t rx_is_consecutive_frame(uint8_t* data_in, uint32_t data_in_len, uint8_t 
     return 0xFF; // Error
 }
 
+uint8_t rx_is_single_Frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_len_per_frame){
+    uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
+
+        if (data_in_len == 0)
+            return 0xFF; // Error
+
+        if(can){
+            uint8_t result = (((0xF0 & data_in[0])>> 4) == 0);
+            //printf("UDS_Comm_Spec - rx_is_single_frame: %d\n", result);
+            return result;
+        }
+
+        printf("TODO: Not yet implemented!");
+        return 0xFF; // Error
+}
+
 // TODO: I changed 'data_out_len' and 'has_next' to uint32_t. Will this still work?
 uint8_t *rx_starting_frame(uint32_t *data_out_len, uint32_t *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len){
     // Caller need to free the memory after processing

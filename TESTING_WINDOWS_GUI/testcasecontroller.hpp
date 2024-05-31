@@ -18,18 +18,20 @@
 #include "Testcases/selftest.hpp"
 #include "Testcases/uds_listening.hpp"
 #include "Testcases/ecu_isotp.hpp"
+#include "Testcases/ecu_test.hpp"
 
 class Testcasecontroller : public QObject{
     Q_OBJECT
 
 public:
-    enum TESTMODES {SELFTEST, LISTENING, MCUISOTP, GUITEST, MCUTEST};
+    enum TESTMODES {SELFTEST, LISTENING, ECUISOTP, GUITEST, ECUTEST};
 
 private:
     Testcasecontroller::TESTMODES testcase;
     Selftest *selftest;
     UDS_Listening *uds_listening;
-    ECU_ISOTP *mcu_isotp;
+    ECU_ISOTP *ecu_isotp;
+    ECU_Test *ecu_test;
 
 public:
     Testcasecontroller();

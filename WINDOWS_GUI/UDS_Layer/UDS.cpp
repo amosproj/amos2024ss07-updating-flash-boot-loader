@@ -701,6 +701,58 @@ UDS::RESP UDS::negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_c
     return TX_OK;
 }
 
+/**
+ * @brief Translates a given Negative Response Code into a String representation according to UDS Communication documentation
+ * @param nrc Given Negative Response Code for translation
+ * @return
+ */
+QString UDS::translateNegResp(uint8_t nrc){
+    switch(nrc){
+    case FBL_RC_GENERAL_REJECT:
+        return QString("General reject"); break;
+    case FBL_RC_SERVICE_NOT_SUPPORTED:
+        return QString("Service not supported"); break;
+    case FBL_RC_SUB_FUNC_NOT_SUPPORTED:
+        return QString("Sub-Function not supported"); break;
+    case FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT:
+        return QString("Incorrect msg len or invalid format"); break;
+    case FBL_RC_RESPONSE_TOO_LONG:
+        return QString("Response too long"); break;
+    case FBL_RC_BUSY_REPEAT_REQUEST:
+        return QString("Busy repeat request"); break;
+    case FBL_RC_CONDITIONS_NOT_CORRECT:
+        return QString("Conditions not correct"); break;
+    case FBL_RC_REQUEST_SEQUENCE_ERROR:
+        return QString("Request sequence error"); break;
+    case FBL_RC_FAILURE_PREVENTS_EXEC_OF_REQUESTED_ACTION:
+        return QString("Failure prevents execution of requested action"); break;
+    case FBL_RC_REQUEST_OUT_OF_RANGE:
+        return QString("Request out of range"); break;
+    case FBL_RC_SECURITY_ACCESS_DENIED:
+        return QString("Security access denied"); break;
+    case FBL_RC_INVALID_KEY:
+        return QString("Invalid key"); break;
+    case FBL_RC_EXCEEDED_NUMBER_OF_ATTEMPTS:
+        return QString("Exceeded number of attempts"); break;
+    case FBL_RC_REQUIRED_TIME_DELAY_NOT_EXPIRED:
+        return QString("Required time delay not expired"); break;
+    case FBL_RC_UPLOAD_DOWNLOAD_NOT_ACCEPTED:
+        return QString("Upload/Download not accepted"); break;
+    case FBL_RC_TRANSFER_DATA_SUSPENDED:
+        return QString("Transfer data suspended"); break;
+    case FBL_RC_GENERAL_PROGRAMMING_FAILURE:
+        return QString("General programming failure"); break;
+    case FBL_RC_WRONG_BLOCK_SEQUENCE_COUNTER:
+        return QString("Wrong Block Sequence Counter"); break;
+    case FBL_RC_SUB_FUNC_NOT_SUPPORTED_IN_ACTIVE_SESSION:
+        return QString("Sub-Function not supported in active session"); break;
+    case FBL_RC_SERVICE_NOT_SUPPORTED_IN_ACTIVE_SESSION:
+        return QString("Service not supported in active session"); break;
+    default:
+        return QString("Negative Response Code unknown");
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // Private
 //////////////////////////////////////////////////////////////////////////////
@@ -779,58 +831,6 @@ UDS::RESP UDS::checkOnResponse(uint32_t waittime){
     return TX_RX_OK;
 }
 
-
-/**
- * @brief Translates a given Negative Response Code into a String representation according to UDS Communication documentation
- * @param nrc Given Negative Response Code for translation
- * @return
- */
-QString UDS::translateNegResp(uint8_t nrc){
-    switch(nrc){
-        case FBL_RC_GENERAL_REJECT:
-            return QString("General reject"); break;
-        case FBL_RC_SERVICE_NOT_SUPPORTED:
-            return QString("Service not supported"); break;
-        case FBL_RC_SUB_FUNC_NOT_SUPPORTED:
-            return QString("Sub-Function not supported"); break;
-        case FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT:
-            return QString("Incorrect msg len or invalid format"); break;
-        case FBL_RC_RESPONSE_TOO_LONG:
-            return QString("Response too long"); break;
-        case FBL_RC_BUSY_REPEAT_REQUEST:
-            return QString("Busy repeat request"); break;
-        case FBL_RC_CONDITIONS_NOT_CORRECT:
-            return QString("Conditions not correct"); break;
-        case FBL_RC_REQUEST_SEQUENCE_ERROR:
-            return QString("Request sequence error"); break;
-        case FBL_RC_FAILURE_PREVENTS_EXEC_OF_REQUESTED_ACTION:
-            return QString("Failure prevents execution of requested action"); break;
-        case FBL_RC_REQUEST_OUT_OF_RANGE:
-            return QString("Request out of range"); break;
-        case FBL_RC_SECURITY_ACCESS_DENIED:
-            return QString("Security access denied"); break;
-        case FBL_RC_INVALID_KEY:
-            return QString("Invalid key"); break;
-        case FBL_RC_EXCEEDED_NUMBER_OF_ATTEMPTS:
-            return QString("Exceeded number of attempts"); break;
-        case FBL_RC_REQUIRED_TIME_DELAY_NOT_EXPIRED:
-            return QString("Required time delay not expired"); break;
-        case FBL_RC_UPLOAD_DOWNLOAD_NOT_ACCEPTED:
-            return QString("Upload/Download not accepted"); break;
-        case FBL_RC_TRANSFER_DATA_SUSPENDED:
-            return QString("Transfer data suspended"); break;
-        case FBL_RC_GENERAL_PROGRAMMING_FAILURE:
-            return QString("General programming failure"); break;
-        case FBL_RC_WRONG_BLOCK_SEQUENCE_COUNTER:
-            return QString("Wrong Block Sequence Counter"); break;
-        case FBL_RC_SUB_FUNC_NOT_SUPPORTED_IN_ACTIVE_SESSION:
-            return QString("Sub-Function not supported in active session"); break;
-        case FBL_RC_SERVICE_NOT_SUPPORTED_IN_ACTIVE_SESSION:
-            return QString("Service not supported in active session"); break;
-        default:
-            return QString("Negative Response Code unknown");
-    }
-}
 
 //============================================================================
 // Slots
