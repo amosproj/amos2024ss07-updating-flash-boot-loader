@@ -1,6 +1,4 @@
 #include <QApplication>
-#include <QMessageBox>
-
 #include "mainwindow.h"
 
 #include <stdio.h>

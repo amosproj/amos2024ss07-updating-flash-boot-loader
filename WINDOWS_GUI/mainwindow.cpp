@@ -1,6 +1,7 @@
 #include <QFileDialog>
 #include <QThread>
 #include <QAction>
+#include <QMessageBox>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -29,6 +30,16 @@ void MainWindow::connectSignalSlots() {
 
     // GUI Console Print
     connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)));
+
+    // GUI menu bar
+    connect(ui->menuLicenseQT, &QAction::triggered, this, [=]() {
+        QMessageBox::about(nullptr, "QT license",
+                       "The app was developed with usage of QT Open Source under LGPLv3.\nThe license can be found in file \"LGPLv3\".\n\n");
+    });
+    connect(ui->menuLicenseMIT, &QAction::triggered, this, [=]() {
+        QMessageBox::about(nullptr, "Code license",
+                       "Our code was developed under MIT license.");
+    });
 
     // GUI choose file
     connect(ui->button_file, &QPushButton::clicked, this, [=]() {
