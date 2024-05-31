@@ -33,12 +33,6 @@ void MainWindow::connectSignalSlots() {
     connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)));
     connect(comm, SIGNAL(toConsole(QString)), this, SLOT(appendTextToConsole(QString)), Qt::DirectConnection);
 
-
-    // Init the Communication
-    comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
-    comm->init(Communication::CAN_DRIVER); // Set to CAN
-
-
     // GUI menu bar
     connect(ui->menuLicenseQT, &QAction::triggered, this, [=]() {
         QMessageBox::about(nullptr, "QT license",
@@ -121,6 +115,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     connectSignalSlots();
 
+    // Init the Communication - Need to be after connectSignalsSlots to directly print to console
+    comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
+    comm->init(Communication::CAN_DRIVER); // Set to CAN
+
+
     // Create both QComboBoxes for later
     editComboBox_speed = new EditableComboBox(this);
     comboBox_speedUnit = new QComboBox(this);
@@ -137,6 +136,8 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    delete uds;
+    delete comm;
     delete ui;
 }
 
