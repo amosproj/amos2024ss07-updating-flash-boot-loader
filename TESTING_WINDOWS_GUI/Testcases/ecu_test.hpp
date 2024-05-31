@@ -32,6 +32,7 @@ class ECU_Test : public Testcase {
 private:
     bool writing_test;
 
+    uint8_t did_system_name_len = 17; // Name including end of string sign
     uint8_t did_system_name[FBL_DID_SYSTEM_NAME_BYTES_SIZE] = "Another ECU Name";
     uint8_t did_programming_date[FBL_DID_PROGRAMMING_DATE_BYTES_SIZE] = {0x01, 0x06, 0x25};
     uint8_t did_bl_key_address[FBL_DID_BL_KEY_ADDRESS_BYTES_SIZE] = {0x0A, 0xF4, 0x08, 0x90};

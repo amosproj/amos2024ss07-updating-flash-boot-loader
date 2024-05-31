@@ -93,7 +93,7 @@ void ECU_Test::messageChecker(const unsigned int id, const QByteArray &rec){
         emit toConsole(">> Received Read Data by Identifiert for DID " + QString("0x%1").arg(did, 2, 16, QLatin1Char( '0' )));
         if(did == FBL_DID_SYSTEM_NAME){
             if(writing_test){
-                msg = _create_read_data_by_ident(&len, 1, FBL_DID_SYSTEM_NAME, did_system_name, sizeof(did_system_name));
+                msg = _create_read_data_by_ident(&len, 1, FBL_DID_SYSTEM_NAME, did_system_name, did_system_name_len);
             }
             else{
                 uint8_t check_data[] = "AMOS FBL 24";
