@@ -59,7 +59,7 @@ void MainWindow::on_testSelectionBox_currentTextChanged(const QString &arg1)
         // Start ECU Test
         this->ui->consoleOut->appendPlainText("Starting ECU Tests\n\tMake sure that the CAN Interface is connected to CAN Bus with ECU connected (Vector Hardware Manager)\n");
 
-        tests->setTestMode(Testcasecontroller::MCUTEST);
+        tests->setTestMode(Testcasecontroller::ECUTEST);
     }
 
     else if(arg1 == "Testcase: UDS Listening only (ECU/GUI -> Testing GUI)"){
@@ -73,7 +73,7 @@ void MainWindow::on_testSelectionBox_currentTextChanged(const QString &arg1)
         // Start UDS Listening Mode
         this->ui->consoleOut->appendPlainText("Send some ISO TP Frames to ECU\n\tMake sure that the CAN Interface is connected a CAN network that contains the UDS Message to be received\n");
 
-        tests->setTestMode(Testcasecontroller::MCUISOTP);
+        tests->setTestMode(Testcasecontroller::ECUISOTP);
     }
 }
 

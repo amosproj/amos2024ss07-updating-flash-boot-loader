@@ -28,6 +28,8 @@ set(PROJECT_SOURCES
         Testcases/uds_listening.hpp
         Testcases/ecu_isotp.cpp
         Testcases/ecu_isotp.hpp
+        Testcases/ecu_test.cpp
+        Testcases/ecu_test.hpp
         ../WINDOWS_GUI/Communication/CommInterface.cpp
         ../WINDOWS_GUI/Communication/CommInterface.hpp
         ../WINDOWS_GUI/Communication/Can_Wrapper.cpp

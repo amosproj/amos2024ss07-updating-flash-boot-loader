@@ -18,7 +18,8 @@ Testcasecontroller::Testcasecontroller(){
     // Initialize different testcases with nullptr
     selftest = nullptr;
     uds_listening = nullptr;
-    mcu_isotp = nullptr;
+    ecu_isotp = nullptr;
+    ecu_test = nullptr;
 }
 
 Testcasecontroller::~Testcasecontroller() {
@@ -51,11 +52,18 @@ void Testcasecontroller::setTestMode(Testcasecontroller::TESTMODES mode){
         connect(uds_listening, SIGNAL(toConsole(QString)), this, SLOT(consoleForward(QString)));
     }
 
-    else if(mode == MCUISOTP){
-        this->mcu_isotp = new ECU_ISOTP(0x1);
+    else if(mode == ECUISOTP){
+        this->ecu_isotp = new ECU_ISOTP(0x1);
 
         // GUI Console Print
-        connect(mcu_isotp, SIGNAL(toConsole(QString)), this, SLOT(consoleForward(QString)));
+        connect(ecu_isotp, SIGNAL(toConsole(QString)), this, SLOT(consoleForward(QString)));
+    }
+
+    else if(mode == ECUTEST){
+        this->ecu_test = new ECU_Test(0x1);
+
+        // GUI Console Print
+        connect(ecu_test, SIGNAL(toConsole(QString)), this, SLOT(consoleForward(QString)));
     }
 
     // Set the testcase
@@ -72,8 +80,12 @@ void Testcasecontroller::startTests(){
         uds_listening->startTests();
     }
 
-    else if(this->testcase == MCUISOTP){
-        mcu_isotp->startTests();
+    else if(this->testcase == ECUISOTP){
+        ecu_isotp->startTests();
+    }
+
+    else if(this->testcase == ECUTEST){
+        ecu_test->startTests();
     }
 }
 
@@ -92,9 +104,14 @@ void Testcasecontroller::cleanUpTestcases(){
         this->uds_listening = nullptr;
     }
 
-    if(this->mcu_isotp != nullptr){
-        delete this->mcu_isotp;
-        this->mcu_isotp = nullptr;
+    if(this->ecu_isotp != nullptr){
+        delete this->ecu_isotp;
+        this->ecu_isotp = nullptr;
+    }
+
+    if(this->ecu_test != nullptr){
+        delete this->ecu_test;
+        this->ecu_test = nullptr;
     }
 }
 
