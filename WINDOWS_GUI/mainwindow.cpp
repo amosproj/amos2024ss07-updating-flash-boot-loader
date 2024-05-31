@@ -1,5 +1,8 @@
 #include <QFileDialog>
 #include <QThread>
+#include <QAction>
+#include <QMessageBox>
+#include <QPixmap>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -14,32 +17,17 @@ static inline void dummy_flash(QString dev) {
     qDebug() << "Flash " << dev;
 }
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-{
-    ui->setupUi(this);
-    this->setFixedSize(this->geometry().width(),this->geometry().height());
-
-    this->setWindowIcon(QIcon::fromTheme("FlashBootloader",
-                                         QIcon("../../icon.png")));
-
-    qInfo("Main: Create Communication Layer");
-    comm = new Communication();
-
-    qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
-    uds = new UDS(0x001);
-
-    //=====================================================================
-    // Connect the signals and slots
-
+void MainWindow::connectSignalSlots() {
     // Comm RX Signal to UDS RX Slot
     connect(comm, SIGNAL(rxDataReceived(unsigned int, QByteArray)), uds, SLOT(rxDataReceiverSlot(unsigned int, QByteArray)), Qt::DirectConnection);
 
     // UDS TX Signals to Comm TX Slots
     connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
     connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
-    //=====================================================================
+
+    // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
+    connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            &MainWindow::comboBoxIndexChanged);
 
     // GUI Console Print
     connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)));
@@ -51,8 +39,17 @@ MainWindow::MainWindow(QWidget *parent)
     comm->init(Communication::CAN_DRIVER); // Set to CAN
 
 
-    //=====================================================================
+    // GUI menu bar
+    connect(ui->menuLicenseQT, &QAction::triggered, this, [=]() {
+        QMessageBox::about(nullptr, "QT license",
+                       "The app was developed with usage of QT Open Source under LGPLv3.\nThe license can be found in file \"LGPLv3\".\n\n");
+    });
+    connect(ui->menuLicenseMIT, &QAction::triggered, this, [=]() {
+        QMessageBox::about(nullptr, "Code license",
+                       "Our code was developed under MIT license.");
+    });
 
+    // GUI choose file
     connect(ui->button_file, &QPushButton::clicked, this, [=]() {
         QString path = QFileDialog::getOpenFileName(nullptr, "Choose File");
         if(!path.isEmpty()) {
@@ -69,14 +66,13 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
-    ui->table_ECU->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->table_ECU->setSelectionMode(QAbstractItemView::SingleSelection);
-    ui->table_ECU->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    // GUI select ECU
     connect(ui->table_ECU, &QTableWidget::itemSelectionChanged, this, [=]() {
         QTableWidgetItem *item = ui->table_ECU->selectedItems().at(0);
         ui->label_selected_ECU->setText("Selected: " + item->text());
     });
 
+    // GUI reset
     connect(ui->button_reset, &QPushButton::clicked, this, [=]() {
         if(ui->label_selected_ECU->text() != "") {
             ui->label_reset_status->setText("Reset status: In progress");
@@ -87,6 +83,7 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
+    // GUI flash
     connect(ui->button_flash, &QPushButton::clicked, this, [=]() {
         if(ui->label_selected_ECU->text() != "") {
             dummy_flash(ui->label_selected_ECU->text());
@@ -97,28 +94,32 @@ MainWindow::MainWindow(QWidget *parent)
             updateStatus(UPDATE, "Already did X");
         }
     });
+}
 
-    connect(ui->button_can_message, &QPushButton::clicked, this, [=]{
-        //uds->testerPresent(0x001);
-        UDS::RESP resp = uds->diagnosticSessionControl(0x001, 0x01);
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    this->setFixedSize(this->geometry().width(),this->geometry().height());
 
-        switch(resp){
-        case UDS::RX_NO_RESPONSE:
-            appendTextToConsole("RX No Response"); break;
-        case UDS::NO_INIT:
-            appendTextToConsole("No Init"); break;
-        case UDS::STILL_BUSY:
-            appendTextToConsole("Still Busy"); break;
-        case UDS::TX_FREE:
-            appendTextToConsole("TX Free"); break;
-        case UDS::RX_ERROR:
-            appendTextToConsole("RX Error"); break;
-        case UDS::TX_RX_OK:
-            appendTextToConsole("TX + RX OK"); break;
-        case UDS::TX_RX_NOK:
-            appendTextToConsole("TX + RX Not OK"); break;
-        }
-    });
+    this->setWindowIcon(QIcon::fromTheme("FlashBootloader",
+                                         QIcon("../../images/icon.png")));
+    const QPixmap pix("../../images/logo.png");
+    pix.scaled(100,100, Qt::KeepAspectRatio);
+    ui->label_logo->setPixmap(pix);
+
+    qInfo("Main: Create Communication Layer");
+    comm = new Communication();
+
+    qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
+    uds = new UDS(0x001);
+
+    ui->table_ECU->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->table_ECU->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->table_ECU->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+    connectSignalSlots();
 
     // Create both QComboBoxes for later
     editComboBox_speed = new EditableComboBox(this);
@@ -131,27 +132,12 @@ MainWindow::MainWindow(QWidget *parent)
     editComboBox_speed->hide();
     comboBox_speedUnit->hide();
 
-    // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
-    connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
-            &MainWindow::comboBoxIndexChanged);
-
     ui->Console->setReadOnly(true);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
-}
-
-void MainWindow::display_rcvd_can_message(unsigned int id, unsigned short dlc, unsigned char data[])
-{
-    QString str = "Received id=";
-    str.append(QString::number(id) + ", dlc=" + QString::number(dlc) + ", data=");
-    str.append(QString::fromUtf8((char *)data));
-    /*for (int i = 0; i < strlen(data)) {
-        str.append(QString::number(data[i]) + ", ");
-    }*/
-    this->ui->textBrowser_flash_status->setText(str);
 }
 
 void MainWindow::updateStatus(MainWindow::status s, QString str) {
