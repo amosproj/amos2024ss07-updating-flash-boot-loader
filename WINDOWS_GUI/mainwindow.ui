@@ -40,7 +40,20 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_ECU_select">
            <item>
+            <widget class="QPushButton" name="pushButton_ECU_refresh">
+             <property name="text">
+              <string>Refresh</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QTableWidget" name="table_ECU">
+             <attribute name="horizontalHeaderStretchLastSection">
+              <bool>true</bool>
+             </attribute>
+             <attribute name="verticalHeaderStretchLastSection">
+              <bool>true</bool>
+             </attribute>
              <row>
               <property name="text">
                <string/>
@@ -63,12 +76,12 @@
              </column>
              <column>
               <property name="text">
-               <string>Version</string>
+               <string>Systemname</string>
               </property>
              </column>
              <column>
               <property name="text">
-               <string>Mac Address</string>
+               <string>Last Flash Date</string>
               </property>
              </column>
              <item row="0" column="0">
