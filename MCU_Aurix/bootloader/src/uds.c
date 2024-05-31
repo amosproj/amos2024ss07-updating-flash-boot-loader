@@ -360,37 +360,36 @@ static uint8_t getSID(UDS_Msg *msg){
 }
 
 static uint16_t getDID(UDS_Msg *msg){
-    if (msg->len == 0){
+    if (msg->len < 3){
         return 0;
     }
 
-    uint16_t did = 0;
-    uint8_t max_idx = 2;
-    for(int i = max_idx; i >= 1; i--){
-        did |= (msg->data[i] << (8*(max_idx-i)));
-    }
+    uint8_t high = msg->data[1];                              // DID high Byte
+    uint8_t low = msg->data[2];                               // DID low Byte
+    uint16_t did = ((uint16_t) high) << 8;
+    did |= low;
     return did;
 }
 
 static uint32_t getMemoryAddress(UDS_Msg *msg){
-    if (msg->len == 0){
+    if (msg->len < 5){
         return 0;
     }
     uint32_t addr = 0;
-    uint8_t max_idx = 4;
-    for(int i = 4; i >= 1; i--){
-        addr |= (msg->data[i] << (8*(max_idx-1)));
-    }
+    addr |= (msg->data[1] << 24);
+    addr |= (msg->data[2] << 16);
+    addr |= (msg->data[3] << 8);
+    addr |= msg->data[4];
     return addr;
 }
 
 static uint16_t getNoBytes(UDS_Msg *msg){
-    if (msg->len == 0){
+    if (msg->len < 7){
         return 0;
     }
     uint16_t bytes = 0;
-    for(int i = 6; i >= 5; i--){
-        bytes |= (msg->data[i] << (8*(i-5)));
-    }
+    bytes |= (msg->data[5] << 8);
+    bytes |= msg->data[6];
+
     return bytes;
 }
