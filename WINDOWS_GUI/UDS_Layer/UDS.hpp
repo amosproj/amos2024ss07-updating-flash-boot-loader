@@ -83,10 +83,10 @@ public:
 private:
     void messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes);
 
+    RESP checkOnFreeTX();
     const RESP txMessageStart();
     void txMessageSend(uint32_t id, uint8_t *msg, int len);
-    const RESP txMessageValid();
-    RESP checkOnFreeTX();
+    const RESP rxMessageValid(uint32_t waittime);
     RESP checkOnResponse(uint32_t waittime);
 	uint32_t createCommonID(uint32_t base_id, uint8_t gui_id, uint32_t ecu_id);
 
@@ -110,6 +110,8 @@ signals:
      * @brief Signals a Text to be print to GUI console
      */
     void toConsole(const QString &);
+
+
 
 public slots:
     /**

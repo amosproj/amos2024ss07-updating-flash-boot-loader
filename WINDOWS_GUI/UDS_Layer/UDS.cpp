@@ -247,12 +247,12 @@ void UDS::txMessageSend(uint32_t id, uint8_t *msg, int len) {
     emit txData(qbdata);
 }
 
-const UDS::RESP UDS::txMessageValid() {
+const UDS::RESP UDS::rxMessageValid(uint32_t waittime) {
     if(rx_exp_data == nullptr || rx_no_bytes == 0)
         return RX_ERROR;
 
     // 5. Wait on RX message interpreter
-    RESP res = checkOnResponse(rx_max_waittime_long);
+    RESP res = checkOnResponse(waittime);
     if( res == TX_RX_OK){
         // Check on result of message interpreter
         if (rx_msg_valid)
@@ -287,7 +287,7 @@ UDS::RESP UDS::reqIdentification() { // Sending out broadcast for tester present
 
     rx_no_bytes = 0;
     rx_exp_data = _create_tester_present(&rx_no_bytes, 1, 1);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_long);
 }
 
 
@@ -317,7 +317,7 @@ UDS::RESP UDS::diagnosticSessionControl(uint32_t id, uint8_t session) {
 
     rx_no_bytes = 0;
     rx_exp_data = _create_diagnostic_session_control(&rx_no_bytes, 1, session);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -345,7 +345,7 @@ UDS::RESP UDS::ecuReset(uint32_t id, uint8_t reset_type) {
 
     rx_no_bytes = 0;
     rx_exp_data = _create_ecu_reset(&rx_no_bytes, 1, reset_type);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -372,7 +372,7 @@ UDS::RESP UDS::securityAccessRequestSEED(uint32_t id) {
 
     rx_no_bytes = 0;
     rx_exp_data = _create_security_access(&rx_no_bytes, 1, FBL_SEC_ACCESS_SEED, 0, 0);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -401,7 +401,7 @@ UDS::RESP UDS::securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_le
 
     rx_no_bytes = 0;
     rx_exp_data = _create_security_access(&rx_no_bytes, 1, FBL_SEC_ACCESS_VERIFY_KEY, 0, 0);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -467,7 +467,7 @@ UDS::RESP UDS::readDataByIdentifier(uint32_t id, uint16_t identifier) {
     // 5. Create the data that is expected, Here: As response data is not filled, but is expected in the response
     rx_no_bytes = 0;
     rx_exp_data = _create_read_data_by_ident(&rx_no_bytes, 1, identifier, 0, 0);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -496,7 +496,7 @@ UDS::RESP UDS::readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_by
 
     rx_no_bytes = 0;
     rx_exp_data = _create_read_memory_by_address(&rx_no_bytes, 1, address, no_bytes, 0, 0);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -526,7 +526,7 @@ UDS::RESP UDS::writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* 
 
     rx_no_bytes = 0;
     rx_exp_data = _create_write_data_by_ident(&rx_no_bytes, 1, identifier, 0, 0);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 // Specification for Upload | Download
@@ -556,7 +556,7 @@ UDS::RESP UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes)
 
     rx_no_bytes = 0;
     rx_exp_data = _create_request_download(&rx_no_bytes, 1, address, no_bytes);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -585,7 +585,7 @@ UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes) {
 
     rx_no_bytes = 0;
     rx_exp_data = _create_request_upload(&rx_no_bytes, 1, address, no_bytes);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -653,7 +653,7 @@ UDS::RESP UDS::requestTransferExit(uint32_t id, uint32_t address) {
 
     rx_no_bytes = 0;
     rx_exp_data = _create_request_transfer_exit(&rx_no_bytes, 1, address);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 // Supported Common Response Codes
