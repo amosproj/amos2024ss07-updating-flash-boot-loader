@@ -51,10 +51,13 @@ void init_bootloader(void){
  */
 void cyclicProcessing (void){
     // UDS RX Handling
+
     rx_uds_message = isotp_rcv(&rx_total_length);
     if(rx_total_length != 0){
+        toggle_led_activity(LED1);
         uds_handleRX(rx_uds_message, rx_total_length);
     }
+
 }
 
 /**
