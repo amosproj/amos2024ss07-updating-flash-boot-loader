@@ -29,10 +29,10 @@ static isoTP* iso;
 // Private Helper Function declarations
 //============================================================================
 
-uint8_t getSID(UDS_Msg *msg);
-uint16_t getDID(UDS_Msg *msg);
-uint32_t getMemoryAddress(UDS_Msg *msg);
-uint16_t getNoBytes(UDS_Msg *msg);
+static uint8_t getSID(UDS_Msg *msg);
+static uint16_t getDID(UDS_Msg *msg);
+static uint32_t getMemoryAddress(UDS_Msg *msg);
+static uint16_t getNoBytes(UDS_Msg *msg);
 
 //============================================================================
 // Init + Close
@@ -352,14 +352,14 @@ void uds_neg_response(uint8_t reg_sid ,uint8_t neg_code){
 // Private Helper Functions
 //============================================================================
 
-uint8_t getSID(UDS_Msg *msg){
+static uint8_t getSID(UDS_Msg *msg){
     if (msg->len == 0){
         return 0;
     }
     return msg->data[0];
 }
 
-uint16_t getDID(UDS_Msg *msg){
+static uint16_t getDID(UDS_Msg *msg){
     if (msg->len == 0){
         return 0;
     }
@@ -372,7 +372,7 @@ uint16_t getDID(UDS_Msg *msg){
     return did;
 }
 
-uint32_t getMemoryAddress(UDS_Msg *msg){
+static uint32_t getMemoryAddress(UDS_Msg *msg){
     if (msg->len == 0){
         return 0;
     }
@@ -384,7 +384,7 @@ uint32_t getMemoryAddress(UDS_Msg *msg){
     return addr;
 }
 
-uint16_t getNoBytes(UDS_Msg *msg){
+static uint16_t getNoBytes(UDS_Msg *msg){
     if (msg->len == 0){
         return 0;
     }

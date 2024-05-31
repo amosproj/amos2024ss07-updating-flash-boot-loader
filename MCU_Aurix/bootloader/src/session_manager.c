@@ -20,7 +20,7 @@ boolean authenticated;
 // Init
 //============================================================================
 
-void init_session_manager(){
+void init_session_manager(void){
     session = FBL_DIAG_SESSION_DEFAULT;
     authenticated = 1; // Currently no authentification necessary
 }

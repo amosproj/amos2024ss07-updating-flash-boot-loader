@@ -37,7 +37,7 @@ uint8_t did_bl_write_end_add_core2[FBL_DID_BL_WRITE_END_ADD_CORE2_BYTES_SIZE]=  
 /**
  * This function reads all the data from the memory and fills the variables (TBD)
  */
-void init_memory(){
+void init_memory(void){
     // TODO: Read from real memory and fill the variables
 }
 
@@ -45,7 +45,7 @@ void init_memory(){
 // Identification
 //============================================================================
 
-uint32_t getID(){
+uint32_t getID(void){
     return (uint32_t)(FBLCAN_BASE_ADDRESS) | ((uint16_t)did_can_id[0] << 12 | (uint16_t)(did_can_id[1])<<4);
 }
 

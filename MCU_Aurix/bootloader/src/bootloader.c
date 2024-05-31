@@ -58,7 +58,7 @@ void cyclicProcessing (void){
 }
 
 /**
- * @brieg: Function to deinit the bootloader logic
+ * @brief: Function to deinit the bootloader logic
  */
 void deinit_bootloader(void){
     uds_close();
