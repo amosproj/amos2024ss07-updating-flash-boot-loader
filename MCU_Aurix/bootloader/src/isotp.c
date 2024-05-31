@@ -239,18 +239,19 @@ void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc){
     if(dlc <= 0) // Need to assume that the data is also empty, using FBL_NEGATIVE_RESPONSE instead
         uds_neg_response(FBL_NEGATIVE_RESPONSE, FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT);
 
+    uint8_t* data_ptr = (uint8_t*)rxData;
+
     if(MAX_ISOTP_MESSAGE_LEN - (iso_RX->write_ptr - iso_RX->data) < dlc || iso_RX->ready_to_read != 0){
 
         // Request with negative response if case of error
-        if(rx_is_single_Frame(rxData, dlc, MAX_FRAME_LEN_CAN))
-            uds_neg_response(rxData[1], FBL_RC_BUSY_REPEAT_REQUEST);
+        if(rx_is_single_Frame(data_ptr, dlc, MAX_FRAME_LEN_CAN))
+            uds_neg_response(data_ptr[1], FBL_RC_BUSY_REPEAT_REQUEST);
         else // Using FBL_NEGATIVE_RESPONSE since it is any other frame (Consecutive or Flow Control)
             uds_neg_response(FBL_NEGATIVE_RESPONSE, FBL_RC_BUSY_REPEAT_REQUEST);
 
         return;
     }
 
-    uint8_t* data_ptr = (uint8_t*)rxData;
 
     //TODO: Check for flow control and handle  (in case we send data)
     // Single Frame get length of whole isoTP message
