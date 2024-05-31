@@ -104,8 +104,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     qInfo("Main: Create Communication Layer");
     comm = new Communication();
-    comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
-    comm->init(Communication::CAN_DRIVER); // Set to CAN
 
     qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
     uds = new UDS(0x001);
@@ -115,6 +113,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->table_ECU->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     connectSignalSlots();
+
+    // Init the Communication - Need to be after connectSignalsSlots to directly print to console
+    comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
+    comm->init(Communication::CAN_DRIVER); // Set to CAN
 
     // Create both QComboBoxes for later
     editComboBox_speed = new EditableComboBox(this);
