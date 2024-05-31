@@ -177,7 +177,7 @@ uint8_t writeData(uint16_t identifier, uint8_t* data, uint8_t len){
             break;
 
         case FBL_DID_BL_KEY_ADDRESS:
-            if(len != FBL_DID_PROGRAMMING_DATE_BYTES_SIZE)
+            if(len != FBL_DID_BL_KEY_ADDRESS_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
             write_to_variable(len, data, did_bl_key_address);
             break;
