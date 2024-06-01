@@ -398,7 +398,9 @@ void CAN_Wrapper::doRX(){
                     }
                     qInfo() << ">> CAN_Wrapper: Received"<<event.tagData.msg.dlc<<"byte CAN message with Data:" << bytes_data.trimmed().toStdString() << "from"<<QString("0x%1").arg(event.tagData.msg.id, 8, 16, QLatin1Char( '0' ));
                     if(VERBOSE_CAN_DRIVER) qInfo() << "CAN_Wrapper: Sending Signal rxDataReceived for ID" << QString("0x%1").arg(event.tagData.msg.id, 8, 16, QLatin1Char( '0' ));
-                    const unsigned int id = (event.tagData.msg.id ^ XL_CAN_EXT_MSG_ID);
+                    unsigned int id = event.tagData.msg.id;
+                    if(id & XL_CAN_EXT_MSG_ID)
+                        id = id ^ XL_CAN_EXT_MSG_ID;
                     emit rxDataReceived(id, ba);
 				}
 			}
