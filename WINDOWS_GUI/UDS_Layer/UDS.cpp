@@ -282,7 +282,7 @@ const UDS::RESP UDS::rxMessageValid(uint32_t waittime) {
  * @brief Method to send a broadcast to all ECUs on the bus, so that they respond with Tester Present
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::reqIdentification() { // Sending out broadcast for tester present
+UDS::RESP UDS::reqIdentification() { // broadcast for tester present
     UDS::RESP resp = txMessageStart();
     if(resp != TX_OK){
         return resp;
@@ -292,8 +292,8 @@ UDS::RESP UDS::reqIdentification() { // Sending out broadcast for tester present
     QString id_str = " using ID "+ QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' ));
 
     // Info to Console
-    qInfo() << "<< UDS: Sending out Request for Identification to all ECUs" <<id_str <<"\n";
-    emit toConsole("UDS: Sending out Request for Identification to all ECUs" + id_str);
+    qInfo() << "<< UDS: Request for Identification to all ECUs" <<id_str <<"\n";
+    emit toConsole("UDS: Request for Identification to all ECUs" + id_str);
 
     int len;  
     uint8_t *msg = _create_tester_present(&len, 0, 1); // Request Tester present from ECUs
@@ -327,8 +327,8 @@ UDS::RESP UDS::diagnosticSessionControl(uint32_t id, uint8_t session) {
     QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
 
     // Info to Console
-    qInfo("<< UDS: Sending out Diagnostic Session Control\n");
-    emit toConsole("<< UDS: Sending out Diagnostic Session Control" + id_str);
+    qInfo("<< UDS: Diagnostic Session Control\n");
+    emit toConsole("<< UDS: Diagnostic Session Control" + id_str);
 
 	int len;
 	uint8_t *msg = _create_diagnostic_session_control(&len, 0, session);
@@ -355,8 +355,8 @@ UDS::RESP UDS::ecuReset(uint32_t id, uint8_t reset_type) {
     QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
 
     // Info to Console
-    qInfo("<< UDS: Sending out for ECU Reset\n");
-    emit toConsole("<< UDS: Sending out for ECU Reset" + id_str);
+    qInfo("<< UDS: for ECU Reset\n");
+    emit toConsole("<< UDS: for ECU Reset" + id_str);
 
     int len;
 	uint8_t *msg = _create_ecu_reset(&len, 0, reset_type);
@@ -382,8 +382,8 @@ UDS::RESP UDS::securityAccessRequestSEED(uint32_t id) {
     QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
 
     // Info to Console
-    qInfo("<< UDS: Sending out Security Access for Seed\n");
-    emit toConsole("<< UDS: Sending out Security Access for Seed" + id_str);
+    qInfo("<< UDS: Security Access for Seed\n");
+    emit toConsole("<< UDS: Security Access for Seed" + id_str);
 
 	int len;
 	uint8_t *msg = _create_security_access(&len, 0, FBL_SEC_ACCESS_SEED, 0, 0);
@@ -411,8 +411,8 @@ UDS::RESP UDS::securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_le
     QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
 
     // Info to Console
-    qInfo("<< UDS: Sending out Security Access for Verify Key\n");
-    emit toConsole("<< UDS: Sending out Security Access for Verify Key" + id_str);
+    qInfo("<< UDS: Security Access for Verify Key\n");
+    emit toConsole("<< UDS: Security Access for Verify Key" + id_str);
 
 	int len;
 	uint8_t *msg = _create_security_access(&len, 0, FBL_SEC_ACCESS_VERIFY_KEY, key, key_len);
@@ -438,8 +438,8 @@ UDS::RESP UDS::testerPresent(uint32_t id) {
     QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
 
     // Info to Console
-    qInfo("<< UDS: Sending out Tester Present\n");
-    emit toConsole("<< UDS: Sending out Tester Present" + id_str);
+    qInfo("<< UDS: Tester Present\n");
+    emit toConsole("<< UDS: Tester Present" + id_str);
 
 	int len;
 	uint8_t *msg = _create_tester_present(&len, 0, FBL_TESTER_PRES_WITHOUT_RESPONSE);
@@ -474,10 +474,11 @@ UDS::RESP UDS::readDataByIdentifier(uint32_t id, uint16_t identifier) {
 
     uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
     QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
+    QString did_str = " for DID "+translateDID(identifier) + " ("+QString("0x%1").arg(identifier, 4, 16, QLatin1Char( '0' )) +")";
 
     // Info to Console
-    qInfo("<< UDS: Sending out Read Data By Identifier\n");
-    emit toConsole("<< UDS: Sending out Read Data By Identifier" + id_str);
+    qInfo("<< UDS: Read Data By Identifier\n");
+    emit toConsole("<< UDS: Read Data By Identifier" + id_str + did_str);
     
 	int len;
 	uint8_t *msg = _create_read_data_by_ident(&len, 0, identifier, 0, 0);
@@ -506,8 +507,8 @@ UDS::RESP UDS::readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_by
     QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
 
     // Info to Console
-    qInfo("<< UDS: Sending out Read Memory By Address\n");
-    emit toConsole("<< UDS: Sending out Read Memory By Address" + id_str);
+    qInfo("<< UDS: Read Memory By Address\n");
+    emit toConsole("<< UDS: Read Memory By Address" + id_str);
 
     int len;
 	uint8_t *msg = _create_read_memory_by_address(&len, 0, address, no_bytes, 0, 0);
@@ -536,8 +537,8 @@ UDS::RESP UDS::writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* 
     QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
 
     // Info to Console
-    qInfo("<< UDS: Sending out Write Data By Identifier\n");
-    emit toConsole("<< UDS: Sending out Write Data By Identifier" + id_str);
+    qInfo("<< UDS: Write Data By Identifier\n");
+    emit toConsole("<< UDS: Write Data By Identifier" + id_str);
 
 	int len;
 	uint8_t *msg = _create_write_data_by_ident(&len, 0, identifier, data, data_len);
@@ -566,8 +567,8 @@ UDS::RESP UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes)
     QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
 
     // Info to Console
-    qInfo("<< UDS: Sending out Request Download\n");
-    emit toConsole("<< UDS: Sending out Request Download" + id_str);
+    qInfo("<< UDS: Request Download\n");
+    emit toConsole("<< UDS: Request Download" + id_str);
 
 	int len;
 	uint8_t *msg = _create_request_download(&len, 0, address, no_bytes);
@@ -625,8 +626,8 @@ UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_
     QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
 
     // Info to Console
-    qInfo("<< UDS: Sending out Transfer Data\n");
-    emit toConsole("<< UDS: Sending out Transfer Data" + id_str);
+    qInfo("<< UDS: Transfer Data\n");
+    emit toConsole("<< UDS: Transfer Data" + id_str);
 
 
 	int len;
@@ -663,8 +664,8 @@ UDS::RESP UDS::requestTransferExit(uint32_t id, uint32_t address) {
     QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
 
     // Info to Console
-    qInfo("<< UDS: Sending out Request Transfer Exit\n");
-    emit toConsole("<< UDS: Sending out Request Transfer Exit" + id_str);
+    qInfo("<< UDS: Request Transfer Exit\n");
+    emit toConsole("<< UDS: Request Transfer Exit" + id_str);
 
 	int len;
 	uint8_t *msg = _create_request_transfer_exit(&len, 0, address);
@@ -694,8 +695,8 @@ UDS::RESP UDS::negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_c
     QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
 
     // Info to Console
-    qInfo("<< UDS: Sending out Negative Response\n");
-    emit toConsole("<< UDS: Sending out Negative Response" + id_str);
+    qInfo("<< UDS: Negative Response\n");
+    emit toConsole("<< UDS: Negative Response" + id_str);
 
 	// Set the right ID to be used for transmitting
     if(VERBOSE_UDS) qInfo("UDS: Sending Signal setID");
@@ -772,6 +773,11 @@ QString UDS::translateNegResp(uint8_t nrc){
     }
 }
 
+/**
+ * @brief Translates a given DID to the String representation of the DID according to UDS Communication documentation
+ * @param DID
+ * @return
+ */
 QString UDS::translateDID(uint16_t DID){
     switch(DID){
         case FBL_DID_SYSTEM_NAME:
@@ -803,30 +809,36 @@ QString UDS::translateDID(uint16_t DID){
     }
 }
 
+/**
+ * @brief Reads the Data based on format of the given DID
+ * @param DID To be used as format template
+ * @param data Payload of the data
+ * @param no_bytes Number of bytes of the data
+ * @return
+ */
 QString UDS::readDIDData(uint16_t DID, uint8_t* data, uint32_t no_bytes){
-
-    QByteArray ba;
-    ba.resize(no_bytes);
-    for(int i = 0; i < no_bytes; i++)
-        ba[i] = data[i];
 
     QString retText = "";
     switch(DID){
         case FBL_DID_SYSTEM_NAME:
-            return QString::fromLocal8Bit(ba); break;
-        case FBL_DID_PROGRAMMING_DATE:
+            return QString::fromLocal8Bit(&data[0]); break;
 
-            for(int i = 0; i < ba.size(); i++){
+        case FBL_DID_PROGRAMMING_DATE:
+            if(no_bytes != 3)
+                return "Wrong Programming Date format";
+
+            for(int i = 0; i < no_bytes; i++){
                 if(i == 0)
-                    retText.append(QString("%1").arg((uint8_t)ba[i], 2, 16, QLatin1Char( '0' )));
-                else if(i == ba.size()-1)
-                    retText.append(".20"+QString("%1").arg((uint8_t)ba[i], 2, 16, QLatin1Char( '0' )));
+                    retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+                else if(i == no_bytes-1)
+                    retText.append(".20"+QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
                 else
-                    retText.append("."+QString("%1").arg((uint8_t)ba[i], 2, 16, QLatin1Char( '0' )));
+                    retText.append("."+QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
             }
             return retText; break;
+
         case FBL_DID_BL_KEY_ADDRESS:
-            return QString("Not yet supported"); break;
+             return QString("Not yet supported"); break;
         case FBL_DID_BL_KEY_GOOD_VALUE:
             return QString("Not yet supported"); break;
         case FBL_DID_CAN_BASE_MASK:
