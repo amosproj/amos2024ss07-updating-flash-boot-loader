@@ -34,9 +34,9 @@ void ECU_Test::messageChecker(const unsigned int id, const QByteArray &rec){
 
     int len = 0;
     uint8_t *msg = nullptr;
-    unsigned int own_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, this->ecu_id) | 0x80000000; // 0x80000000 because of CAN Driver (to identify extended ID)
-    unsigned int ecu_id = createCommonID(FBLCAN_BASE_ADDRESS, 0           , this->ecu_id) | 0x80000000;
-    unsigned int broadcast_check_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, 0) | 0x80000000;
+    unsigned int own_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, this->ecu_id); // 0x80000000 because of CAN Driver (to identify extended ID)
+    unsigned int ecu_id = createCommonID(FBLCAN_BASE_ADDRESS, 0           , this->ecu_id);
+    unsigned int broadcast_check_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, 0);
 
     if(id == own_id || id == broadcast_check_id){
         //emit toConsole("ECU Test: Ignoring UDS Message with Testing GUI ID");
