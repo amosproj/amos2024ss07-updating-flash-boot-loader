@@ -25,12 +25,15 @@ public:
         RESET
     };
 private:
+    uint8_t gui_id = 0x01;
+
     Ui::MainWindow *ui;
     EditableComboBox *editComboBox_speed;
     QComboBox *comboBox_speedUnit;
 
     Communication *comm;
     UDS *uds;
+    QMap<QString, QMap<QString, QString>> eculist;
 
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -40,9 +43,16 @@ public:
 
 private:
     void connectSignalSlots();
+    void updateECUList();
+
+    void clearECUTableView();
+    void updateECUTableView(QMap<QString, QMap<QString, QString>> eculist);
 
 private slots:
     void comboBoxIndexChanged(int index);
     void appendTextToConsole(const QString &text);
+
+    void ecuResponseSlot(const QMap<QString, QString> &data);
+    void on_pushButton_ECU_refresh_clicked();
 };
 #endif // MAINWINDOW_H

@@ -3,6 +3,8 @@
 #include <QAction>
 #include <QMessageBox>
 #include <QPixmap>
+#include <QTimer>
+#include <QTableView>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -19,11 +21,14 @@ static inline void dummy_flash(QString dev) {
 
 void MainWindow::connectSignalSlots() {
     // Comm RX Signal to UDS RX Slot
-    connect(comm, SIGNAL(rxDataReceived(unsigned int, QByteArray)), uds, SLOT(rxDataReceiverSlot(unsigned int, QByteArray)), Qt::DirectConnection);
+    connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
 
     // UDS TX Signals to Comm TX Slots
     connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
     connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
+
+    // UDS Receive Signals to GUI Slots
+    connect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), this, SLOT(ecuResponseSlot(QMap<QString,QString>)));
 
     // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
     connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
@@ -62,32 +67,66 @@ void MainWindow::connectSignalSlots() {
 
     // GUI select ECU
     connect(ui->table_ECU, &QTableWidget::itemSelectionChanged, this, [=]() {
-        QTableWidgetItem *item = ui->table_ECU->selectedItems().at(0);
-        ui->label_selected_ECU->setText("Selected: " + item->text());
+        if(!ui->table_ECU->selectedItems().empty()){
+            QTableWidgetItem *item = ui->table_ECU->selectedItems().at(0);
+            if(!item->text().isEmpty())
+                ui->label_selected_ECU->setText("Selected: " + item->text());
+            else
+                ui->label_selected_ECU->setText("");
+        }
     });
 
     // GUI reset
     connect(ui->button_reset, &QPushButton::clicked, this, [=]() {
         if(ui->label_selected_ECU->text() != "") {
-            ui->label_reset_status->setText("Reset status: In progress");
-            if(uds->ecuReset(0x001, FBL_ECU_RESET_WARM_POWERON) == UDS::TX_RX_OK) 
-                ui->label_reset_status->setText("Reset status: Succeeded");
-            else
-                ui->label_reset_status->setText("Reset status: Failed");
+            QStringList separated = ui->label_selected_ECU->text().split(": 0x");
+            if(separated.size() == 2){
+                QString ID_HEX = separated[1];
+                bool ok;
+                uint32_t ecu_id = (0xFFF0 & ID_HEX.toUInt(&ok, 16)) >> 4;
+
+                ui->label_reset_status->setText("Reset status: In progress");
+                if(uds->ecuReset(ecu_id, FBL_ECU_RESET_WARM_POWERON) == UDS::TX_RX_OK)
+                    ui->label_reset_status->setText("Reset status: Succeeded");
+                else
+                    ui->label_reset_status->setText("Reset status: Failed");
+            }
+
         }
     });
 
     // GUI flash
     connect(ui->button_flash, &QPushButton::clicked, this, [=]() {
+        this->ui->textBrowser_flash_status->clear();
+        this->ui->progressBar_flash->setValue(0);
+
         if(ui->label_selected_ECU->text() != "") {
             dummy_flash(ui->label_selected_ECU->text());
             // Just for demonstration purposes
             updateStatus(RESET, "");
             updateStatus(UPDATE, "Flashing started for " + ui->label_selected_ECU->text());
             updateStatus(INFO, "It may take a while");
-            updateStatus(UPDATE, "Already did X");
+
+            for(int j = 1; j <= 100; j++){
+                if(j < 100){
+                    QTimer::singleShot(j*175, [this]{
+                        updateStatus(UPDATE, "Flashing in Progress.. Please Wait");
+                    });
+                }
+                else{
+                    QTimer::singleShot(j*175, [this]{
+                        updateStatus(INFO, "Flashing finished!");
+                    });
+                }
+            }
+
+            appendTextToConsole("INFO: ONLY DEMO UI - Flashing currently not supported on ECU.");
+        }
+        else {
+            this->ui->textBrowser_flash_status->setText("No valid ECU selected");
         }
     });
+
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -107,7 +146,7 @@ MainWindow::MainWindow(QWidget *parent)
     comm = new Communication();
 
     qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
-    uds = new UDS(0x001);
+    uds = new UDS(gui_id);
 
     ui->table_ECU->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->table_ECU->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -118,6 +157,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Init the Communication - Need to be after connectSignalsSlots to directly print to console
     comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
     comm->init(Communication::CAN_DRIVER); // Set to CAN
+
 
     // Create both QComboBoxes for later
     editComboBox_speed = new EditableComboBox(this);
@@ -141,21 +181,25 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::updateStatus(MainWindow::status s, QString str) {
-    QString status;
+    QString status = "";
     int val = 0;
     switch(s) {
         case UPDATE:
             status = "[UPDATE] ";
-            qDebug() << this->ui->progressBar_flash->value();
-            val = this->ui->progressBar_flash->value() + 10;
-            this->ui->progressBar_flash->setValue(val);
+            //qDebug() << this->ui->progressBar_flash->value();
+            val = this->ui->progressBar_flash->value() + 1;
+            if(val % 10)
+                status = "";
+
+            if(val <= 100)
+                this->ui->progressBar_flash->setValue(val);
             break;
         case INFO:
             status = "[INFO] ";
             break;
-        /*case ERROR:
+        case ERR:
             status = "[ERROR] ";
-            break;*/
+            break;
         case RESET:
             status = "";
             this->ui->progressBar_flash->setValue(0);
@@ -165,10 +209,81 @@ void MainWindow::updateStatus(MainWindow::status s, QString str) {
             qDebug() << "Error wrong status for updateStatus " + QString::number(val);
             break;
     }
-    QString rest = this->ui->textBrowser_flash_status->toPlainText();
-    this->ui->textBrowser_flash_status->setText(status + str + "\n" + rest);
+
+    if(!status.isEmpty()){
+        QString rest = this->ui->textBrowser_flash_status->toPlainText();
+        this->ui->textBrowser_flash_status->setText(status + str + "\n" + rest);
+    }
 
 }
+
+void MainWindow::updateECUList(){
+    qInfo() << "Updating ECU List";
+    //this->ui->table_ECU->clearContents();
+    //this->ui->table_ECU->setRowCount(0);
+    eculist.clear();
+    clearECUTableView();
+    uds->reqIdentification();
+
+    // Wait and then check on all the received ECUs
+    QTimer::singleShot(500, [this]{
+        qInfo("Updating ECU Listing Table");
+        for(QString ID : eculist.keys()){
+            unsigned int id_int = ID.toUInt();
+            uint32_t ecu_id = (0xFFF0 & id_int) >> 4;
+            if(id_int > 0){
+                uds->readDataByIdentifier(ecu_id, (uint16_t) FBL_DID_SYSTEM_NAME);
+                uds->readDataByIdentifier(ecu_id, (uint16_t) FBL_DID_PROGRAMMING_DATE);
+            }
+        }
+
+        // Short break to process the incoming signals
+        QTimer::singleShot(100, [this]{
+            updateECUTableView(eculist);
+        });
+    });
+}
+
+void MainWindow::clearECUTableView(){
+    // Clear the content, keep the current table layout with rowcount
+    for(int row = 0; row < ui->table_ECU->rowCount(); row++){
+        for(int col = 0; col < ui->table_ECU->columnCount(); col++){
+            QTableWidgetItem *item = new QTableWidgetItem("");
+            ui->table_ECU->setItem(row, col, item);
+        }
+    }
+}
+
+void MainWindow::updateECUTableView(QMap<QString, QMap<QString, QString>> eculist){
+
+    clearECUTableView();
+
+    // Expect cleared Table
+    int ctr = 0;
+    for(QString ID : eculist.keys()){
+        uint32_t id_int = ID.toUInt();
+        if(id_int > 0 && ui->table_ECU->columnCount() >= 3){
+            QTableWidgetItem *ecu = ui->table_ECU->item(ctr, 0);
+            ecu->setText(QString("0x%1").arg(id_int, 8, 16, QLatin1Char( '0' )));
+
+            QTableWidgetItem *system_name = ui->table_ECU->item(ctr, 1);
+            system_name->setText(eculist[ID][QString::number(FBL_DID_SYSTEM_NAME)]);
+
+            QTableWidgetItem *programming_date = ui->table_ECU->item(ctr, 2);
+            programming_date->setText(eculist[ID][QString::number(FBL_DID_PROGRAMMING_DATE)]);
+        }
+        ctr++;
+        if(ctr >= ui->table_ECU->rowCount()){
+            appendTextToConsole("Currently max "+QString::number(ui->table_ECU->rowCount()) + " ECUs possible");
+            break;
+        }
+    }
+}
+
+
+//=============================================================================
+// Slots
+//=============================================================================
 
 //Will show/hide the new ComboBoxes below the ComboBox for the protocol
 void MainWindow::comboBoxIndexChanged(int index)
@@ -212,3 +327,43 @@ void MainWindow::comboBoxIndexChanged(int index)
 void MainWindow::appendTextToConsole(const QString &text){
     ui->Console->appendPlainText(text);
 }
+
+
+void MainWindow::ecuResponseSlot(const QMap<QString, QString> &data){
+    for (QString key : data.keys()){
+        QStringList ID_SID = key.split("#");
+        QString ID, SID;
+        if (ID_SID.size() == 2){
+            ID = ID_SID[0];
+            SID = ID_SID[1];
+        }
+
+        QString content = data[key];
+        qInfo() << ">> MainWindow: ECU Response: ID(int)=" << ID << " - SID(int)=" << SID << " - Data="<< content;
+
+        if(SID == QString::number(FBL_TESTER_PRESENT)){
+            eculist[ID] = QMap<QString, QString>();
+        }
+        else if(SID == QString::number(FBL_READ_DATA_BY_IDENTIFIER)){
+            QStringList DID_Payload = content.split("#");
+            QString DID, payload;
+            if(DID_Payload.size() == 2){
+                DID = DID_Payload[0];
+                payload = DID_Payload[1];
+                eculist[ID][DID] = payload;
+            }
+        }
+        else if(SID == QString::number(FBL_ECU_RESET)){
+            qInfo() << ID << "successfully reset";
+        }
+        else{
+            qInfo() << "SID is not yet supported";
+        }
+    }
+}
+
+void MainWindow::on_pushButton_ECU_refresh_clicked()
+{
+    updateECUList();
+}
+
