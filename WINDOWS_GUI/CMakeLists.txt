@@ -32,7 +32,7 @@ set(PROJECT_SOURCES
         UDS_Layer/UDS.hpp
         UDS_Spec/uds_comm_spec.cpp
         UDS_Spec/uds_comm_spec.h
-        )
+    )
 
 file(GLOB VECTOR_LIB "C:/Users/Public/Documents/Vector/XL\ Driver\ Library\ */bin")
 find_library(VXLAPI vxlapi64.lib PATHS ${VECTOR_LIB})
@@ -44,6 +44,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(WINDOWS_GUI
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        application.qrc
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET WINDOWS_GUI APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
