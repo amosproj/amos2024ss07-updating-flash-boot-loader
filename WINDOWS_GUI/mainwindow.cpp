@@ -137,8 +137,8 @@ MainWindow::MainWindow(QWidget *parent)
     this->setFixedSize(this->geometry().width(),this->geometry().height());
 
     this->setWindowIcon(QIcon::fromTheme("FlashBootloader",
-                                         QIcon("../../images/icon.png")));
-    const QPixmap pix("../../images/logo.png");
+                                         QIcon(":/application/images/icon.png")));
+    const QPixmap pix(":/application/images/logo.png");
     pix.scaled(100,100, Qt::KeepAspectRatio);
     ui->label_logo->setPixmap(pix);
 
