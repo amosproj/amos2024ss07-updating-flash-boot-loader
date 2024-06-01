@@ -119,7 +119,6 @@ MainWindow::MainWindow(QWidget *parent)
     comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
     comm->init(Communication::CAN_DRIVER); // Set to CAN
 
-
     // Create both QComboBoxes for later
     editComboBox_speed = new EditableComboBox(this);
     comboBox_speedUnit = new QComboBox(this);
