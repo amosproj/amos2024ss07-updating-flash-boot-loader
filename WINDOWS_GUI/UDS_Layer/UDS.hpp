@@ -78,6 +78,8 @@ public:
 	// Supported Common Response Codes
     RESP negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_code);
     QString translateNegResp(uint8_t nrc);
+    QString translateDID(uint16_t DID);
+    QString readDIDData(uint16_t DID, uint8_t* data, uint32_t no_bytes);
 
 
 private:
@@ -110,6 +112,12 @@ signals:
      * @brief Signals a Text to be print to GUI console
      */
     void toConsole(const QString &);
+
+    /**
+     * @brief Signals that a ECU send a response
+     * @param id Of the ECU
+     */
+    void ecuResponse(const QMap<QString, QString> &data);
 
 
 

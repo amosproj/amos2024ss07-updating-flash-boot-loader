@@ -111,6 +111,12 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
     }
     QString SID_str = " (" + QString("0x%1").arg(SID, 2, 16, QLatin1Char( '0' )) +")";
     QString ID_str = " from ID "+ QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' ));
+    QString Key = QString::number(id)+"#"+QString::number(SID);
+    QMap<QString, QString> signalContent;
+    signalContent[Key] = "";
+    uint16_t did_raw;
+    QString DID = "";
+    QString read_data;
 
     switch(SID) {
         case FBL_DIAGNOSTIC_SESSION_CONTROL:
@@ -140,12 +146,17 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
 
         case FBL_READ_DATA_BY_IDENTIFIER:
             out << info + "Read Data By Identifier "<< SID_str << ID_str<<"\n";
-            out << "DID: " << QString("0x%1").arg(data[1], 2, 16, QLatin1Char( '0' )) << QString("0x%1").arg(data[2], 2, 16, QLatin1Char( '0' )) << "\n";
-            if(response)
-                out << "Data: " << QString::fromLocal8Bit(&data[3]) << "\n";
+            did_raw = (data[1]<<8)|data[2];
+            DID = QString("0x%1").arg((data[1]<<8)|data[2], 2, 16, QLatin1Char( '0' ));
+            read_data = readDIDData(did_raw, data+3, no_bytes - 3);
+            out << "DID: " << translateDID(did_raw) << " (" << DID << ")\n";
+            if(response){
+                out << "Data: " << read_data << "\n";
+            }
 
             // Check on the relevant message - Data is included, DID is correct
             rx_msg_valid = rxMsgValid(neg_resp, false, rx_no_bytes, no_bytes, rx_exp_data, data, 2);
+            signalContent[Key] = QString::number(did_raw)+"#"+read_data;
             break;
 
         case FBL_READ_MEMORY_BY_ADDRESS:
@@ -204,6 +215,9 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
         comm_mutex.lock();
         _comm = false;
         comm_mutex.unlock();
+
+        // Signal the response
+        emit ecuResponse(signalContent);
     }
 }
 
@@ -287,7 +301,12 @@ UDS::RESP UDS::reqIdentification() { // Sending out broadcast for tester present
 
     rx_no_bytes = 0;
     rx_exp_data = _create_tester_present(&rx_no_bytes, 1, 1);
-    return rxMessageValid(rx_max_waittime_long);
+    // Release the communication flag
+    comm_mutex.lock();
+    _comm = false;
+    comm_mutex.unlock();
+
+    return TX_OK;
 }
 
 
@@ -750,6 +769,84 @@ QString UDS::translateNegResp(uint8_t nrc){
         return QString("Service not supported in active session"); break;
     default:
         return QString("Negative Response Code unknown");
+    }
+}
+
+QString UDS::translateDID(uint16_t DID){
+    switch(DID){
+        case FBL_DID_SYSTEM_NAME:
+            return QString("System Name"); break;
+        case FBL_DID_PROGRAMMING_DATE:
+            return QString("Programming Date"); break;
+        case FBL_DID_BL_KEY_ADDRESS:
+            return QString("Key Address"); break;
+        case FBL_DID_BL_KEY_GOOD_VALUE:
+            return QString("Key Good Value"); break;
+        case FBL_DID_CAN_BASE_MASK:
+            return QString("CAN Base Mask"); break;
+        case FBL_DID_CAN_ID:
+            return QString("CAN ID"); break;
+        case FBL_DID_BL_WRITE_START_ADD_CORE0:
+            return QString("Write Start Address Core 0"); break;
+        case FBL_DID_BL_WRITE_END_ADD_CORE0:
+            return QString("Write End Address Core 0"); break;
+        case FBL_DID_BL_WRITE_START_ADD_CORE1:
+            return QString("Write Start Address Core 1"); break;
+        case FBL_DID_BL_WRITE_END_ADD_CORE1:
+            return QString("Write End Address Core 1"); break;
+        case FBL_DID_BL_WRITE_START_ADD_CORE2:
+            return QString("Write Start Address Core 2"); break;
+        case FBL_DID_BL_WRITE_END_ADD_CORE2:
+            return QString("Write End Address Core 2"); break;
+        default:
+            return QString("Data Identifier unknown");
+    }
+}
+
+QString UDS::readDIDData(uint16_t DID, uint8_t* data, uint32_t no_bytes){
+
+    QByteArray ba;
+    ba.resize(no_bytes);
+    for(int i = 0; i < no_bytes; i++)
+        ba[i] = data[i];
+
+    QString retText = "";
+    switch(DID){
+        case FBL_DID_SYSTEM_NAME:
+            return QString::fromLocal8Bit(ba); break;
+        case FBL_DID_PROGRAMMING_DATE:
+
+            for(int i = 0; i < ba.size(); i++){
+                if(i == 0)
+                    retText.append(QString("%1").arg((uint8_t)ba[i], 2, 16, QLatin1Char( '0' )));
+                else if(i == ba.size()-1)
+                    retText.append(".20"+QString("%1").arg((uint8_t)ba[i], 2, 16, QLatin1Char( '0' )));
+                else
+                    retText.append("."+QString("%1").arg((uint8_t)ba[i], 2, 16, QLatin1Char( '0' )));
+            }
+            return retText; break;
+        case FBL_DID_BL_KEY_ADDRESS:
+            return QString("Not yet supported"); break;
+        case FBL_DID_BL_KEY_GOOD_VALUE:
+            return QString("Not yet supported"); break;
+        case FBL_DID_CAN_BASE_MASK:
+            return QString("Not yet supported"); break;
+        case FBL_DID_CAN_ID:
+            return QString("Not yet supported"); break;
+        case FBL_DID_BL_WRITE_START_ADD_CORE0:
+            return QString("Not yet supported"); break;
+        case FBL_DID_BL_WRITE_END_ADD_CORE0:
+            return QString("Not yet supported"); break;
+        case FBL_DID_BL_WRITE_START_ADD_CORE1:
+            return QString("Not yet supported"); break;
+        case FBL_DID_BL_WRITE_END_ADD_CORE1:
+            return QString("Not yet supported"); break;
+        case FBL_DID_BL_WRITE_START_ADD_CORE2:
+            return QString("Not yet supported"); break;
+        case FBL_DID_BL_WRITE_END_ADD_CORE2:
+            return QString("Not yet supported"); break;
+        default:
+            return QString("Data Identifier unknown");
     }
 }
 
