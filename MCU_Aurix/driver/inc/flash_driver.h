@@ -37,10 +37,10 @@
 /*------------------------------------------------Function Prototypes------------------------------------------------*/
 /*********************************************************************************************************************/
 
-int writeProgramFlash(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32 data[], size_t dataSize);
-uint32 verifyProgramFlash(uint32 flashStartAddr, uint32 data[], size_t dataSize);
+int flashWriteProgram(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32 data[], size_t dataSize);
+uint32 flashVerifyProgram(uint32 flashStartAddr, uint32 data[], size_t dataSize);
 
-int writeDataFlash(IfxFlash_FlashType flashModule, uint32 address, uint32 data[], size_t data_size);
-uint32 verifyDataFlash(uint32 flashStartAddress, uint32 data[], size_t dataSize);
+int flashWriteData(IfxFlash_FlashType flashModule, uint32 address, uint32 data[], size_t data_size);
+uint32 flashVerifyData(uint32 flashStartAddress, uint32 data[], size_t dataSize);
 
 #endif /* FLASH_H_ */

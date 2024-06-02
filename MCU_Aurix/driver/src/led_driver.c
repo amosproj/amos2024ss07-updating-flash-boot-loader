@@ -7,9 +7,10 @@
 //============================================================================
 
 #include "led_driver.h"
+#include "led_driver_TC375_LK.h"
 
 /* This function initializes the 2 usable LEDs so they can be turned on and off */
-void init_led_driver(void) 
+void ledInitDriver(void) 
 {
     /* Initializing LED1 */
     IfxPort_setPinModeOutput(LED1, IfxPort_OutputMode_pushPull, IfxPort_OutputIdx_general);
@@ -24,18 +25,18 @@ void init_led_driver(void)
 /* This function toggles the activity of one specific LED, described by the combination of port and pinIndex.
  * LED on -> LED off
  * LED off -> LED on */
-void toggle_led_activity(Ifx_P *port, uint8 pinIndex) 
+void ledToggleActivity(Ifx_P *port, uint8 pinIndex) 
 {
     /* Function call to toggle LED activity */
     IfxPort_togglePin(port, pinIndex);
 }
 
-void led_off(Ifx_P *port, uint8 pinIndex)
+void ledOff(Ifx_P *port, uint8 pinIndex)
 {
     IfxPort_setPinHigh(port, pinIndex);
 }
 
-void led_on(Ifx_P *port, uint8 pinIndex)
+void ledOn(Ifx_P *port, uint8 pinIndex)
 {
     IfxPort_setPinLow(port, pinIndex);
 }

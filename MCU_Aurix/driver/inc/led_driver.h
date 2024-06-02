@@ -15,15 +15,13 @@
 
 #include "IfxPort.h"
 
-#include "led_driver_TC375_LK.h"
-
 /******************************************************************************/
 /*----------------------------Function Prototypes-----------------------------*/
 /******************************************************************************/
 
-void toggle_led_activity(Ifx_P *, uint8);
+void ledToggleActivity(Ifx_P *, uint8 pinIndex);
 
-void led_off(Ifx_P *port, uint8 pinIndex);
-void led_on(Ifx_P *port, uint8 pinIndex);
+void ledOff(Ifx_P *port, uint8 pinIndex);
+void ledOn(Ifx_P *port, uint8 pinIndex);
 
 #endif
