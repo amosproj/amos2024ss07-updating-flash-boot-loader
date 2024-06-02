@@ -10,7 +10,7 @@
 //============================================================================
 
 #include "can_driver.h"
-#include "can_init.h"
+#include "can_driver_TC375_LK.h"
 #include "led_driver.h"
 #include "led_driver_TC375_LK.h"
 
