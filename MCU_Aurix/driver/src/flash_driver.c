@@ -47,9 +47,9 @@ typedef struct
     void (*writePage)(uint32 pageAddr);
     void (*erasePFlash)(IfxFlash_FlashType flashModule, uint32 sectorAddr, uint32 numSectors);
     void (*writePFlash)(IfxFlash_FlashType flashModule, uint32 startingAddr, uint32 numPages, uint32 data[], size_t dataSize);
-} Function;
+} Flash_Function;
 
-Function g_functionsFromPSPR;
+Flash_Function g_functionsFromPSPR;
 
 /* This function erases a given sector of the Program Flash memory. The function is copied in the PSPR through
  * copyFunctionsToPSPR(). Because of this, inside the function, only routines from the PSPR or inline functions

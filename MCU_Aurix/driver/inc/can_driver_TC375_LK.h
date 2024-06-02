@@ -33,7 +33,7 @@
 #define CAN_STB                     &MODULE_P20, 6
 
 /*canType struct contains Data Structures needed for config and processing of CAN Messages*/
-typedef struct canType
+typedef struct Can_Type
 {
     IfxCan_Can_Config canConfig;                            /* CAN module configuration structure                   */
     IfxCan_Can canModule;                                   /* CAN module handle                                    */
@@ -46,13 +46,13 @@ typedef struct canType
     IfxCan_Message rxMsg;                                   /* Received CAN message structure                       */
     uint32_t txData[MAXIMUM_CAN_DATA_PAYLOAD];                /* Transmitted CAN data array                           */
     uint32_t rxData[MAXIMUM_CAN_DATA_PAYLOAD];                /* Received CAN data array                              */
-}canType;
+}Can_Type;
 
-typedef struct msg
+typedef struct Can_Msg
 {
     IfxCan_Message Msg;
     uint32 Data[MAXIMUM_CAN_DATA_PAYLOAD];
-}msg;
+}Can_Msg;
 
 void canInitDriver(void (*processData)(uint32_t*, IfxCan_DataLengthCode));
 

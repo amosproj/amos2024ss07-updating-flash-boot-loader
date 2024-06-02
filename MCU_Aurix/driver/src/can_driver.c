@@ -19,7 +19,7 @@ void (*processDataFunction)(uint32_t*, IfxCan_DataLengthCode);
 //TODO: Implement the processDataFunction we want to use
 
 
-canType g_can; //Global control struct
+Can_Type can_g; //Global control struct
 
 IfxCan_Can_Pins canPins = {
     .padDriver = IfxPort_PadDriver_cmosAutomotiveSpeed2,
@@ -34,7 +34,7 @@ IFX_INTERRUPT(canIsrTxHandler, 0, INTERRUPT_PRIO_TX);
 IFX_INTERRUPT(canIsrRxFifo0Handler, 0, INTERRUPT_PRIO_RX);
 
 void canIsrTxHandler(void){
-      IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_transmissionCompleted);
+      IfxCan_Node_clearInterruptFlag(can_g.canTXandRXNode.node, IfxCan_Interrupt_transmissionCompleted);
 }
 
 /**
@@ -43,67 +43,67 @@ void canIsrTxHandler(void){
  * @param processDataFunction Pointer to function that processes Data read in CAN Message
 */
 void canIsrRxFifo0Handler(){
-        IfxCan_Node_clearInterruptFlag(g_can.canTXandRXNode.node, IfxCan_Interrupt_rxFifo0NewMessage); /*Clear Message Stored Flag*/
-        IfxCan_Can_readMessage(&g_can.canTXandRXNode, &g_can.rxMsg, (uint32*)g_can.rxData);
+        IfxCan_Node_clearInterruptFlag(can_g.canTXandRXNode.node, IfxCan_Interrupt_rxFifo0NewMessage); /*Clear Message Stored Flag*/
+        IfxCan_Can_readMessage(&can_g.canTXandRXNode, &can_g.rxMsg, (uint32*)can_g.rxData);
 
         // TODO: Filter for Own ECU ID or Broadcast messages - Do not call processDataFunction if message is for other ECU
-        processDataFunction(g_can.rxData, g_can.rxMsg.dataLengthCode); //has to be casted in ISO-Tp
+        processDataFunction(can_g.rxData, can_g.rxMsg.dataLengthCode); //has to be casted in ISO-Tp
 
 }
 
  
 void canAcceptAllMessagesFilter(void){
-    g_can.canFilter.number = 0;
-    g_can.canFilter.elementConfiguration = IfxCan_FilterElementConfiguration_storeInRxFifo0;
-    g_can.canFilter.type = IfxCan_FilterType_classic;
+    can_g.canFilter.number = 0;
+    can_g.canFilter.elementConfiguration = IfxCan_FilterElementConfiguration_storeInRxFifo0;
+    can_g.canFilter.type = IfxCan_FilterType_classic;
 
     // Testing lines
-    g_can.canFilter.id1 = 0x0F24; // TODO: Change based on Memory DID
-    g_can.canFilter.id2 = 0xFFFFFFFF;
+    can_g.canFilter.id1 = 0x0F24; // TODO: Change based on Memory DID
+    can_g.canFilter.id2 = 0xFFFFFFFF;
 
     //TESTING
 
     //g_can.canFilter.rxBufferOffset = IfxCan_RxBufferId_0;
-    IfxCan_Can_setStandardFilter(&g_can.canTXandRXNode, &g_can.canFilter);
+    IfxCan_Can_setStandardFilter(&can_g.canTXandRXNode, &can_g.canFilter);
 }
 
-void initTXandRXNode(void){
-    IfxCan_Can_initNodeConfig(&g_can.canNodeConfig, &g_can.canModule);                  /*Default Config*/
+void canInitTXandRXNode(void){
+    IfxCan_Can_initNodeConfig(&can_g.canNodeConfig, &can_g.canModule);                  /*Default Config*/
 
-    g_can.canNodeConfig.busLoopbackEnabled = FALSE;                                      /*Loopbackmode*/
-    g_can.canNodeConfig.nodeId = IfxCan_NodeId_0;                                         /*Node ID 0 -> is must*/
+    can_g.canNodeConfig.busLoopbackEnabled = FALSE;                                      /*Loopbackmode*/
+    can_g.canNodeConfig.nodeId = IfxCan_NodeId_0;                                         /*Node ID 0 -> is must*/
     
     /*FRAME TYPE RX AND TX*/
-    g_can.canNodeConfig.frame.type = IfxCan_FrameType_transmitAndReceive;
-    g_can.canNodeConfig.rxConfig.rxFifo0DataFieldSize = IfxCan_DataFieldSize_64;
-    g_can.canNodeConfig.rxConfig.rxFifo0Size = 15;
-    g_can.canNodeConfig.rxConfig.rxMode = IfxCan_RxMode_fifo0;
+    can_g.canNodeConfig.frame.type = IfxCan_FrameType_transmitAndReceive;
+    can_g.canNodeConfig.rxConfig.rxFifo0DataFieldSize = IfxCan_DataFieldSize_64;
+    can_g.canNodeConfig.rxConfig.rxFifo0Size = 15;
+    can_g.canNodeConfig.rxConfig.rxMode = IfxCan_RxMode_fifo0;
 
     /*PIN Definition*/
-    g_can.canNodeConfig.pins = &canPins;
+    can_g.canNodeConfig.pins = &canPins;
 
     /*Filter config*/
-    g_can.canNodeConfig.filterConfig.messageIdLength = IfxCan_MessageIdLength_both;
-    g_can.canNodeConfig.filterConfig.standardListSize = 0;
-    g_can.canNodeConfig.filterConfig.extendedListSize = 0;
-    g_can.canNodeConfig.filterConfig.standardFilterForNonMatchingFrames = IfxCan_NonMatchingFrame_acceptToRxFifo0;
-    g_can.canNodeConfig.filterConfig.extendedFilterForNonMatchingFrames = IfxCan_NonMatchingFrame_acceptToRxFifo0;
-    g_can.canNodeConfig.filterConfig.rejectRemoteFramesWithStandardId = TRUE;
-    g_can.canNodeConfig.filterConfig.rejectRemoteFramesWithExtendedId = TRUE;
+    can_g.canNodeConfig.filterConfig.messageIdLength = IfxCan_MessageIdLength_both;
+    can_g.canNodeConfig.filterConfig.standardListSize = 0;
+    can_g.canNodeConfig.filterConfig.extendedListSize = 0;
+    can_g.canNodeConfig.filterConfig.standardFilterForNonMatchingFrames = IfxCan_NonMatchingFrame_acceptToRxFifo0;
+    can_g.canNodeConfig.filterConfig.extendedFilterForNonMatchingFrames = IfxCan_NonMatchingFrame_acceptToRxFifo0;
+    can_g.canNodeConfig.filterConfig.rejectRemoteFramesWithStandardId = TRUE;
+    can_g.canNodeConfig.filterConfig.rejectRemoteFramesWithExtendedId = TRUE;
 
     /*Interrupt Config*/
-    g_can.canNodeConfig.interruptConfig.rxFifo0NewMessageEnabled = TRUE;
-    g_can.canNodeConfig.interruptConfig.rxf0n.priority = INTERRUPT_PRIO_RX;           /*Prio*/
-    g_can.canNodeConfig.interruptConfig.rxf0n.interruptLine = IfxCan_InterruptLine_1;   /*Interrupt Line 1*/
-    g_can.canNodeConfig.interruptConfig.rxf0n.typeOfService = IfxSrc_Tos_cpu0;          /*On CPU 0*/
+    can_g.canNodeConfig.interruptConfig.rxFifo0NewMessageEnabled = TRUE;
+    can_g.canNodeConfig.interruptConfig.rxf0n.priority = INTERRUPT_PRIO_RX;           /*Prio*/
+    can_g.canNodeConfig.interruptConfig.rxf0n.interruptLine = IfxCan_InterruptLine_1;   /*Interrupt Line 1*/
+    can_g.canNodeConfig.interruptConfig.rxf0n.typeOfService = IfxSrc_Tos_cpu0;          /*On CPU 0*/
 
-    g_can.canNodeConfig.interruptConfig.transmissionCompletedEnabled = TRUE;     /*Raises Interrupt when transmition is done*/
-    g_can.canNodeConfig.interruptConfig.traco.priority = INTERRUPT_PRIO_TX;    /*Prio*/
-    g_can.canNodeConfig.interruptConfig.traco.interruptLine = IfxCan_InterruptLine_0; /*Interrupt line 0*/
-    g_can.canNodeConfig.interruptConfig.traco.typeOfService = IfxSrc_Tos_cpu0;       /*On CPU0*/
+    can_g.canNodeConfig.interruptConfig.transmissionCompletedEnabled = TRUE;     /*Raises Interrupt when transmition is done*/
+    can_g.canNodeConfig.interruptConfig.traco.priority = INTERRUPT_PRIO_TX;    /*Prio*/
+    can_g.canNodeConfig.interruptConfig.traco.interruptLine = IfxCan_InterruptLine_0; /*Interrupt line 0*/
+    can_g.canNodeConfig.interruptConfig.traco.typeOfService = IfxSrc_Tos_cpu0;       /*On CPU0*/
     IfxPort_setPinModeOutput(CAN_STB, IfxPort_OutputMode_pushPull, IfxPort_OutputIdx_general);
     IfxPort_setPinLow(CAN_STB);
-    IfxCan_Can_initNode(&g_can.canTXandRXNode, &g_can.canNodeConfig); //Init Node with CAN Pin Config and Standard Baud Rate 500k
+    IfxCan_Can_initNode(&can_g.canTXandRXNode, &can_g.canNodeConfig); //Init Node with CAN Pin Config and Standard Baud Rate 500k
     
 }
 
@@ -111,14 +111,14 @@ void initTXandRXNode(void){
  * Initialize CAN Module and Node
 */
 void canInitDriver(void (*processData)(uint32_t*, IfxCan_DataLengthCode)){
-    IfxCan_Can_initModuleConfig(&g_can.canConfig, &MODULE_CAN0); /*LoadsDefault Config*/
-    IfxCan_Can_initModule(&g_can.canModule, &g_can.canConfig); /*Init with default config*/
+    IfxCan_Can_initModuleConfig(&can_g.canConfig, &MODULE_CAN0); /*LoadsDefault Config*/
+    IfxCan_Can_initModule(&can_g.canModule, &can_g.canConfig); /*Init with default config*/
 
-    initTXandRXNode();
+    canInitTXandRXNode();
     canAcceptAllMessagesFilter();
     
-    IfxCan_Can_initMessage(&g_can.rxMsg); /*Init for RX Message*/
-    g_can.rxMsg.readFromRxFifo0 = TRUE; /*Read from FIFO0*/
+    IfxCan_Can_initMessage(&can_g.rxMsg); /*Init for RX Message*/
+    can_g.rxMsg.readFromRxFifo0 = TRUE; /*Read from FIFO0*/
 
     processDataFunction = processData;
 }
@@ -130,10 +130,10 @@ void canInitDriver(void (*processData)(uint32_t*, IfxCan_DataLengthCode)){
  * @param size, len of CAN Message
 */
 int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
-    toggle_led_activity(LED2);
-    IfxCan_Can_initMessage(&g_can.txMsg);
-    g_can.txMsg.messageId = canMessageID;
-    g_can.txMsg.messageIdLength = IfxCan_MessageIdLength_extended;
+    ledToggleActivity(LED2);
+    IfxCan_Can_initMessage(&can_g.txMsg);
+    can_g.txMsg.messageId = canMessageID;
+    can_g.txMsg.messageIdLength = IfxCan_MessageIdLength_extended;
 
     //Not sure if necessary ~Leon
     // Ensure that the size of data does not exceed 8 bytes (32 bits)
@@ -143,18 +143,18 @@ int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
     }
 
     // Initialize g_can.txData to zero
-    g_can.txData[0] = 0;
-    g_can.txData[1] = 0;
+    can_g.txData[0] = 0;
+    can_g.txData[1] = 0;
 
-    g_can.txMsg.dataLengthCode = size;
+    can_g.txMsg.dataLengthCode = size;
 
-    // Copy up to 8 bytes of data into g_can.txData
-    memcpy(g_can.txData, data, size);
+    // Copy up to 8 bytes of data into can_g.txData
+    memcpy(can_g.txData, data, size);
 
 
     //Sends CAN Message, only if BUS is empty
     while( IfxCan_Status_notSentBusy ==
-           IfxCan_Can_sendMessage(&g_can.canTXandRXNode, &g_can.txMsg, &g_can.txData[0]))
+           IfxCan_Can_sendMessage(&can_g.canTXandRXNode, &can_g.txMsg, &can_g.txData[0]))
     {
 
     }
