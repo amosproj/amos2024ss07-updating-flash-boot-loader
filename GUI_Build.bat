@@ -1,5 +1,6 @@
 @REM SPDX-License-Identifier: MIT
 @REM SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
+@REM SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
 
 @echo off
 set main_path=%CD%
