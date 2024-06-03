@@ -1,5 +1,5 @@
-REM SPDX-License-Identifier: MIT
-REM SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+@REM SPDX-License-Identifier: MIT
+@REM SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
 
 @echo off
 
