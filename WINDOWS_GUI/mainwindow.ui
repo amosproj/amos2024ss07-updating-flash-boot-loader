@@ -86,17 +86,17 @@
              </column>
              <item row="0" column="0">
               <property name="text">
-               <string>ECU1</string>
+               <string/>
               </property>
              </item>
              <item row="1" column="0">
               <property name="text">
-               <string>ECU2</string>
+               <string/>
               </property>
              </item>
              <item row="2" column="0">
               <property name="text">
-               <string>ECU3</string>
+               <string/>
               </property>
              </item>
             </widget>
