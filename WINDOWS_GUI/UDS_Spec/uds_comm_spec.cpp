@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>, Wiktor Pilarczyk <wiktorpilar99@gmail.com>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : uds_comm_spec.c

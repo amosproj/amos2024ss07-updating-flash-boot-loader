@@ -1,3 +1,6 @@
+REM SPDX-License-Identifier: MIT
+REM SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
+
 @echo off
 set main_path=%CD%
 cd WINDOWS_GUI
