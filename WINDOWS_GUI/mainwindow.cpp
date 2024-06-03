@@ -107,22 +107,16 @@ void MainWindow::connectSignalSlots() {
             updateStatus(UPDATE, "Flashing started for " + ui->label_selected_ECU->text());
             updateStatus(INFO, "It may take a while");
 
-            for(int j = 1; j <= 100; j++){
-                if(j < 100){
-                    QTimer::singleShot(j*175, [this]{
-                        updateStatus(UPDATE, "Flashing in Progress.. Please Wait");
-                    });
-                }
-                else{
-                    QTimer::singleShot(j*175, [this]{
-                        updateStatus(INFO, "Flashing finished!");
-                    });
-                }
-            }
+            for(int j = 1; j < 100; j++)
+                QTimer::singleShot(j*175, [this]{
+                    updateStatus(UPDATE, "Flashing in Progress.. Please Wait");
+                });
+            QTimer::singleShot(100*175, [this]{
+                updateStatus(INFO, "Flashing finished!");
+            });
 
             appendTextToConsole("INFO: ONLY DEMO UI - Flashing currently not supported on ECU.");
-        }
-        else {
+        } else {
             this->ui->textBrowser_flash_status->setText("No valid ECU selected");
         }
     });
