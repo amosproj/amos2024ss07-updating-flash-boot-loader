@@ -20,14 +20,10 @@ static LED leds[NUM_LEDS];
 /* This function initializes the 2 usable LEDs so they can be turned on and off */
 void ledInitDriver(void) 
 {
-    /* Initializing LED-array*/
+    /* Initializing LED-array and LEDs*/
     for (int i = 0; i < NUM_LEDS; i++) {
         leds[i].port = LED_PORTS[i];
         leds[i].pinIndex = LED_PINS[i];
-    }
-
-    /* Initializing LEDs */
-    for (int i = 0; i < NUM_LEDS; i++) {
         IfxPort_setPinModeOutput(leds[i].port, leds[i].pinIndex, IfxPort_OutputMode_pushPull, IfxPort_OutputIdx_general);
         IfxPort_setPinHigh(leds[i].port, leds[i].pinIndex);
     }
