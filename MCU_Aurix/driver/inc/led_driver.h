@@ -13,6 +13,7 @@
 /*----------------------------Function Prototypes-----------------------------*/
 /******************************************************************************/
 
+void ledInitDriver(void);
 void ledToggleActivity(uint8 pinIndex);
 
 void ledOff(uint8 pinIndex);
