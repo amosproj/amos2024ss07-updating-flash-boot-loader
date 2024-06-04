@@ -57,5 +57,6 @@ private slots:
 
     void ecuResponseSlot(const QMap<QString, QString> &data);
     void on_pushButton_ECU_refresh_clicked();
+    void on_clearConsoleButton_clicked();
 };
 #endif // MAINWINDOW_H

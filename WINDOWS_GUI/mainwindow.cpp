@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Sebastian Rodriguez <r99@melao.de>
 
 #include <QFileDialog>
 #include <QThread>
@@ -362,5 +364,11 @@ void MainWindow::ecuResponseSlot(const QMap<QString, QString> &data){
 void MainWindow::on_pushButton_ECU_refresh_clicked()
 {
     updateECUList();
+}
+
+
+void MainWindow::on_clearConsoleButton_clicked()
+{
+    this->ui->Console->clear();
 }
 
