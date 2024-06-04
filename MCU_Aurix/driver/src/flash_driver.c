@@ -4,7 +4,7 @@
 //============================================================================
 // Name        : flash.c
 // Author      : Dorothea Ehrl
-// Version     : 0.1
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Flash wrapper for Bootloader
 //============================================================================
@@ -51,11 +51,15 @@ typedef struct
 
 Flash_Function g_functionsFromPSPR;
 
+int flashWrite(uint32 flashStartAddr, uint32 data[], size_t dataSize) {
+
+}
+
 /* This function erases a given sector of the Program Flash memory. The function is copied in the PSPR through
  * copyFunctionsToPSPR(). Because of this, inside the function, only routines from the PSPR or inline functions
  * can be called, otherwise a Context Type (CTYP) trap can be triggered.
  */
-void flashErasePFlash(IfxFlash_FlashType flashModule, uint32 sectorAddr, uint32 numSectors)
+static void erasePFlash(IfxFlash_FlashType flashModule, uint32 sectorAddr, uint32 numSectors)
 {
     /* Get the current password of the Safety WatchDog module */
     uint16 endInitSafetyPassword = IfxScuWdt_getSafetyWatchdogPasswordInline();
@@ -72,7 +76,7 @@ void flashErasePFlash(IfxFlash_FlashType flashModule, uint32 sectorAddr, uint32 
  * Because of this, inside the function, only routines from the PSPR or inline functions can be called,
  * otherwise a Context Type (CTYP) trap can be triggered.
  */
-void flashWritePFlash(IfxFlash_FlashType flashModule, uint32 startingAddr, uint32 numPages, uint32 data[], size_t dataSize)
+static void writePFlash(IfxFlash_FlashType flashModule, uint32 startingAddr, uint32 numPages, uint32 data[], size_t dataSize)
 {
     uint32 page;
     uint32 offset;
@@ -205,7 +209,7 @@ static int checkAddrInFlashModule(IfxFlash_FlashType flashModule, uint32 addr)
 }
 
 /* This function flashes the Program Flash memory calling the routines from the PSPR */
-int flashWriteProgram(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32 data[], size_t dataSize)
+static int flashWriteProgram(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32 data[], size_t dataSize)
 {
     if (flashModule != PROGRAM_FLASH_0 && flashModule != PROGRAM_FLASH_1)
     {
@@ -273,7 +277,7 @@ uint32 flashVerifyProgram(uint32 flashStartAddr, uint32 data[], size_t dataSize)
  * It is not needed to run this function from the PSPR, thus functions from the Program Flash memory can be called
  * inside.
  */
-int flashWriteData(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32 data[], size_t dataSize)
+static int flashWriteData(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32 data[], size_t dataSize)
 {
     if (flashModule != DATA_FLASH_0 && flashModule != DATA_FLASH_1)
     {

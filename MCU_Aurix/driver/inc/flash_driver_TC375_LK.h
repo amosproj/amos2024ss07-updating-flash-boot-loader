@@ -4,7 +4,7 @@
 //============================================================================
 // Name        : flash_TC375.h
 // Author      : Dorothea Ehrl
-// Version     : 0.1
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Flash wrapper for Bootloader
 //============================================================================

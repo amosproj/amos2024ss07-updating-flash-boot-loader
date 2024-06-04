@@ -1,7 +1,7 @@
 //============================================================================
 // Name        : led_driver.h
 // Author      : Paul Roy
-// Version     : 0.1
+// Version     : 0.
 // Copyright   : MIT
 // Description : platform-independent header file for LED-Driver
 //============================================================================
@@ -10,18 +10,12 @@
 #define LED_DRIVER_H_
 
 /******************************************************************************/
-/*----------------------------------Includes----------------------------------*/
-/******************************************************************************/
-
-#include "IfxPort.h"
-
-/******************************************************************************/
 /*----------------------------Function Prototypes-----------------------------*/
 /******************************************************************************/
 
-void ledToggleActivity(Ifx_P *, uint8 pinIndex);
+void ledToggleActivity(uint8 pinIndex);
 
-void ledOff(Ifx_P *port, uint8 pinIndex);
-void ledOn(Ifx_P *port, uint8 pinIndex);
+void ledOff(uint8 pinIndex);
+void ledOn(uint8 pinIndex);
 
 #endif

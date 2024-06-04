@@ -4,7 +4,7 @@
 //============================================================================
 // Name        : flash.h
 // Author      : Dorothea Ehrl
-// Version     : 0.1
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Flash wrapper for Bootloader
 //============================================================================
@@ -15,7 +15,7 @@
 /*********************************************************************************************************************/
 /*-----------------------------------------------------Includes------------------------------------------------------*/
 /*********************************************************************************************************************/
-#include "IfxFlash.h"
+//#include "IfxFlash.h"
 
 /*********************************************************************************************************************/
 /*------------------------------------------------------Macros-------------------------------------------------------*/
@@ -37,10 +37,11 @@
 /*------------------------------------------------Function Prototypes------------------------------------------------*/
 /*********************************************************************************************************************/
 
-int flashWriteProgram(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32 data[], size_t dataSize);
+int flashWrite(uint32 flashStartAddr, uint32 data[], size_t dataSize);
+//int flashWriteProgram(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32 data[], size_t dataSize);
 uint32 flashVerifyProgram(uint32 flashStartAddr, uint32 data[], size_t dataSize);
 
-int flashWriteData(IfxFlash_FlashType flashModule, uint32 address, uint32 data[], size_t data_size);
+//int flashWriteData(IfxFlash_FlashType flashModule, uint32 address, uint32 data[], size_t data_size);
 uint32 flashVerifyData(uint32 flashStartAddress, uint32 data[], size_t dataSize);
 
 #endif /* FLASH_H_ */
