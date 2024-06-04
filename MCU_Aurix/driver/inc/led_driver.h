@@ -10,13 +10,19 @@
 #define LED_DRIVER_H_
 
 /******************************************************************************/
+/*---------------------------------Includes-----------------------------------*/
+/******************************************************************************/
+
+#include <stdint.h>
+
+/******************************************************************************/
 /*----------------------------Function Prototypes-----------------------------*/
 /******************************************************************************/
 
 void ledInitDriver(void);
-void ledToggleActivity(uint8 pinIndex);
+void ledToggleActivity(uint8_t ledNum);
 
-void ledOff(uint8 pinIndex);
-void ledOn(uint8 pinIndex);
+void ledOff(uint8_t ledNum);
+void ledOn(uint8_t ledNum);
 
 #endif
