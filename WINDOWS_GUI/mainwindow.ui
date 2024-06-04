@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1400</width>
+    <width>1200</width>
     <height>700</height>
    </rect>
   </property>
@@ -17,236 +17,154 @@
    <widget class="QWidget" name="horizontalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>90</x>
-      <y>40</y>
-      <width>1241</width>
-      <height>611</height>
+      <x>20</x>
+      <y>60</y>
+      <width>1150</width>
+      <height>580</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="bottomMargin">
+      <number>1</number>
+     </property>
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout_file">
-       <item>
-        <widget class="QPushButton" name="button_file">
-         <property name="text">
-          <string>Choose file:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_size">
-         <property name="text">
-          <string>File size:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_content">
-         <property name="text">
-          <string>File content:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="button_can_message">
-         <property name="text">
-          <string>send CAN-message</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="can_message_rcvd">
-         <property name="text">
-          <string/>
-         </property>
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_channel">
-         <item>
-          <widget class="QLabel" name="label_channel">
-           <property name="text">
-            <string>Connect Hardware and choose a protocol (Drop-Down &amp; Editable):</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="comboBox_channel">
+      <widget class="QGroupBox" name="groupBox_ECU">
+       <property name="title">
+        <string>ECU</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_ECU">
+        <item>
+         <widget class="QGroupBox" name="groupBox_ECU_select">
+          <property name="title">
+           <string>Select ECU</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_ECU_select">
            <item>
-            <property name="text">
-             <string>Please choose a communication protocol</string>
-            </property>
+            <widget class="QPushButton" name="pushButton_ECU_refresh">
+             <property name="text">
+              <string>Refresh</string>
+             </property>
+            </widget>
            </item>
            <item>
-            <property name="text">
-             <string>CAN</string>
-            </property>
+            <widget class="QTableWidget" name="table_ECU">
+             <attribute name="horizontalHeaderStretchLastSection">
+              <bool>true</bool>
+             </attribute>
+             <attribute name="verticalHeaderStretchLastSection">
+              <bool>true</bool>
+             </attribute>
+             <row>
+              <property name="text">
+               <string/>
+              </property>
+             </row>
+             <row>
+              <property name="text">
+               <string/>
+              </property>
+             </row>
+             <row>
+              <property name="text">
+               <string/>
+              </property>
+             </row>
+             <column>
+              <property name="text">
+               <string>ECU</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Systemname</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Last Flash Date</string>
+              </property>
+             </column>
+             <item row="0" column="0">
+              <property name="text">
+               <string/>
+              </property>
+             </item>
+             <item row="1" column="0">
+              <property name="text">
+               <string/>
+              </property>
+             </item>
+             <item row="2" column="0">
+              <property name="text">
+               <string/>
+              </property>
+             </item>
+            </widget>
            </item>
            <item>
-            <property name="text">
-             <string>CAN-FD</string>
-            </property>
+            <widget class="QLabel" name="label_selected_ECU">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox_ECU_reset">
+          <property name="title">
+           <string>Reset ECU</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_ECU_reset">
+           <item>
+            <widget class="QPushButton" name="button_reset">
+             <property name="text">
+              <string>Reset</string>
+             </property>
+            </widget>
            </item>
            <item>
-            <property name="text">
-             <string>Ethernet</string>
-            </property>
+            <widget class="QLabel" name="label_reset_status">
+             <property name="text">
+              <string>Reset Status:</string>
+             </property>
+            </widget>
            </item>
-          </widget>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_channel"/>
-         </item>
-         <item>
-          <spacer name="verticalSpacer_4">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>13</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_1">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_ECU">
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Choose ECU for flashing:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QTableWidget" name="table_ECU">
-         <row>
-          <property name="text">
-           <string/>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox_ECU_flash">
+          <property name="title">
+           <string>Flash ECU</string>
           </property>
-         </row>
-         <row>
-          <property name="text">
-           <string/>
-          </property>
-         </row>
-         <row>
-          <property name="text">
-           <string/>
-          </property>
-         </row>
-         <column>
-          <property name="text">
-           <string>ECU</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Version</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Mac Address</string>
-          </property>
-         </column>
-         <item row="0" column="0">
-          <property name="text">
-           <string>ECU1</string>
-          </property>
-         </item>
-         <item row="1" column="0">
-          <property name="text">
-           <string>ECU2</string>
-          </property>
-         </item>
-         <item row="2" column="0">
-          <property name="text">
-           <string>ECU3</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_selected_ECU">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="button_reset">
-         <property name="text">
-          <string>Reset</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_reset_status">
-         <property name="text">
-          <string>Reset Status:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="button_flash">
-         <property name="text">
-          <string>Flash</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label_flash_status">
-         <property name="text">
-          <string>Flashing Status:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QProgressBar" name="progressBar_flash">
-         <property name="value">
-          <number>0</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QTextBrowser" name="textBrowser_flash_status">
-         <property name="html">
-          <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+          <layout class="QVBoxLayout" name="verticalLayout_ECU_flash">
+           <item>
+            <widget class="QPushButton" name="button_flash">
+             <property name="text">
+              <string>Flash</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_flash_status">
+             <property name="text">
+              <string>Flashing Status:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QProgressBar" name="progressBar_flash">
+             <property name="value">
+              <number>0</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTextBrowser" name="textBrowser_flash_status">
+             <property name="html">
+              <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 hr { height: 1px; border-width: 0; }
@@ -254,18 +172,147 @@ li.unchecked::marker { content: &quot;\2610&quot;; }
 li.checked::marker { content: &quot;\2612&quot;; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_file_communication">
+       <item>
+        <widget class="QGroupBox" name="groupBox_file_flash">
+         <property name="title">
+          <string>Flash File</string>
          </property>
+         <layout class="QVBoxLayout" name="verticalLayout_file_flash">
+          <item>
+           <widget class="QPushButton" name="button_file">
+            <property name="text">
+             <string>Choose file:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_content">
+            <property name="text">
+             <string>File content:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_size">
+            <property name="text">
+             <string>File size:</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_communication">
+         <property name="title">
+          <string>Communication</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_communication">
+          <item>
+           <widget class="QLabel" name="label_channel">
+            <property name="text">
+             <string>Connect Hardware and choose a protocol (Drop-Down &amp; Editable):</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_channel">
+            <item>
+             <widget class="QComboBox" name="comboBox_channel">
+              <item>
+               <property name="text">
+                <string>Please choose a communication protocol</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>CAN</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>CAN-FD</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Ethernet</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_console">
+            <property name="title">
+             <string>Console</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_console">
+             <item>
+              <widget class="QPlainTextEdit" name="Console"/>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
      </item>
-     <item>
-      <widget class="QPlainTextEdit" name="Console"/>
-     </item>
     </layout>
    </widget>
+   <widget class="QLabel" name="label_logo">
+    <property name="geometry">
+     <rect>
+      <x>528</x>
+      <y>0</y>
+      <width>144</width>
+      <height>48</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1200</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuLicense">
+    <property name="title">
+     <string>License</string>
+    </property>
+    <addaction name="menuLicenseQT"/>
+    <addaction name="menuLicenseMIT"/>
+   </widget>
+   <addaction name="menuLicense"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="menuLicenseQT">
+   <property name="text">
+    <string>QT license</string>
+   </property>
+  </action>
+  <action name="menuLicenseMIT">
+   <property name="text">
+    <string>MIT license</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

@@ -76,7 +76,7 @@ void CommInterface::runThread(){
 }
 
 void CommInterface::txDataSlot(const QByteArray &data){
-    qInfo() << "CommInterface: Slot - Received TX Data to be transmitted - Size =" << data.size() << " Bytes";
+    if(VERBOSE_COMMINTERFACE) qInfo() << "CommInterface: Slot - Received TX Data to be transmitted - Size =" << data.size() << " Bytes";
 
     // Unwrap the received data
     uint8_t* msg = (uint8_t*)calloc(data.size(), sizeof(uint8_t));

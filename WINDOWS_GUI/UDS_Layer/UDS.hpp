@@ -11,6 +11,8 @@
 #ifndef UDS_LAYER_UDS_H_
 #define UDS_LAYER_UDS_H_
 
+#define VERBOSE_UDS     0                       // switch for verbose console information
+
 #include <QObject>
 #include <QByteArray>
 #include <QMutex>
@@ -75,18 +77,21 @@ public:
 
 	// Supported Common Response Codes
     RESP negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_code);
+    QString translateNegResp(uint8_t nrc);
+    QString translateDID(uint16_t DID);
+    QString readDIDData(uint16_t DID, uint8_t* data, uint32_t no_bytes);
 
 
 private:
     void messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes);
 
+    RESP checkOnFreeTX();
     const RESP txMessageStart();
     void txMessageSend(uint32_t id, uint8_t *msg, int len);
-    const RESP txMessageValid();
-    RESP checkOnFreeTX();
+    const RESP rxMessageValid(uint32_t waittime);
     RESP checkOnResponse(uint32_t waittime);
 	uint32_t createCommonID(uint32_t base_id, uint8_t gui_id, uint32_t ecu_id);
-    QString translateNegResp(uint8_t nrc);
+
 
 
 signals:
@@ -107,6 +112,14 @@ signals:
      * @brief Signals a Text to be print to GUI console
      */
     void toConsole(const QString &);
+
+    /**
+     * @brief Signals that a ECU send a response
+     * @param id Of the ECU
+     */
+    void ecuResponse(const QMap<QString, QString> &data);
+
+
 
 public slots:
     /**

@@ -1,6 +1,7 @@
-#include <QApplication>
-#include <QMessageBox>
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
+#include <QApplication>
 #include "mainwindow.h"
 
 #include <stdio.h>
@@ -8,9 +9,6 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    QMessageBox::about(nullptr, "License", 
-                       "The app was developed with usage of QT Open Source under LGPLv3.\nThe license can be found in file \"LGPLv3\".");
-
     MainWindow w;
     w.show();
     return a.exec();

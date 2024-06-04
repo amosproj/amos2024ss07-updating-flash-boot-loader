@@ -37,8 +37,8 @@ void Selftest::messageChecker(const unsigned int id, const QByteArray &rec){
 
     int len = 0;
     uint8_t *msg = nullptr;
-    unsigned int check_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, this->ecu_id) | 0x80000000; // 0x80000000 because of CAN Driver (to identify extended ID)
-    unsigned int broadcast_check_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, 0) | 0x80000000;
+    unsigned int check_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, this->ecu_id);
+    unsigned int broadcast_check_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, 0);
 
     if(rec[0] == FBL_DIAGNOSTIC_SESSION_CONTROL){
         emit toConsole(">> Received Diagnostic Session Control - Checking on content");

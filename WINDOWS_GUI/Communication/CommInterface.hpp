@@ -12,6 +12,8 @@
 #ifndef COMMUNICATION_LAYER_COMMINTERFACE_H_
 #define COMMUNICATION_LAYER_COMMINTERFACE_H_
 
+#define VERBOSE_COMMINTERFACE   0   // switch for verbose console information
+
 #include <QObject>
 #include <QMutex>
 #include <QByteArray>
@@ -75,6 +77,24 @@ protected:
     virtual void doRX();
 
 signals:
+
+    /**
+     * @brief Signals that DEBUG text is available for printing to console
+     * @param text To be printed
+     */
+    void debugPrint(const QString &text);
+
+    /**
+     * @brief Signals that INFO text is available for printing to console
+     * @param text To be printed
+     */
+    void infoPrint(const QString &text);
+
+    /**
+     * @brief Signals that ERROR text is available for printing to console
+     * @param text To be printed
+     */
+    void errorPrint(const QString &text);
 
     /**
      * @brief Signals the status of driver init

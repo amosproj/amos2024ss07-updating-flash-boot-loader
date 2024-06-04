@@ -79,7 +79,7 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
     QTextStream out(&s);
 
     if(no_bytes == 0) {
-        out << "UDS: No data passed";
+        out << "UDS: No data passed\n";
         emit toConsole(*out.string());
         return;
     }
@@ -98,8 +98,7 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
 
     // 2. Do a precheck of the message, Ignore if SID does not fit
     if((!neg_resp) && ((rx_no_bytes <= 0) || data[0] != rx_exp_data[0])){
-        qInfo() << "Ignoring message - Received SID "<<QString("0x%1").arg(uint8_t(data[0]), 2, 16, QLatin1Char( '0' )) << " does not fit to expected SID "<< QString("0x%1").arg(uint8_t(rx_exp_data[0]), 2, 16, QLatin1Char( '0' ));
-        emit toConsole(*out.string());
+        qInfo() << ">> UDS INFO: Ignoring message - Received SID "<<QString("0x%1").arg(uint8_t(data[0]), 2, 16, QLatin1Char( '0' )) << " does not fit to expected SID "<< QString("0x%1").arg(uint8_t(rx_exp_data[0]), 2, 16, QLatin1Char( '0' ));
         return;
     }
 
@@ -107,94 +106,107 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
     bool response = (SID & FBL_SID_ACK);
     QString info = "";
     if(response) {
-        info = "Response for ";
+        info = ">> UDS: "; // Indicates Response
         SID -= FBL_SID_ACK;
     }
-    out << "UDS: SID = " <<  QString("0x%1").arg(SID, 2, 16, QLatin1Char( '0' )) << " - ";
+    QString SID_str = " (" + QString("0x%1").arg(SID, 2, 16, QLatin1Char( '0' )) +")";
+    QString ID_str = " from ID "+ QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' ));
+    QString Key = QString::number(id)+"#"+QString::number(SID);
+    QMap<QString, QString> signalContent;
+    signalContent[Key] = "";
+    uint16_t did_raw;
+    QString DID = "";
+    QString read_data;
 
     switch(SID) {
         case FBL_DIAGNOSTIC_SESSION_CONTROL:
-            out << info + "UDS Service: Diagnostic Session Control\n";
+            out << info + "Diagnostic Session Control" << SID_str << ID_str<<"\n";
 
             // Check on the relevant message - Session is correct
             rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 1);
             break;
 
         case FBL_ECU_RESET:
-            out << info + "UDS Service: ECU Reset\n";
+            out << info + "ECU Reset " << SID_str << ID_str<<"\n";
             // Check on the relevant message - ECU Reset Type is correct
             rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 1);
             break;
 
         case FBL_SECURITY_ACCESS:
-            out << info + "UDS Service: Security Access\n";
+            out << info + "Security Access "<< SID_str << ID_str<<"\n";
             // Check on the relevant message - Request Type is correct
             rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 1);
             break;
 
         case FBL_TESTER_PRESENT:
-            out << info + "UDS Service: Tester Present\n";
+            out << info + "Tester Present " << SID_str << ID_str<<"\n";
             // Check on the relevant message - Response Type is correct
             rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 1);
             break;
 
         case FBL_READ_DATA_BY_IDENTIFIER:
-            out << info + "UDS Service: Read Data By Identifier\n";
-            out << "DID: " << QString("0x%1").arg(data[1], 2, 16, QLatin1Char( '0' )) << QString("0x%1").arg(data[2], 2, 16, QLatin1Char( '0' )) << "\n";
-            if(response)
-                out << "Data: " << QString::fromLocal8Bit(&data[3]) << "\n";
+            out << info + "Read Data By Identifier "<< SID_str << ID_str<<"\n";
+            did_raw = (data[1]<<8)|data[2];
+            DID = QString("0x%1").arg((data[1]<<8)|data[2], 2, 16, QLatin1Char( '0' ));
+            read_data = readDIDData(did_raw, data+3, no_bytes - 3);
+            out << "DID: " << translateDID(did_raw) << " (" << DID << ")\n";
+            if(response){
+                out << "Data: " << read_data << "\n";
+            }
 
             // Check on the relevant message - Data is included, DID is correct
             rx_msg_valid = rxMsgValid(neg_resp, false, rx_no_bytes, no_bytes, rx_exp_data, data, 2);
+            signalContent[Key] = QString::number(did_raw)+"#"+read_data;
             break;
 
         case FBL_READ_MEMORY_BY_ADDRESS:
-            out << info + "UDS Service: Read Memory By Address\n";
+            out << info + "Read Memory By Address "<< SID_str << ID_str<<"\n";
 
             // Check on the relevant message - Data is included, Adress is correct
             rx_msg_valid = rxMsgValid(neg_resp, false, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
             break;
 
         case FBL_WRITE_DATA_BY_IDENTIFIER:
-            out << info + "UDS Service: Write Data By Identifier\n";
+            out << info + "Write Data By Identifier "<< SID_str << ID_str<<"\n";
 
             // Check on the relevant message - DID is correct
             rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 2);
             break;
 
         case FBL_REQUEST_DOWNLOAD:
-            out << info + "UDS Service: Request Download\n";
+            out << info + "Request Download "<< SID_str << ID_str<<"\n";
 
             // Check on the relevant message - Adress is correct
             rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
             break;
 
         case FBL_REQUEST_UPLOAD:
-            out << info + "UDS Service: Request Upload\n";
+            out << info + "Request Upload "<< SID_str << ID_str<<"\n";
 
             // Check on the relevant message - Adress is correct
             rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
             break;
 
         case FBL_TRANSFER_DATA:
-            out << info + "UDS Service: Transfer Data\n";
+            out << info + "Transfer Data "<< SID_str << ID_str<<"\n";
 
             // Info: There is no response for it
             rx_msg_valid = true;
             break;
 
         case FBL_REQUEST_TRANSFER_EXIT:
-            out << info + "UDS Service: Request Transfer Exit\n";
+            out << info + "Request Transfer Exit "<< SID_str << ID_str<<"\n";
 
             // Info: Response includes the end address. There is no content check here
             rx_msg_valid = true;
             break;
 
         default:
-            out << info << "UDS Service: ERROR UNRECOGNIZED SID\n";
+            out << info << "ERROR UNRECOGNIZED SID "<< SID_str << ID_str<<"\n";
             break;
     }
 
+    qInfo() << *out.string();
     emit toConsole(*out.string());
 
     // Only release
@@ -203,6 +215,9 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
         comm_mutex.lock();
         _comm = false;
         comm_mutex.unlock();
+
+        // Signal the response
+        emit ecuResponse(signalContent);
     }
 }
 
@@ -230,7 +245,7 @@ const UDS::RESP UDS::txMessageStart() {
 void UDS::txMessageSend(uint32_t id, uint8_t *msg, int len) {
     // 3. Setup the Communication Interface for Sending Message
 	// Set the right ID to be used for transmitting
-    qInfo("UDS: Sending Signal setID");
+    if(VERBOSE_UDS) qInfo("UDS: Sending Signal setID");
     emit setID(id); // TODO: Check Architecture how to handle interface
 
     // Wrap data into QByteArray
@@ -242,16 +257,16 @@ void UDS::txMessageSend(uint32_t id, uint8_t *msg, int len) {
     free(msg);
 
     // 4. Transmit the data on the bus
-    qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
+    if(VERBOSE_UDS) qInfo() << "UDS: Sending Signal txData with " << len << " bytes";
     emit txData(qbdata);
 }
 
-const UDS::RESP UDS::txMessageValid() {
+const UDS::RESP UDS::rxMessageValid(uint32_t waittime) {
     if(rx_exp_data == nullptr || rx_no_bytes == 0)
         return RX_ERROR;
 
     // 5. Wait on RX message interpreter
-    RESP res = checkOnResponse(rx_max_waittime_long);
+    RESP res = checkOnResponse(waittime);
     if( res == TX_RX_OK){
         // Check on result of message interpreter
         if (rx_msg_valid)
@@ -267,23 +282,31 @@ const UDS::RESP UDS::txMessageValid() {
  * @brief Method to send a broadcast to all ECUs on the bus, so that they respond with Tester Present
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::reqIdentification() { // Sending out broadcast for tester present
+UDS::RESP UDS::reqIdentification() { // broadcast for tester present
     UDS::RESP resp = txMessageStart();
-    if(resp != TX_OK)
+    if(resp != TX_OK){
         return resp;
-
-    // Info to Console
-    qInfo("<< UDS: Sending out Request for Identification to all ECUs\n");
-    emit toConsole("UDS: Sending out Request for Identification to all ECUs");
+    }
 
 	uint32_t id = (uint32_t)(FBLCAN_BASE_ADDRESS | this->gui_id);
+    QString id_str = " using ID "+ QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' ));
+
+    // Info to Console
+    qInfo() << "<< UDS: Request for Identification to all ECUs" <<id_str <<"\n";
+    emit toConsole("UDS: Request for Identification to all ECUs" + id_str);
+
     int len;  
     uint8_t *msg = _create_tester_present(&len, 0, 1); // Request Tester present from ECUs
     txMessageSend(id, msg, len);    
 
     rx_no_bytes = 0;
     rx_exp_data = _create_tester_present(&rx_no_bytes, 1, 1);
-    return txMessageValid();
+    // Release the communication flag
+    comm_mutex.lock();
+    _comm = false;
+    comm_mutex.unlock();
+
+    return TX_OK;
 }
 
 
@@ -296,21 +319,24 @@ UDS::RESP UDS::reqIdentification() { // Sending out broadcast for tester present
  */
 UDS::RESP UDS::diagnosticSessionControl(uint32_t id, uint8_t session) {
     UDS::RESP resp = txMessageStart();
-    if(resp != TX_OK)
+    if(resp != TX_OK){
         return resp;
-
-    // Info to Console
-    qInfo("<< UDS: Sending out Diagnostic Session Control\n");
-    emit toConsole("<< UDS: Sending out Diagnostic Session Control");
+    }
 
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
+    QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
+
+    // Info to Console
+    qInfo("<< UDS: Diagnostic Session Control\n");
+    emit toConsole("<< UDS: Diagnostic Session Control" + id_str);
+
 	int len;
 	uint8_t *msg = _create_diagnostic_session_control(&len, 0, session);
     txMessageSend(send_id, msg, len);
 
     rx_no_bytes = 0;
     rx_exp_data = _create_diagnostic_session_control(&rx_no_bytes, 1, session);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -321,21 +347,24 @@ UDS::RESP UDS::diagnosticSessionControl(uint32_t id, uint8_t session) {
  */
 UDS::RESP UDS::ecuReset(uint32_t id, uint8_t reset_type) {
     UDS::RESP resp = txMessageStart();
-    if(resp != TX_OK)
+    if(resp != TX_OK){
         return resp;
-
-    // Info to Console
-    qInfo("<< UDS: Sending out for ECU Reset\n");
-    emit toConsole("<< UDS: Sending out for ECU Reset");
+    }
 
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
+    QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
+
+    // Info to Console
+    qInfo("<< UDS: for ECU Reset\n");
+    emit toConsole("<< UDS: for ECU Reset" + id_str);
+
     int len;
 	uint8_t *msg = _create_ecu_reset(&len, 0, reset_type);
     txMessageSend(send_id, msg, len);
 
     rx_no_bytes = 0;
     rx_exp_data = _create_ecu_reset(&rx_no_bytes, 1, reset_type);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -345,21 +374,24 @@ UDS::RESP UDS::ecuReset(uint32_t id, uint8_t reset_type) {
  */
 UDS::RESP UDS::securityAccessRequestSEED(uint32_t id) {
     UDS::RESP resp = txMessageStart();
-    if(resp != TX_OK)
+    if(resp != TX_OK){
         return resp;
+    }
+
+	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
+    QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
 
     // Info to Console
-    qInfo("<< UDS: Sending out Security Access for Seed\n");
+    qInfo("<< UDS: Security Access for Seed\n");
+    emit toConsole("<< UDS: Security Access for Seed" + id_str);
 
-    emit toConsole("<< UDS: Sending out Security Access for Seed");
-	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
 	int len;
 	uint8_t *msg = _create_security_access(&len, 0, FBL_SEC_ACCESS_SEED, 0, 0);
     txMessageSend(send_id, msg, len);
 
     rx_no_bytes = 0;
     rx_exp_data = _create_security_access(&rx_no_bytes, 1, FBL_SEC_ACCESS_SEED, 0, 0);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -371,21 +403,24 @@ UDS::RESP UDS::securityAccessRequestSEED(uint32_t id) {
  */
 UDS::RESP UDS::securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_len) {
     UDS::RESP resp = txMessageStart();
-    if(resp != TX_OK)
+    if(resp != TX_OK){
         return resp;
-
-    // Info to Console
-    qInfo("<< UDS: Sending out Security Access for Verify Key\n");
-    emit toConsole("<< UDS: Sending out Security Access for Verify Key");
+    }
 
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
+    QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
+
+    // Info to Console
+    qInfo("<< UDS: Security Access for Verify Key\n");
+    emit toConsole("<< UDS: Security Access for Verify Key" + id_str);
+
 	int len;
 	uint8_t *msg = _create_security_access(&len, 0, FBL_SEC_ACCESS_VERIFY_KEY, key, key_len);
     txMessageSend(send_id, msg, len);
 
     rx_no_bytes = 0;
     rx_exp_data = _create_security_access(&rx_no_bytes, 1, FBL_SEC_ACCESS_VERIFY_KEY, 0, 0);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -395,14 +430,17 @@ UDS::RESP UDS::securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_le
  */
 UDS::RESP UDS::testerPresent(uint32_t id) {
     UDS::RESP resp = txMessageStart();
-    if(resp != TX_OK)
+    if(resp != TX_OK){
         return resp;
-
-    // Info to Console
-    qInfo("<< UDS: Sending out Tester Present\n");
-    emit toConsole("<< UDS: Sending out Tester Present");
+    }
 
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
+    QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
+
+    // Info to Console
+    qInfo("<< UDS: Tester Present\n");
+    emit toConsole("<< UDS: Tester Present" + id_str);
+
 	int len;
 	uint8_t *msg = _create_tester_present(&len, 0, FBL_TESTER_PRES_WITHOUT_RESPONSE);
     txMessageSend(send_id, msg, len);
@@ -430,14 +468,17 @@ UDS::RESP UDS::testerPresent(uint32_t id) {
  */
 UDS::RESP UDS::readDataByIdentifier(uint32_t id, uint16_t identifier) {
     UDS::RESP resp = txMessageStart();
-    if(resp != TX_OK)
+    if(resp != TX_OK){
         return resp;
-
-    // Info to Console
-    qInfo("<< UDS: Sending out Read Data By Identifier\n");
-    emit toConsole("<< UDS: Sending out Read Data By Identifier");
+    }
 
     uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
+    QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
+    QString did_str = " for DID "+translateDID(identifier) + " ("+QString("0x%1").arg(identifier, 4, 16, QLatin1Char( '0' )) +")";
+
+    // Info to Console
+    qInfo("<< UDS: Read Data By Identifier\n");
+    emit toConsole("<< UDS: Read Data By Identifier" + id_str + did_str);
     
 	int len;
 	uint8_t *msg = _create_read_data_by_ident(&len, 0, identifier, 0, 0);
@@ -446,7 +487,7 @@ UDS::RESP UDS::readDataByIdentifier(uint32_t id, uint16_t identifier) {
     // 5. Create the data that is expected, Here: As response data is not filled, but is expected in the response
     rx_no_bytes = 0;
     rx_exp_data = _create_read_data_by_ident(&rx_no_bytes, 1, identifier, 0, 0);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -458,21 +499,24 @@ UDS::RESP UDS::readDataByIdentifier(uint32_t id, uint16_t identifier) {
  */
 UDS::RESP UDS::readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_bytes) {
     UDS::RESP resp = txMessageStart();
-    if(resp != TX_OK)
+    if(resp != TX_OK){
         return resp;
-
-    // Info to Console
-    qInfo("<< UDS: Sending out Read Memory By Address\n");
-    emit toConsole("<< UDS: Sending out Read Memory By Address");
+    }
 
     uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
+    QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
+
+    // Info to Console
+    qInfo("<< UDS: Read Memory By Address\n");
+    emit toConsole("<< UDS: Read Memory By Address" + id_str);
+
     int len;
 	uint8_t *msg = _create_read_memory_by_address(&len, 0, address, no_bytes, 0, 0);
     txMessageSend(send_id, msg, len);
 
     rx_no_bytes = 0;
     rx_exp_data = _create_read_memory_by_address(&rx_no_bytes, 1, address, no_bytes, 0, 0);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -485,21 +529,24 @@ UDS::RESP UDS::readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_by
  */
 UDS::RESP UDS::writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* data, uint8_t data_len) {
     UDS::RESP resp = txMessageStart();
-    if(resp != TX_OK)
+    if(resp != TX_OK){
         return resp;
-
-    // Info to Console
-    qInfo("<< UDS: Sending out Write Data By Identifier\n");
-    emit toConsole("<< UDS: Sending out Write Data By Identifier");
+    }
 
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
+    QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
+
+    // Info to Console
+    qInfo("<< UDS: Write Data By Identifier\n");
+    emit toConsole("<< UDS: Write Data By Identifier" + id_str);
+
 	int len;
 	uint8_t *msg = _create_write_data_by_ident(&len, 0, identifier, data, data_len);
     txMessageSend(send_id, msg, len);  
 
     rx_no_bytes = 0;
     rx_exp_data = _create_write_data_by_ident(&rx_no_bytes, 1, identifier, 0, 0);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 // Specification for Upload | Download
@@ -512,21 +559,24 @@ UDS::RESP UDS::writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* 
  */
 UDS::RESP UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes) {
     UDS::RESP resp = txMessageStart();
-    if(resp != TX_OK)
+    if(resp != TX_OK){
         return resp;
-
-    // Info to Console
-    qInfo("<< UDS: Sending out Request Download\n");
-    emit toConsole("<< UDS: Sending out Request Download");
+    }
 
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
+    QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
+
+    // Info to Console
+    qInfo("<< UDS: Request Download\n");
+    emit toConsole("<< UDS: Request Download" + id_str);
+
 	int len;
 	uint8_t *msg = _create_request_download(&len, 0, address, no_bytes);
     txMessageSend(send_id, msg, len);  
 
     rx_no_bytes = 0;
     rx_exp_data = _create_request_download(&rx_no_bytes, 1, address, no_bytes);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -538,21 +588,24 @@ UDS::RESP UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes)
  */
 UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes) {
     UDS::RESP resp = txMessageStart();
-    if(resp != TX_OK)
+    if(resp != TX_OK){
         return resp;
+    }
+
+	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
+    QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
 
     // Info to Console
     qInfo("<< UDS: Sending Request Upload \n");
-    emit toConsole("<< UDS: Sending Request Upload");
+    emit toConsole("<< UDS: Sending Request Upload" + id_str);
 
-	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
 	int len;
 	uint8_t *msg = _create_request_upload(&len, 0, address, no_bytes);
     txMessageSend(send_id, msg, len);  
 
     rx_no_bytes = 0;
     rx_exp_data = _create_request_upload(&rx_no_bytes, 1, address, no_bytes);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -565,14 +618,18 @@ UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes) {
  */
 UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_t data_len) {
     UDS::RESP resp = txMessageStart();
-    if(resp != TX_OK)
+    if(resp != TX_OK){
         return resp;
-
-    // Info to Console
-    qInfo("<< UDS: Sending out Transfer Data\n");
-    emit toConsole("<< UDS: Sending out Transfer Data");
+    }
 
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
+    QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
+
+    // Info to Console
+    qInfo("<< UDS: Transfer Data\n");
+    emit toConsole("<< UDS: Transfer Data" + id_str);
+
+
 	int len;
     uint8_t *msg = _create_transfer_data(&len, address, data, data_len);
     txMessageSend(send_id, msg, len);  
@@ -599,21 +656,24 @@ UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_
  */
 UDS::RESP UDS::requestTransferExit(uint32_t id, uint32_t address) {
     UDS::RESP resp = txMessageStart();
-    if(resp != TX_OK)
+    if(resp != TX_OK){
         return resp;
-
-    // Info to Console
-    qInfo("<< UDS: Sending out Request Transfer Exit\n");
-    emit toConsole("<< UDS: Sending out Request Transfer Exit");
+    }
 
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
+    QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
+
+    // Info to Console
+    qInfo("<< UDS: Request Transfer Exit\n");
+    emit toConsole("<< UDS: Request Transfer Exit" + id_str);
+
 	int len;
 	uint8_t *msg = _create_request_transfer_exit(&len, 0, address);
     txMessageSend(send_id, msg, len);  
 
     rx_no_bytes = 0;
     rx_exp_data = _create_request_transfer_exit(&rx_no_bytes, 1, address);
-    return txMessageValid();
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 // Supported Common Response Codes
@@ -626,17 +686,20 @@ UDS::RESP UDS::requestTransferExit(uint32_t id, uint32_t address) {
  */
 UDS::RESP UDS::negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_code) {
     UDS::RESP resp = txMessageStart();
-    if(resp != TX_OK)
+    if(resp != TX_OK){
         return resp;
-
-    // Info to Console
-    qInfo("<< UDS: Sending out Negative Response\n");
-    emit toConsole("<< UDS: Sending out Negative Response");
+    }
 
     // 3a. Setup the Communication Interface for Sending Message
 	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
+    QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
+
+    // Info to Console
+    qInfo("<< UDS: Negative Response\n");
+    emit toConsole("<< UDS: Negative Response" + id_str);
+
 	// Set the right ID to be used for transmitting
-    qInfo("UDS: Sending Signal setID");
+    if(VERBOSE_UDS) qInfo("UDS: Sending Signal setID");
     emit setID(send_id);
 
     // 3b. Create the relevant message
@@ -656,6 +719,147 @@ UDS::RESP UDS::negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_c
     if(synchronized_rx_tx)
         return TX_RX_OK;
     return TX_OK;
+}
+
+/**
+ * @brief Translates a given Negative Response Code into a String representation according to UDS Communication documentation
+ * @param nrc Given Negative Response Code for translation
+ * @return
+ */
+QString UDS::translateNegResp(uint8_t nrc){
+    switch(nrc){
+    case FBL_RC_GENERAL_REJECT:
+        return QString("General reject"); break;
+    case FBL_RC_SERVICE_NOT_SUPPORTED:
+        return QString("Service not supported"); break;
+    case FBL_RC_SUB_FUNC_NOT_SUPPORTED:
+        return QString("Sub-Function not supported"); break;
+    case FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT:
+        return QString("Incorrect msg len or invalid format"); break;
+    case FBL_RC_RESPONSE_TOO_LONG:
+        return QString("Response too long"); break;
+    case FBL_RC_BUSY_REPEAT_REQUEST:
+        return QString("Busy repeat request"); break;
+    case FBL_RC_CONDITIONS_NOT_CORRECT:
+        return QString("Conditions not correct"); break;
+    case FBL_RC_REQUEST_SEQUENCE_ERROR:
+        return QString("Request sequence error"); break;
+    case FBL_RC_FAILURE_PREVENTS_EXEC_OF_REQUESTED_ACTION:
+        return QString("Failure prevents execution of requested action"); break;
+    case FBL_RC_REQUEST_OUT_OF_RANGE:
+        return QString("Request out of range"); break;
+    case FBL_RC_SECURITY_ACCESS_DENIED:
+        return QString("Security access denied"); break;
+    case FBL_RC_INVALID_KEY:
+        return QString("Invalid key"); break;
+    case FBL_RC_EXCEEDED_NUMBER_OF_ATTEMPTS:
+        return QString("Exceeded number of attempts"); break;
+    case FBL_RC_REQUIRED_TIME_DELAY_NOT_EXPIRED:
+        return QString("Required time delay not expired"); break;
+    case FBL_RC_UPLOAD_DOWNLOAD_NOT_ACCEPTED:
+        return QString("Upload/Download not accepted"); break;
+    case FBL_RC_TRANSFER_DATA_SUSPENDED:
+        return QString("Transfer data suspended"); break;
+    case FBL_RC_GENERAL_PROGRAMMING_FAILURE:
+        return QString("General programming failure"); break;
+    case FBL_RC_WRONG_BLOCK_SEQUENCE_COUNTER:
+        return QString("Wrong Block Sequence Counter"); break;
+    case FBL_RC_SUB_FUNC_NOT_SUPPORTED_IN_ACTIVE_SESSION:
+        return QString("Sub-Function not supported in active session"); break;
+    case FBL_RC_SERVICE_NOT_SUPPORTED_IN_ACTIVE_SESSION:
+        return QString("Service not supported in active session"); break;
+    default:
+        return QString("Negative Response Code unknown");
+    }
+}
+
+/**
+ * @brief Translates a given DID to the String representation of the DID according to UDS Communication documentation
+ * @param DID
+ * @return
+ */
+QString UDS::translateDID(uint16_t DID){
+    switch(DID){
+        case FBL_DID_SYSTEM_NAME:
+            return QString("System Name"); break;
+        case FBL_DID_PROGRAMMING_DATE:
+            return QString("Programming Date"); break;
+        case FBL_DID_BL_KEY_ADDRESS:
+            return QString("Key Address"); break;
+        case FBL_DID_BL_KEY_GOOD_VALUE:
+            return QString("Key Good Value"); break;
+        case FBL_DID_CAN_BASE_MASK:
+            return QString("CAN Base Mask"); break;
+        case FBL_DID_CAN_ID:
+            return QString("CAN ID"); break;
+        case FBL_DID_BL_WRITE_START_ADD_CORE0:
+            return QString("Write Start Address Core 0"); break;
+        case FBL_DID_BL_WRITE_END_ADD_CORE0:
+            return QString("Write End Address Core 0"); break;
+        case FBL_DID_BL_WRITE_START_ADD_CORE1:
+            return QString("Write Start Address Core 1"); break;
+        case FBL_DID_BL_WRITE_END_ADD_CORE1:
+            return QString("Write End Address Core 1"); break;
+        case FBL_DID_BL_WRITE_START_ADD_CORE2:
+            return QString("Write Start Address Core 2"); break;
+        case FBL_DID_BL_WRITE_END_ADD_CORE2:
+            return QString("Write End Address Core 2"); break;
+        default:
+            return QString("Data Identifier unknown");
+    }
+}
+
+/**
+ * @brief Reads the Data based on format of the given DID
+ * @param DID To be used as format template
+ * @param data Payload of the data
+ * @param no_bytes Number of bytes of the data
+ * @return
+ */
+QString UDS::readDIDData(uint16_t DID, uint8_t* data, uint32_t no_bytes){
+
+    QString retText = "";
+    switch(DID){
+        case FBL_DID_SYSTEM_NAME:
+            return QString::fromLocal8Bit(&data[0]); break;
+
+        case FBL_DID_PROGRAMMING_DATE:
+            if(no_bytes != 3)
+                return "Wrong Programming Date format";
+
+            for(int i = 0; i < no_bytes; i++){
+                if(i == 0)
+                    retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+                else if(i == no_bytes-1)
+                    retText.append(".20"+QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+                else
+                    retText.append("."+QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+            }
+            return retText; break;
+
+        case FBL_DID_BL_KEY_ADDRESS:
+             return QString("Not yet supported"); break;
+        case FBL_DID_BL_KEY_GOOD_VALUE:
+            return QString("Not yet supported"); break;
+        case FBL_DID_CAN_BASE_MASK:
+            return QString("Not yet supported"); break;
+        case FBL_DID_CAN_ID:
+            return QString("Not yet supported"); break;
+        case FBL_DID_BL_WRITE_START_ADD_CORE0:
+            return QString("Not yet supported"); break;
+        case FBL_DID_BL_WRITE_END_ADD_CORE0:
+            return QString("Not yet supported"); break;
+        case FBL_DID_BL_WRITE_START_ADD_CORE1:
+            return QString("Not yet supported"); break;
+        case FBL_DID_BL_WRITE_END_ADD_CORE1:
+            return QString("Not yet supported"); break;
+        case FBL_DID_BL_WRITE_START_ADD_CORE2:
+            return QString("Not yet supported"); break;
+        case FBL_DID_BL_WRITE_END_ADD_CORE2:
+            return QString("Not yet supported"); break;
+        default:
+            return QString("Data Identifier unknown");
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -737,64 +941,12 @@ UDS::RESP UDS::checkOnResponse(uint32_t waittime){
 }
 
 
-/**
- * @brief Translates a given Negative Response Code into a String representation according to UDS Communication documentation
- * @param nrc Given Negative Response Code for translation
- * @return
- */
-QString UDS::translateNegResp(uint8_t nrc){
-    switch(nrc){
-        case FBL_RC_GENERAL_REJECT:
-            return QString("General reject"); break;
-        case FBL_RC_SERVICE_NOT_SUPPORTED:
-            return QString("Service not supported"); break;
-        case FBL_RC_SUB_FUNC_NOT_SUPPORTED:
-            return QString("Sub-Function not supported"); break;
-        case FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT:
-            return QString("Incorrect msg len or invalid format"); break;
-        case FBL_RC_RESPONSE_TOO_LONG:
-            return QString("Response too long"); break;
-        case FBL_RC_BUSY_REPEAT_REQUEST:
-            return QString("Busy repeat request"); break;
-        case FBL_RC_CONDITIONS_NOT_CORRECT:
-            return QString("Conditions not correct"); break;
-        case FBL_RC_REQUEST_SEQUENCE_ERROR:
-            return QString("Request sequence error"); break;
-        case FBL_RC_FAILURE_PREVENTS_EXEC_OF_REQUESTED_ACTION:
-            return QString("Failure prevents execution of requested action"); break;
-        case FBL_RC_REQUEST_OUT_OF_RANGE:
-            return QString("Request out of range"); break;
-        case FBL_RC_SECURITY_ACCESS_DENIED:
-            return QString("Security access denied"); break;
-        case FBL_RC_INVALID_KEY:
-            return QString("Invalid key"); break;
-        case FBL_RC_EXCEEDED_NUMBER_OF_ATTEMPTS:
-            return QString("Exceeded number of attempts"); break;
-        case FBL_RC_REQUIRED_TIME_DELAY_NOT_EXPIRED:
-            return QString("Required time delay not expired"); break;
-        case FBL_RC_UPLOAD_DOWNLOAD_NOT_ACCEPTED:
-            return QString("Upload/Download not accepted"); break;
-        case FBL_RC_TRANSFER_DATA_SUSPENDED:
-            return QString("Transfer data suspended"); break;
-        case FBL_RC_GENERAL_PROGRAMMING_FAILURE:
-            return QString("General programming failure"); break;
-        case FBL_RC_WRONG_BLOCK_SEQUENCE_COUNTER:
-            return QString("Wrong Block Sequence Counter"); break;
-        case FBL_RC_SUB_FUNC_NOT_SUPPORTED_IN_ACTIVE_SESSION:
-            return QString("Sub-Function not supported in active session"); break;
-        case FBL_RC_SERVICE_NOT_SUPPORTED_IN_ACTIVE_SESSION:
-            return QString("Service not supported in active session"); break;
-        default:
-            return QString("Negative Response Code unknown");
-    }
-}
-
 //============================================================================
 // Slots
 //============================================================================
 
 void UDS::rxDataReceiverSlot(const unsigned int id, const QByteArray &ba){
-    qInfo("UDS: Slot - Received UDS Message to be processed");
+    if(VERBOSE_UDS) qInfo("UDS: Slot - Received UDS Message to be processed");
     // Unwrap the data
 
     uint8_t* msg = (uint8_t*)calloc(ba.size(), sizeof(uint8_t));

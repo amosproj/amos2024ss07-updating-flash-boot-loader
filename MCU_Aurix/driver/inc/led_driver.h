@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2024 Paul Roy <paul.roy@fau.de>
+// SPDX-FileCopyrightText: 2024 Leon Wilms <leonwilms.wk@gmail.com>
+
 //============================================================================
 // Name        : led_driver.h
 // Author      : Paul Roy

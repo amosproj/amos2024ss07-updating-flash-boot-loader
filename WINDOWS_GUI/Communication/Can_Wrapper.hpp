@@ -17,7 +17,8 @@
  #include <windows.h>
 #endif
 
-#define DEBUGGING				0 		// switch for debugging prints
+#define DEBUGGING_CAN_DRIVER    0 		// switch for debugging prints
+#define VERBOSE_CAN_DRIVER      0       // switch for verbose console information
 
 #define RECEIVE_EVENT_SIZE 		1 		// do not edit! Currently 1 is supported only
 #define RX_QUEUE_SIZE			4096 	// internal driver queue size in CAN events
