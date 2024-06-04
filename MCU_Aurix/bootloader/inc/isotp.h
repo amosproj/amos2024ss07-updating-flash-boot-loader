@@ -14,7 +14,7 @@
 
 #include "can_driver.h"
 #include "uds_comm_spec.h"
-#include "can_init.h"
+#include "can_driver_TC375_LK.h"
 
 // Struct that is used for TX
 typedef struct isoTp
