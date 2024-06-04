@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : selftest.cpp
-// Author      : Michael Bauer
-// Version     : 0.1
+// Author      : Michael Bauer, Wiktor Pilarczyk
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Class for Selftest testcases
 //============================================================================
@@ -50,7 +51,7 @@ void Selftest::messageChecker(const unsigned int id, const QByteArray &rec){
         emit toConsole(">> Received ECU Reset - Checking on content");
 
         // Create the relevant message
-        msg = _create_ecu_reset(&len, 0, FBL_ECU_RESET_POWERON);
+        msg = _create_ecu_reset(&len, 0, FBL_ECU_RESET_HARD);
     }
 
     else if(rec[0] == FBL_SECURITY_ACCESS){
@@ -209,8 +210,8 @@ void Selftest::testDiagnosticSessionControl()
 
 void Selftest::testEcuReset()
 {
-    emit toConsole("Selftest: TX Check ECU Reset - Poweron");
-    uds->ecuReset(this->ecu_id, FBL_ECU_RESET_POWERON);
+    emit toConsole("Selftest: TX Check ECU Reset - HARD");
+    uds->ecuReset(this->ecu_id, FBL_ECU_RESET_HARD);
 }
 
 void Selftest::testSecurityAccessRequestSEED()

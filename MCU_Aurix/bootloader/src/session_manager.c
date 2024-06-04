@@ -2,9 +2,11 @@
 // SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
 // SPDX-FileCopyrightText: 2024 Sebastian Rodriguez <r99@melao.de>
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
+
 //============================================================================
 // Name        : session_manager.h
-// Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer
+// Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer, Wiktor Pilarczyk
 // Version     : 0.2
 // Copyright   : MIT
 // Description : Manages bootloader session including auth
@@ -12,6 +14,7 @@
 
 #include "session_manager.h"
 #include "uds_comm_spec.h"
+#include "reset.h"
 
 uint8_t session;
 boolean authenticated;
@@ -133,16 +136,25 @@ uint8_t isAuthorized(void){
 
 uint8_t isResetTypeAvailable(uint8_t reset_type){
     switch (reset_type){
-        case FBL_ECU_RESET_POWERON:
-        case FBL_ECU_RESET_COLD_POWERON:
-        case FBL_ECU_RESET_WARM_POWERON:
+        case FBL_ECU_RESET_HARD:
+        case FBL_ECU_RESET_SOFT:
             return 0;
         default:
             return FBL_RC_SUB_FUNC_NOT_SUPPORTED;
     }
 }
 
-void resetECU(uint8_t reset_type){
-    // TODO implement
+void resetECU(uint8_t reset_type) {
+    switch(reset_type) {
+        case FBL_ECU_RESET_HARD:
+            hardReset();
+            break;
+        case FBL_ECU_RESET_SOFT:
+            softReset();
+            break;
+        default:
+            //TODO handle unexpected reset_type
+            break;
+    }
 }
 

@@ -89,7 +89,7 @@ void MainWindow::connectSignalSlots() {
                 uint32_t ecu_id = (0xFFF0 & ID_HEX.toUInt(&ok, 16)) >> 4;
 
                 ui->label_reset_status->setText("Reset status: In progress");
-                if(uds->ecuReset(ecu_id, FBL_ECU_RESET_WARM_POWERON) == UDS::TX_RX_OK)
+                if(uds->ecuReset(ecu_id, FBL_ECU_RESET_SOFT) == UDS::TX_RX_OK)
                     ui->label_reset_status->setText("Reset status: Succeeded");
                 else
                     ui->label_reset_status->setText("Reset status: Failed");
