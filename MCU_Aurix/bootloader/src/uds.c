@@ -93,12 +93,7 @@ void uds_handleRX(uint8_t* data, uint32_t data_len){
             }
 
             uint8_t reset_type = msg->data[1];
-            if (reset_type == FBL_ECU_RESET_HARD || reset_type == FBL_ECU_RESET_SOFT){
-                uds_ecu_reset(reset_type);
-                resetECU(reset_type);
-            } else {
-                uds_neg_response(SID, FBL_RC_INVALID_KEY);
-            }
+            uds_ecu_reset(reset_type);
             break;
 
         case FBL_SECURITY_ACCESS:

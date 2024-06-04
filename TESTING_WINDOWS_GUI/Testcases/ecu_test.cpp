@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : ecu_test.cpp
-// Author      : Michael Bauer
-// Version     : 0.1
+// Author      : Michael Bauer, Wiktor Pilarczyk
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Class for ECU testcases
 //============================================================================
@@ -68,12 +69,10 @@ void ECU_Test::messageChecker(const unsigned int id, const QByteArray &rec){
         emit toConsole(">> Received ECU Reset - Checking on content");
 
         // Create the relevant message
-        if(rec[1] == FBL_ECU_RESET_POWERON)
-            msg = _create_ecu_reset(&len, 1, FBL_ECU_RESET_POWERON);
-        else if(rec[1] == FBL_ECU_RESET_COLD_POWERON)
-            msg = _create_ecu_reset(&len, 1, FBL_ECU_RESET_COLD_POWERON);
-        else if(rec[1] == FBL_ECU_RESET_WARM_POWERON)
-            msg = _create_ecu_reset(&len, 1, FBL_ECU_RESET_WARM_POWERON);
+        if(rec[1] == FBL_ECU_RESET_HARD)
+            msg = _create_ecu_reset(&len, 1, FBL_ECU_RESET_HARD);
+        else if(rec[1] == FBL_ECU_RESET_SOFT)
+            msg = _create_ecu_reset(&len, 1, FBL_ECU_RESET_SOFT);
     }
 
     else if(sid == FBL_TESTER_PRESENT){
@@ -311,14 +310,11 @@ void ECU_Test::testDiagnosticSessionControl()
 
 void ECU_Test::testEcuReset()
 {
-    emit toConsole("ECU Test: TX Check ECU Reset - Poweron");
-    uds->ecuReset(this->ecu_id, FBL_ECU_RESET_POWERON);
+    emit toConsole("ECU Test: TX Check ECU Reset - HARD");
+    uds->ecuReset(this->ecu_id, FBL_ECU_RESET_HARD);
 
-    emit toConsole("ECU Test: TX Check ECU Reset - Warm Poweron");
-    uds->ecuReset(this->ecu_id, FBL_ECU_RESET_WARM_POWERON);
-
-    emit toConsole("ECU Test: TX Check ECU Reset - Cold Poweron");
-    uds->ecuReset(this->ecu_id, FBL_ECU_RESET_COLD_POWERON);
+    emit toConsole("ECU Test: TX Check ECU Reset - SOFT");
+    uds->ecuReset(this->ecu_id, FBL_ECU_RESET_SOFT);
 }
 
 

@@ -136,9 +136,8 @@ uint8_t isAuthorized(void){
 
 uint8_t isResetTypeAvailable(uint8_t reset_type){
     switch (reset_type){
-        case FBL_ECU_RESET_POWERON:
-        case FBL_ECU_RESET_COLD_POWERON:
-        case FBL_ECU_RESET_WARM_POWERON:
+        case FBL_ECU_RESET_HARD:
+        case FBL_ECU_RESET_SOFT:
             return 0;
         default:
             return FBL_RC_SUB_FUNC_NOT_SUPPORTED;
