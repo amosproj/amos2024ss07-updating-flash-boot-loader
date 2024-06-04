@@ -218,6 +218,9 @@ void uds_ecu_reset(uint8_t reset_type){
     isotp_send(iso, msg, len);
     free(msg);
 
+    // TODO Refactor/Flash messages
+    waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 100)); // Wait for the messages being sent
+    
     // Trigger the reset
     resetECU(reset_type);
 }
