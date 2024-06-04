@@ -14,6 +14,8 @@
 
 #include "../../WINDOWS_GUI/UDS_Spec/uds_comm_spec.h"
 
+#include <QDateTime>
+
 ECU_Test::ECU_Test(uint8_t gui_id) : Testcase(gui_id){
     writing_test = true; // Change if writing test should be activated
 }
@@ -272,8 +274,8 @@ void ECU_Test::startTests(){
     testReqIdentification();
 
     // Specification for Diagnostic and Communication Management
-    testDiagnosticSessionControl();
     testEcuReset();
+    testDiagnosticSessionControl();
     testTesterPresent();
 
     // Specification for Data Transmission
@@ -313,8 +315,14 @@ void ECU_Test::testEcuReset()
     emit toConsole("ECU Test: TX Check ECU Reset - HARD");
     uds->ecuReset(this->ecu_id, FBL_ECU_RESET_HARD);
 
+    qint64 start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 3){}
+
     emit toConsole("ECU Test: TX Check ECU Reset - SOFT");
     uds->ecuReset(this->ecu_id, FBL_ECU_RESET_SOFT);
+
+    start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 3){}
 }
 
 
