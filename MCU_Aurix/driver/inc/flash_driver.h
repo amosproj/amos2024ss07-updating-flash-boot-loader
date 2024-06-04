@@ -15,7 +15,6 @@
 /*********************************************************************************************************************/
 /*-----------------------------------------------------Includes------------------------------------------------------*/
 /*********************************************************************************************************************/
-//#include "IfxFlash.h"
 
 /*********************************************************************************************************************/
 /*------------------------------------------------------Macros-------------------------------------------------------*/
@@ -38,10 +37,7 @@
 /*********************************************************************************************************************/
 
 int flashWrite(uint32 flashStartAddr, uint32 data[], size_t dataSize);
-//int flashWriteProgram(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32 data[], size_t dataSize);
 uint32 flashVerifyProgram(uint32 flashStartAddr, uint32 data[], size_t dataSize);
-
-//int flashWriteData(IfxFlash_FlashType flashModule, uint32 address, uint32 data[], size_t data_size);
 uint32 flashVerifyData(uint32 flashStartAddress, uint32 data[], size_t dataSize);
 
 #endif /* FLASH_H_ */
