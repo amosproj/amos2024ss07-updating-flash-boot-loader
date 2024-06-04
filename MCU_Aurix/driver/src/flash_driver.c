@@ -51,7 +51,10 @@ typedef struct
 
 Flash_Function g_functionsFromPSPR;
 
-/* This function calls the correct writing function, either flashWriteProgramm or flashWriteData, depending on flashStartAddr */
+/* This function calls the correct writing function, either flashWriteProgramm or flashWriteData, depending on flashStartAddr,
+ * so the programmer doesn't have to differentiate between writing pflash and dflash*/
+
+//TODO this function makes checkAddrInFlashModule redundant, so maybe remove it and change calling functions accordingly
 int flashWrite(uint32 flashStartAddr, uint32 data[], size_t dataSize) {
     if (flashStartAddr > DATA_FLASH_0_BASE_ADDR && flashStartAddr < DATA_FLASH_0_END_ADDR) //maybe check if flashStartAddr + dataSize > DATA/PROGRAMM_FLASH_X_END_ADDR
     {
@@ -70,7 +73,7 @@ int flashWrite(uint32 flashStartAddr, uint32 data[], size_t dataSize) {
         return flashWriteData(PROGRAM_FLASH_1, flashStartAddr, data, dataSize);
     }
     return -1;
-}
+} 
 
 /* This function erases a given sector of the Program Flash memory. The function is copied in the PSPR through
  * copyFunctionsToPSPR(). Because of this, inside the function, only routines from the PSPR or inline functions
