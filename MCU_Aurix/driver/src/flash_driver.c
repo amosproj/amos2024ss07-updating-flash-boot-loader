@@ -368,19 +368,19 @@ uint32 flashVerifyData(uint32 flashStartAddress, uint32 data[], size_t dataSize)
 
 //TODO this function makes checkAddrInFlashModule redundant, so maybe remove it and change calling functions accordingly
 int flashWrite(uint32 flashStartAddr, uint32 data[], size_t dataSize) {
-    if (flashStartAddr > DATA_FLASH_0_BASE_ADDR && flashStartAddr < DATA_FLASH_0_END_ADDR) //maybe check if flashStartAddr + dataSize > DATA/PROGRAMM_FLASH_X_END_ADDR
+    if (flashStartAddr >= DATA_FLASH_0_BASE_ADDR && flashStartAddr <= DATA_FLASH_0_END_ADDR) //maybe check if flashStartAddr + dataSize > DATA/PROGRAMM_FLASH_X_END_ADDR
     {
         return flashWriteData(DATA_FLASH_0, flashStartAddr, data, dataSize);
     }
-    else if (flashStartAddr > DATA_FLASH_1_BASE_ADDR && flashStartAddr < DATA_FLASH_1_END_ADDR)
+    else if (flashStartAddr >= DATA_FLASH_1_BASE_ADDR && flashStartAddr <= DATA_FLASH_1_END_ADDR)
     {
         return flashWriteData(DATA_FLASH_1, flashStartAddr, data, dataSize);
     }
-    else if (flashStartAddr > PROGRAM_FLASH_0_BASE_ADDR && flashStartAddr < PROGRAM_FLASH_0_END_ADDR)
+    else if (flashStartAddr >= PROGRAM_FLASH_0_BASE_ADDR && flashStartAddr <= PROGRAM_FLASH_0_END_ADDR)
     {
         return flashWriteProgram(PROGRAM_FLASH_0, flashStartAddr, data, dataSize);
     }
-    else if (flashStartAddr > PROGRAM_FLASH_1_BASE_ADDR && flashStartAddr < PROGRAM_FLASH_1_END_ADDR)
+    else if (flashStartAddr >= PROGRAM_FLASH_1_BASE_ADDR && flashStartAddr <= PROGRAM_FLASH_1_END_ADDR)
     {
         return flashWriteProgram(PROGRAM_FLASH_1, flashStartAddr, data, dataSize);
     }
