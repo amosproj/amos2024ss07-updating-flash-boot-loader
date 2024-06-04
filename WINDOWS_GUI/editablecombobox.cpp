@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2024 Leon Wilms <leonwilms.wk@gmail.com>
+
 #include "editablecombobox.h"
 
 EditableComboBox::EditableComboBox(QWidget *parent) : QComboBox(parent)

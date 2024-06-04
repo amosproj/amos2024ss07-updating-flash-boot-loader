@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+
 #include <QFileDialog>
 #include <QDebug>
 #include <QString>

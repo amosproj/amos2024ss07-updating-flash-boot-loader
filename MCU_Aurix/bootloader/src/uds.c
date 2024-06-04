@@ -2,10 +2,11 @@
 // SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
 // SPDX-FileCopyrightText: 2024 Sebastian Rodriguez <r99@melao.de>
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : uds.c
-// Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer
+// Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer, Wiktor Pilarczyk
 // Version     : 0.2
 // Copyright   : MIT
 // Description : UDS Layer implementation
@@ -91,7 +92,8 @@ void uds_handleRX(uint8_t* data, uint32_t data_len){
                 return;
             }
 
-            uds_ecu_reset(msg->data[1]);
+            uint8_t reset_type = msg->data[1];
+            uds_ecu_reset(reset_type);
             break;
 
         case FBL_SECURITY_ACCESS:
@@ -216,6 +218,9 @@ void uds_ecu_reset(uint8_t reset_type){
     isotp_send(iso, msg, len);
     free(msg);
 
+    // TODO Refactor/Flash messages
+    waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 100)); // Wait for the messages being sent
+    
     // Trigger the reset
     resetECU(reset_type);
 }

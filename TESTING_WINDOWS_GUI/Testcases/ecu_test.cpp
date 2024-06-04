@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : ecu_test.cpp
-// Author      : Michael Bauer
-// Version     : 0.1
+// Author      : Michael Bauer, Wiktor Pilarczyk
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Class for ECU testcases
 //============================================================================
@@ -12,6 +13,8 @@
 #include "ecu_test.hpp"
 
 #include "../../WINDOWS_GUI/UDS_Spec/uds_comm_spec.h"
+
+#include <QDateTime>
 
 ECU_Test::ECU_Test(uint8_t gui_id) : Testcase(gui_id){
     writing_test = true; // Change if writing test should be activated
@@ -34,9 +37,9 @@ void ECU_Test::messageChecker(const unsigned int id, const QByteArray &rec){
 
     int len = 0;
     uint8_t *msg = nullptr;
-    unsigned int own_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, this->ecu_id) | 0x80000000; // 0x80000000 because of CAN Driver (to identify extended ID)
-    unsigned int ecu_id = createCommonID(FBLCAN_BASE_ADDRESS, 0           , this->ecu_id) | 0x80000000;
-    unsigned int broadcast_check_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, 0) | 0x80000000;
+    unsigned int own_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, this->ecu_id); // 0x80000000 because of CAN Driver (to identify extended ID)
+    unsigned int ecu_id = createCommonID(FBLCAN_BASE_ADDRESS, 0           , this->ecu_id);
+    unsigned int broadcast_check_id = createCommonID(FBLCAN_BASE_ADDRESS, this->gui_id, 0);
 
     if(id == own_id || id == broadcast_check_id){
         //emit toConsole("ECU Test: Ignoring UDS Message with Testing GUI ID");
@@ -68,12 +71,10 @@ void ECU_Test::messageChecker(const unsigned int id, const QByteArray &rec){
         emit toConsole(">> Received ECU Reset - Checking on content");
 
         // Create the relevant message
-        if(rec[1] == FBL_ECU_RESET_POWERON)
-            msg = _create_ecu_reset(&len, 1, FBL_ECU_RESET_POWERON);
-        else if(rec[1] == FBL_ECU_RESET_COLD_POWERON)
-            msg = _create_ecu_reset(&len, 1, FBL_ECU_RESET_COLD_POWERON);
-        else if(rec[1] == FBL_ECU_RESET_WARM_POWERON)
-            msg = _create_ecu_reset(&len, 1, FBL_ECU_RESET_WARM_POWERON);
+        if(rec[1] == FBL_ECU_RESET_HARD)
+            msg = _create_ecu_reset(&len, 1, FBL_ECU_RESET_HARD);
+        else if(rec[1] == FBL_ECU_RESET_SOFT)
+            msg = _create_ecu_reset(&len, 1, FBL_ECU_RESET_SOFT);
     }
 
     else if(sid == FBL_TESTER_PRESENT){
@@ -273,8 +274,8 @@ void ECU_Test::startTests(){
     testReqIdentification();
 
     // Specification for Diagnostic and Communication Management
-    testDiagnosticSessionControl();
     testEcuReset();
+    testDiagnosticSessionControl();
     testTesterPresent();
 
     // Specification for Data Transmission
@@ -311,14 +312,17 @@ void ECU_Test::testDiagnosticSessionControl()
 
 void ECU_Test::testEcuReset()
 {
-    emit toConsole("ECU Test: TX Check ECU Reset - Poweron");
-    uds->ecuReset(this->ecu_id, FBL_ECU_RESET_POWERON);
+    emit toConsole("ECU Test: TX Check ECU Reset - HARD");
+    uds->ecuReset(this->ecu_id, FBL_ECU_RESET_HARD);
 
-    emit toConsole("ECU Test: TX Check ECU Reset - Warm Poweron");
-    uds->ecuReset(this->ecu_id, FBL_ECU_RESET_WARM_POWERON);
+    qint64 start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 3){}
 
-    emit toConsole("ECU Test: TX Check ECU Reset - Cold Poweron");
-    uds->ecuReset(this->ecu_id, FBL_ECU_RESET_COLD_POWERON);
+    emit toConsole("ECU Test: TX Check ECU Reset - SOFT");
+    uds->ecuReset(this->ecu_id, FBL_ECU_RESET_SOFT);
+
+    start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 3){}
 }
 
 

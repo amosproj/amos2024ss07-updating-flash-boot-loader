@@ -20,7 +20,7 @@
       <x>20</x>
       <y>60</y>
       <width>1150</width>
-      <height>580</height>
+      <height>583</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -86,17 +86,17 @@
              </column>
              <item row="0" column="0">
               <property name="text">
-               <string>ECU1</string>
+               <string/>
               </property>
              </item>
              <item row="1" column="0">
               <property name="text">
-               <string>ECU2</string>
+               <string/>
               </property>
              </item>
              <item row="2" column="0">
               <property name="text">
-               <string>ECU3</string>
+               <string/>
               </property>
              </item>
             </widget>
@@ -263,6 +263,13 @@ li.checked::marker { content: &quot;\2612&quot;; }
              <item>
               <widget class="QPlainTextEdit" name="Console"/>
              </item>
+             <item>
+              <widget class="QPushButton" name="clearConsoleButton">
+               <property name="text">
+                <string>Clear console</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </widget>
           </item>
@@ -290,7 +297,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
      <x>0</x>
      <y>0</y>
      <width>1200</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuLicense">

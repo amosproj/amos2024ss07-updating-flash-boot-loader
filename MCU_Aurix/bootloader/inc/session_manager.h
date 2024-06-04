@@ -2,9 +2,10 @@
 // SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
 // SPDX-FileCopyrightText: 2024 Sebastian Rodriguez <r99@melao.de>
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 //============================================================================
 // Name        : session_manager.h
-// Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer
+// Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer, Wiktor Pilarczyk
 // Version     : 0.2
 // Copyright   : MIT
 // Description : Manages bootloader session including auth
