@@ -18,7 +18,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include "Bsp.h"
 
 
 int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size);

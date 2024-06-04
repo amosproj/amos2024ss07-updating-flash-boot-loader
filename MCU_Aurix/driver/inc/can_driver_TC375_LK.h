@@ -17,6 +17,7 @@
 #include "IfxCpu_Irq.h"
 #include "IfxPort.h"
 #include "IfxPort_PinMap.h"
+#include "Bsp.h"
 
 #include <stdint.h>
 

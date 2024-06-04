@@ -130,7 +130,7 @@ void canInitDriver(void (*processData)(uint32_t*, IfxCan_DataLengthCode)){
  * @param size, len of CAN Message
 */
 int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
-    ledToggleActivity(LED2);
+    ledToggleActivity(1);
     IfxCan_Can_initMessage(&can_g.txMsg);
     can_g.txMsg.messageId = canMessageID;
     can_g.txMsg.messageIdLength = IfxCan_MessageIdLength_extended;
