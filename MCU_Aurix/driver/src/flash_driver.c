@@ -66,11 +66,11 @@ int flashWrite(uint32 flashStartAddr, uint32 data[], size_t dataSize) {
     }
     else if (flashStartAddr > PROGRAM_FLASH_0_BASE_ADDR && flashStartAddr < PROGRAM_FLASH_0_END_ADDR)
     {
-        return flashWriteData(PROGRAM_FLASH_0, flashStartAddr, data, dataSize);
+        return flashWriteProgram(PROGRAM_FLASH_0, flashStartAddr, data, dataSize);
     }
     else if (flashStartAddr > PROGRAM_FLASH_1_BASE_ADDR && flashStartAddr < PROGRAM_FLASH_1_END_ADDR)
     {
-        return flashWriteData(PROGRAM_FLASH_1, flashStartAddr, data, dataSize);
+        return flashWriteProgram(PROGRAM_FLASH_1, flashStartAddr, data, dataSize);
     }
     return -1;
 } 
@@ -386,3 +386,5 @@ uint32 flashVerifyData(uint32 flashStartAddress, uint32 data[], size_t dataSize)
     }
     return errors;
 }
+
+
