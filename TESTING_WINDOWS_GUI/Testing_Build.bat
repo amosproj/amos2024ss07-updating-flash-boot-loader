@@ -3,7 +3,6 @@
 
 @echo off
 set main_path=%CD%
-cd ../TESTING_WINDOWS_GUI
 rd /s /q build
 mkdir build
 cd build
