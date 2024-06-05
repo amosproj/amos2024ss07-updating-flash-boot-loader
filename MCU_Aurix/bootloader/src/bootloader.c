@@ -80,18 +80,18 @@ void show_flash(void)
         data[i] = i;
     }
 
-    int ret_p = flashWrite(PROGRAM_FLASH_0_BASE_ADDR, data, data_size);
+    bool ret_p = flashWrite(PROGRAM_FLASH_0_BASE_ADDR, data, data_size);
 
-    uint32 errors_p = flashVerifyProgram(PROGRAM_FLASH_0_BASE_ADDR, data, data_size);
-    if(errors_p == 0 && ret_p == 0)
+    bool errors_p = flashVerify(PROGRAM_FLASH_0_BASE_ADDR, data, data_size);
+    if(errors_p && ret_p)
     {
         ledOn(1);
     }
 
-    int ret_d = flashWrite(DATA_FLASH_0_BASE_ADDR, data, data_size);
+    bool ret_d = flashWrite(DATA_FLASH_0_BASE_ADDR, data, data_size);
 
-    uint32 errors_d = flashVerifyData(DATA_FLASH_0_BASE_ADDR, data, data_size);
-    if(errors_d == 0 && ret_d == 0)
+    bool errors_d = flashVerify(DATA_FLASH_0_BASE_ADDR, data, data_size);
+    if(errors_d && ret_d)
     {
         ledOn(0);
     }
