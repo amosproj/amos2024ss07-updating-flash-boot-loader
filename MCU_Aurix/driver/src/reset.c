@@ -11,7 +11,7 @@
 
 #include "reset.h"
 #include "IfxScuRcu.h"
-#include "SCU_Reset.h"
+#include "reset_TC375_LK.h"
 
 void softReset() {
     triggerSwReset(IfxScuRcu_ResetType_application);

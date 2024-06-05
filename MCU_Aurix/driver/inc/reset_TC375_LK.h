@@ -1,5 +1,5 @@
 /**********************************************************************************************************************
- * \file SCU_Reset.c
+ * \file SCU_Reset.h
  * \copyright Copyright (C) Infineon Technologies AG 2019
  *
  * Use of this file is subject to the terms of use agreed between (i) you or the company in which ordinary course of
@@ -25,27 +25,11 @@
  * IN THE SOFTWARE.
  *********************************************************************************************************************/
 
-#include "reset_TC375_LK.h"
-#include "Ifx_Types.h"
-#include "IfxCpu.h"
-#include "Bsp.h"
+#ifndef SCU_RESET_DETECTION_H_
+#define SCU_RESET_DETECTION_H_
 
-/* This function triggers either a SW Application Reset or a SW System Reset, based on the parameter resetType */
-void triggerSwReset(IfxScuRcu_ResetType resetType)
-{
-    /* Get the CPU EndInit password */
-    uint16 CPUEndinitPw = IfxScuWdt_getCpuWatchdogPassword();
+#include "IfxScuRcu.h"
 
-    /* Configure the request trigger in the Reset Configuration Register */
-    IfxScuRcu_configureResetRequestTrigger(IfxScuRcu_Trigger_sw, resetType);
+void triggerSwReset(IfxScuRcu_ResetType resetType);
 
-    /* Clear CPU EndInit protection to write in the SWRSTCON register of SCU */
-    IfxScuWdt_clearCpuEndinit(CPUEndinitPw);
-
-    /* Trigger a software reset based on the configuration of RSTCON register */
-    IfxCpu_triggerSwReset();
-
-    /* The following instructions are not executed if a SW reset occurs */
-    /* Set CPU EndInit protection */
-    IfxScuWdt_setCpuEndinit(CPUEndinitPw);
-}
+#endif /* SCU_RESET_DETECTION_H_ */
