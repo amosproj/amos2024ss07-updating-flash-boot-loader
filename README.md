@@ -29,14 +29,18 @@ Further details can be found under [Documentation](./Documentation).
 
 ## Using Flash Bootloader Tool
 You can start the application by pressing "run_GUI".
-* TBD
+* In the MCU table a connected microcontroller can be selected
+* On the right is a log to view messages between your computer and the microcontroller
+* The `Reset`  button resets the microcontroller
+
+<!--- TODO User documentation when GUI is ready -->
 
 ## FAQ
 * TBD
 
 ## Licenses
 
-<!--- TODO Vector in table -->
+<!--- TODO missing dlls in table -->
 
 This project is licensed under the MIT License.
 It includes several libraries that are licensed using different Licenses.
