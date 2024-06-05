@@ -21,7 +21,6 @@
 
 
 int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size);
-void canIsrRxHandler();
 
 #endif /*CAN_DRIVER_H*/
 

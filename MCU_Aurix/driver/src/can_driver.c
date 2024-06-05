@@ -33,7 +33,7 @@ IfxCan_Can_Pins canPins = {
 IFX_INTERRUPT(canIsrTxHandler, 0, INTERRUPT_PRIO_TX);
 IFX_INTERRUPT(canIsrRxFifo0Handler, 0, INTERRUPT_PRIO_RX);
 
-void canIsrTxHandler(void){
+static void canIsrTxHandler(void){
       IfxCan_Node_clearInterruptFlag(can_g.canTXandRXNode.node, IfxCan_Interrupt_transmissionCompleted);
 }
 
@@ -42,7 +42,7 @@ void canIsrTxHandler(void){
  * Calls function to execute on Data Read in CAN Message
  * @param processDataFunction Pointer to function that processes Data read in CAN Message
 */
-void canIsrRxFifo0Handler(){
+static void canIsrRxFifo0Handler(){
         IfxCan_Node_clearInterruptFlag(can_g.canTXandRXNode.node, IfxCan_Interrupt_rxFifo0NewMessage); /*Clear Message Stored Flag*/
         IfxCan_Can_readMessage(&can_g.canTXandRXNode, &can_g.rxMsg, (uint32*)can_g.rxData);
 
@@ -52,7 +52,7 @@ void canIsrRxFifo0Handler(){
 }
 
  
-void canAcceptAllMessagesFilter(void){
+static void canAcceptAllMessagesFilter(void){
     can_g.canFilter.number = 0;
     can_g.canFilter.elementConfiguration = IfxCan_FilterElementConfiguration_storeInRxFifo0;
     can_g.canFilter.type = IfxCan_FilterType_classic;
@@ -67,7 +67,7 @@ void canAcceptAllMessagesFilter(void){
     IfxCan_Can_setStandardFilter(&can_g.canTXandRXNode, &can_g.canFilter);
 }
 
-void canInitTXandRXNode(void){
+static void canInitTXandRXNode(void){
     IfxCan_Can_initNodeConfig(&can_g.canNodeConfig, &can_g.canModule);                  /*Default Config*/
 
     can_g.canNodeConfig.busLoopbackEnabled = FALSE;                                      /*Loopbackmode*/
