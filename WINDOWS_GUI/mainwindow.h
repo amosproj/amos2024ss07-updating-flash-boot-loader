@@ -51,6 +51,9 @@ private:
     void clearECUTableView();
     void updateECUTableView(QMap<QString, QMap<QString, QString>> eculist);
 
+    uint32_t getECUID();
+    bool ECUSelected();
+
 private slots:
     void comboBoxIndexChanged(int index);
     void appendTextToConsole(const QString &text);
@@ -58,5 +61,6 @@ private slots:
     void ecuResponseSlot(const QMap<QString, QString> &data);
     void on_pushButton_ECU_refresh_clicked();
     void on_clearConsoleButton_clicked();
+    void checkECUconnectivity();
 };
 #endif // MAINWINDOW_H

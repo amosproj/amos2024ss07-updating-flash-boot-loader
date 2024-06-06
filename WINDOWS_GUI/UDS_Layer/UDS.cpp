@@ -438,8 +438,8 @@ UDS::RESP UDS::testerPresent(uint32_t id) {
     QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
 
     // Info to Console
-    qInfo("<< UDS: Tester Present\n");
-    emit toConsole("<< UDS: Tester Present" + id_str);
+    qInfo("<< UDS: Tester Present without Response\n");
+    emit toConsole("<< UDS: Tester Present without Response" + id_str);
 
 	int len;
 	uint8_t *msg = _create_tester_present(&len, 0, FBL_TESTER_PRES_WITHOUT_RESPONSE);
@@ -457,6 +457,34 @@ UDS::RESP UDS::testerPresent(uint32_t id) {
     if(synchronized_rx_tx)
         return TX_RX_OK;
     return TX_OK;
+}
+
+
+/**
+ * @brief Method to send a Tester Present to the given ECU ID. Message is send without any expected response
+ * @param id Target ID
+ * @return UDS::RESP accordingly
+ */
+UDS::RESP UDS::testerPresentResponse(uint32_t id) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK){
+        return resp;
+    }
+
+	uint32_t send_id = createCommonID((uint32_t)FBLCAN_BASE_ADDRESS, this->gui_id, id);
+    QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
+
+    // Info to Console
+    qInfo("<< UDS: Tester Present with Response\n");
+    emit toConsole("<< UDS: Tester Present with Response" + id_str);
+
+	int len;
+	uint8_t *msg = _create_tester_present(&len, 0, FBL_TESTER_PRES_WITH_RESPONSE);
+    txMessageSend(send_id, msg, len);
+
+    rx_no_bytes = 0;
+	rx_exp_data = _create_tester_present(&rx_no_bytes, 1, FBL_TESTER_PRES_WITH_RESPONSE);
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 // Specification for Data Transmission

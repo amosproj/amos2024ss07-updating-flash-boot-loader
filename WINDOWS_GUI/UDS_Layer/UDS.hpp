@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : UDS.hpp
-// Author      : Michael Bauer
+// Author      : Michael Bauer, Wiktor Pilarczyk
 // Version     : 0.3
 // Copyright   : MIT
 // Description : Qt UDS Layer implementation
@@ -63,6 +64,8 @@ public:
     RESP securityAccessRequestSEED(uint32_t id);
     RESP securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_len);
     RESP testerPresent(uint32_t id);
+    RESP testerPresentResponse(uint32_t id);
+
 
 	// Specification for Data Transmission
     RESP readDataByIdentifier(uint32_t id, uint16_t identifier);
