@@ -106,7 +106,7 @@
              <item>
               <widget class="QLabel" name="label_ECU_status">
                <property name="styleSheet">
-                <string notr="true">QLabel { background-color : red; border-radius: 5px; width: 10px; height: 10px; max-width: 10px; max-height: 10px }</string>
+                <string notr="true">QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color : transparent }</string>
                </property>
                <property name="text">
                 <string/>

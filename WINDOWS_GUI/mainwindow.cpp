@@ -379,14 +379,13 @@ void MainWindow::on_clearConsoleButton_clicked()
 }
 
 void MainWindow::checkECUconnectivity() {
-    QString currentStyleSheet = ui->label_ECU_status->styleSheet();
-    if(!ECUSelected()) {
-        ui->label_ECU_status->setStyleSheet("QLabel { background-color : transparent;}");
-        return;
+    QString color = "transparent";
+    if(ECUSelected()) {
+        auto response = uds->testerPresentResponse(getECUID());
+        if(response == UDS::TX_RX_OK)
+            color = "green";
+        else
+            color = "red";
     }
-    auto response = uds->testerPresentResponse(getECUID());
-    if(response == UDS::TX_RX_OK)
-        ui->label_ECU_status->setStyleSheet("QLabel { background-color : green;}");
-    else
-        ui->label_ECU_status->setStyleSheet("QLabel { background-color : red;}");
+    ui->label_ECU_status->setStyleSheet("QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color: " + color + "}");
 }
