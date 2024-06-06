@@ -461,7 +461,7 @@ UDS::RESP UDS::testerPresent(uint32_t id) {
 
 
 /**
- * @brief Method to send a Tester Present to the given ECU ID. Message is send without any expected response
+ * @brief Method to send a Tester Present to the given ECU ID. Message is send with expected response
  * @param id Target ID
  * @return UDS::RESP accordingly
  */
