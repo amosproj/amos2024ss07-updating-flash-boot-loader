@@ -72,32 +72,23 @@ void MainWindow::connectSignalSlots() {
 
     // GUI select ECU
     connect(ui->table_ECU, &QTableWidget::itemSelectionChanged, this, [=]() {
-        if(!ui->table_ECU->selectedItems().empty()){
+        if(ECUSelected()) {
             QTableWidgetItem *item = ui->table_ECU->selectedItems().at(0);
-            if(!item->text().isEmpty())
-                ui->label_selected_ECU->setText("Selected: " + item->text());
-            else
-                ui->label_selected_ECU->setText("");
+            ui->label_selected_ECU->setText("Selected: " + item->text());
+        } else { 
+            ui->label_selected_ECU->setText("");
         }
     });
 
     // GUI reset
     connect(ui->button_reset, &QPushButton::clicked, this, [=]() {
-        if(ui->label_selected_ECU->text() != "") {
-            QStringList separated = ui->label_selected_ECU->text().split(": 0x");
-            if(separated.size() == 2){
-                QString ID_HEX = separated[1];
-                bool ok;
-                uint32_t ecu_id = (0xFFF0 & ID_HEX.toUInt(&ok, 16)) >> 4;
-
-                ui->label_reset_status->setText("Reset status: In progress");
-                if(uds->ecuReset(ecu_id, FBL_ECU_RESET_SOFT) == UDS::TX_RX_OK)
-                    ui->label_reset_status->setText("Reset status: Succeeded");
-                else
-                    ui->label_reset_status->setText("Reset status: Failed");
-            }
-
-        }
+        if(!ECUSelected()) 
+            return;
+        ui->label_reset_status->setText("Reset status: In progress");
+        if(uds->ecuReset(getECUID(), FBL_ECU_RESET_SOFT) == UDS::TX_RX_OK)
+            ui->label_reset_status->setText("Reset status: Succeeded");
+        else
+            ui->label_reset_status->setText("Reset status: Failed");
     });
 
     // GUI flash
@@ -125,6 +116,11 @@ void MainWindow::connectSignalSlots() {
             this->ui->textBrowser_flash_status->setText("No valid ECU selected");
         }
     });
+
+    // GUI connectivity indicator
+    QTimer *timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
+    timer->start(1000);
 
 }
 
@@ -279,6 +275,16 @@ void MainWindow::updateECUTableView(QMap<QString, QMap<QString, QString>> eculis
     }
 }
 
+uint32_t MainWindow::getECUID() {
+    QStringList separated = ui->label_selected_ECU->text().split(": 0x");
+    QString ID_HEX = separated[1];
+    bool ok;
+    return (0xFFF0 & ID_HEX.toUInt(&ok, 16)) >> 4;
+}
+
+bool MainWindow::ECUSelected() {
+    return !ui->table_ECU->selectedItems().empty() && !ui->table_ECU->selectedItems().at(0)->text().isEmpty();
+}
 
 //=============================================================================
 // Slots
@@ -372,3 +378,14 @@ void MainWindow::on_clearConsoleButton_clicked()
     this->ui->Console->clear();
 }
 
+void MainWindow::checkECUconnectivity() {
+    QString color = "transparent";
+    if(ECUSelected()) {
+        auto response = uds->testerPresentResponse(getECUID());
+        if(response == UDS::TX_RX_OK)
+            color = "green";
+        else
+            color = "red";
+    }
+    ui->label_ECU_status->setStyleSheet("QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color: " + color + "}");
+}

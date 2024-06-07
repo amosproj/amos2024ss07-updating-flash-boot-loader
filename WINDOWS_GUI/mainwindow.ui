@@ -102,11 +102,25 @@
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="label_selected_ECU">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
+            <layout class="QHBoxLayout" name="horizontalLayout_selected_ECU">
+             <item>
+              <widget class="QLabel" name="label_ECU_status">
+               <property name="styleSheet">
+                <string notr="true">QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color : transparent }</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_selected_ECU">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>
@@ -297,7 +311,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
      <x>0</x>
      <y>0</y>
      <width>1200</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuLicense">
