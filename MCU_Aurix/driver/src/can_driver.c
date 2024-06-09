@@ -33,7 +33,7 @@ IfxCan_Can_Pins canPins = {
 IFX_INTERRUPT(canIsrTxHandler, 0, INTERRUPT_PRIO_TX);
 IFX_INTERRUPT(canIsrRxFifo0Handler, 0, INTERRUPT_PRIO_RX);
 
-static void canIsrTxHandler(void){
+void canIsrTxHandler(void){
       IfxCan_Node_clearInterruptFlag(can_g.canTXandRXNode.node, IfxCan_Interrupt_transmissionCompleted);
 }
 
@@ -42,7 +42,7 @@ static void canIsrTxHandler(void){
  * Calls function to execute on Data Read in CAN Message
  * @param processDataFunction Pointer to function that processes Data read in CAN Message
 */
-static void canIsrRxFifo0Handler(){
+void canIsrRxFifo0Handler(){
         IfxCan_Node_clearInterruptFlag(can_g.canTXandRXNode.node, IfxCan_Interrupt_rxFifo0NewMessage); /*Clear Message Stored Flag*/
         IfxCan_Can_readMessage(&can_g.canTXandRXNode, &can_g.rxMsg, (uint32*)can_g.rxData);
 
