@@ -12,9 +12,11 @@
 //============================================================================
 
 #include <string.h>
+#include <stdlib.h>     /* calloc, exit, free */
 
 #include "memory.h"
 #include "uds_comm_spec.h"
+#include "flash_driver.h"
 
 typedef struct {
         uint8_t did_system_name[FBL_DID_SYSTEM_NAME_BYTES_SIZE];
@@ -72,6 +74,16 @@ static inline uint8_t *prepare_message(uint8_t *len, uint8_t *data){
  * This function reads all the data from the memory and fills the variables (TBD)
  */
 void init_memory(void){
+
+    // Reading from memory
+    uint32_t len = sizeof(memData);
+    uint8_t *dataRead = flashRead((uint32)DID_DATA_FLASH_ADDR, len);
+
+    // Copy content to Variables
+    write_to_variable(len, dataRead, (uint8_t*)(&memData));
+    free(dataRead);
+
+    // Check Init
     if(!init){
         // Do not include System Name or Programming Date!
 

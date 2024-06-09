@@ -18,6 +18,8 @@
 
 #include "Ifx_Types.h"
 
+#define DID_DATA_FLASH_ADDR                                         0xAF000000
+
 // Size in uint8_t bytes
 #define FBL_DID_SYSTEM_NAME_BYTES_SIZE                              (32)
 #define FBL_DID_PROGRAMMING_DATE_BYTES_SIZE                         (6)
