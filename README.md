@@ -47,8 +47,6 @@ It includes several libraries that are licensed using different Licenses.
 | GNU LGPL | Qt*.dll files and qwindows.dll | [QT](https://www.qt.io/download) | [LGPL V3](LGPLv3.txt) |
 | Copyright (c) 2020 by Vector Informatik GmbH | [vxlapi.h](_Snippets/GUI/CAN_Wrapper/src/lib/vxlapi.h) | [Vector XL driver library](https://www.vector.com/de/de/download/vector-driver-setup-windows-10-und-11/) | No license text |
 | MIT | All Files not contained by previous licenses. Contain MIT license declaration in the file header. | Implemented by our team. | [MIT License](LICENSE) |
-|  | D3Dcompiler_47.dll |  | []() |
-|  | opengl32sw.dll |  | []() |
 
 ## Contributors
 <a href="https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/graphs/contributors">
