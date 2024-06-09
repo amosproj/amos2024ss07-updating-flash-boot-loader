@@ -852,17 +852,20 @@ QString UDS::readDIDData(uint16_t DID, uint8_t* data, uint32_t no_bytes){
             return QString::fromLocal8Bit(&data[0]); break;
 
         case FBL_DID_PROGRAMMING_DATE:
-            if(no_bytes != 3)
+            if(no_bytes != 6)
                 return "Wrong Programming Date format";
 
-            for(int i = 0; i < no_bytes; i++){
-                if(i == 0)
-                    retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
-                else if(i == no_bytes-1)
-                    retText.append(".20"+QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
-                else
-                    retText.append("."+QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
-            }
+            if(data[0] == 0 && data[1] == 0)
+                return "-";
+
+            retText.append(QString("%1").arg(data[0], 2, 16, QLatin1Char( '0' )));          // Day
+            retText.append("."+QString("%1").arg(data[1], 2, 16, QLatin1Char( '0' )));      // Month
+            retText.append(".20"+QString("%1").arg(data[2], 2, 16, QLatin1Char( '0' )));    // Year
+
+            retText.append(" "+QString("%1").arg(data[3], 2, 16, QLatin1Char( '0' )));      // Hour
+            retText.append(":"+QString("%1").arg(data[4], 2, 16, QLatin1Char( '0' )));      // Minute
+            retText.append(":"+QString("%1").arg(data[5], 2, 16, QLatin1Char( '0' )));      // Second
+
             return retText; break;
 
         case FBL_DID_BL_KEY_ADDRESS:

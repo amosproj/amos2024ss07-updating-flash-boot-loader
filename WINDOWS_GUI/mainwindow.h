@@ -54,6 +54,10 @@ private:
     uint32_t getECUID();
     bool ECUSelected();
 
+    void setupECUForFlashing(uint32_t id);
+    QByteArray getCurrentFlashDate();
+    void udsUpdateProgrammingDate(uint32_t id);
+
 private slots:
     void comboBoxIndexChanged(int index);
     void appendTextToConsole(const QString &text);
