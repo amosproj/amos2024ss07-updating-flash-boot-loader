@@ -66,6 +66,37 @@ static inline uint8_t *prepare_message(uint8_t *len, uint8_t *data){
     return ret_data;
 }
 
+static inline boolean validateSystemName(uint8_t *data, uint32_t len){
+    if (len > FBL_DID_SYSTEM_NAME_BYTES_SIZE)
+        return false;
+
+    for(int i = 0; i < len; i++){
+        if(data[i] != '\0' && (data[i] < 32 || data[i] > 126)) // Only from ASCII Space (32) to Tilde (126), including Null character
+            return false;
+    }
+    return true;
+}
+
+static boolean validateMemory(){
+    boolean valid = true;
+
+    // Check on the system Name
+    if(!validateSystemName(memData.did_system_name, FBL_DID_SYSTEM_NAME_BYTES_SIZE))
+        valid = false;
+
+    // Check on valid date
+    if( FBL_DID_PROGRAMMING_DATE_BYTES_SIZE == 6 && (
+        memData.did_programming_date[0] > 0x31 ||
+        memData.did_programming_date[1] > 0x12 ||
+        memData.did_programming_date[2] > 0x99 ||
+        memData.did_programming_date[3] > 0x23 ||
+        memData.did_programming_date[4] > 0x59 ||
+        memData.did_programming_date[5] > 0x59 ))
+        valid = false;
+
+    return valid;
+}
+
 //============================================================================
 // Init
 //============================================================================
@@ -83,9 +114,16 @@ void init_memory(void){
     write_to_variable(len, dataRead, (uint8_t*)(&memData));
     free(dataRead);
 
+    // Validate the Memory Based on Programming Date and System Name
+    init = validateMemory();
+
     // Check Init
     if(!init){
-        // Do not include System Name or Programming Date!
+        uint8_t did_system_name[] = FBL_DID_SYSTEM_NAME_DEFAULT;
+        write_to_variable(sizeof(did_system_name), did_system_name, memData.did_system_name);
+
+        uint8_t did_programming_date[] = FBL_DID_PROGRAMMING_DATE_DEFAULT;
+        write_to_variable(FBL_DID_PROGRAMMING_DATE_BYTES_SIZE, did_programming_date, memData.did_programming_date);
 
         uint8_t did_bl_key_address[] = FBL_DID_BL_KEY_ADDRESS_DEFAULT;
         write_to_variable(FBL_DID_BL_KEY_ADDRESS_BYTES_SIZE, did_bl_key_address, memData.did_bl_key_address);
@@ -213,12 +251,15 @@ uint8_t* readData(uint16_t identifier, uint8_t* len, uint8_t* nrc){
 }
 
 uint8_t writeData(uint16_t identifier, uint8_t* data, uint8_t len){
-    // TODO: Write to and Read from real memory
-    // TBD: Store values to local variables if we have enough space to keep answer times short -> Write+Read in case of writeData
+    // Store values to local variables if we have enough space to keep answer times short -> Write in case of writeData
     switch(identifier){
         case FBL_DID_SYSTEM_NAME:
             if(len > FBL_DID_SYSTEM_NAME_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
+
+            if(!validateSystemName(data,  len))
+                return FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT;
+
             write_to_variable(len, data, memData.did_system_name);
             break;
 

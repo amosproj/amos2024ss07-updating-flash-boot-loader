@@ -36,7 +36,7 @@
 
 // Size need to match above mentioned defines
 #define FBL_DID_SYSTEM_NAME_DEFAULT                                 "AMOS FBL 24"
-#define FBL_DID_PROGRAMMING_DATE_DEFAULT                            {0x09, 0x06, 0x24, 0x12, 0x00, 0x00}
+#define FBL_DID_PROGRAMMING_DATE_DEFAULT                            {0x17, 0x04, 0x24, 0x10, 0x15, 0x00}
 #define FBL_DID_BL_KEY_ADDRESS_DEFAULT                              {0xA0, 0x4F, 0x80, 0x09}
 #define FBL_DID_BL_KEY_GOOD_VALUE_DEFAULT                           {0x93, 0x86, 0xC3, 0xA5}
 #define FBL_DID_CAN_BASE_MASK_DEFAULT                               {0x0F, 0x24}
