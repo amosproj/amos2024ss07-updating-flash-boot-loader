@@ -223,6 +223,15 @@ derivative tc37
         map not_cached (dest=bus:sri, dest_offset=0xa0040000, reserved, size=320K);
     }
 
+    memory pfls0_asw_core0
+    {
+        mau = 8;
+        size = 0x170000; /* little more than 1.5MB */
+        type = rom;
+        map     cached (dest=bus:sri, dest_offset=0x80090000,           size=0x170000);
+        map not_cached (dest=bus:sri, dest_offset=0xa0090000, reserved, size=0x170000);
+    }
+
     memory pfls0_reserved1
     {
         mau = 8;
@@ -239,6 +248,15 @@ derivative tc37
         type = rom;
         map     cached (dest=bus:sri, dest_offset=0x80300000,           size=0x4000);
         map not_cached (dest=bus:sri, dest_offset=0xa0300000, reserved, size=0x4000);
+    }
+
+    memory pfls1_asw_core1
+    {
+        mau = 8;
+        size = 0x1F4000; /* little more than 2MB */
+        type = rom;
+        map     cached (dest=bus:sri, dest_offset=0x80304000,           size=0x1F4000);
+        map not_cached (dest=bus:sri, dest_offset=0xa0304000, reserved, size=0x1F4000);
     }
 
     memory pfls1_asw_key
