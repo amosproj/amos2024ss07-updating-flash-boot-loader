@@ -60,6 +60,8 @@ void Testcasecontroller::setTestMode(Testcasecontroller::TESTMODES mode){
     }
 
     else if(mode == ECUTEST){
+        emit toConsole("\tIMPORTANT: This Testcase uses writing to flash! The flash write cycles are limited.\n");
+
         this->ecu_test = new ECU_Test(0x1);
 
         // GUI Console Print
