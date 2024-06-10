@@ -10,3 +10,16 @@
 //============================================================================
 
 #include "aswdummy.h"
+#include "led_driver.h"
+
+version_info global_info = {
+    .magic_number = 0xA305FB12024FB124,
+    .asw_version = "v0.34",
+    .asw_version_comment = "Bremse vorne links",
+    .magic_number2 = 0xA305FB12024FB124,
+};
+
+void alternating_blinking(void){
+    ledToggleActivity(leds[0]);
+    ledToggleActivity(leds[1]);
+}
