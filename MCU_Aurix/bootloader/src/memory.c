@@ -6,7 +6,7 @@
 //============================================================================
 // Name        : memory.c
 // Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer
-// Version     : 0.2
+// Version     : 0.3
 // Copyright   : MIT
 // Description : Manages writing and returning data in memory
 //============================================================================
@@ -71,7 +71,12 @@ static inline boolean validateSystemName(uint8_t *data, uint32_t len){
         return false;
 
     for(int i = 0; i < len; i++){
-        if(data[i] != '\0' && (data[i] < 32 || data[i] > 126)) // Only from ASCII Space (32) to Tilde (126), including Null character
+        // Directly stop at Null character
+        if(data[i] != '\0' )
+            return true;
+
+        // Only allow from ASCII Space (32) to Tilde (126)
+        if(data[i] < 32 || data[i] > 126)
             return false;
     }
     return true;
@@ -334,6 +339,9 @@ uint8_t writeData(uint16_t identifier, uint8_t* data, uint8_t len){
         default: // Negative Response Code
             return FBL_RC_SUB_FUNC_NOT_SUPPORTED;
     }
+
+    // Finally store the changed values to flash
+    flashWrite((uint32)DID_DATA_FLASH_ADDR, (uint32_t*)(&memData), sizeof(memData) / sizeof(uint32_t));
 
     return 0; // return 0 on success
 }

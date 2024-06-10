@@ -6,7 +6,7 @@
 //============================================================================
 // Name        : memory.h
 // Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer
-// Version     : 0.2
+// Version     : 0.3
 // Copyright   : MIT
 // Description : Manages writing and returning data in memory
 //============================================================================
