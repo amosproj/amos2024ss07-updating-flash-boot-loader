@@ -16,6 +16,7 @@ class EditableComboBox : public QComboBox
 
 public:
     EditableComboBox(QWidget *parent = nullptr);
+    int currentData();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;

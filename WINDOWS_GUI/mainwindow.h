@@ -56,6 +56,7 @@ private:
 
 private slots:
     void comboBoxIndexChanged(int index);
+    void editComboBoxIndexChanged(int index);
     void appendTextToConsole(const QString &text);
 
     void ecuResponseSlot(const QMap<QString, QString> &data);

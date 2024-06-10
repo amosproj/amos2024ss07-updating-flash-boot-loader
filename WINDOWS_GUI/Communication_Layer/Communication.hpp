@@ -52,6 +52,7 @@ public:
 
     void init(INTERFACE ct);
     void setCommunicationType(INTERFACE ct);
+    CAN_Wrapper *getCANWrapper();
 
     // Testing
     void setTestMode();

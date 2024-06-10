@@ -95,6 +95,13 @@ void Communication::setCommunicationType(INTERFACE comm_interface_type){
 }
 
 /**
+ * @brief Getter for CAN-Wrapper
+ */
+CAN_Wrapper *Communication::getCANWrapper() {
+    return canDriver;
+}
+
+/**
  * @brief Method to set the Test Mode for the currently set Communication interface - Used for Testing only
  */
 void Communication::setTestMode(){

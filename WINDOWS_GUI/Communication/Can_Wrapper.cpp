@@ -262,6 +262,30 @@ uint8_t CAN_Wrapper::txData(uint8_t *data, uint8_t no_bytes) {
 	return (status == XL_SUCCESS);
 }
 
+/**
+ * @brief Sets the Baudrate for the opened channel
+ * @param baudrate to be set
+ * @return
+ */
+XLstatus CAN_Wrapper::setBaudrate(unsigned int baudrate){
+
+	XLstatus status;
+
+	status = xlCanSetChannelBitrate(portHandle, channelMask, baudrate);
+    if (DEBUGGING_CAN_DRIVER) {
+        qInfo()<<"CAN_Wrapper: CanSetChannelBitrate to BaudRate="<<baudrate<<", Info:"<< xlGetErrorString(status);
+    }
+
+    // Bugfix for "CAN-Bus not opening, when already in use by other app, e.g. CANoe"
+    // Info: Baudrate can not be set twice, so the invalid access is ignored. Using the already set baudrate
+    if(status == XL_ERR_INVALID_ACCESS){
+        status = XL_SUCCESS;
+    }
+
+	return status;
+
+}
+
 //============================================================================
 // Private
 //============================================================================
@@ -299,30 +323,6 @@ XLstatus CAN_Wrapper::closePort(){
 	}
 	portHandle = XL_INVALID_PORTHANDLE;
 	return status;
-}
-
-/**
- * @brief Sets the Baudrate for the opened channel
- * @param baudrate to be set
- * @return
- */
-XLstatus CAN_Wrapper::setBaudrate(unsigned int baudrate){
-
-	XLstatus status;
-
-	status = xlCanSetChannelBitrate(portHandle, channelMask, baudrate);
-    if (DEBUGGING_CAN_DRIVER) {
-        qInfo()<<"CAN_Wrapper: CanSetChannelBitrate to BaudRate="<<baudrate<<", Info:"<< xlGetErrorString(status);
-    }
-
-    // Bugfix for "CAN-Bus not opening, when already in use by other app, e.g. CANoe"
-    // Info: Baudrate can not be set twice, so the invalid access is ignored. Using the already set baudrate
-    if(status == XL_ERR_INVALID_ACCESS){
-        status = XL_SUCCESS;
-    }
-
-	return status;
-
 }
 
 /**

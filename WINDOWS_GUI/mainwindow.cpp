@@ -165,6 +165,8 @@ MainWindow::MainWindow(QWidget *parent)
     editComboBox_speed->hide();
     comboBox_speedUnit->hide();
 
+    connect(editComboBox_speed, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::editComboBoxIndexChanged);
+
     ui->Console->setReadOnly(true);
 }
 
@@ -302,7 +304,7 @@ void MainWindow::comboBoxIndexChanged(int index)
     {
         // Populate the second QComboBox based on the selected index of the first QComboBox
         if (index == 1) // Example condition, replace with your own logic
-            editComboBox_speed->addItems({"33.3", "50", "83.3", "100", "125", "250", "500", "1000"});
+            editComboBox_speed->addItems({ "33.3", "50", "83.3", "100", "125", "250", "500", "1000"});
         else if (index == 2) // Example condition, replace with your own logic
             editComboBox_speed->addItems({"1000", "2000", "3000", "4000", "5000", "6000", "7000", "8000"});
         else if (index == 3) // Example condition, replace with your own logic
@@ -325,6 +327,30 @@ void MainWindow::comboBoxIndexChanged(int index)
         // If index doesn't correspond to desired options, hide the second QComboBox
         editComboBox_speed->hide();
         comboBox_speedUnit->hide();
+    }
+}
+
+void MainWindow::editComboBoxIndexChanged(int index) {
+    CAN_Wrapper *can = comm->getCANWrapper();
+    int bitrate;
+    if (comboBox_speedUnit->currentIndex() == 0) {
+        bitrate = editComboBox_speed->currentData() * 1000;
+    } else if (comboBox_speedUnit->currentIndex() == 1) {
+        bitrate = editComboBox_speed->currentData() * 1000000;
+    } else {
+        bitrate = -1;
+    }
+    QString speed = "bitrate = ";
+    speed.append(QString::number(bitrate));
+    appendTextToConsole(speed);
+    if (bitrate == -1) {
+        return;
+    }
+    XLstatus status = can->setBaudrate(bitrate);
+    if (status != XL_SUCCESS) {
+        QString errorMsg = "Failed setting bitrate: ";
+        errorMsg.append(xlGetErrorString(status));
+        appendTextToConsole(errorMsg);
     }
 }
 
