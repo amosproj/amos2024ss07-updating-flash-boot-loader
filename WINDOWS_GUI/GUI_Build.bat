@@ -13,7 +13,7 @@ cmake --build . --config Release
 call "C:\Qt\6.8.0\msvc2019_64\bin\qtenv2.bat"
 cd /D %my_path%
 cd Release
-windeployqt.exe --quick .
+windeployqt.exe --quick --no-system-d3d-compiler --no-opengl-sw .
 
 cd /D %main_path%
 
