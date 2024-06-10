@@ -303,13 +303,15 @@ uint8_t *flashRead(uint32 flashStartAddr, size_t dataBytesToRead){
         size_t uint32_bytes = dataBytesToRead / sizeof(uint32) + 1;
         uint32 dataRead = 0;
         uint32 byteCtr = 0;
-        uint8_t byteExtracted = 0;
+        uint8_t *byteExtracted = 0;
 
         for(uint32 address = flashStartAddr; (address < flashStartAddr + uint32_bytes * sizeof(uint32)) && byteCtr < dataBytesToRead; address += sizeof(uint32)){
             dataRead = MEM(address);
-            for(int i = sizeof(uint32)-1; i >= 0 && byteCtr < dataBytesToRead; i--){
-                byteExtracted = (uint8_t)(dataRead >> 8*i) & 0xFF;
-                data[byteCtr] = byteExtracted;
+            byteExtracted = (uint8_t*)(&dataRead);
+
+            for(int i = 0; i < sizeof(uint32) && byteCtr < dataBytesToRead; i++){
+                data[byteCtr] = *byteExtracted;
+                byteExtracted++;
                 byteCtr++;
             }
         }
