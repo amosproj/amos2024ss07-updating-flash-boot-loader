@@ -378,38 +378,74 @@ void ECU_Test::testWriteDataByIdentifier()
     emit toConsole("ECU Test: TX Check Write Data By Identifier");
     uds->writeDataByIdentifier(this->ecu_id, FBL_DID_SYSTEM_NAME, did_system_name, sizeof(did_system_name));
 
+    qint64 start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 1){}
+
     emit toConsole("ECU Test: TX Check Write Data By Identifier - Programming Date (0xF199)");
     uds->writeDataByIdentifier(this->ecu_id, FBL_DID_PROGRAMMING_DATE, did_programming_date, sizeof(did_programming_date));
+
+    start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 1){}
 
     emit toConsole("ECU Test: TX Check Write Data By Identifier - Key Address (0xFD00)");
     uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_KEY_ADDRESS, did_bl_key_address, sizeof(did_bl_key_address));
 
+    start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 1){}
+
     emit toConsole("ECU Test: TX Check Write Data By Identifier - Key Good Value (0xFD01)");
     uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_KEY_GOOD_VALUE, did_bl_key_good_value, sizeof(did_bl_key_good_value));
+
+    start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 1){}
 
     emit toConsole("ECU Test: TX Check Write Data By Identifier - CAN Base Mask (0xFD02)");
     uds->writeDataByIdentifier(this->ecu_id, FBL_DID_CAN_BASE_MASK, did_can_base_mask, sizeof(did_can_base_mask));
 
+    start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 1){}
+
     emit toConsole("ECU Test: TX Check Write Data By Identifier - CAN ID (0xFD03)");
     uds->writeDataByIdentifier(this->ecu_id, FBL_DID_CAN_ID, did_can_id, sizeof(did_can_id));
+
+    start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 1){}
 
     emit toConsole("ECU Test: TX Check Write Data By Identifier - Write Start Address Core 0 (0xFD10)");
     uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_WRITE_START_ADD_CORE0, did_bl_write_start_add_core0, sizeof(did_bl_write_start_add_core0));
 
+    start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 1){}
+
     emit toConsole("ECU Test: TX Check Write Data By Identifier - Write End Address Core 0 (0xFD11)");
     uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_WRITE_END_ADD_CORE0, did_bl_write_end_add_core0, sizeof(did_bl_write_end_add_core0));
+
+    start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 1){}
 
     emit toConsole("ECU Test: TX Check Write Data By Identifier - Write Start Address Core 1 (0xFD12)");
     uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_WRITE_START_ADD_CORE1, did_bl_write_start_add_core1, sizeof(did_bl_write_start_add_core1));
 
+    start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 1){}
+
     emit toConsole("ECU Test: TX Check Write Data By Identifier - Write End Address Core 1 (0xFD13)");
     uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_WRITE_END_ADD_CORE1, did_bl_write_end_add_core1, sizeof(did_bl_write_end_add_core1));
+
+    start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 1){}
 
     emit toConsole("ECU Test: TX Check Write Data By Identifier - Write Start Address Core 2 (0xFD14)");
     uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_WRITE_START_ADD_CORE2, did_bl_write_start_add_core2, sizeof(did_bl_write_start_add_core2));
 
+    start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 1){}
+
     emit toConsole("ECU Test: TX Check Write Data By Identifier - Write End Address Core 2 (0xFD15)");
     uds->writeDataByIdentifier(this->ecu_id, FBL_DID_BL_WRITE_END_ADD_CORE2, did_bl_write_end_add_core2, sizeof(did_bl_write_end_add_core2));
+
+    start = QDateTime::currentSecsSinceEpoch();
+    while(QDateTime::currentSecsSinceEpoch() - start <= 1){}
 }
 
 
