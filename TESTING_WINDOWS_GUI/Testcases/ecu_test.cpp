@@ -108,7 +108,7 @@ void ECU_Test::messageChecker(const unsigned int id, const QByteArray &rec){
                 msg = _create_read_data_by_ident(&len, 1, FBL_DID_PROGRAMMING_DATE, did_programming_date, sizeof(did_programming_date));
             }
             else{
-                uint8_t check_data[] = {0x30, 0x05, 0x24};
+                uint8_t check_data[] = {0x17, 0x04, 0x24, 0x10, 0x15, 0x00};
                 msg = _create_read_data_by_ident(&len, 1, FBL_DID_PROGRAMMING_DATE, check_data, sizeof(check_data));
             }
 
