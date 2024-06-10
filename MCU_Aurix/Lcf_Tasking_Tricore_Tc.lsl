@@ -208,10 +208,28 @@ derivative tc37
     memory pfls0
     {
         mau = 8;
-        size = 3M;
+        size = 256K;
         type = rom;
-        map     cached (dest=bus:sri, dest_offset=0x80000000,           size=3M);
-        map not_cached (dest=bus:sri, dest_offset=0xa0000000, reserved, size=3M);
+        map     cached (dest=bus:sri, dest_offset=0x80000000,           size=256K);
+        map not_cached (dest=bus:sri, dest_offset=0xa0000000, reserved, size=256K);
+    }
+
+    memory pfls0_reserved0
+    {
+        mau = 8;
+        size = 320K;
+        type = rom;
+        map     cached (dest=bus:sri, dest_offset=0x80040000,           size=320K);
+        map not_cached (dest=bus:sri, dest_offset=0xa0040000, reserved, size=320K);
+    }
+
+    memory pfls0_reserved1
+    {
+        mau = 8;
+        size = 0x100000;
+        type = rom;
+        map     cached (dest=bus:sri, dest_offset=0x80200000,           size=0x100000);
+        map not_cached (dest=bus:sri, dest_offset=0xa0200000, reserved, size=0x100000);
     }
     
     memory pfls1
