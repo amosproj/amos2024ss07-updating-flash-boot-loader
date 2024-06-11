@@ -95,13 +95,6 @@ void Communication::setCommunicationType(INTERFACE comm_interface_type){
 }
 
 /**
- * @brief Getter for CAN-Wrapper
- */
-CAN_Wrapper *Communication::getCANWrapper() {
-    return canDriver;
-}
-
-/**
  * @brief Method to set the Test Mode for the currently set Communication interface - Used for Testing only
  */
 void Communication::setTestMode(){
@@ -322,6 +315,15 @@ void Communication::txDataSlot(const QByteArray &data){
 void Communication::setIDSlot(uint32_t id){
     if(VERBOSE_COMMUNICATION) qInfo("Communication TX: Slot - Received setID");
     this->setID(id);
+}
+
+//TODO has to be changed as soon as we have CAN-FD implemented
+void Communication::setBaudrate(unsigned int baudrate) {
+    connect(this, SIGNAL(baudrateSignal(unsigned int)), canDriver, SLOT(setChannelBaudrate(unsigned int)), Qt::DirectConnection);
+
+    emit baudrateSignal(baudrate);
+
+    disconnect(this, SIGNAL(baudrateSignal(unsigned int)), canDriver, SLOT(setChannelBaudrate(unsigned int)));
 }
 
 //============================================================================

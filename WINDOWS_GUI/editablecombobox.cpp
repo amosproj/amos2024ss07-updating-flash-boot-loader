@@ -10,8 +10,10 @@ EditableComboBox::EditableComboBox(QWidget *parent) : QComboBox(parent)
     setLineEdit(lineEdit);
 }
 
-double EditableComboBox::currentData() {
-    return this->currentText().toDouble();
+unsigned int EditableComboBox::currentNumber() {
+    double currText =  this->currentText().toDouble();
+    currText *= 1000;
+    return static_cast<unsigned int>(currText);
 }
 
 // Tries to handle all key presses

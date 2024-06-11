@@ -122,6 +122,9 @@ void MainWindow::connectSignalSlots() {
     connect(timer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
     timer->start(1000);
 
+    //Set baudrate
+    connect(this, SIGNAL(baudrateSignal(uint)), comm, SLOT(setBaudrate(uint)), Qt::DirectConnection);
+
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -165,7 +168,7 @@ MainWindow::MainWindow(QWidget *parent)
     editComboBox_speed->hide();
     comboBox_speedUnit->hide();
 
-    connect(editComboBox_speed, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::editComboBoxIndexChanged);
+    connect(editComboBox_speed, QOverload<int>::of(&QComboBox::activated), this, &MainWindow::setBaudrate);
 
     ui->Console->setReadOnly(true);
 }
@@ -311,7 +314,6 @@ void MainWindow::comboBoxIndexChanged(int index)
             editComboBox_speed->addItems({"Option A", "Option B", "Option C"});
 
         comboBox_speedUnit->addItem("kBit/s");
-        comboBox_speedUnit->addItem("MBit/s");
 
         // Show the second QComboBox
         editComboBox_speed->show();
@@ -330,7 +332,13 @@ void MainWindow::comboBoxIndexChanged(int index)
     }
 }
 
-void MainWindow::editComboBoxIndexChanged(int index) {
+void MainWindow::setBaudrate() {
+    unsigned int baudrate = editComboBox_speed->currentNumber();
+
+    emit baudrateSignal(baudrate);
+}
+
+/*void MainWindow::editComboBoxIndexChanged(int index) {
     CAN_Wrapper *can = comm->getCANWrapper();
     double bitrate;
     if (comboBox_speedUnit->currentIndex() == 0) {
@@ -354,7 +362,7 @@ void MainWindow::editComboBoxIndexChanged(int index) {
     msg.append(QString::number(bitrate));
     msg.append(" Bit/s");
     appendTextToConsole(msg);
-}
+}*/
 
 // Will write Text to console
 void MainWindow::appendTextToConsole(const QString &text){

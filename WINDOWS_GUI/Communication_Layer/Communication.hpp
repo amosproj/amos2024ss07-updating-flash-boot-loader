@@ -52,7 +52,6 @@ public:
 
     void init(INTERFACE ct);
     void setCommunicationType(INTERFACE ct);
-    CAN_Wrapper *getCANWrapper();
 
     // Testing
     void setTestMode();
@@ -95,6 +94,12 @@ signals:
      */
     void toConsole(const QString &text);
 
+    /**
+     * @brief Signals a change of the channels baudrate
+     * @param baudrate
+     */
+    void baudrateSignal(unsigned int baudrate);
+
 
 public slots:
 
@@ -116,6 +121,13 @@ public slots:
      * @param id ID to be set
      */
     void setIDSlot(uint32_t id);
+
+    /**
+     * @brief Slot to revieve new baudrate from mainwindow
+     * @param baudrate
+     * @param CAN/CAN-FD/Ethernet
+     */
+    void setBaudrate(unsigned int baudrate);
 
 private slots:
     /**

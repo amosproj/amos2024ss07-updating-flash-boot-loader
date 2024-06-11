@@ -58,7 +58,6 @@ class CAN_Wrapper : public CommInterface {
 		~CAN_Wrapper();
 
         void setID(uint32_t id) override;
-        XLstatus setBaudrate(unsigned int baudrate);
 		uint8_t initDriver() override;
 
         uint8_t txData(uint8_t *data, uint8_t no_bytes) override;
@@ -73,9 +72,13 @@ class CAN_Wrapper : public CommInterface {
 
 		XLstatus actChannels();
 		XLstatus setNotification();
+        XLstatus setBaudrate(unsigned int baudrate);
 
 		// debugging methods
 		void _printConfig();
+
+    public slots:
+        void setChannelBaudrate(unsigned int baudrate) override;
 };
 
 

@@ -56,12 +56,15 @@ private:
 
 private slots:
     void comboBoxIndexChanged(int index);
-    void editComboBoxIndexChanged(int index);
     void appendTextToConsole(const QString &text);
 
     void ecuResponseSlot(const QMap<QString, QString> &data);
     void on_pushButton_ECU_refresh_clicked();
     void on_clearConsoleButton_clicked();
     void checkECUconnectivity();
+    void setBaudrate();
+
+signals:
+    void baudrateSignal(unsigned int baudrate);
 };
 #endif // MAINWINDOW_H
