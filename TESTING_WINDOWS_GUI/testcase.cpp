@@ -115,7 +115,11 @@ uint8_t Testcase::checkEqual(unsigned int recid, const QByteArray &rec, unsigned
 
     uint8_t error = 0;
     for(auto i = 0; i < rec.size(); i++){
-        if(rec[i] != check[i]){
+        if (i >= check.size()){
+            out << ">> Testcase - ERROR - Content is different at index " << i<<", Received: "<<QString("0x%1").arg(uint8_t(rec[i]), 2, 16, QLatin1Char( '0' ))<<" != Check: No Data given for IDX\n";
+            error=1;
+        }
+        else if(rec[i] != check[i]){
             out << ">> Testcase - ERROR - Content is different at index " << i<<", Received: "<<QString("0x%1").arg(uint8_t(rec[i]), 2, 16, QLatin1Char( '0' ))<<" != Check: "<< QString("0x%1").arg(uint8_t(check[i]), 2, 16, QLatin1Char( '0' ))<< "\n";
             error=1;
         }

@@ -10,6 +10,8 @@
 #include <QPixmap>
 #include <QTimer>
 #include <QTableView>
+#include <QDate>
+#include <QTime>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -97,6 +99,11 @@ void MainWindow::connectSignalSlots() {
         this->ui->progressBar_flash->setValue(0);
 
         if(ui->label_selected_ECU->text() != "") {
+            uint32_t selectedID = getECUID();
+
+            appendTextToConsole("\n\nINFO: ONLY DEMO UI - Flashing currently not supported on ECU.");
+            setupECUForFlashing(selectedID);
+
             dummy_flash(ui->label_selected_ECU->text());
             // Just for demonstration purposes
             updateStatus(RESET, "");
@@ -104,14 +111,17 @@ void MainWindow::connectSignalSlots() {
             updateStatus(INFO, "It may take a while");
 
             for(int j = 1; j < 100; j++)
-                QTimer::singleShot(j*175, [this]{
+                QTimer::singleShot(j*35, [this]{
                     updateStatus(UPDATE, "Flashing in Progress.. Please Wait");
                 });
-            QTimer::singleShot(100*175, [this]{
+            QTimer::singleShot(100*35, [this, selectedID]{
+                updateStatus(RESET, "");
                 updateStatus(INFO, "Flashing finished!");
-            });
+                this->udsUpdateProgrammingDate(selectedID);
 
-            appendTextToConsole("INFO: ONLY DEMO UI - Flashing currently not supported on ECU.");
+                updateStatus(INFO, "Updating ECU List");
+                this->updateECUList();
+            });
         } else {
             this->ui->textBrowser_flash_status->setText("No valid ECU selected");
         }
@@ -284,6 +294,33 @@ uint32_t MainWindow::getECUID() {
 
 bool MainWindow::ECUSelected() {
     return !ui->table_ECU->selectedItems().empty() && !ui->table_ECU->selectedItems().at(0)->text().isEmpty();
+}
+
+void MainWindow::setupECUForFlashing(uint32_t id){
+
+    appendTextToConsole("Change Session to Programming Session for selected ECU");
+    uds->diagnosticSessionControl(id, FBL_DIAG_SESSION_PROGRAMMING);
+
+    appendTextToConsole("TODO: Add Security Access once activated");
+}
+
+QByteArray MainWindow::getCurrentFlashDate(){
+
+    QDate date = QDate().currentDate();
+    QTime time = QTime().currentTime();
+    QString date_str = date.toString("ddMMyy");
+    QString time_str = time.toString("HHmmss");
+    QString combi = date_str + time_str;
+    QByteArray bcd = QByteArray::fromHex(QByteArray(combi.toLocal8Bit()));
+
+    return bcd;
+}
+
+void MainWindow::udsUpdateProgrammingDate(uint32_t id){
+    QByteArray flashdate = getCurrentFlashDate();
+    uint8_t *data = (uint8_t*)flashdate.data();
+
+    uds->writeDataByIdentifier(id, FBL_DID_PROGRAMMING_DATE, data, flashdate.size());
 }
 
 //=============================================================================

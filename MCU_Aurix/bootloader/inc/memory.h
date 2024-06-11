@@ -6,7 +6,7 @@
 //============================================================================
 // Name        : memory.h
 // Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer
-// Version     : 0.2
+// Version     : 0.3
 // Copyright   : MIT
 // Description : Manages writing and returning data in memory
 //============================================================================
@@ -18,8 +18,11 @@
 
 #include "Ifx_Types.h"
 
+#define DID_DATA_FLASH_ADDR                                         0xAF000000
+
+// Size in uint8_t bytes
 #define FBL_DID_SYSTEM_NAME_BYTES_SIZE                              (32)
-#define FBL_DID_PROGRAMMING_DATE_BYTES_SIZE                         (3)
+#define FBL_DID_PROGRAMMING_DATE_BYTES_SIZE                         (6)
 #define FBL_DID_BL_KEY_ADDRESS_BYTES_SIZE                           (4)
 #define FBL_DID_BL_KEY_GOOD_VALUE_BYTES_SIZE                        (4)
 #define FBL_DID_CAN_BASE_MASK_BYTES_SIZE                            (2)
@@ -31,6 +34,19 @@
 #define FBL_DID_BL_WRITE_START_ADD_CORE2_BYTES_SIZE                 (4)
 #define FBL_DID_BL_WRITE_END_ADD_CORE2_BYTES_SIZE                   (4)
 
+// Size need to match above mentioned defines
+#define FBL_DID_SYSTEM_NAME_DEFAULT                                 "AMOS FBL 24"
+#define FBL_DID_PROGRAMMING_DATE_DEFAULT                            {0x17, 0x04, 0x24, 0x10, 0x15, 0x00}
+#define FBL_DID_BL_KEY_ADDRESS_DEFAULT                              {0xA0, 0x4F, 0x80, 0x09}
+#define FBL_DID_BL_KEY_GOOD_VALUE_DEFAULT                           {0x93, 0x86, 0xC3, 0xA5}
+#define FBL_DID_CAN_BASE_MASK_DEFAULT                               {0x0F, 0x24}
+#define FBL_DID_CAN_ID_DEFAULT                                      {0x00, 0x01}
+#define FBL_DID_BL_WRITE_START_ADD_CORE0_DEFAULT                    {0xA0, 0x09, 0x00, 0x00}
+#define FBL_DID_BL_WRITE_END_ADD_CORE0_DEFAULT                      {0xA0, 0x1F, 0xFF, 0xFF}
+#define FBL_DID_BL_WRITE_START_ADD_CORE1_DEFAULT                    {0xA0, 0x30, 0x40, 0x00}
+#define FBL_DID_BL_WRITE_END_ADD_CORE1_DEFAULT                      {0xA0, 0x4F, 0xF7, 0xFF}
+#define FBL_DID_BL_WRITE_START_ADD_CORE2_DEFAULT                    {0xFF, 0xFF, 0xFF, 0xFF}
+#define FBL_DID_BL_WRITE_END_ADD_CORE2_DEFAULT                      {0xFF, 0xFF, 0xFF, 0xFF}
 
 //============================================================================
 // Init

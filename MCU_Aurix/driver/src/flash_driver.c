@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
 
 //============================================================================
-// Name        : flash.c
-// Author      : Dorothea Ehrl
+// Name        : flash_driver.c
+// Author      : Dorothea Ehrl, Michael Bauer
 // Version     : 0.2
 // Copyright   : MIT
 // Description : Flash wrapper for Bootloader
 //============================================================================
 
 #include <string.h>
+#include <stdlib.h> /* calloc, exit, free */
 
 #include "IfxCpu.h"
 
@@ -288,3 +290,31 @@ bool flashWrite(uint32 flashStartAddr, uint32 data[], size_t dataSize) {
     }
     return false;
 } 
+
+/**
+ * This function reads the given number of bytes into the dataReadFromFlash buffer. The caller need to make sure to free the buffer.
+ * Internally the buffer is created by using calloc
+ */
+uint8_t *flashRead(uint32 flashStartAddr, size_t dataBytesToRead){
+
+    uint8_t *data = (uint8_t*)calloc((uint32_t)dataBytesToRead, sizeof(uint8_t));
+    if(data != NULL){
+
+        size_t uint32_bytes = dataBytesToRead / sizeof(uint32) + 1;
+        uint32 dataRead = 0;
+        uint32 byteCtr = 0;
+        uint8_t *byteExtracted = 0;
+
+        for(uint32 address = flashStartAddr; (address < flashStartAddr + uint32_bytes * sizeof(uint32)) && byteCtr < dataBytesToRead; address += sizeof(uint32)){
+            dataRead = MEM(address);
+            byteExtracted = (uint8_t*)(&dataRead);
+
+            for(int i = 0; i < sizeof(uint32) && byteCtr < dataBytesToRead; i++){
+                data[byteCtr] = *byteExtracted;
+                byteExtracted++;
+                byteCtr++;
+            }
+        }
+    }
+    return data;
+}
