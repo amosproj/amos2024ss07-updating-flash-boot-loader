@@ -332,7 +332,7 @@ void MainWindow::comboBoxIndexChanged(int index)
 
 void MainWindow::editComboBoxIndexChanged(int index) {
     CAN_Wrapper *can = comm->getCANWrapper();
-    int bitrate;
+    double bitrate;
     if (comboBox_speedUnit->currentIndex() == 0) {
         bitrate = editComboBox_speed->currentData() * 1000;
     } else if (comboBox_speedUnit->currentIndex() == 1) {
@@ -340,9 +340,6 @@ void MainWindow::editComboBoxIndexChanged(int index) {
     } else {
         bitrate = -1;
     }
-    QString speed = "bitrate = ";
-    speed.append(QString::number(bitrate));
-    appendTextToConsole(speed);
     if (bitrate == -1) {
         return;
     }
@@ -351,7 +348,12 @@ void MainWindow::editComboBoxIndexChanged(int index) {
         QString errorMsg = "Failed setting bitrate: ";
         errorMsg.append(xlGetErrorString(status));
         appendTextToConsole(errorMsg);
+        return;
     }
+    QString msg = "Successfully set bitrate to: ";
+    msg.append(QString::number(bitrate));
+    msg.append(" Bit/s");
+    appendTextToConsole(msg);
 }
 
 // Will write Text to console
