@@ -127,7 +127,7 @@ public slots:
      * @param baudrate
      * @param CAN/CAN-FD/Ethernet
      */
-    void setBaudrate(unsigned int baudrate, unsigned int comProtocol);
+    void setBaudrate(unsigned int baudrate, unsigned int commType);
 
 private slots:
     /**

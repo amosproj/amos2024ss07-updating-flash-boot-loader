@@ -317,14 +317,14 @@ void Communication::setIDSlot(uint32_t id){
     this->setID(id);
 }
 
-void Communication::setBaudrate(unsigned int baudrate, unsigned int comProtocol) {
-    if (comProtocol == 1) { //CAN
+void Communication::setBaudrate(unsigned int baudrate, unsigned int commType) {
+    if (commType == 1) { //CAN
         connect(this, SIGNAL(baudrateSignal(unsigned int)), canDriver, SLOT(setChannelBaudrate(unsigned int)), Qt::DirectConnection);
         emit baudrateSignal(baudrate);
         disconnect(this, SIGNAL(baudrateSignal(unsigned int)), canDriver, SLOT(setChannelBaudrate(unsigned int)));
-    } else if (comProtocol == 2) { //CAN-FD
+    } else if (commType == 2) { //CAN-FD
         //TODO has to be changed as soon as we have CAN-FD implemented
-    } else if (comProtocol == 3){ //ethernet
+    } else if (commType == 3){ //ethernet
         //need commInterface instance for default implementation
     }
 }

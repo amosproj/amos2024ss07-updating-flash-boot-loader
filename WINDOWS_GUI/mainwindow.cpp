@@ -334,9 +334,9 @@ void MainWindow::comboBoxIndexChanged(int index)
 
 void MainWindow::setBaudrate() {
     unsigned int baudrate = editComboBox_speed->currentNumber();
-    unsigned int comProtocol = ui->comboBox_channel->currentIndex();
+    unsigned int commType = ui->comboBox_channel->currentIndex();
 
-    emit baudrateSignal(baudrate, comProtocol);
+    emit baudrateSignal(baudrate, commType);
 }
 
 // Will write Text to console
