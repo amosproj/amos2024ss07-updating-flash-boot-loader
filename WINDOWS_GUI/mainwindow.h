@@ -65,6 +65,6 @@ private slots:
     void setBaudrate();
 
 signals:
-    void baudrateSignal(unsigned int baudrate);
+    void baudrateSignal(unsigned int baudrate, unsigned int comProtocoll);
 };
 #endif // MAINWINDOW_H

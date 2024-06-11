@@ -317,13 +317,16 @@ void Communication::setIDSlot(uint32_t id){
     this->setID(id);
 }
 
-//TODO has to be changed as soon as we have CAN-FD implemented
-void Communication::setBaudrate(unsigned int baudrate) {
-    connect(this, SIGNAL(baudrateSignal(unsigned int)), canDriver, SLOT(setChannelBaudrate(unsigned int)), Qt::DirectConnection);
-
-    emit baudrateSignal(baudrate);
-
-    disconnect(this, SIGNAL(baudrateSignal(unsigned int)), canDriver, SLOT(setChannelBaudrate(unsigned int)));
+void Communication::setBaudrate(unsigned int baudrate, unsigned int comProtocol) {
+    if (comProtocol == 1) { //CAN
+        connect(this, SIGNAL(baudrateSignal(unsigned int)), canDriver, SLOT(setChannelBaudrate(unsigned int)), Qt::DirectConnection);
+        emit baudrateSignal(baudrate);
+        disconnect(this, SIGNAL(baudrateSignal(unsigned int)), canDriver, SLOT(setChannelBaudrate(unsigned int)));
+    } else if (comProtocol == 2) { //CAN-FD
+        //TODO has to be changed as soon as we have CAN-FD implemented
+    } else if (comProtocol == 3){ //ethernet
+        //need commInterface instance for default implementation
+    }
 }
 
 //============================================================================
