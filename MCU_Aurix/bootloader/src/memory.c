@@ -89,14 +89,14 @@ static boolean validateMemory(){
     if(!validateSystemName(memData.did_system_name, FBL_DID_SYSTEM_NAME_BYTES_SIZE))
         valid = false;
 
-    // Check on valid date
+    // Check on valid date in BCD format [dd][MM][yy][HH][mm][ss]
     if( FBL_DID_PROGRAMMING_DATE_BYTES_SIZE == 6 && (
-        memData.did_programming_date[0] > 0x31 ||
-        memData.did_programming_date[1] > 0x12 ||
-        memData.did_programming_date[2] > 0x99 ||
-        memData.did_programming_date[3] > 0x23 ||
-        memData.did_programming_date[4] > 0x59 ||
-        memData.did_programming_date[5] > 0x59 ))
+        memData.did_programming_date[0] > 0x31 || // Checking Day for range 0-31
+        memData.did_programming_date[1] > 0x12 || // Checking Month for range 0-12
+        memData.did_programming_date[2] > 0x99 || // Checking Year for range 0-99
+        memData.did_programming_date[3] > 0x23 || // Checking Hour for range 0-23
+        memData.did_programming_date[4] > 0x59 || // Checking Minute for range 0-59
+        memData.did_programming_date[5] > 0x59 )) // Checking Second for range 0-59
         valid = false;
 
     return valid;
@@ -124,6 +124,7 @@ void init_memory(void){
 
     // Check Init
     if(!init){
+        // Info: Size of default System name usually < 32 Byte
         uint8_t did_system_name[] = FBL_DID_SYSTEM_NAME_DEFAULT;
         write_to_variable(sizeof(did_system_name), did_system_name, memData.did_system_name);
 
