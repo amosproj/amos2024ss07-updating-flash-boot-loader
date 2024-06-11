@@ -205,22 +205,85 @@ derivative tc37
         map (dest=bus:sri, dest_offset=0x70100000, size=64k);
     }
     
-    memory pfls0
+    memory pfls0_bootloader
     {
         mau = 8;
-        size = 3M;
+        size = 256K;
         type = rom;
-        map     cached (dest=bus:sri, dest_offset=0x80000000,           size=3M);
-        map not_cached (dest=bus:sri, dest_offset=0xa0000000, reserved, size=3M);
+        map     cached (dest=bus:sri, dest_offset=0x80000000,           size=256K);
+        map not_cached (dest=bus:sri, dest_offset=0xa0000000, reserved, size=256K);
+    }
+
+    memory pfls0_reserved0
+    {
+        mau = 8;
+        size = 320K;
+        type = rom;
+        map     cached (dest=bus:sri, dest_offset=0x80040000,           size=320K);
+        map not_cached (dest=bus:sri, dest_offset=0xa0040000, reserved, size=320K);
+    }
+
+    memory pfls0_asw_core0
+    {
+        mau = 8;
+        size = 0x170000; /* little more than 1.5MB */
+        type = rom;
+        map     cached (dest=bus:sri, dest_offset=0x80090000,           size=0x170000);
+        map not_cached (dest=bus:sri, dest_offset=0xa0090000, reserved, size=0x170000);
+    }
+
+    memory pfls0_reserved1
+    {
+        mau = 8;
+        size = 0x100000;
+        type = rom;
+        map     cached (dest=bus:sri, dest_offset=0x80200000,           size=0x100000);
+        map not_cached (dest=bus:sri, dest_offset=0xa0200000, reserved, size=0x100000);
     }
     
-    memory pfls1
+    memory pfls1_reserved0
     {
         mau = 8;
-        size = 3M;
+        size = 0x4000;
         type = rom;
-        map     cached (dest=bus:sri, dest_offset=0x80300000,           size=3M);
-        map not_cached (dest=bus:sri, dest_offset=0xa0300000, reserved, size=3M);
+        map     cached (dest=bus:sri, dest_offset=0x80300000,           size=0x4000);
+        map not_cached (dest=bus:sri, dest_offset=0xa0300000, reserved, size=0x4000);
+    }
+
+    memory pfls1_asw_core1
+    {
+        mau = 8;
+        size = 0x1F4000; /* little more than 2MB */
+        type = rom;
+        map     cached (dest=bus:sri, dest_offset=0x80304000,           size=0x1F4000);
+        map not_cached (dest=bus:sri, dest_offset=0xa0304000, reserved, size=0x1F4000);
+    }
+
+    memory pfls1_asw_key
+    {
+        mau = 8;
+        size = 0x3FFF;
+        type = rom;
+        map     cached (dest=bus:sri, dest_offset=0x804F8000,           size=0x3FFF);
+        map not_cached (dest=bus:sri, dest_offset=0xa04F8000, reserved, size=0x3FFF);
+    }
+
+    memory pfls1_calibration_data
+    {
+        mau = 8;
+        size = 0x3FFF;
+        type = rom;
+        map     cached (dest=bus:sri, dest_offset=0x804FC000,           size=0x3FFF);
+        map not_cached (dest=bus:sri, dest_offset=0xa04FC000, reserved, size=0x3FFF);
+    }
+
+    memory pfls1_reserved1
+    {
+        mau = 8;
+        size = 0x100000;
+        type = rom;
+        map     cached (dest=bus:sri, dest_offset=0x80500000,           size=0x100000);
+        map not_cached (dest=bus:sri, dest_offset=0xa0500000, reserved, size=0x100000);
     }
     
     memory dfls0
@@ -395,7 +458,7 @@ derivative tc37
                     select ".text.start";
                 }
             }
-            group  interface_const (run_addr=mem:pfls0[0x0020])
+            group  interface_const (run_addr=mem:pfls0_bootloader[0x0020])
             {
                 select "*.interface_const";
             }
@@ -606,7 +669,7 @@ derivative tc37
         /*Near Absolute Const, selectable with patterns and user defined sections*/
         group
         {
-            group (ordered, align = 4, contiguous, run_addr=mem:pfls0)
+            group (ordered, align = 4, contiguous, run_addr=mem:pfls0_bootloader)
             {
                 select ".zrodata.Ifx_Ssw_Tc0.*";
                 select ".zrodata.Ifx_Ssw_Tc1.*";
@@ -650,13 +713,13 @@ derivative tc37
         /*Relative A1 Addressable Const, selectable by toolchain*/
         /*Small constant sections, No option given for CPU specific user sections to make generated code portable across Cpus*/
 #        if LCF_DEFAULT_HOST == LCF_CPU2
-        group  a1 (ordered, align = 4, run_addr=mem:pfls1)
+        group  a1 (ordered, align = 4, run_addr=mem:pfls1_reserved0)
 #        endif
 #        if LCF_DEFAULT_HOST == LCF_CPU1
-        group  a1 (ordered, align = 4, run_addr=mem:pfls1)
+        group  a1 (ordered, align = 4, run_addr=mem:pfls1_reserved0)
 #        endif
 #        if LCF_DEFAULT_HOST == LCF_CPU0
-        group  a1 (ordered, align = 4, run_addr=mem:pfls0)
+        group  a1 (ordered, align = 4, run_addr=mem:pfls0_bootloader)
 #        endif
         {
             select "(.rodata_a1.srodata|.rodata_a1.srodata.*)";
@@ -676,13 +739,13 @@ derivative tc37
 
         /*Relative A8 Addressable Const, selectable with patterns and user defined sections*/
 #        if LCF_DEFAULT_HOST == LCF_CPU2
-        group  a8 (ordered, align = 4, run_addr=mem:pfls1)
+        group  a8 (ordered, align = 4, run_addr=mem:pfls1_reserved0)
 #        endif
 #        if LCF_DEFAULT_HOST == LCF_CPU1
-        group  a8 (ordered, align = 4, run_addr=mem:pfls1)
+        group  a8 (ordered, align = 4, run_addr=mem:pfls1_reserved0)
 #        endif
 #        if LCF_DEFAULT_HOST == LCF_CPU0
-        group  a8 (ordered, align = 4, run_addr=mem:pfls0)
+        group  a8 (ordered, align = 4, run_addr=mem:pfls0_bootloader)
 #        endif
         {
             select "(.rodata_a8.a8srodata|.rodata_a8.a8srodata.*)";
@@ -808,19 +871,19 @@ derivative tc37
         /*Far Const Sections, selectable with patterns and user defined sections*/
         group
         {
-            group (ordered, align = 4, run_addr=mem:pfls0)
+            group (ordered, align = 4, run_addr=mem:pfls0_bootloader)
             {
                 select ".rodata.Ifx_Ssw_Tc0.*";
                 select ".rodata.Cpu0_Main.*";
                 select "(.rodata.rodata_cpu0|.rodata.rodata_cpu0.*)";
             }
-            group (ordered, align = 4, run_addr=mem:pfls1)
+            group (ordered, align = 4, run_addr=mem:pfls1_reserved0)
             {
                 select ".rodata.Cpu1_Main.*";
                 select ".rodata.Ifx_Ssw_Tc1.*";
                 select "(.rodata.rodata_cpu1|.rodata.rodata_cpu1.*)";
             }
-            group (ordered, align = 4, run_addr=mem:pfls1)
+            group (ordered, align = 4, run_addr=mem:pfls1_reserved0)
             {
                 select ".rodata.Ifx_Ssw_Tc2.*";
                 select ".rodata.Cpu2_Main.*";
@@ -830,13 +893,13 @@ derivative tc37
 
         /*Far Const Sections, selectable by toolchain*/
 #        if LCF_DEFAULT_HOST == LCF_CPU2
-        group (ordered, align = 4, run_addr=mem:pfls1)
+        group (ordered, align = 4, run_addr=mem:pfls1_reserved0)
 #        endif
 #        if LCF_DEFAULT_HOST == LCF_CPU1
-        group (ordered, align = 4, run_addr=mem:pfls1)
+        group (ordered, align = 4, run_addr=mem:pfls1_reserved0)
 #        endif
 #        if LCF_DEFAULT_HOST == LCF_CPU0
-        group (ordered, align = 4, run_addr=mem:pfls0)
+        group (ordered, align = 4, run_addr=mem:pfls0_bootloader)
 #        endif
         {
             select ".rodata.farConst.cpu0.32bit";
@@ -883,20 +946,20 @@ derivative tc37
             /*Cpu specific PFLASH Sections*/
             group
             {
-                group (ordered, align = 4, run_addr=mem:pfls0)
+                group (ordered, align = 4, run_addr=mem:pfls0_bootloader)
                 {
                     select ".text.Ifx_Ssw_Tc0.*";
                     select ".text.Cpu0_Main.*";
                     select ".text.CompilerTasking.Ifx_C_Init";
                     select "(.text.text_cpu0|.text.text_cpu0.*)";
                 }
-                group (ordered, align = 4, run_addr=mem:pfls1)
+                group (ordered, align = 4, run_addr=mem:pfls1_reserved0)
                 {
                     select ".text.Ifx_Ssw_Tc1.*";
                     select ".text.Cpu1_Main.*";
                     select "(.text.text_cpu1|.text.text_cpu1.*)";
                 }
-                group (ordered, align = 4, run_addr=mem:pfls1)
+                group (ordered, align = 4, run_addr=mem:pfls1_reserved0)
                 {
                     select ".text.Ifx_Ssw_Tc2.*";
                     select ".text.Cpu2_Main.*";
@@ -907,13 +970,13 @@ derivative tc37
         
         /*Code Sections, selectable by toolchain*/
 #        if LCF_DEFAULT_HOST == LCF_CPU2
-        group (ordered, run_addr=mem:pfls1)
+        group (ordered, run_addr=mem:pfls1_reserved0)
 #        endif
 #        if LCF_DEFAULT_HOST == LCF_CPU1
-        group (ordered, run_addr=mem:pfls1)
+        group (ordered, run_addr=mem:pfls1_reserved0)
 #        endif
 #        if LCF_DEFAULT_HOST == LCF_CPU0
-        group (ordered, run_addr=mem:pfls0)
+        group (ordered, run_addr=mem:pfls0_bootloader)
 #        endif
         {
             select ".text.fast.pfls.cpu0";
