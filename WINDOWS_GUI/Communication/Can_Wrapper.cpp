@@ -450,11 +450,13 @@ void CAN_Wrapper::_printConfig(){
 void CAN_Wrapper::setChannelBaudrate(unsigned int baudrate) {
     XLstatus status = setBaudrate(baudrate);
     if (status != XL_SUCCESS) {
-        QString errorMsg = "Failed setting bitrate: ";
+        QString errorMsg = "Failed setting bitrate to ";
+        errorMsg.append(QString::number(static_cast<double>(baudrate) / 1000));
+        errorMsg.append(" kBit/s :");
         emit errorPrint(errorMsg.append(xlGetErrorString(status)));
         return;
     }
     QString msg = "Successfully set bitrate to: ";
-    msg.append(QString::number(baudrate / 1000));
+    msg.append(QString::number(static_cast<double>(baudrate) / 1000));
     emit infoPrint(msg.append(" kBit/s"));
 }
