@@ -1,0 +1,99 @@
+	; Module start
+	.compiler_version	"TASKING VX-toolset for AURIX Development Studio (non-commercial): C compiler v1.1r8 Build 22011964"
+	.compiler_invocation	"ctc -f cc14936a --dep-file=Libraries/Infra/Platform/Tricore/Compilers/CompilerDcc.d -c99 --fp-model=3cflnrSTz -D__CPU__=tc37x -D__CPU_TC37X__ --core=tc1.6.2 --fp-model=+float -D__CPU__=tc37x -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Configurations -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\Infra -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\Infra\\\\Platform -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\Infra\\\\Platform\\\\Tricore -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\Infra\\\\Platform\\\\Tricore\\\\Compilers -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\Infra\\\\Sfr -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\Infra\\\\Sfr\\\\TC37A -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\Infra\\\\Sfr\\\\TC37A\\\\_Reg -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\Infra\\\\Ssw -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\Infra\\\\Ssw\\\\TC37A -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\Infra\\\\Ssw\\\\TC37A\\\\Tricore -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\Service -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\Service\\\\CpuGeneric -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\Service\\\\CpuGeneric\\\\SysSe -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\Service\\\\CpuGeneric\\\\SysSe\\\\Bsp -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\Service\\\\CpuGeneric\\\\_Utilities -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Cpu -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Cpu\\\\Irq -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Cpu\\\\Std -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Cpu\\\\Trap -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Gtm -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Gtm\\\\Std -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Mtu -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Mtu\\\\Std -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Pms -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Pms\\\\Std -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Port -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Port\\\\Std -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Scu -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Scu\\\\Std -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Src -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Src\\\\Std -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Stm -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\Stm\\\\Std -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\_Impl -IC:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\\\_PinMap -g2 -w544 -w557 -t4 --language=+volatile -N0 -O0 -Y0 -Z0 --compact-max-size=200 --misrac-version=2004 -o Libraries/Infra/Platform/Tricore/Compilers/CompilerDcc.src ../Libraries/Infra/Platform/Tricore/Compilers/CompilerDcc.c"
+	.compiler_name		"ctc"
+	;source	'../Libraries/Infra/Platform/Tricore/Compilers/CompilerDcc.c'
+
+	
+$TC162
+	
+	.sdecl	'.debug_info',debug
+	.sect	'.debug_info'
+.L3:
+	.word	621
+	.half	3
+	.word	.L4
+	.byte	4
+.L2:
+	.byte	1
+	.byte	'../Libraries/Infra/Platform/Tricore/Compilers/CompilerDcc.c',0
+	.byte	'TASKING VX-toolset for AURIX Development Studio (non-commercial): C compiler',0
+	.byte	'C:\\Users\\r99\\Desktop\\amos2024ss07-updating-flash-boot-loader\\asw_dummy_new\\TriCore Debug (TASKING)\\',0
+	.byte	12,1
+	.word	.L5
+	.byte	2
+	.byte	'short int',0,2,5,3
+	.byte	'__wchar_t',0,1,1,1
+	.word	255
+	.byte	2
+	.byte	'unsigned int',0,4,7,3
+	.byte	'__size_t',0,1,1,1
+	.word	286
+	.byte	2
+	.byte	'int',0,4,5,3
+	.byte	'__ptrdiff_t',0,1,1,1
+	.word	319
+	.byte	4,1,5
+	.word	346
+	.byte	3
+	.byte	'__codeptr',0,1,1,1
+	.word	348
+	.byte	2
+	.byte	'unsigned char',0,1,8,3
+	.byte	'uint8',0,2,108,29
+	.word	371
+	.byte	2
+	.byte	'unsigned short int',0,2,7,3
+	.byte	'uint16',0,2,112,29
+	.word	402
+	.byte	2
+	.byte	'unsigned long int',0,4,7,3
+	.byte	'uint32',0,2,116,29
+	.word	439
+	.byte	3
+	.byte	'sint16',0,2,129,1,29
+	.word	255
+	.byte	2
+	.byte	'long int',0,4,5,3
+	.byte	'sint32',0,2,134,1,29
+	.word	491
+	.byte	2
+	.byte	'long long int',0,8,5,3
+	.byte	'sint64',0,2,141,1,29
+	.word	519
+	.byte	2
+	.byte	'float',0,4,4,3
+	.byte	'float32',0,2,170,1,29
+	.word	552
+	.byte	6
+	.byte	'void',0,5
+	.word	578
+	.byte	3
+	.byte	'pvoid',0,3,54,28
+	.word	584
+	.byte	3
+	.byte	'Ifx_TickTime',0,3,76,28
+	.word	519
+	.byte	0
+	.sdecl	'.debug_abbrev',debug
+	.sect	'.debug_abbrev'
+.L4:
+	.byte	1,17,1,3,8,37,8,27,8,19,15,128,70,12,16,6,0,0,2,36,0,3,8,11,15,62,15,0,0,3,22,0,3,8,58,15,59,15,57,15
+	.byte	73,19,0,0,4,21,0,54,15,0,0,5,15,0,73,19,0,0,6,59,0,3,8,0,0,0
+	.sdecl	'.debug_line',debug
+	.sect	'.debug_line'
+.L5:
+	.word	.L7-.L6
+.L6:
+	.half	3
+	.word	.L9-.L8
+.L8:
+	.byte	2,1,-4,9,10,0,1,1,1,1,0,0,0,1,0
+	.byte	'../Libraries/Infra/Platform/Tricore/Compilers/CompilerDcc.c',0,0,0,0
+	.byte	'C:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\Cpu\\Std\\Platform_Types.h',0
+	.byte	0,0,0
+	.byte	'C:\\\\Users\\\\r99\\\\Desktop\\\\amos2024ss07-updating-flash-boot-loader\\\\asw_dummy_new\\\\Libraries\\\\iLLD\\\\TC37A\\\\Tricore\\Cpu\\Std\\Ifx_Types.h',0
+	.byte	0,0,0,0
+.L9:
+.L7:
+	; Module end
