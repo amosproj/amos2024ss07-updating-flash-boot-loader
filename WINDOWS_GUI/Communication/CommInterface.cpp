@@ -89,3 +89,11 @@ void CommInterface::txDataSlot(const QByteArray &data){
         free(msg);
     }
 }
+
+/**
+ * @brief default implementation for setBaudrate
+ * @param baudrate
+ */
+void CommInterface::setChannelBaudrate(unsigned int baudrate) {
+    emit errorPrint("Baudrate of the selected channel cannot be changed");
+}

@@ -66,5 +66,9 @@ private slots:
     void on_pushButton_ECU_refresh_clicked();
     void on_clearConsoleButton_clicked();
     void checkECUconnectivity();
+    void setBaudrate();
+
+signals:
+    void baudrateSignal(unsigned int baudrate, unsigned int commType);
 };
 #endif // MAINWINDOW_H

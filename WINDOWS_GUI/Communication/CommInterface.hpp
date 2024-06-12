@@ -147,6 +147,12 @@ public slots:
      */
     void txDataSlot(const QByteArray &data);
 
+    /**
+     * @brief Slot to change baudrate
+     * @param baudrate
+     */
+    virtual void setChannelBaudrate(unsigned int baudrate);
+
 };
 
 #endif /* COMMUNICATION_LAYER_COMMINTERFACE_H_ */

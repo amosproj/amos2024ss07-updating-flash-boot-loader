@@ -70,12 +70,15 @@ class CAN_Wrapper : public CommInterface {
 		XLstatus openPort();
 		XLstatus closePort();
 
-		XLstatus setBaudrate(unsigned int baudrate);
 		XLstatus actChannels();
 		XLstatus setNotification();
+        XLstatus setBaudrate(unsigned int baudrate);
 
 		// debugging methods
 		void _printConfig();
+
+    public slots:
+        void setChannelBaudrate(unsigned int baudrate) override;
 };
 
 

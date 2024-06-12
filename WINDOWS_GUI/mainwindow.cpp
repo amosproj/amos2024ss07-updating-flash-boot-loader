@@ -132,6 +132,9 @@ void MainWindow::connectSignalSlots() {
     connect(timer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
     timer->start(1000);
 
+    //Set baudrate
+    connect(this, SIGNAL(baudrateSignal(uint, uint)), comm, SLOT(setBaudrate(uint, uint)), Qt::DirectConnection);
+
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -174,6 +177,8 @@ MainWindow::MainWindow(QWidget *parent)
     // Initially hide the other QComboBoxes
     editComboBox_speed->hide();
     comboBox_speedUnit->hide();
+
+    connect(editComboBox_speed, QOverload<int>::of(&QComboBox::activated), this, &MainWindow::setBaudrate);
 
     ui->Console->setReadOnly(true);
 }
@@ -339,14 +344,13 @@ void MainWindow::comboBoxIndexChanged(int index)
     {
         // Populate the second QComboBox based on the selected index of the first QComboBox
         if (index == 1) // Example condition, replace with your own logic
-            editComboBox_speed->addItems({"33.3", "50", "83.3", "100", "125", "250", "500", "1000"});
+            editComboBox_speed->addItems({ "33.3", "50", "83.3", "100", "125", "250", "500", "1000"});
         else if (index == 2) // Example condition, replace with your own logic
             editComboBox_speed->addItems({"1000", "2000", "3000", "4000", "5000", "6000", "7000", "8000"});
         else if (index == 3) // Example condition, replace with your own logic
             editComboBox_speed->addItems({"Option A", "Option B", "Option C"});
 
         comboBox_speedUnit->addItem("kBit/s");
-        comboBox_speedUnit->addItem("MBit/s");
 
         // Show the second QComboBox
         editComboBox_speed->show();
@@ -363,6 +367,13 @@ void MainWindow::comboBoxIndexChanged(int index)
         editComboBox_speed->hide();
         comboBox_speedUnit->hide();
     }
+}
+
+void MainWindow::setBaudrate() {
+    unsigned int baudrate = editComboBox_speed->currentNumber();
+    unsigned int commType = ui->comboBox_channel->currentIndex();
+
+    emit baudrateSignal(baudrate, commType);
 }
 
 // Will write Text to console
