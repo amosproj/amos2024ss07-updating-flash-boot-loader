@@ -75,7 +75,7 @@ QByteArray FlashManager::getCurrentFlashDate(){
 void FlashManager::doFlashing(){
 
     qInfo() << "FlashManager: Started flashing.\n";
-    emit infoPrint("FlashManager: Started flashing.\n");
+    emit infoPrint("###############################################\nFlashManager: Started flashing.\n###############################################\n");
     emit flashingThreadStarted();
 
     while(this->_working) {
@@ -133,7 +133,7 @@ void FlashManager::doFlashing(){
             continue;
         }
 
-        if(state_attempt_ctr > 0){
+        if(state_attempt_ctr > 0 && curr_state != IDLE){
             qInfo() << "\nFlashManager: Change to next state not possible. Waiting "+QString::number((uint32_t)WAITTIME_AFTER_ATTEMPT) + " ms before starting next attempt\n\n";
             emit infoPrint("\nFlashManager: Change to next state not possible. Waiting "+QString::number((uint32_t)WAITTIME_AFTER_ATTEMPT) + " ms before starting next attempt\n\n");
             QThread::msleep((unsigned long)WAITTIME_AFTER_ATTEMPT);
@@ -146,7 +146,7 @@ void FlashManager::doFlashing(){
     mutex.unlock();
 
     qInfo() << "FlashManager: Stopped flashing.\n";
-    emit infoPrint("FlashManager: Stopped flashing.\n");
+    emit infoPrint("###############################################\nFlashManager: Stopped flashing.\n###############################################\n");
     emit flashingThreadFinished();
 }
 
@@ -207,7 +207,7 @@ void FlashManager::finishFlashing(){
     // Update Programming Date
     QByteArray flashdate = getCurrentFlashDate();
     uint8_t *data = (uint8_t*)flashdate.data();
-    uds->writeDataByIdentifier(ecu_id, FBL_DID_PROGRAMMING_DATE, data, flashdate.size());
+    //uds->writeDataByIdentifier(ecu_id, FBL_DID_PROGRAMMING_DATE, data, flashdate.size());
 
 
     // =========================================================================

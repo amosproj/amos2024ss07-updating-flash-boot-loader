@@ -306,6 +306,9 @@ void MainWindow::startUDSUsage(){
     // Enable all buttons with UDS messages
     ui->button_reset->setDisabled(false);
     ui->pushButton_ECU_refresh->setDisabled(false);
+
+    // Update of ECU List
+    this->updateECUList();
 }
 
 /**

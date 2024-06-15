@@ -54,13 +54,13 @@ public:
 
         if(ecu_id <= 0){
             emit errorPrint("FlashManager: Could not start flashing. Wrong ECU ID given");
+            this->stopFlashing();
             return;
         }
 
         this->ecu_id = ecu_id;
 
         state_attempt_ctr = 0;
-        prev_state = IDLE;
         curr_state = PREPARE;
 
         mutex.lock();
