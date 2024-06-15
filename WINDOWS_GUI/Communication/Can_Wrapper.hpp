@@ -58,6 +58,7 @@ class CAN_Wrapper : public CommInterface {
 		~CAN_Wrapper();
 
         void setID(uint32_t id) override;
+        void setFilterMask(uint32_t mask) override;
 		uint8_t initDriver() override;
 
         uint8_t txData(uint8_t *data, uint8_t no_bytes) override;

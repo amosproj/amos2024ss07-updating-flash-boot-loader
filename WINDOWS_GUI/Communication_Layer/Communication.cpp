@@ -72,6 +72,7 @@ void Communication::init(INTERFACE comm_interface_type){
         // Connect Communication TX with CAN Driver TX
         connect(this, SIGNAL(txCANDataSignal(QByteArray)), canDriver, SLOT(txDataSlot(QByteArray)), Qt::DirectConnection);
 
+        canDriver->setFilterMask((uint32_t)(FBLCAN_BASE_ADDRESS) | 0xFFF0); // Only accept responses from valid ECUs
         canDriver->startRX();
 	}
 
