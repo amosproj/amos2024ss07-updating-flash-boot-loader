@@ -106,11 +106,16 @@ void MainWindow::connectSignalSlots() {
         if(ui->label_selected_ECU->text() != "") {
             uint32_t selectedID = getECUID();
 
-            flashMan->setFile("JUST FOR TESTING");
-
-            flashMan->stopFlashing();
-            threadFlashing->wait();
-            flashMan->startFlashing(selectedID);
+            if(ui->button_flash->text().contains("Stop")){
+                flashMan->stopFlashing();
+                threadFlashing->wait();
+                setFlashButton(FLASH);
+            }
+            else{
+                flashMan->setFile("Testing.test");
+                flashMan->startFlashing(selectedID);
+                setFlashButton(STOP);
+            }
 
         } else {
             this->ui->textBrowser_flash_status->setText("No valid ECU selected");
@@ -176,6 +181,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(editComboBox_speed, QOverload<int>::of(&QComboBox::activated), this, &MainWindow::setBaudrate);
 
     ui->Console->setReadOnly(true);
+
+    // Rename Flash Button to make sure that naming is correct
+    setFlashButton(FLASH);
 }
 
 MainWindow::~MainWindow()
@@ -295,6 +303,21 @@ bool MainWindow::ECUSelected() {
     return !ui->table_ECU->selectedItems().empty() && !ui->table_ECU->selectedItems().at(0)->text().isEmpty();
 }
 
+void MainWindow::setFlashButton(FLASH_BTN m){
+
+    switch(m){
+        case FLASH:
+            ui->button_flash->setText("Flash");
+            break;
+        case STOP:
+            ui->button_flash->setText("Stop Flashing");
+            break;
+        default:
+            ui->button_flash->setText("Flash");
+            break;
+    }
+}
+
 //=============================================================================
 // Slots
 //=============================================================================
@@ -325,6 +348,7 @@ void MainWindow::stopUDSUsage(){
 }
 
 void MainWindow::updateStatusSlot(FlashManager::STATUS s, const QString &str, int percent) {
+    qInfo() << "MainWindow: updateStatusSlot " << s << str << percent;
     this->updateStatus(s, str, percent);
 }
 

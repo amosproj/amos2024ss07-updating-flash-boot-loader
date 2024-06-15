@@ -24,6 +24,7 @@ class MainWindow : public QMainWindow
 
 private:
     uint8_t gui_id = 0x01;
+    enum FLASH_BTN {FLASH, STOP};
 
     Ui::MainWindow *ui;
     EditableComboBox *editComboBox_speed;
@@ -52,6 +53,8 @@ private:
 
     uint32_t getECUID();
     bool ECUSelected();
+
+    void setFlashButton(FLASH_BTN m);
 
 private slots:
     void startUDSUsage();

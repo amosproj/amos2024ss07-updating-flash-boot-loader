@@ -148,6 +148,9 @@ void FlashManager::doFlashing(){
     qInfo() << "FlashManager: Stopped flashing.\n";
     emit infoPrint("###############################################\nFlashManager: Stopped flashing.\n###############################################\n");
     emit flashingThreadFinished();
+
+    // Reset progress bar
+    emit updateStatus(FlashManager::UPDATE, "", 0);
 }
 
 void FlashManager::prepareFlashing(){
@@ -180,18 +183,19 @@ void FlashManager::executeFlashing(){
 
     for(int j = 1; j < 100; j++){
 
+        QThread::msleep(150);
+        if(j % 10 == 0)
+            emit updateStatus(UPDATE, "Flashing in Progress.. Please Wait", j);
+        else
+            emit updateStatus(UPDATE, "", j);
+
+
         mutex.lock();
         bool abort = _abort;
         mutex.unlock();
 
         if(abort)
             return;
-
-        QThread::msleep(150);
-        if(j % 10 == 0)
-            emit updateStatus(UPDATE, "Flashing in Progress.. Please Wait", j);
-        else
-            emit updateStatus(UPDATE, "", j);
     }
 
     emit updateStatus(INFO, "Flash file fully transmitted.", 0);
