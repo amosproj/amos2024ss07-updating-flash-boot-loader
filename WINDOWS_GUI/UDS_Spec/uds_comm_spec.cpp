@@ -16,7 +16,6 @@ extern "C" {
 #endif
 
 #include "uds_comm_spec.h"
-#include <stdlib.h>
 #include <stdio.h>
 
 // TODO: Check on Error Handling for calloc -> Mainly relevant for MCU
