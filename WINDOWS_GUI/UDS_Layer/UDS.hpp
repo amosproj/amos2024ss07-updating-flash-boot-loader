@@ -47,6 +47,8 @@ private:
     bool rx_msg_valid;                          // Indication of Message Interpreter if UDS Msg was valid
     bool rx_msg_neg_resp;                       // Indication of Negative Response
 
+    uint32_t ecu_rec_buffer_size;               // Used for Request Download response -> ECU indicates the buffer size that could used for transfer data
+
 public:
     UDS();
     UDS(uint8_t gui_id);
@@ -55,6 +57,10 @@ public:
     // Switch for Synchronous TX/RX vs. Async TX Mode
     void setSyncMode(bool synchronized);
 
+    // UDS RX -> Extracted to variables
+    uint32_t getECUTransferDataBufferSize();
+
+    // UDS TX
     // Sending out broadcast for tester present
     RESP reqIdentification();
 
@@ -80,6 +86,7 @@ public:
 
 	// Supported Common Response Codes
     RESP negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_code);
+
     QString translateNegResp(uint8_t nrc);
     QString translateDID(uint16_t DID);
     QString readDIDData(uint16_t DID, uint8_t* data, uint32_t no_bytes);

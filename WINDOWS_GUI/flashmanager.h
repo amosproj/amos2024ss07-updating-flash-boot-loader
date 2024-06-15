@@ -41,7 +41,8 @@ private:
     uint32_t ecu_id;                                            // ECU ID to flash
     UDS *uds;                                                   // Reference to UDS Layer
     QString file;                                               // Reference to file for flashing
-    QMap<uint32_t, QByteArray> flashContent;                     // Map with Address -> continous byte array
+    QMap<uint32_t, QByteArray> flashContent;                    // Map with Address -> continous byte array
+    size_t flashedBytesCtr;                                     // Counter for flashed bytes
 
     bool _abort;                                    // Thread Handling
     bool _working;                                  // Thread Handling
@@ -90,6 +91,7 @@ public:
 
 private:
     QByteArray getCurrentFlashDate();
+    size_t getOverallByteSize();
 
     void doFlashing();
     void prepareFlashing();

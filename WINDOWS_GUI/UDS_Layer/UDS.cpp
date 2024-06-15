@@ -24,6 +24,7 @@ UDS::UDS(){
 UDS::UDS(uint8_t gui_id) {
 	this->gui_id = gui_id;
     this->init = 1;
+    this->ecu_rec_buffer_size = 0;
 
     // Default: Sync-Mode is turned on
     this->synchronized_rx_tx = true;
@@ -48,6 +49,10 @@ UDS::~UDS() {
  */
 void UDS::setSyncMode(bool synchronized){
     synchronized_rx_tx = synchronized;
+}
+
+uint32_t UDS::getECUTransferDataBufferSize(){
+    return ecu_rec_buffer_size;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -178,6 +183,17 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
 
             // Check on the relevant message - Adress is correct
             rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
+            if(rx_msg_valid){
+                this->ecu_rec_buffer_size |= (data[5] << 24);
+                this->ecu_rec_buffer_size |= (data[6] << 16);
+                this->ecu_rec_buffer_size |= (data[7] << 8);
+                this->ecu_rec_buffer_size |= data[8];
+
+                out << "ECU Buffer Size in bytes: "+QString::number(ecu_rec_buffer_size);
+            }
+            else
+                this->ecu_rec_buffer_size = 0;
+
             break;
 
         case FBL_REQUEST_UPLOAD:
@@ -191,7 +207,7 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
             out << info + "Transfer Data "<< SID_str << ID_str<<"\n";
 
             // Info: There is no response for it
-            rx_msg_valid = true;
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 5);
             break;
 
         case FBL_REQUEST_TRANSFER_EXIT:
@@ -603,7 +619,7 @@ UDS::RESP UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes)
     txMessageSend(send_id, msg, len);  
 
     rx_no_bytes = 0;
-    rx_exp_data = _create_request_download(&rx_no_bytes, 1, address, no_bytes);
+    rx_exp_data = _create_request_download(&rx_no_bytes, 1, address, 0); // ECU need to response with the buffer size for bytes_size
     return rxMessageValid(rx_max_waittime_general);
 }
 
@@ -628,11 +644,11 @@ UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes) {
     emit toConsole("<< UDS: Sending Request Upload" + id_str);
 
 	int len;
-	uint8_t *msg = _create_request_upload(&len, 0, address, no_bytes);
+    uint8_t *msg = _create_request_upload(&len, 0, address, no_bytes);
     txMessageSend(send_id, msg, len);  
 
     rx_no_bytes = 0;
-    rx_exp_data = _create_request_upload(&rx_no_bytes, 1, address, no_bytes);
+    rx_exp_data = _create_request_upload(&rx_no_bytes, 1, address, 0); // ECU need to response with the buffer size for bytes_size
     return rxMessageValid(rx_max_waittime_general);
 }
 
@@ -662,18 +678,10 @@ UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_
     uint8_t *msg = _create_transfer_data(&len, 0, address, data, data_len);
     txMessageSend(send_id, msg, len);  
 
-    // Create the data that is expected, here: Mainly no response is expected.
-    rx_exp_data = nullptr;
+    // Create the data that is expected
     rx_no_bytes = 0;
-
-    // Release the communication flag
-    comm_mutex.lock();
-    _comm = false;
-    comm_mutex.unlock();
-
-    if(synchronized_rx_tx)
-        return TX_RX_OK;
-    return TX_OK;
+    rx_exp_data = _create_transfer_data(&rx_no_bytes, 1, address, 0, 0);
+    return rxMessageValid(rx_max_waittime_long);
 }
 
 /**

@@ -81,6 +81,8 @@ void FlashManager::setFile(QString file){
     }
     else{
         emit errorPrint("FlashManager: Flashing of files is not yet implemented");
+
+        // TODO: set flashContent for single addresses
     }
 }
 
@@ -98,6 +100,18 @@ QByteArray FlashManager::getCurrentFlashDate(){
     QByteArray bcd = QByteArray::fromHex(QByteArray(combi.toLocal8Bit()));
 
     return bcd;
+}
+
+size_t FlashManager::getOverallByteSize(){
+    size_t numberOfBytes = 0;
+
+    for(uint32_t add: flashContent.keys()){
+        QByteArray bytes = flashContent[add];
+        if(bytes != nullptr)
+            numberOfBytes += bytes.size();
+    }
+
+    return numberOfBytes;
 }
 
 //============================================================================
@@ -169,6 +183,11 @@ void FlashManager::doFlashing(){
             qInfo() << "\nFlashManager: Change to next state not possible. Waiting "+QString::number((uint32_t)WAITTIME_AFTER_ATTEMPT) + " ms before starting next attempt\n\n";
             emit infoPrint("\nFlashManager: Change to next state not possible. Waiting "+QString::number((uint32_t)WAITTIME_AFTER_ATTEMPT) + " ms before starting next attempt\n\n");
             QThread::msleep((unsigned long)WAITTIME_AFTER_ATTEMPT);
+
+            if(curr_state == EXECUTE){
+                // Force Transfer Exit for any address
+                uds->requestTransferExit(ecu_id, 0);
+            }
         }
     }
 
@@ -208,6 +227,9 @@ void FlashManager::prepareFlashing(){
     emit infoPrint("TODO: Add Security Access once activated");
     //resp = uds->securityAccessRequestSEED(ecu_id);
 
+    // Reset the counter for flashed bytes
+    flashedBytesCtr = 0;
+
     curr_state = EXECUTE;
 }
 
@@ -242,6 +264,7 @@ void FlashManager::executeFlashing(){
         uint8_t *data = (uint8_t*) bytes.data();
         emit updateStatus(INFO, "Flashing "+QString::number(bytes.size())+" bytes to flash address "+QString("0x%8").arg(add, 8, 16, QLatin1Char( '0' )), 0);
 
+        // ##############################################################################################################
         // Request Download
         emit infoPrint("Requesting Download for flash address "+QString("0x%8").arg(add, 8, 16, QLatin1Char( '0' )));
         resp = uds->requestDownload(ecu_id, add, bytes.size());
@@ -251,41 +274,73 @@ void FlashManager::executeFlashing(){
             return;
         }
 
-        mutex.lock();
-        abort = _abort;
-        mutex.unlock();
-
-        if(abort)
-            return;
-
-        // Transfer Data
-        emit infoPrint("Transfer Data for flash address "+QString("0x%8").arg(add, 8, 16, QLatin1Char( '0' )));
-        resp = uds->transferData(ecu_id, add, data, bytes.size());
-
-        if(resp != UDS::TX_RX_OK){
-            emit errorPrint("ERROR: Transfer Data failed");
+        uint32_t bufferSize = uds->getECUTransferDataBufferSize();
+        if(bufferSize == 0){
+            emit errorPrint("ERROR: ECU Buffer size is 0.");
             return;
         }
 
+        emit infoPrint("Requesting Download OK");
+
         mutex.lock();
         abort = _abort;
         mutex.unlock();
 
         if(abort)
             return;
+
+        // ##############################################################################################################
+        // Transfer Data
+
+        // Info: content for single address need to be split according to buffer size. Each package need to be requested independently
+
+        // Transfer Data
+        uint32_t packages = bytes.size() % bufferSize > 0 ? bytes.size() / bufferSize + 1 : bytes.size() / bufferSize;
+        QString info = "According to the buffer size of the ECU the data need to be splittet into "+QString::number(packages)+" packages";
+        emit infoPrint(info);
+        emit updateStatus(INFO, info, 0);
+
+        uint32_t curr_flash_add = add;
+        uint32_t curr_flash_byte_ptr = 0;
+        uint32_t curr_flash_bytes = 0;
+
+        for(int package = 0; package < packages; package++){
+            curr_flash_add = add + package*bufferSize;
+            curr_flash_byte_ptr = package*bufferSize;
+
+            // Calc the bytes to be flashed
+            if(curr_flash_add + bufferSize < add+flashContent[add].size())
+                curr_flash_bytes = bufferSize;
+            else
+                curr_flash_bytes = add + flashContent[add].size() - curr_flash_add; // Last Packages
+
+            emit infoPrint("Transfer Data for flash address "+QString("0x%8").arg(curr_flash_add, 8, 16, QLatin1Char( '0' ))+ " ("+QString::number(curr_flash_bytes)+" bytes)");
+            resp = uds->transferData(ecu_id, curr_flash_add, data+curr_flash_byte_ptr, curr_flash_bytes);
+
+            if(resp != UDS::TX_RX_OK){
+                emit errorPrint("ERROR: Transfer Data failed");
+                return;
+            }
+
+            // Update the GUI progress bar
+            flashedBytesCtr += curr_flash_bytes;
+            emit updateStatus(UPDATE, "", (size_t)(((double)flashedBytesCtr)/getOverallByteSize()*100));
+
+            mutex.lock();
+            abort = _abort;
+            mutex.unlock();
+
+            if(abort)
+                return;
+
+        }
+
+        resp = uds->requestTransferExit(ecu_id, add);
+        if(resp != UDS::TX_RX_OK){
+            emit errorPrint("ERROR: Transfer Exit failed");
+            return;
+        }
     }
-
-    /*
-    for(int j = 1; j < 100; j++){
-
-        QThread::msleep(150);
-        if(j % 10 == 0)
-            emit updateStatus(UPDATE, "Flashing in Progress.. Please Wait", j);
-        else
-            emit updateStatus(UPDATE, "", j);
-
-    }
-    */
 
     emit updateStatus(INFO, "Flash file fully transmitted.", 0);
 

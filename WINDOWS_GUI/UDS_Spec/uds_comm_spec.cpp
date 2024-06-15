@@ -16,6 +16,7 @@ extern "C" {
 #endif
 
 #include "uds_comm_spec.h"
+#include <stdlib.h>
 #include <stdio.h>
 
 // TODO: Check on Error Handling for calloc -> Mainly relevant for MCU
@@ -438,17 +439,16 @@ void upload_download_message(uint8_t *msg, uint32_t addr, uint8_t response, uint
     msg[3] = (uint8_t)((addr>>8)  & 0xFF);                      // Address Byte 2
     msg[4] = (uint8_t)((addr)     & 0xFF);                      // Address Byte 1
 
-    if(!response){
-        msg[5] = (uint8_t)((bytes_size>>24) & 0xFF);            // Size Byte 4
-        msg[6] = (uint8_t)((bytes_size>>16) & 0xFF);            // Size Byte 3
-        msg[7] = (uint8_t)((bytes_size>>8)  & 0xFF);            // Size Byte 2
-        msg[8] = (uint8_t)((bytes_size)     & 0xFF);            // Size Byte 1
-    }
+    // Request = Number of Bytes, Response = Buffer Side on Receiver side (bigger messages get rejected during transfer)
+    msg[5] = (uint8_t)((bytes_size>>24) & 0xFF);            // Size Byte 4
+    msg[6] = (uint8_t)((bytes_size>>16) & 0xFF);            // Size Byte 3
+    msg[7] = (uint8_t)((bytes_size>>8)  & 0xFF);            // Size Byte 2
+    msg[8] = (uint8_t)((bytes_size)     & 0xFF);            // Size Byte 1
 }
 
 // Request Download (0x34)
 uint8_t *_create_request_download(int *len, uint8_t response, uint32_t addr, uint32_t bytes_size){
-    uint8_t *msg = prepare_message(len, response, FBL_REQUEST_DOWNLOAD, 0, response ? 5 : 9);
+    uint8_t *msg = prepare_message(len, response, FBL_REQUEST_DOWNLOAD, 0, 9);
     if (msg == NULL)
         return msg;
     upload_download_message(msg, addr, response, bytes_size);
@@ -458,7 +458,7 @@ uint8_t *_create_request_download(int *len, uint8_t response, uint32_t addr, uin
 
 // Request Upload (0x35)
 uint8_t *_create_request_upload(int *len, uint8_t response, uint32_t addr, uint32_t bytes_size){
-    uint8_t *msg = prepare_message(len, response, FBL_REQUEST_UPLOAD, 0, response ? 5 : 9);
+    uint8_t *msg = prepare_message(len, response, FBL_REQUEST_UPLOAD, 0, 9);
     if (msg == NULL)
         return msg;
 
