@@ -124,8 +124,8 @@ void Communication::setID(uint32_t id){
  */
 void Communication::txData(uint8_t *data, uint32_t no_bytes) {
     if(curr_interface_type == CAN_DRIVER) {
-        int send_len;
-        int has_next;
+        uint32_t send_len;
+        uint32_t has_next;
         uint8_t max_len_per_frame = MAX_FRAME_LEN_CAN; // Also use CAN Message Length
         uint32_t data_ptr = 0;
         uint8_t idx = 0;
@@ -170,7 +170,7 @@ void Communication::dataReceiveHandleMulti(){
     if(multiframe_still_receiving && !multiframe_next_msg_available && multiframe_curr_uds_msg != NULL){
         QByteArray ba;
         ba.resize(multiframe_curr_uds_msg_len);
-        for(int i = 0; i < multiframe_curr_uds_msg_len; i++)
+        for(unsigned int i = 0; i < multiframe_curr_uds_msg_len; i++)
             ba[i] = multiframe_curr_uds_msg[i];
         const unsigned int id_ba = multiframe_curr_id;
 
@@ -203,14 +203,14 @@ void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned
 
     uint8_t starting_frame = rx_is_starting_frame(data, dlc, MAX_FRAME_LEN_CAN);
     if(starting_frame){
-        int temp_uds_msg_len = 0;
-        int temp_next_msg_available = 0;
+        uint32_t temp_uds_msg_len = 0;
+        uint32_t temp_next_msg_available = 0;
         uint8_t* temp_uds_msg = rx_starting_frame(&temp_uds_msg_len, &temp_next_msg_available, MAX_FRAME_LEN_CAN, data, dlc);
 
         if(!temp_next_msg_available){ // Single Frame
             QByteArray ba;
             ba.resize(temp_uds_msg_len);
-            for(int i = 0; i < temp_uds_msg_len; i++)
+            for(unsigned int i = 0; i < temp_uds_msg_len; i++)
                 ba[i] = temp_uds_msg[i];
             const unsigned int id_ba = id;
 
@@ -263,7 +263,7 @@ void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned
 void Communication::_debug_printf_isotp_buffer(){
     if(multiframe_curr_uds_msg != NULL && multiframe_curr_uds_msg_len > 0){
         QString s = "Communication RX: Current ISO-TP Data:";
-        for(int i = 0; i < multiframe_curr_uds_msg_len; i ++){
+        for(unsigned int i = 0; i < multiframe_curr_uds_msg_len; i ++){
             s.append(" "+ QString("%1").arg(uint8_t(multiframe_curr_uds_msg[i]), 2, 16, QLatin1Char( '0' )));
         }
 

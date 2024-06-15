@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Leon Wilms <leonwilms.wk@gmail.com>
 // SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : uds_comm_spec.h
-// Author      : Michael Bauer, Wiktor Pilarczyk
-// Version     : 0.3
+// Author      : Michael Bauer, Leon Wilms, Wiktor Pilarczyk
+// Version     : 1.0
 // Copyright   : MIT
 // Description : UDS communication specification for AMOS Flashbootloader
 //============================================================================
@@ -20,6 +21,8 @@ extern "C" {
 #include "stdint.h"
 
 #define MAX_FRAME_LEN_CAN											(0x08)
+#define MAX_FRAME_LEN_CANFD                                         (0x40)
+#define MAX_ISOTP_MESSAGE_LEN                                       (4096)
 #define FBLCAN_IDENTIFIER_MASK								  		(0x0F24FFFF)
 #define FBLCAN_BASE_ADDRESS											(FBLCAN_IDENTIFIER_MASK & 0xFFFF0000)
 
@@ -134,14 +137,15 @@ extern "C" {
 //////////////////////////////////////////////////////////////////////////////
 
 
-uint8_t *tx_starting_frame(int *data_out_len, int *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr);
-uint8_t *tx_consecutive_frame(int *data_out_len, int *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr, uint8_t* frame_idx);
-uint8_t *tx_flow_control_frame(int *data_out_len, uint8_t flag, uint8_t blocksize, uint8_t sep_time_millis, uint8_t sep_time_multi_millis);
+uint8_t *tx_starting_frame(uint32_t *data_out_len, uint32_t *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr);
+uint8_t *tx_consecutive_frame(uint32_t *data_out_len, uint32_t *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr, uint8_t* frame_idx);
+uint8_t *tx_flow_control_frame(uint32_t *data_out_len, uint8_t flag, uint8_t blocksize, uint8_t sep_time_millis, uint8_t sep_time_multi_millis);
 
 uint8_t rx_is_starting_frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_len_per_frame);
 uint8_t rx_is_consecutive_frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_len_per_frame);
-uint8_t *rx_starting_frame(int *data_out_len, int *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len);
-uint8_t rx_consecutive_frame(int *data_out_len, uint8_t *data_out, int *has_next, uint32_t data_in_len, uint8_t* data_in, uint32_t *idx); // TODO: Error Handling for correct order
+uint8_t rx_is_single_Frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_len_per_frame);
+uint8_t *rx_starting_frame(uint32_t *data_out_len, uint32_t *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len);
+uint8_t rx_consecutive_frame(uint32_t *data_out_len, uint8_t *data_out, uint32_t *has_next, uint32_t data_in_len, uint8_t* data_in, uint32_t *idx); // TODO: Error Handling for correct order
 
 //////////////////////////////////////////////////////////////////////////////
 // Templates for UDS Messages
@@ -162,11 +166,11 @@ uint8_t *_create_write_data_by_ident(int *len, uint8_t response, uint16_t did, u
 // Specification for Upload | Download
 uint8_t *_create_request_download(int *len, uint8_t response, uint32_t add, uint32_t bytes_size);
 uint8_t *_create_request_upload(int *len, uint8_t response, uint32_t add, uint32_t bytes_size);
-uint8_t *_create_transfer_data(int *len, uint32_t add, uint8_t* data, uint32_t data_len);
+uint8_t *_create_transfer_data(int *len, uint8_t response, uint32_t add, uint8_t* data, uint32_t data_len);
 uint8_t *_create_request_transfer_exit(int *len, uint8_t response, uint32_t add);
 
 // Supported Common Response Codes
-uint8_t *_create_neg_response(int *len, uint8_t reg_sid, uint8_t neg_resp_code);
+uint8_t *_create_neg_response(int *len, uint8_t rej_sid, uint8_t neg_resp_code);
 
 #ifdef __cplusplus
 }

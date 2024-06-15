@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Leon Wilms <leonwilms.wk@gmail.com>
 // SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : uds_comm_spec.h
 // Author      : Michael Bauer, Leon Wilms, Wiktor Pilarczyk
-// Version     : 0.5
+// Version     : 1.0
 // Copyright   : MIT
 // Description : UDS communication specification for AMOS Flashbootloader
 //============================================================================
@@ -17,8 +18,7 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include <stdlib.h>
+#include "stdint.h"
 
 #define MAX_FRAME_LEN_CAN                                           (0x08)
 #define MAX_FRAME_LEN_CANFD                                         (0x40)
@@ -136,16 +136,6 @@ extern "C" {
 // ISO TP Handling
 //////////////////////////////////////////////////////////////////////////////
 
-//TODO: add rx_is_flowcontrol_frame()
-//      add rx_flowcontrol_frame()
-
-
-// TODO: I changed 'data_out_len' and 'has_next' to uint32_t. Will this still work?
-//     ||                                                   ||
-//     ||                                                   ||
-//     \/                                                   \/
-
-
 
 uint8_t *tx_starting_frame(uint32_t *data_out_len, uint32_t *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr);
 uint8_t *tx_consecutive_frame(uint32_t *data_out_len, uint32_t *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len, uint32_t* data_out_idx_ctr, uint8_t* frame_idx);
@@ -170,17 +160,17 @@ uint8_t *_create_tester_present(int *len, uint8_t response, uint8_t response_typ
 
 // Specification for Data Transmission
 uint8_t *_create_read_data_by_ident(int *len, uint8_t response, uint16_t did, uint8_t* data, uint8_t data_len);
-uint8_t *_create_read_memory_by_address(int *len, uint8_t response, uint32_t add, uint16_t no_bytes, uint8_t* data, uint8_t data_len);
+uint8_t *_create_read_memory_by_address(int *len, uint8_t response, uint32_t add, uint16_t no_bytes, uint8_t* data, uint16_t data_len);
 uint8_t *_create_write_data_by_ident(int *len, uint8_t response, uint16_t did, uint8_t* data, uint8_t data_len);
 
 // Specification for Upload | Download
 uint8_t *_create_request_download(int *len, uint8_t response, uint32_t add, uint32_t bytes_size);
 uint8_t *_create_request_upload(int *len, uint8_t response, uint32_t add, uint32_t bytes_size);
-uint8_t *_create_transfer_data(int *len, uint32_t add, uint8_t* data, uint32_t data_len);
+uint8_t *_create_transfer_data(int *len, uint8_t response, uint32_t add, uint8_t* data, uint32_t data_len);
 uint8_t *_create_request_transfer_exit(int *len, uint8_t response, uint32_t add);
 
 // Supported Common Response Codes
-uint8_t *_create_neg_response(int *len, uint8_t reg_sid, uint8_t neg_resp_code);
+uint8_t *_create_neg_response(int *len, uint8_t rej_sid, uint8_t neg_resp_code);
 
 #ifdef __cplusplus
 }

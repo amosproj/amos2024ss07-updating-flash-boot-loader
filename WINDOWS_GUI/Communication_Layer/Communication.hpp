@@ -41,9 +41,9 @@ private:
     // Used for consecutive frames
     uint32_t multiframe_curr_id;                // ECU ID of the currently processed Multiframe
     uint8_t *multiframe_curr_uds_msg;           // Pointer to currently process UDS Multiframe message
-    int multiframe_curr_uds_msg_len;            // Length of the UDS Multiframe message
+    uint32_t multiframe_curr_uds_msg_len;            // Length of the UDS Multiframe message
     uint32_t multiframe_curr_uds_msg_idx;       // UDS Multiframe message index of the data, starting idx for writing to multiframe_curr_uds_msg
-    int multiframe_next_msg_available;          // Indicates if next frame is available
+    uint32_t multiframe_next_msg_available;          // Indicates if next frame is available
     uint8_t multiframe_still_receiving;         // Indicates that Multiframe receiving is still ongoing, used as Trigger for final Frame of the Multiframe message
 
 public:
