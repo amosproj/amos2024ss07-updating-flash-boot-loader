@@ -22,6 +22,7 @@
 #include "uds.h"
 #include "session_manager.h"
 #include "memory.h"
+#include "flashing.h"
 
 uint8_t* rx_uds_message;
 uint32_t rx_total_length;
@@ -38,6 +39,9 @@ void init_bootloader(void){
 
     // Memory
     init_memory();
+
+    // Flashing
+    flashingInit();
 
     // Session Manager
     init_session_manager();
