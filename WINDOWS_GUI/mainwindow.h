@@ -33,6 +33,8 @@ private:
     Ui::MainWindow *ui;
     EditableComboBox *editComboBox_speed;
     QComboBox *comboBox_speedUnit;
+    QWidget flashPopup;
+    QString filePath;
 
     Communication *comm;
     UDS *uds;
@@ -57,6 +59,8 @@ private:
     void setupECUForFlashing(uint32_t id);
     QByteArray getCurrentFlashDate();
     void udsUpdateProgrammingDate(uint32_t id);
+
+    void setupFlashPopup();
 
 private slots:
     void comboBoxIndexChanged(int index);

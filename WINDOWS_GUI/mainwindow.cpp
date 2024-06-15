@@ -57,11 +57,11 @@ void MainWindow::connectSignalSlots() {
 
     // GUI choose file
     connect(ui->button_file, &QPushButton::clicked, this, [=]() {
-        QString path = QFileDialog::getOpenFileName(nullptr, "Choose File");
-        if(!path.isEmpty()) {
-            QFile file(path);
+        filePath = QFileDialog::getOpenFileName(nullptr, "Choose File");
+        if(!filePath.isEmpty()) {
+            QFile file(filePath);
             if(!file.open(QFile::ReadOnly)) {
-                qDebug() << "Couldn't open file " + path + " " + file.errorString();
+                qDebug() << "Couldn't open file " + filePath + " " + file.errorString();
                 return;
             }
             ui->label_size->setText("File size: " + QString::number(file.size()));
@@ -95,36 +95,12 @@ void MainWindow::connectSignalSlots() {
 
     // GUI flash
     connect(ui->button_flash, &QPushButton::clicked, this, [=]() {
-        this->ui->textBrowser_flash_status->clear();
-        this->ui->progressBar_flash->setValue(0);
-
-        if(ui->label_selected_ECU->text() != "") {
-            uint32_t selectedID = getECUID();
-
-            appendTextToConsole("\n\nINFO: ONLY DEMO UI - Flashing currently not supported on ECU.");
-            setupECUForFlashing(selectedID);
-
-            dummy_flash(ui->label_selected_ECU->text());
-            // Just for demonstration purposes
-            updateStatus(RESET, "");
-            updateStatus(UPDATE, "Flashing started for " + ui->label_selected_ECU->text());
-            updateStatus(INFO, "It may take a while");
-
-            for(int j = 1; j < 100; j++)
-                QTimer::singleShot(j*35, [this]{
-                    updateStatus(UPDATE, "Flashing in Progress.. Please Wait");
-                });
-            QTimer::singleShot(100*35, [this, selectedID]{
-                updateStatus(RESET, "");
-                updateStatus(INFO, "Flashing finished!");
-                this->udsUpdateProgrammingDate(selectedID);
-
-                updateStatus(INFO, "Updating ECU List");
-                this->updateECUList();
-            });
-        } else {
+        if(ui->label_selected_ECU->text() == "")
             this->ui->textBrowser_flash_status->setText("No valid ECU selected");
-        }
+        else if(filePath.isEmpty())
+            this->ui->textBrowser_flash_status->setText("Flash file NOT selected");
+        else
+            this->flashPopup.show();
     });
 
     // GUI connectivity indicator
@@ -135,6 +111,56 @@ void MainWindow::connectSignalSlots() {
     //Set baudrate
     connect(this, SIGNAL(baudrateSignal(uint, uint)), comm, SLOT(setBaudrate(uint, uint)), Qt::DirectConnection);
 
+}
+
+void MainWindow::setupFlashPopup() {
+    QVBoxLayout *layout = new QVBoxLayout;
+
+    QLabel *labelPopup = new QLabel("You are going to flash version:" + );
+
+    QPushButton *buttonYes = new QPushButton("Yes");
+    QPushButton *buttonNo = new QPushButton("No");
+
+    
+    QObject::connect(buttonYes, &QPushButton::clicked, this, [&]() {
+        flashPopup.close();
+        this->ui->textBrowser_flash_status->clear();
+        this->ui->progressBar_flash->setValue(0);
+
+        uint32_t selectedID = getECUID();
+
+        appendTextToConsole("\n\nINFO: ONLY DEMO UI - Flashing currently not supported on ECU.");
+        setupECUForFlashing(selectedID);
+
+        dummy_flash(ui->label_selected_ECU->text());
+        // Just for demonstration purposes
+        updateStatus(RESET, "");
+        updateStatus(UPDATE, "Flashing started for " + ui->label_selected_ECU->text());
+        updateStatus(INFO, "It may take a while");
+
+        for(int j = 1; j < 100; j++)
+            QTimer::singleShot(j*35, [this]{
+                updateStatus(UPDATE, "Flashing in Progress.. Please Wait");
+            });
+        QTimer::singleShot(100*35, [this, selectedID]{
+            updateStatus(RESET, "");
+            updateStatus(INFO, "Flashing finished!");
+            this->udsUpdateProgrammingDate(selectedID);
+
+            updateStatus(INFO, "Updating ECU List");
+            this->updateECUList();
+        });
+    });
+
+    QObject::connect(buttonNo, &QPushButton::clicked, [&]() {
+        flashPopup.close();
+    });
+
+    layout->addWidget(labelPopup);
+    layout->addWidget(buttonYes);
+    layout->addWidget(buttonNo);
+
+    flashPopup.setLayout(layout);
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -170,6 +196,8 @@ MainWindow::MainWindow(QWidget *parent)
     // Create both QComboBoxes for later
     editComboBox_speed = new EditableComboBox(this);
     comboBox_speedUnit = new QComboBox(this);
+
+    setupFlashPopup();
 
     // Call comboBoxIndexChanged to set up editComboBox_speed initially
     comboBoxIndexChanged(ui->comboBox_channel->currentIndex());
