@@ -26,6 +26,10 @@ static inline void dummy_flash(QString dev) {
     qDebug() << "Flash " << dev;
 }
 
+static inline QString dummy_flash_version(QString path) {
+    return QString("AMOS TESTING");
+}
+
 void MainWindow::connectSignalSlots() {
     // Comm RX Signal to UDS RX Slot
     connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
@@ -95,12 +99,16 @@ void MainWindow::connectSignalSlots() {
 
     // GUI flash
     connect(ui->button_flash, &QPushButton::clicked, this, [=]() {
-        if(ui->label_selected_ECU->text() == "")
+        if(ui->label_selected_ECU->text() == "") {
             this->ui->textBrowser_flash_status->setText("No valid ECU selected");
-        else if(filePath.isEmpty())
+        } else if(filePath.isEmpty()) {
             this->ui->textBrowser_flash_status->setText("Flash file NOT selected");
-        else
+        } else {
+            QLabel* label = qobject_cast<QLabel*>(flashPopup.property("label").value<QObject*>());
+            label->setText(QString("You are going to flash from ") + QString(this->ui->table_ECU->selectedItems().at(1)->text())
+                                    + QString(" to ") + dummy_flash_version(filePath));
             this->flashPopup.show();
+        }
     });
 
     // GUI connectivity indicator
@@ -116,7 +124,8 @@ void MainWindow::connectSignalSlots() {
 void MainWindow::setupFlashPopup() {
     QVBoxLayout *layout = new QVBoxLayout;
 
-    QLabel *labelPopup = new QLabel("You are going to flash version:" + );
+    QLabel *labelPopup = new QLabel;
+    flashPopup.setProperty("label", QVariant::fromValue(static_cast<QObject*>(labelPopup)));
 
     QPushButton *buttonYes = new QPushButton("Yes");
     QPushButton *buttonNo = new QPushButton("No");
@@ -146,6 +155,8 @@ void MainWindow::setupFlashPopup() {
             updateStatus(RESET, "");
             updateStatus(INFO, "Flashing finished!");
             this->udsUpdateProgrammingDate(selectedID);
+            QByteArray arr = dummy_flash_version(filePath).toLocal8Bit();
+            this->udsUpdateVersion(selectedID, (uint8_t*)arr.data(), arr.size());
 
             updateStatus(INFO, "Updating ECU List");
             this->updateECUList();
@@ -186,18 +197,17 @@ MainWindow::MainWindow(QWidget *parent)
     ui->table_ECU->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->table_ECU->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
+    setupFlashPopup();
+
     connectSignalSlots();
 
     // Init the Communication - Need to be after connectSignalsSlots to directly print to console
     comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
     comm->init(Communication::CAN_DRIVER); // Set to CAN
 
-
     // Create both QComboBoxes for later
     editComboBox_speed = new EditableComboBox(this);
     comboBox_speedUnit = new QComboBox(this);
-
-    setupFlashPopup();
 
     // Call comboBoxIndexChanged to set up editComboBox_speed initially
     comboBoxIndexChanged(ui->comboBox_channel->currentIndex());
@@ -354,6 +364,10 @@ void MainWindow::udsUpdateProgrammingDate(uint32_t id){
     uint8_t *data = (uint8_t*)flashdate.data();
 
     uds->writeDataByIdentifier(id, FBL_DID_PROGRAMMING_DATE, data, flashdate.size());
+}
+
+void MainWindow::udsUpdateVersion(uint32_t id, uint8_t *data, uint8_t data_size) {
+    uds->writeDataByIdentifier(id, FBL_DID_SYSTEM_NAME, data, data_size);
 }
 
 //=============================================================================

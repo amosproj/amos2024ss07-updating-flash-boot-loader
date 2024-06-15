@@ -59,6 +59,7 @@ private:
     void setupECUForFlashing(uint32_t id);
     QByteArray getCurrentFlashDate();
     void udsUpdateProgrammingDate(uint32_t id);
+    void udsUpdateVersion(uint32_t id, uint8_t *data, uint8_t data_size);
 
     void setupFlashPopup();
 
