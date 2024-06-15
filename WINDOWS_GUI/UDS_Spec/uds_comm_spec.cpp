@@ -412,7 +412,7 @@ static inline void upload_download_message(uint8_t *msg, uint32_t addr, uint8_t 
 
 // Request Download (0x34)
 uint8_t *_create_request_download(int *len, uint8_t response, uint32_t addr, uint32_t bytes_size){
-	uint8_t *msg = prepare_message(len, 0, FBL_REQUEST_DOWNLOAD, 0, response ? 5 : 9);
+    uint8_t *msg = prepare_message(len, response, FBL_REQUEST_DOWNLOAD, 0, response ? 5 : 9);
 	if (msg == NULL)
 		return msg;
 	upload_download_message(msg, addr, response, bytes_size);
@@ -422,7 +422,7 @@ uint8_t *_create_request_download(int *len, uint8_t response, uint32_t addr, uin
 
 // Request Upload (0x35)
 uint8_t *_create_request_upload(int *len, uint8_t response, uint32_t addr, uint32_t bytes_size){
-	uint8_t *msg = prepare_message(len, 0, FBL_REQUEST_UPLOAD, 0, response ? 5 : 9);
+    uint8_t *msg = prepare_message(len, response, FBL_REQUEST_UPLOAD, 0, response ? 5 : 9);
 	if (msg == NULL)
 		return msg;
 
@@ -450,7 +450,7 @@ uint8_t *_create_transfer_data(int *len, uint32_t addr, uint8_t* data, uint32_t 
 
 // Request Transfer Exit (0x37)
 uint8_t *_create_request_transfer_exit(int *len, uint8_t response, uint32_t addr){
-	uint8_t *msg = prepare_message(len, 0, FBL_REQUEST_TRANSFER_EXIT, 0, 5);
+    uint8_t *msg = prepare_message(len, response, FBL_REQUEST_TRANSFER_EXIT, 0, 5);
 	if (msg == NULL)
 		return msg;
 
