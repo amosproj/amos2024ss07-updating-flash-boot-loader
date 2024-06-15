@@ -9,6 +9,7 @@
 
 #include "UDS_Layer/UDS.hpp"
 #include "Communication_Layer/Communication.hpp"
+#include "flashmanager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -20,13 +21,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
     
-public:
-    enum status {
-        UPDATE,
-        INFO,
-        ERR,
-        RESET
-    };
+
 private:
     uint8_t gui_id = 0x01;
 
@@ -36,13 +31,17 @@ private:
 
     Communication *comm;
     UDS *uds;
+    QThread *threadFlashing;
+    FlashManager *flashMan;
     QMap<QString, QMap<QString, QString>> eculist;
+
+    QTimer *ecuConnectivityTimer;
 
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void updateStatus(MainWindow::status s, QString str);
+    void updateStatus(FlashManager::STATUS s, QString str, int percent);
 
 private:
     void connectSignalSlots();
@@ -54,11 +53,12 @@ private:
     uint32_t getECUID();
     bool ECUSelected();
 
-    void setupECUForFlashing(uint32_t id);
-    QByteArray getCurrentFlashDate();
-    void udsUpdateProgrammingDate(uint32_t id);
-
 private slots:
+    void startUDSUsage();
+    void stopUDSUsage();
+
+    void updateStatusSlot(FlashManager::STATUS s, const QString &str, int percent);
+
     void comboBoxIndexChanged(int index);
     void appendTextToConsole(const QString &text);
 

@@ -20,6 +20,8 @@ set(PROJECT_SOURCES
         mainwindow.ui
         editableComboBox.h
         editablecombobox.cpp
+        flashmanager.h
+        flashmanager.cpp
         Communication/CommInterface.cpp
         Communication/CommInterface.hpp
         Communication/Can_Wrapper.cpp
