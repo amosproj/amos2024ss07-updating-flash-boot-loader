@@ -4,7 +4,7 @@
 
 //============================================================================
 // Name        : UDS.cpp
-// Author      : Michael Bauerr, Wiktor Pilarczyk
+// Author      : Michael Bauer, Wiktor Pilarczyk
 // Version     : 0.3
 // Copyright   : MIT
 // Description : Qt UDS Layer implementation

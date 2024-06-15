@@ -109,12 +109,10 @@ void MainWindow::connectSignalSlots() {
             if(ui->button_flash->text().contains("Stop")){
                 flashMan->stopFlashing();
                 threadFlashing->wait();
-                setFlashButton(FLASH);
             }
             else{
                 flashMan->setFile("Testing.test");
                 flashMan->startFlashing(selectedID);
-                setFlashButton(STOP);
             }
 
         } else {
@@ -332,6 +330,9 @@ void MainWindow::startUDSUsage(){
 
     // Update of ECU List
     this->updateECUList();
+
+    // Also set the Flash Button
+    setFlashButton(FLASH);
 }
 
 /**
@@ -345,10 +346,13 @@ void MainWindow::stopUDSUsage(){
     // Disable all buttons with UDS messages
     ui->button_reset->setDisabled(true);
     ui->pushButton_ECU_refresh->setDisabled(true);
+
+    // Also set the Flash Button
+    setFlashButton(STOP);
 }
 
 void MainWindow::updateStatusSlot(FlashManager::STATUS s, const QString &str, int percent) {
-    qInfo() << "MainWindow: updateStatusSlot " << s << str << percent;
+    //qInfo() << "MainWindow: updateStatusSlot " << s << str << percent;
     this->updateStatus(s, str, percent);
 }
 
