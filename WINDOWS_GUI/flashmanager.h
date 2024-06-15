@@ -12,9 +12,13 @@
 #ifndef FLASHMANAGER_H_
 #define FLASHMANAGER_H_
 
-#define VERBOSE_FLASHMANAGER   0   // switch for verbose console information
-#define MAX_TRIES_PER_STATE    5   // Max Attempts per state
-#define WAITTIME_AFTER_ATTEMPT  1000 // Waittime in ms
+#define VERBOSE_FLASHMANAGER        0           // switch for verbose console information
+#define MAX_TRIES_PER_STATE         10          // Max Attempts per state
+#define WAITTIME_AFTER_ATTEMPT      1000        // Waittime in ms
+
+#define TESTFILE_START_ADD          0xA0090000  // Start Address for flashing
+#define TESTFILE_BYTES              0x16FFFF    // ~1.5 MB
+#define TESTFILE_PADDING_BYTES      32         // Padding between test data
 
 #include <QObject>
 #include <QMutex>
@@ -32,11 +36,12 @@ public:
 
 private:
     enum STATE_MACHINE {PREPARE, EXECUTE, FINISH, IDLE, ERR_STATE};
-    STATE_MACHINE curr_state, prev_state;           // States
-    uint8_t state_attempt_ctr;                      // State attempt counter
-    uint32_t ecu_id;                                // ECU ID to flash
-    UDS *uds;                                       // Reference to UDS Layer
-    QString file;                                   // Reference to file for flashing
+    STATE_MACHINE curr_state, prev_state;                       // States
+    uint8_t state_attempt_ctr;                                  // State attempt counter
+    uint32_t ecu_id;                                            // ECU ID to flash
+    UDS *uds;                                                   // Reference to UDS Layer
+    QString file;                                               // Reference to file for flashing
+    QMap<uint32_t, QByteArray> flashContent;                     // Map with Address -> continous byte array
 
     bool _abort;                                    // Thread Handling
     bool _working;                                  // Thread Handling
