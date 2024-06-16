@@ -314,7 +314,7 @@ void FlashManager::executeFlashing(){
             else
                 curr_flash_bytes = add + flashContent[add].size() - curr_flash_add; // Last Packages
 
-            emit infoPrint("Transfer Data for flash address "+QString("0x%8").arg(curr_flash_add, 8, 16, QLatin1Char( '0' ))+ " ("+QString::number(curr_flash_bytes)+" bytes)");
+            emit infoPrint("Package "+QString::number(package+1)+": Transfer Data for flash address "+QString("0x%8").arg(curr_flash_add, 8, 16, QLatin1Char( '0' ))+ " ("+QString::number(curr_flash_bytes)+" bytes)");
             resp = uds->transferData(ecu_id, curr_flash_add, data+curr_flash_byte_ptr, curr_flash_bytes);
 
             if(resp != UDS::TX_RX_OK){

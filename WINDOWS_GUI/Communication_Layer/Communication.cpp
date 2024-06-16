@@ -149,7 +149,6 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes) {
         uint32_t data_ptr = 0;
         uint8_t idx = 0;
         uint8_t *send_msg = tx_starting_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr);
-        sent_bytes += send_len - 2;
         // Wrap data into QByteArray for signaling
         QByteArray qbdata;
         qbdata.resize(send_len);
@@ -163,6 +162,7 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes) {
         multiframe_flow_ctr_valid = 0;
         emit txCANDataSignal(qbdata);
         if (has_next) { // Check in flow control and continue sending
+            sent_bytes += send_len - 2;
             qInfo() << "Communication TX: Number of Bytes" << no_bytes;
 
             // Wait on flow control...
@@ -214,9 +214,8 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes) {
                     } while(!consecutive_frame_valid);
                 }
             }
+             qInfo() << "Communication TX: Sent" << QString::number(sent_bytes)<<"bytes. No of Bytes from Method call: "<<QString::number(no_bytes);
         }
-
-        emit toConsole("Communication TX: Sent "+QString::number(sent_bytes)+" bytes. No of Bytes from Method call: "+QString::number(no_bytes));
     }
     if(VERBOSE_COMMUNICATION) qInfo("Communication TX: Sending out Data via CAN Driver - Finished!");
 }
