@@ -44,6 +44,7 @@ typedef struct isoTp_RX
 
     uint16_t data_in_len;
     uint8_t ready_to_read; // bool that will be set to =! 0 if message can be read.
+    uint8_t last_consecutive_ctr;
 
 }isoTP_RX;
 

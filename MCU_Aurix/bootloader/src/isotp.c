@@ -15,6 +15,7 @@
 #include "memory.h"
 
 isoTP_RX* iso_RX;
+isoTP* iso_TX;
 uint8_t isoTP_RX_data_buffer[MAX_ISOTP_MESSAGE_LEN];
 
 //============================================================================
@@ -32,6 +33,7 @@ void rx_reset_isotp_buffer(){
     iso_RX->write_ptr = iso_RX->data;
     iso_RX->data_in_len = 0;
     iso_RX->ready_to_read = 0;
+    iso_RX->last_consecutive_ctr = 0;
 }
 
 /*
@@ -115,6 +117,8 @@ void close_isoTP(isoTP* iso){
  */
 void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len){
 
+    iso_TX = iso;
+
     uint8_t* first_frame = tx_starting_frame(&iso->data_out_len,
                                                 &iso->has_next,
                                                 iso->max_len_per_frame,
@@ -138,7 +142,6 @@ void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len){
 
         // Wait for flow control if needed
         while (iso->flow_flag == 0x01) {
-
             waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 1)); // Wait 1 ms
         }
 
@@ -171,6 +174,8 @@ void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len){
             waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, iso->stmin)); // Wait STmin milliseconds
         }
     }
+
+    iso_TX = NULL;
 }
 
 //============================================================================
@@ -243,7 +248,7 @@ void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc){
 
     if(MAX_ISOTP_MESSAGE_LEN - (iso_RX->write_ptr - iso_RX->data) < dlc || iso_RX->ready_to_read != 0){
 
-        // Request with negative response if case of error
+        // Request with negative response in case of error
         if(rx_is_single_Frame(data_ptr, dlc, MAX_FRAME_LEN_CAN))
             uds_neg_response(data_ptr[1], FBL_RC_BUSY_REPEAT_REQUEST);
         else // Using FBL_NEGATIVE_RESPONSE since it is any other frame (Consecutive or Flow Control)
@@ -269,24 +274,40 @@ void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc){
 
         memcpy(iso_RX->write_ptr, &data_ptr[2], dlc - 2);
         iso_RX->write_ptr += dlc - 2;
+
+        // Send Flow Control Frame as response
+        uint32_t flow_ctrl_len = 0;
+        uint8_t *flow_ctrl = tx_flow_control_frame(&flow_ctrl_len, 0, 0, 0, 0);
+        canTransmitMessage(getID(), flow_ctrl, flow_ctrl_len);
+        free(flow_ctrl);
+
     }
     // Consecutive Frame
     else if(((0xF0 & rxData[0]) >> 4) == 2){
 
-        memcpy(iso_RX->write_ptr, &data_ptr[1], dlc - 1);
-        iso_RX->write_ptr += dlc - 1;
+        // Only copy if counter is different. Sender needs to make sure that correct sequence is transmitted
+        if(iso_RX->last_consecutive_ctr != &data_ptr[0]){
+            memcpy(iso_RX->write_ptr, &data_ptr[1], dlc - 1);
+            iso_RX->write_ptr += dlc - 1;
+        }
+
+        // Send response for Consecutive Frame
+        canTransmitMessage(getID(), &data_ptr[0], 1);
+
+        // Store the counter
+        iso_RX->last_consecutive_ctr = data_ptr[0];
     }
     // Flow Control
     else if(((0xF0 & rxData[0]) >> 4) == 3){
 
-        memcpy(iso_RX->write_ptr, &data_ptr[1], dlc - 1);
-
-        // Move pointer accordingly
-        iso_RX->write_ptr += dlc - 1;
+        // Check for current isoTP TX and set bytes accordingly
+        if(iso_TX != NULL){
+            // TODO: Implement UDS Comm Spec method to readout the variables and fill iso_TX
+        }
     }
     // ERROR
     else{
-        uds_neg_response(rxData[0], FBL_RC_BUSY_REPEAT_REQUEST);
+        uds_neg_response(data_ptr[0], FBL_RC_BUSY_REPEAT_REQUEST);
     }
 
     // Set ready_to_read if all bytes have been received for one isoTP message
