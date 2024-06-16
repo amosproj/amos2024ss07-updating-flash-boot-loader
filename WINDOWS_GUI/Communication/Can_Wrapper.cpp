@@ -404,7 +404,7 @@ void CAN_Wrapper::doRX(){
                         id = id ^ XL_CAN_EXT_MSG_ID;
 
                     if(rxFilterMask > 0 && id & ~rxFilterMask){
-                        qInfo(">> CAN_Wrapper: Ignoring CAN message from 0x%08X based on rxFilterMask 0x%08X\n", id, rxFilterMask);
+                        if(VERBOSE_CAN_DRIVER) qInfo(">> CAN_Wrapper: Ignoring CAN message from 0x%08X based on rxFilterMask 0x%08X", id, rxFilterMask);
                         continue;
                     }
 
