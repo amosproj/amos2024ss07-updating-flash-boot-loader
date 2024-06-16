@@ -261,7 +261,7 @@ uint8_t CAN_Wrapper::txData(uint8_t *data, uint8_t no_bytes) {
 
 	// Transmit the message
 	status = xlCanTransmit(portHandle, chanMaskTx, &msgCount, &event);
-    qInfo() << "<< CAN_Wrapper: Transmitting "<<no_bytes<<" byte CAN message (Data=" << bytes_data.trimmed().toStdString() << ") with ID (" << QString("0x%1").arg(event.tagData.msg.id, 8, 16, QLatin1Char( '0' ))<<") and CM("<<chanMaskTx<<") - Info: " <<xlGetErrorString(status);
+    if(RX_TX_CAN_DRIVER || status != XL_SUCCESS) qInfo() << "<< CAN_Wrapper: Transmitting "<<no_bytes<<" byte CAN message (Data=" << bytes_data.trimmed().toStdString() << ") with ID (" << QString("0x%1").arg(event.tagData.msg.id, 8, 16, QLatin1Char( '0' ))<<") and CM("<<chanMaskTx<<") - Info: " <<xlGetErrorString(status);
 
     if(VERBOSE_CAN_DRIVER) qInfo("CAN_Wrapper: Sending Signal txDataSentStatus");
     emit txDataSentStatus(xlGetErrorString(status));
@@ -415,7 +415,7 @@ void CAN_Wrapper::doRX(){
                         ba[i] = event.tagData.msg.data[i];
                         bytes_data.append(QString("%1").arg(uint8_t(ba[i]), 2, 16, QLatin1Char( '0' )) + " ");
                     }
-                    qInfo() << ">> CAN_Wrapper: Received"<<event.tagData.msg.dlc<<"byte CAN message with Data:" << bytes_data.trimmed().toStdString() << "from"<<QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' ));
+                    if(RX_TX_CAN_DRIVER) qInfo() << ">> CAN_Wrapper: Received"<<event.tagData.msg.dlc<<"byte CAN message with Data:" << bytes_data.trimmed().toStdString() << "from"<<QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' ));
                     if(VERBOSE_CAN_DRIVER) qInfo() << "CAN_Wrapper: Sending Signal rxDataReceived for ID" << QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' ));
 
                     emit rxDataReceived(id, ba);
