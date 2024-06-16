@@ -7,13 +7,14 @@
 //============================================================================
 // Name        : uds.c
 // Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer, Wiktor Pilarczyk
-// Version     : 0.2
+// Version     : 0.3
 // Copyright   : MIT
 // Description : UDS Layer implementation
 //============================================================================
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "uds.h"
 #include "isotp.h"
@@ -54,11 +55,9 @@ void uds_close(void){
 //============================================================================
 
 void uds_handleRX(uint8_t* data, uint32_t data_len){
-    uint8_t array[sizeof(uint32_t) + data_len ]; // TODO change if incoming data format is different
-
-    UDS_Msg* msg = (UDS_Msg*) array;
+    UDS_Msg* msg = malloc(sizeof(UDS_Msg));
     msg->len = data_len;
-    memcpy(msg->data, data, data_len);
+    msg->data = data;
 
     // Flag for session control
     boolean responded = 1;

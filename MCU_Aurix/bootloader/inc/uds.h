@@ -5,7 +5,7 @@
 //============================================================================
 // Name        : uds.h
 // Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer
-// Version     : 0.2
+// Version     : 0.3
 // Copyright   : MIT
 // Description : Handles UDS messages from CAN bus
 //============================================================================
@@ -21,7 +21,7 @@
 
 struct UDS_Msg {
     uint32_t len;
-    uint8_t data[]; // flexible array member
+    uint8_t* data; // flexible array member
 };
 typedef struct UDS_Msg UDS_Msg;
 

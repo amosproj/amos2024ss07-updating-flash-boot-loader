@@ -5,10 +5,12 @@
 //============================================================================
 // Name        : loader.c
 // Author      : Dorothea Ehrl, Michael Bauer
-// Version     : 0.2
+// Version     : 0.3
 // Copyright   : MIT
 // Description : Loader initial file
 //============================================================================
+
+#include <stdlib.h>
 
 #include "bootloader.h"
 
@@ -24,8 +26,11 @@
 #include "memory.h"
 #include "flashing.h"
 
-uint8_t* rx_uds_message;
-uint32_t rx_total_length;
+uint8_t* rx_uds_message_single;
+uint32_t rx_total_length_single;
+
+uint8_t* rx_uds_message_multi;
+uint32_t rx_total_length_multi;
 
 /**
  * @brief: Function to init the bootloader logic
@@ -47,7 +52,8 @@ void init_bootloader(void){
     init_session_manager();
 
     // Init UDS and CAN
-    rx_total_length = 0;
+    rx_total_length_single = 0;
+    rx_total_length_multi = 0;
     uds_init();
 
 }
@@ -58,12 +64,21 @@ void init_bootloader(void){
 void cyclicProcessing (void){
     // UDS RX Handling
 
-    rx_uds_message = isotp_rcv(&rx_total_length);
-    if(rx_total_length != 0){
+    rx_uds_message_single = isotp_single_rcv(&rx_total_length_single);
+    if(rx_total_length_single != 0){
         ledToggleActivity(0);
-        uds_handleRX(rx_uds_message, rx_total_length);
+        // New RX message is created using calloc
+        uds_handleRX(rx_uds_message_single, rx_total_length_single);
+        free(rx_uds_message_single);
     }
 
+    rx_uds_message_multi = isotp_multi_rcv(&rx_total_length_multi);
+    if(rx_total_length_multi != 0){
+        ledToggleActivity(0);
+        // RX Buffer of Multiframe is used, no need to free the buffer
+        uds_handleRX(rx_uds_message_multi, rx_total_length_multi);
+        rx_reset_isotp_multi_buffer();
+    }
 }
 
 /**

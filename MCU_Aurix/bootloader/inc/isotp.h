@@ -58,7 +58,8 @@ void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc);
 //============================================================================
 // Init / Deinit / Resetting
 //============================================================================
-void rx_reset_isotp_buffer(void);
+void rx_reset_isotp_single_buffer(void);
+void rx_reset_isotp_multi_buffer(void);
 void tx_reset_isotp_buffer(isoTP* iso);
 isoTP* isotp_init(void);
 void close_isoTP(isoTP* iso);
@@ -72,7 +73,8 @@ void isotp_send(isoTP* iso, uint8_t* data, uint32_t data_in_len);
 //============================================================================
 // RX
 //============================================================================
-uint8_t* isotp_rcv(uint32_t* total_length);
+uint8_t* isotp_single_rcv(uint32_t* total_length);
+uint8_t* isotp_multi_rcv(uint32_t* total_length);
 
 
 

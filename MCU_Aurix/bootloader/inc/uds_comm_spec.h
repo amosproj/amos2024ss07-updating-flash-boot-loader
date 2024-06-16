@@ -22,8 +22,8 @@ extern "C" {
 #include <stdlib.h>
 
 #define MAX_FRAME_LEN_CAN                                           (0x08)
-#define MAX_FRAME_LEN_CANFD                                         (0x40)
-#define MAX_ISOTP_MESSAGE_LEN                                       (4096)
+#define MAX_FRAME_LEN_CANFD                                         (0x40)  // Used for single frame buffer (MCU)
+#define MAX_ISOTP_MESSAGE_LEN                                       (4096)  // Used for starting frame + consecutive frames buffer (MCU)
 #define FBLCAN_IDENTIFIER_MASK                                      (0x0F24FFFF)
 #define FBLCAN_BASE_ADDRESS                                         (FBLCAN_IDENTIFIER_MASK & 0xFFFF0000)
 

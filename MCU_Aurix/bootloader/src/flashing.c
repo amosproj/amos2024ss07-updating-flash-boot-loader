@@ -93,7 +93,7 @@ uint8_t flashingRequestDownload(uint32_t address, uint32_t data_len){
     flashing_int_data.endAddr = address + data_len;
 
     // Identify the max package size
-    flashing_int_data.buffer = MAX_ISOTP_MESSAGE_LEN - 8; // Excluding: SID + address (5 bytes), round up to make it "even" address
+    flashing_int_data.buffer = MAX_ISOTP_MESSAGE_LEN - 8; // Excluding: SID + address (5 bytes), keep some buffer
 
     // Setup Flashing Mode
     flashing_int_data.state = TRANSFER_DATA;
