@@ -246,6 +246,7 @@ void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc){
 
     uint8_t* data_ptr = (uint8_t*)rxData;
 
+    // TODO: Possibility to release the buffer in case of errors like incomplete uds messages
     if(MAX_ISOTP_MESSAGE_LEN - (iso_RX->write_ptr - iso_RX->data) < dlc || iso_RX->ready_to_read != 0){
 
         // Request with negative response in case of error
@@ -270,7 +271,7 @@ void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc){
     // First Frame get length of whole isoTP message
     else if(((0xF0 & rxData[0]) >> 4) == 1){
 
-        iso_RX->data_in_len = ((data_ptr[0] & 0x0F) << 4) | data_ptr[1];
+        iso_RX->data_in_len = (((uint32_t)(data_ptr[0] & 0x0F)) << 8) | data_ptr[1];
 
         memcpy(iso_RX->write_ptr, &data_ptr[2], dlc - 2);
         iso_RX->write_ptr += dlc - 2;
@@ -312,7 +313,6 @@ void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc){
 
     // Set ready_to_read if all bytes have been received for one isoTP message
     if(iso_RX->write_ptr - iso_RX->data >= iso_RX->data_in_len){
-
         iso_RX->ready_to_read = 1;
     }
 

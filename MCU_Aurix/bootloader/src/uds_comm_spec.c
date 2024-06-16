@@ -341,7 +341,7 @@ uint8_t rx_consecutive_frame(uint32_t *data_out_len, uint8_t *data_out, uint32_t
 // Supported Service Overview (SID)
 //////////////////////////////////////////////////////////////////////////////
 
-uint8_t *prepare_message(int *len, uint8_t response, uint8_t SID, uint8_t info, uint8_t len_val) {
+uint8_t *prepare_message(int *len, uint8_t response, uint8_t SID, uint8_t info, uint32_t len_val) {
     // Caller need to free the memory after processing
     *len = len_val;
     uint8_t *msg = (uint8_t*)calloc(*len, sizeof(uint8_t));
