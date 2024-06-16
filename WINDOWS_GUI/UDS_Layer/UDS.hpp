@@ -37,7 +37,7 @@ private:
     uint32_t tx_max_waittime_free_tx    = 1000; // ms - Wait time before TX aborts
     uint32_t rx_max_waittime_general    = 500;  // ms - Wait time before RX aborts
     uint32_t rx_max_waittime_long       = 2000; // ms - Long wait time before RX aborts
-    uint32_t rx_max_waittime_flashing   = 10000;// ms - Flashing wait time before RX aborts
+    uint32_t rx_max_waittime_flashing   = 2000; // ms - Flashing wait time before RX aborts
 
     bool _comm;                                 // For communication usage, only synchronized TX+RX is possible
     QMutex comm_mutex;                          // Protects _comm
@@ -82,7 +82,7 @@ public:
 	// Specification for Upload | Download
     RESP requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes);
     RESP requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes);
-    RESP transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_t data_len);
+    RESP transferData(uint32_t id, uint32_t address, uint8_t* data, uint32_t data_len);
     RESP requestTransferExit(uint32_t id, uint32_t address);
 
 	// Supported Common Response Codes

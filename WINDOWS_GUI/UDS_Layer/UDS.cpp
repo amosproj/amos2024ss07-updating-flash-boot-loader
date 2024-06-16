@@ -661,7 +661,7 @@ UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes) {
  * @param data_len Number of bytes of the data
  * @return UDS::RESP accordingly
  */
-UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_t data_len) {
+UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint32_t data_len) {
     UDS::RESP resp = txMessageStart();
     if(resp != TX_OK){
         return resp;
