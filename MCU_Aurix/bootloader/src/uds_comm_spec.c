@@ -235,6 +235,22 @@ uint8_t rx_is_single_Frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_l
     return 0xFF; // Error
 }
 
+uint8_t rx_is_flow_control_frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_len_per_frame){
+    uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
+
+    if (data_in_len == 0)
+        return 0xFF; // Error
+
+    if(can){
+        uint8_t result = (((0xF0 & data_in[0])>> 4) == 3);
+        //printf("UDS_Comm_Spec - rx_is_flow_control_frame: %d\n", result);
+        return result;
+    }
+
+    printf("TODO: Not yet implemented!");
+    return 0xFF; // Error
+}
+
 uint8_t *rx_starting_frame(uint32_t *data_out_len, uint32_t *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len){
     // Caller need to free the memory after processing
     uint8_t can = (max_len_per_frame <= MAX_FRAME_LEN_CAN);
@@ -490,7 +506,11 @@ uint8_t *_create_request_transfer_exit(int *len, uint8_t response, uint32_t addr
     if (msg == NULL)
         return msg;
 
-    upload_download_message(msg, addr, 1, 0);
+    msg[1] = (uint8_t)((addr>>24) & 0xFF);                      // Address Byte 4
+    msg[2] = (uint8_t)((addr>>16) & 0xFF);                      // Address Byte 3
+    msg[3] = (uint8_t)((addr>>8)  & 0xFF);                      // Address Byte 2
+    msg[4] = (uint8_t)((addr)     & 0xFF);                      // Address Byte 1
+
     return msg;
 }
 

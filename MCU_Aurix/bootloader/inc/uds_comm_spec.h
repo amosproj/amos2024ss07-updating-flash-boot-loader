@@ -145,6 +145,7 @@ uint8_t *tx_flow_control_frame(uint32_t *data_out_len, uint8_t flag, uint8_t blo
 uint8_t rx_is_starting_frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_len_per_frame);
 uint8_t rx_is_consecutive_frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_len_per_frame);
 uint8_t rx_is_single_Frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_len_per_frame);
+uint8_t rx_is_flow_control_frame(uint8_t* data_in, uint32_t data_in_len, uint8_t max_len_per_frame);
 uint8_t *rx_starting_frame(uint32_t *data_out_len, uint32_t *has_next, uint8_t max_len_per_frame, uint8_t* data_in, uint32_t data_in_len);
 uint8_t rx_consecutive_frame(uint32_t *data_out_len, uint8_t *data_out, uint32_t *has_next, uint32_t data_in_len, uint8_t* data_in, uint32_t *idx); // TODO: Error Handling for correct order
 
