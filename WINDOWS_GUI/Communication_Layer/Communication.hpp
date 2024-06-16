@@ -16,15 +16,18 @@
 #include <QThread>
 #include <QDebug>
 #include <QByteArray>
+#include <QMutex>
 
 #include <stdint.h>
 
 #include "../Communication/Can_Wrapper.hpp"
 
-#define VERBOSE_COMMUNICATION               0       // switch for verbose console information
+#define VERBOSE_COMMUNICATION               0      // switch for verbose console information
 
 #define COMM_INTERFACE_CAN					(0x1)
-
+#define COMM_FLOW_CTR_WAIT                  (300)  // Waittime for FlowControl Frame in ms
+#define COMM_CONSEC_RETRIES                 (10)   // Max Tries for Consecutive Frame
+#define COMM_CONSEC_WAIT                    (300)  // Waittime for Consecutive Frame in ms
 
 class Communication : public QObject{
     Q_OBJECT
@@ -41,10 +44,18 @@ private:
     // Used for consecutive frames
     uint32_t multiframe_curr_id;                // ECU ID of the currently processed Multiframe
     uint8_t *multiframe_curr_uds_msg;           // Pointer to currently process UDS Multiframe message
-    uint32_t multiframe_curr_uds_msg_len;            // Length of the UDS Multiframe message
+    uint32_t multiframe_curr_uds_msg_len;       // Length of the UDS Multiframe message
     uint32_t multiframe_curr_uds_msg_idx;       // UDS Multiframe message index of the data, starting idx for writing to multiframe_curr_uds_msg
-    uint32_t multiframe_next_msg_available;          // Indicates if next frame is available
+    uint32_t multiframe_next_msg_available;     // Indicates if next frame is available
     uint8_t multiframe_still_receiving;         // Indicates that Multiframe receiving is still ongoing, used as Trigger for final Frame of the Multiframe message
+
+    QMutex multiframe_mutex;
+    uint8_t multiframe_flow_ctr_valid;          // Flag for checking if Flow Control Frame is received
+    uint8_t multiframe_flow_ctr_flag;           // Store flag of last received Flow Control Frame
+    uint8_t multiframe_flow_ctr_blocksize;      // Store blocksize of last received Flow Control Frame
+    uint8_t multiframe_flow_ctr_sep_time;       // Store separation time of last received Flow Control Frame
+
+    uint8_t multiframe_consecutive_frame_ctr;   // Store counter of last received Consecutive Frame
 
 public:
 	Communication();
@@ -57,6 +68,9 @@ public:
     void setTestMode();
 
 private:
+    // General
+    void resetMultiFrame();
+
     // TX Section
     void setID(uint32_t id);
     void txData(uint8_t *data, uint32_t no_bytes);

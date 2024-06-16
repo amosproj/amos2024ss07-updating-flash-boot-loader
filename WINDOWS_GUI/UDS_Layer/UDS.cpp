@@ -206,8 +206,8 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
         case FBL_TRANSFER_DATA:
             out << info + "Transfer Data "<< SID_str << ID_str<<"\n";
 
-            // Info: There is no response for it
-            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 5);
+            // Check on the relevant message - Adress is correct
+            rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
             break;
 
         case FBL_REQUEST_TRANSFER_EXIT:
@@ -218,7 +218,8 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
             break;
 
         default:
-            out << info << "ERROR UNRECOGNIZED SID "<< SID_str << ID_str<<"\n";
+            if(!neg_resp)
+                out << info << "ERROR UNRECOGNIZED SID "<< SID_str << ID_str<<"\n";
             break;
     }
 
@@ -681,7 +682,7 @@ UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_
     // Create the data that is expected
     rx_no_bytes = 0;
     rx_exp_data = _create_transfer_data(&rx_no_bytes, 1, address, 0, 0);
-    return rxMessageValid(rx_max_waittime_long);
+    return rxMessageValid(rx_max_waittime_flashing);
 }
 
 /**

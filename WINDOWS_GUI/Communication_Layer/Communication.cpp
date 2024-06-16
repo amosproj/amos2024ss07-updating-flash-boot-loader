@@ -15,17 +15,14 @@
  #include <windows.h>
 #endif
 
+#include <QDateTime>
+
 #include "Communication.hpp"
 #include "../UDS_Spec/uds_comm_spec.h"
 
 Communication::Communication(){
     curr_interface_type = CAN_DRIVER; // Initial with Virtual Driver
-
-    multiframe_curr_id = 0; // Init receiving ID
-    multiframe_curr_uds_msg = NULL;
-    multiframe_curr_uds_msg_len = 0;
-    multiframe_next_msg_available = 0;
-    multiframe_still_receiving = 0;
+    resetMultiFrame();
 
     threadCAN = new QThread();
     canDriver = new CAN_Wrapper(500000);
@@ -108,6 +105,23 @@ void Communication::setTestMode(){
 // Private
 //============================================================================
 
+void Communication::resetMultiFrame(){
+    multiframe_mutex.lock();
+    multiframe_still_receiving = 0;
+    multiframe_curr_id = 0;
+
+    multiframe_curr_uds_msg_len = 0;
+    multiframe_curr_uds_msg = NULL;
+    multiframe_next_msg_available = 0;
+
+    multiframe_flow_ctr_valid = 0;
+    multiframe_flow_ctr_flag = 0;
+    multiframe_flow_ctr_blocksize = 0;
+    multiframe_flow_ctr_sep_time = 0;
+    multiframe_consecutive_frame_ctr = 0;
+    multiframe_mutex.unlock();
+}
+
 /**
  * @brief Method to set the Target ID of the currently set Communication interface
  * @param id
@@ -140,9 +154,24 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes) {
         free(send_msg);
         if(VERBOSE_COMMUNICATION) qInfo("Communication TX: Sending out Data via CAN Driver - Started!");
         if(VERBOSE_COMMUNICATION) qInfo("Communication TX: Sending Signal txCANDataSignal with payload (Single/First Frame)");
+
+        multiframe_flow_ctr_valid = 0;
         emit txCANDataSignal(qbdata);
-        if (has_next) { // Check in flow control and continue sending
-            // TODO: Wait on flow control...
+        if (has_next) { // Check in flow control and continue sending            
+            // Wait on flow control...
+            QDateTime start = QDateTime::currentDateTime();
+            uint8_t flow_ctr_valid = 0;
+            do{
+                multiframe_mutex.lock();
+                flow_ctr_valid = multiframe_flow_ctr_valid;
+                multiframe_mutex.unlock();
+
+                if(start.msecsTo(QDateTime::currentDateTime()) > COMM_FLOW_CTR_WAIT){
+                    toConsole("Communication: ERROR - No Flow Control received");
+                    resetMultiFrame();
+                    return;
+                }
+            } while(!flow_ctr_valid);
 
             while(has_next) {
                 send_msg = tx_consecutive_frame(&send_len, &has_next, max_len_per_frame, data, no_bytes, &data_ptr, &idx);
@@ -154,8 +183,25 @@ void Communication::txData(uint8_t *data, uint32_t no_bytes) {
                 // Free the allocated memory of msg
                 free(send_msg);
 
-                if(VERBOSE_COMMUNICATION) qInfo("Communication TX: Sending Signal txCANDataSignal with payload (Consecutive Frame)");
-                emit txCANDataSignal(qbdata);
+                // Wait on ACK for Consecutive Frame...
+                uint8_t consecutive_frame_ctr = idx;
+                uint8_t consecutive_frame_valid = 0;
+                for(int i = 0; !consecutive_frame_valid && i < COMM_CONSEC_RETRIES; i++){
+                    start = QDateTime::currentDateTime();
+                    if(VERBOSE_COMMUNICATION) qInfo("Communication TX: Sending Signal txCANDataSignal with payload (Consecutive Frame)");
+                    emit txCANDataSignal(qbdata);
+
+                    do {
+                        multiframe_mutex.lock();
+                        consecutive_frame_valid = multiframe_consecutive_frame_ctr == consecutive_frame_ctr;
+                        multiframe_mutex.unlock();
+
+                        if(start.msecsTo(QDateTime::currentDateTime()) > COMM_CONSEC_WAIT){
+                            qInfo() << "Communication TX: ERROR - Could not receive ACK for Consecutive Frame No"<<QString::number(consecutive_frame_ctr);
+                            break;
+                        }
+                    } while(!consecutive_frame_valid);
+                }
             }
         }
     }
@@ -182,12 +228,8 @@ void Communication::dataReceiveHandleMulti(){
         if(VERBOSE_COMMUNICATION) qInfo("Communication RX: Sending Signal rxDataReceived for Multi Frame");
         emit rxDataReceived(id_ba, ba);
 
-        // Reset both receiving flags and ID
-        multiframe_still_receiving = 0;
-        multiframe_curr_id = 0;
-
-        multiframe_curr_uds_msg_len = 0;
-        multiframe_curr_uds_msg = NULL;
+        // Reset multiframe variables
+        resetMultiFrame();
     }
 }
 
@@ -229,12 +271,14 @@ void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned
             //qInfo("Call of Starting Frame\n");
             if(VERBOSE_COMMUNICATION) qInfo("Communication RX: Found ISO-TP First Frame. Waiting to receive other Frames");
 
+            multiframe_mutex.lock();
             multiframe_still_receiving = 1;
             multiframe_curr_id = id;
             multiframe_curr_uds_msg = temp_uds_msg;
             multiframe_curr_uds_msg_idx = 6; // First 6 bytes contained in First Frame
             multiframe_curr_uds_msg_len = temp_uds_msg_len;
             multiframe_next_msg_available = temp_next_msg_available;
+            multiframe_mutex.unlock();
 
             // Debugging
             _debug_printf_isotp_buffer();
@@ -245,15 +289,42 @@ void Communication::handleCANEvent(unsigned int id, unsigned short dlc, unsigned
     uint8_t consecutive_frame = rx_is_consecutive_frame(data, dlc, MAX_FRAME_LEN_CAN);
     if(consecutive_frame){
         if(multiframe_curr_id && id != multiframe_curr_id){ // Ignore other IDs
-            if(VERBOSE_COMMUNICATION) qInfo()<<"Communication RX: Ignoring ID"<<id<<". Still processing communication with "<<multiframe_curr_id;
-            emit toConsole("Communication RX: Ignoring ID" + QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' )) + ". Still processing communication with " + QString("0x%1").arg(multiframe_curr_id, 8, 16, QLatin1Char( '0' )));
+            if(VERBOSE_COMMUNICATION) qInfo()<<"Communication RX: Ignoring Consecutive Frame from ID"<<id<<". Still processing communication with "<<multiframe_curr_id;
+            emit toConsole("Communication RX: Ignoring Consecutive Frame from ID" + QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' )) + ". Still processing communication with " + QString("0x%1").arg(multiframe_curr_id, 8, 16, QLatin1Char( '0' )));
             return;
         }
         if(VERBOSE_COMMUNICATION) qInfo() << "Communication RX: Found ISO-TP Consecutive Frame with DLC "<<dlc;
 
+        // Check on ACK for Consecutive Frame
+        if(dlc == 1){
+            multiframe_consecutive_frame_ctr = data[0] & 0x0F;
+            if(VERBOSE_COMMUNICATION) qInfo()<<"Communication RX: Received ACK for Consecutive Frame No"<< QString::number(multiframe_consecutive_frame_ctr);
+            return;
+        }
+
+        multiframe_mutex.lock();
         multiframe_still_receiving = 1;
+        multiframe_mutex.unlock();
         rx_consecutive_frame(&multiframe_curr_uds_msg_len, multiframe_curr_uds_msg, &multiframe_next_msg_available, dlc, data, &multiframe_curr_uds_msg_idx);
         this->dataReceiveHandleMulti();
+        return;
+    }
+
+    uint8_t flow_control_frame = rx_is_flow_control_frame(data, dlc, MAX_FRAME_LEN_CAN);
+    if(flow_control_frame){
+        if(multiframe_curr_id && id != multiframe_curr_id){ // Ignore other IDs
+            if(VERBOSE_COMMUNICATION) qInfo()<<"Communication RX: Ignoring Flow Control from ID"<<id<<". Still processing communication with "<<multiframe_curr_id;
+            emit toConsole("Communication RX: Ignoring Flow Control from ID" + QString("0x%1").arg(id, 8, 16, QLatin1Char( '0' )) + ". Still processing communication with " + QString("0x%1").arg(multiframe_curr_id, 8, 16, QLatin1Char( '0' )));
+            return;
+        }
+        if(VERBOSE_COMMUNICATION) qInfo() << "Communication RX: Found ISO-TP Flow Control Frame with DLC "<<dlc;
+
+        multiframe_mutex.lock();
+        multiframe_flow_ctr_flag = data[0] & 0x3;
+        multiframe_flow_ctr_blocksize = data[1];
+        multiframe_flow_ctr_sep_time = data[2];
+        multiframe_flow_ctr_valid = 1;
+        multiframe_mutex.unlock();
         return;
     }
 }
