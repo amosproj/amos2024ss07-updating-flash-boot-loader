@@ -14,6 +14,7 @@
 #include "flashing.h"
 #include "uds_comm_spec.h"
 #include "memory.h"
+#include "flash_driver.h"
 
 enum FLASHING_STATE {DOWNLOAD, UPLOAD, TRANSFER_DATA, IDLE};
 
@@ -113,8 +114,14 @@ uint8_t flashingTransferData(uint32_t address, uint8_t* data, uint32_t data_len)
         return FBL_RC_REQUEST_OUT_OF_RANGE;
     }
 
-    // TODO: Erase Flash
-    // TODO: Store the data to memory
+    // TODO: Erase Flash Necessary? See flashWrite internal
+
+    // TODO: Check Edge cases -> Decide what to do when data_len % size(uint32_t) > 0!
+    bool flashed = flashWrite(address, (uint32_t*)(&data), data_len / sizeof(uint32_t));
+
+    if(!flashed)
+        return FBL_RC_FAILURE_PREVENTS_EXEC_OF_REQUESTED_ACTION;
+
     return 0;
 }
 
