@@ -18,7 +18,7 @@
 
 #define TESTFILE_START_ADD          0xA0090000  // Start Address for flashing
 #define TESTFILE_BYTES              0x16FFFF    // ~1.5 MB
-#define TESTFILE_PADDING_BYTES      32         // Padding between test data
+#define TESTFILE_PADDING_BYTES      7           // Padding between test data
 
 #include <QObject>
 #include <QMutex>
