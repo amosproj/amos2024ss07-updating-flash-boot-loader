@@ -190,6 +190,9 @@ void uds_handleRX(uint8_t* data, uint32_t data_len){
         // Call session control to indicate that valid communication was received
         sessionControl();
     }
+
+    // Important: Free the UDS msg variable
+    free(msg);
 }
 
 //============================================================================
