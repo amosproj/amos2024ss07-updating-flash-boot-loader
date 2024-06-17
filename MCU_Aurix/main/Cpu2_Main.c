@@ -27,6 +27,10 @@
 #include "Ifx_Types.h"
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
+#include "Bsp.h"
+
+#include "led_driver.h"
+#include "led_driver_TC375_LK.h"
 
 extern IfxCpu_syncEvent g_cpuSyncEvent;
 
@@ -43,7 +47,11 @@ void core2_main(void)
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
     
+    ledInitDriver();
+
     while(1)
     {
+        ledToggleActivity(0);
+        waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 100));
     }
 }
