@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Sebastian Rodriguez <r99@melao.de>
 
 //============================================================================
 // Name        : loader.c
-// Author      : Dorothea Ehrl, Michael Bauer
-// Version     : 0.2
+// Author      : Dorothea Ehrl, Michael Bauer, Sebastian Rodriguez
+// Version     : 0.3
 // Copyright   : MIT
 // Description : Loader initial file
 //============================================================================
+
+#include <time.h>
 
 #include "bootloader.h"
 
@@ -25,6 +28,8 @@
 
 uint8_t* rx_uds_message;
 uint32_t rx_total_length;
+
+time_t seconds = time(NULL);
 
 /**
  * @brief: Function to init the bootloader logic
@@ -58,7 +63,13 @@ void cyclicProcessing (void){
     if(rx_total_length != 0){
         ledToggleActivity(0);
         uds_handleRX(rx_uds_message, rx_total_length);
+        time(&seconds); //Assumes no tester present was received
     }
+    else if (difftime(time(NULL), seconds) > 5)
+    {
+        jumpToASW();
+    }
+    
 
 }
 
