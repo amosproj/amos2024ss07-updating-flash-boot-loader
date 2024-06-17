@@ -16,7 +16,7 @@
 #define MAX_TRIES_PER_STATE         5          // Max Attempts per state
 #define WAITTIME_AFTER_ATTEMPT      1000        // Waittime in ms
 
-#define TESTFILE_START_ADD          0xA0090000  // Start Address for flashing
+#define TESTFILE_START_ADD          0xA0300000  // Start Address for flashing
 #define TESTFILE_BYTES              0x16FFFF    // ~1.5 MB
 #define TESTFILE_PADDING_BYTES      7           // Padding between test data
 

@@ -59,6 +59,7 @@ void FlashManager::setFile(QString file){
 
         // Content for flashing
         QByteArray flashdate = getCurrentFlashDate();
+        emit infoPrint("Demodata: "+flashdate.toHex());
 
         // Create some test bytes to flash to MCU
         QByteArray testBytes;
@@ -76,7 +77,6 @@ void FlashManager::setFile(QString file){
 
             testDataCtr++;
         }
-
         flashContent[TESTFILE_START_ADD] = testBytes;
     }
     else{
