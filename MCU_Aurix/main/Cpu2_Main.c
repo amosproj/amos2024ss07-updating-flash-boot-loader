@@ -51,7 +51,5 @@ void core2_main(void)
 
     while(1)
     {
-        ledToggleActivity(0);
-        waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 100));
     }
 }

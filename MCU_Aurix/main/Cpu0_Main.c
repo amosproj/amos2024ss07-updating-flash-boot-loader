@@ -46,16 +46,12 @@ void core0_main(void)
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
 
+    init_bootloader();
+
     while(1)
     {
-    }
-
-//    init_bootloader();
-//
-//    while(1)
-//    {
         cyclicProcessing();
-//    }
+    }
 
     deinit_bootloader();
 }
