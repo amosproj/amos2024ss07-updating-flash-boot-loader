@@ -15,6 +15,7 @@
 
 #include "bootloader.h"
 
+#include "Ifx_Ssw_CompilersTasking.h" //For the bootloaderJumpToApp function
 #include "can_driver.h"
 #include "can_driver_TC375_LK.h"
 #include "flash_driver.h"
@@ -54,6 +55,32 @@ void init_bootloader(void){
 }
 
 /**
+ * @brief: Function to jump to the application software
+ */
+void bootloaderJumpToASW(void){
+    uds_close();
+
+    //Reset Peripherals, Lock Flash again
+    //Not sure how to do it
+    
+    //Disable Interrupts
+    IfxCpu_disableInterrupts();
+    //Clear Interrupt flags
+    //Should be cleared by can_driver no other flags are used ? 
+    
+    //Set Vector Table offset
+    Ifx_Ssw_MTCR(CPU_BTV, (unsigned int)__TRAPTABASW); //Base Trap Vector Table
+    Ifx_Ssw_MTCR(CPU_BIV, (unsigned int)__INTTABASW); //Base Interrupt Vector Table
+
+    //Set Stack Pointer
+    Ifx_Ssw_MTCR(CPU_ISP, (unsigned int)__ISTACKASW); //Interrupt Stack Pointer
+    Ifx_Ssw_setAddressReg(a10, __USTACKASW); //User Stack Pointer
+
+    //Jump to Start Address                                            
+    Ifx_Ssw_jumpToFunction(ASWStartAddress); //or __asm("ja 0xA0800000"); ?
+}
+
+/**
  * @brief: Function to process the cyclic tasks
  */
 void cyclicProcessing (void){
@@ -67,7 +94,7 @@ void cyclicProcessing (void){
     }
     else if (difftime(time(NULL), seconds) > 5)
     {
-        jumpToASW();
+        bootloaderJumpToASW();
     }
     
 
