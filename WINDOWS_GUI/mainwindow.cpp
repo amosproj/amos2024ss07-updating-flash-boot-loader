@@ -74,8 +74,8 @@ void MainWindow::connectSignalSlots() {
 
             ui->label_type->setText("File type:  " + fileType);
 
-            // Validate file
-            QMap<uint32_t, QByteArray> result = validateFile(data, file.size());
+            // Validate file, result is already prepared for furhter calculations
+            QMap<uint32_t, QByteArray> result = validateFile(data);
 
             //dummy_function(data);
             file.close();
@@ -448,7 +448,7 @@ void MainWindow::checkECUconnectivity() {
     ui->label_ECU_status->setStyleSheet("QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color: " + color + "}");
 }
 
-QMap<uint32_t, QByteArray> MainWindow::validateFile(QByteArray data, qint64 size)
+QMap<uint32_t, QByteArray> MainWindow::validateFile(QByteArray data)
 {
     QList<QByteArray> lines = data.split('\n');
     int current_index = 0;
@@ -486,7 +486,7 @@ QMap<uint32_t, QByteArray> MainWindow::validateFile(QByteArray data, qint64 size
         // extract header information
         if(record_type == '0'){
 
-            QByteArray header = extractFileHeader(line);
+            QByteArray header;
 
             line = line.left(line.size() - 2);
             line = line.right(line.size() - 2);
@@ -578,16 +578,6 @@ QMap<uint32_t, QByteArray> MainWindow::validateFile(QByteArray data, qint64 size
 
         ui->label_valid->setText("File validity:  Not Valid");
     }
-
-
-    return result;
-}
-
-
-QByteArray MainWindow::extractFileHeader(QByteArray line)
-{
-    QByteArray result;
-
 
 
     return result;
