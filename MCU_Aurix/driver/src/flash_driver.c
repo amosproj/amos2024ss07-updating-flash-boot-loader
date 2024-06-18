@@ -4,19 +4,21 @@
 
 //============================================================================
 // Name        : flash_driver.c
-// Author      : Dorothea Ehrl, Michael Bauer
-// Version     : 0.2
+// Author      : Dorothea Ehrl, Michael Bauer, Paul Roy
+// Version     : 0.3
 // Copyright   : MIT
 // Description : Flash wrapper for Bootloader
 //============================================================================
 
 #include <string.h>
 #include <stdlib.h> /* calloc, exit, free */
+#include <stdio.h> /* snprintf */
 
 #include "IfxCpu.h"
 
 #include "flash_driver.h"
 #include "flash_driver_TC375_LK.h"
+#include "crc.h"
 
 #define PMU_FLASH_MODULE                0               /* Macro to select the flash (PMU) module           */
 
@@ -317,4 +319,22 @@ uint8_t *flashRead(uint32 flashStartAddr, size_t dataBytesToRead){
         }
     }
     return data;
+}
+
+/* Calculates Checksum for the given part of memory used to verify flash after flashing */
+uint32 flashCalculateChecksum(uint32 flashStartAddr, size_t length) {
+
+    //TODO vllt anpassen auf single byte
+    crc_t crc = crc_init();
+
+    for (uint32 addr = flashStartAddr; addr < flashStartAddr + length * sizeof(uint32); addr += sizeof(uint32)) {
+        uint32 nextFourBytes = MEM(addr);
+        char stringBytes[9];
+        snprintf(stringBytes, sizeof(stringBytes), "%x", nextFourBytes);
+        crc = crc_update(crc, (unsigned char *) stringBytes, strlen(stringBytes));
+    }
+
+    crc = crc_finalize(crc);
+
+    return (uint32) crc;
 }
