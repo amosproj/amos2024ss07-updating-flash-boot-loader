@@ -70,5 +70,10 @@ private slots:
 
 signals:
     void baudrateSignal(unsigned int baudrate, unsigned int commType);
+    QByteArray extractFileHeader(QByteArray line);
+    QMap<uint32_t, QByteArray> validateFile(QByteArray data, qint64 size);
+    bool validateLine(QByteArray line);
+    QByteArray extractData(QByteArray line, char record_type);
+
 };
 #endif // MAINWINDOW_H
