@@ -32,8 +32,8 @@
 uint8_t* rx_uds_message;
 uint32_t rx_total_length;
 
-time_t seconds = time(NULL);
-jumpToASW = 0;
+time_t seconds;
+int jumpToASW = 0;
 
 /**
  * @brief: Function to init the bootloader logic
@@ -47,7 +47,7 @@ void init_bootloader(void){
 
     // Memory
     init_memory();
-
+    seconds = time(NULL);
     // Session Manager
     init_session_manager();
 
