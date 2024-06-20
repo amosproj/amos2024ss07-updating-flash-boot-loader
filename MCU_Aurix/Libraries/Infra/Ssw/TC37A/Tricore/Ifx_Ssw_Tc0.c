@@ -271,6 +271,7 @@ static void __Core0_start(void)
     /* Set A0 Pointer to access global variables with small data addressing */
     Ifx_Ssw_setAddressReg(a0, __SDATA1(0));
 
+    void (*asw)(void) = 0;
     
     if (jumpToASW)
     {
@@ -284,6 +285,7 @@ static void __Core0_start(void)
         Ifx_Ssw_MTCR(CPU_BIV, 0x804F4000);
         /* Interrupt stack pointer is configured */
         Ifx_Ssw_MTCR(CPU_ISP, (unsigned int)__ISTACK(0));
+        asw = (void*) 0x800924b8;
     }
     else{
         /* These to be un commented if A8 and A9 are required to be initialized */
@@ -332,7 +334,12 @@ static void __Core0_start(void)
     }
 #else /* IFX_CFG_SSW_RETURN_FROM_MAIN */
     extern void core0_main(void);
-    Ifx_Ssw_jumpToFunction(core0_main);    /* Jump to main function of CPU0 */
+
+    void (*start)(void) = core0_main;
+    if (asw != 0){
+        start = asw;
+    }
+    Ifx_Ssw_jumpToFunction(start);    /* Jump to main function of CPU0 */
 #endif /* IFX_CFG_SSW_RETURN_FROM_MAIN */
 
 	/* Go into infinite loop, normally the code shall not reach here */

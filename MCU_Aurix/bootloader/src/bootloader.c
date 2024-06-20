@@ -80,10 +80,10 @@ void cyclicProcessing (void){
         uds_handleRX(rx_uds_message, rx_total_length);
         time(&seconds); //Assumes no tester present was received
     }
-    else if (difftime(time(NULL), seconds) > 5)
-    {
+//    else if (difftime(time(NULL), seconds) > 5)
+//    {
         bootloaderJumpToASW();
-    }
+//    }
     
 
 }
