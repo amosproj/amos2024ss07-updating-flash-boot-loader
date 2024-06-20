@@ -46,6 +46,7 @@
 #include "Ifx_Ssw.h"
 #include "Ifx_Ssw_Infra.h"
 #include "Ifx_Cfg_Ssw.h"
+#include "bootloader.h"
 /*******************************************************************************
 **                       Macros                                               **
 *******************************************************************************/
@@ -270,17 +271,32 @@ static void __Core0_start(void)
     /* Set A0 Pointer to access global variables with small data addressing */
     Ifx_Ssw_setAddressReg(a0, __SDATA1(0));
 
-    /* These to be un commented if A8 and A9 are required to be initialized */
-    Ifx_Ssw_setAddressReg(a8, __SDATA3(0));
-    Ifx_Ssw_setAddressReg(a9, __SDATA4(0));
+    
+    if (jumpToASW)
+    {
+        /* These to be un commented if A8 and A9 are required to be initialized */
+        Ifx_Ssw_setAddressReg(a8, __SDATA3(0));
+        Ifx_Ssw_setAddressReg(a9, __SDATA4(0));
 
-    /* Trap vector table initialization is necessary if it is not same as default value */
-    Ifx_Ssw_MTCR(CPU_BTV, (unsigned int)__TRAPTAB(0));
-    /* Base interrupt vector table initialized */
-    Ifx_Ssw_MTCR(CPU_BIV, (unsigned int)__INTTAB(0));
-    /* Interrupt stack pointer is configured */
-    Ifx_Ssw_MTCR(CPU_ISP, (unsigned int)__ISTACK(0));
+        /* Trap vector table initialization is necessary if it is not same as default value */
+        Ifx_Ssw_MTCR(CPU_BTV, 0x80090100);
+        /* Base interrupt vector table initialized */
+        Ifx_Ssw_MTCR(CPU_BIV, 0x804F4000);
+        /* Interrupt stack pointer is configured */
+        Ifx_Ssw_MTCR(CPU_ISP, (unsigned int)__ISTACK(0));
+    }
+    else{
+        /* These to be un commented if A8 and A9 are required to be initialized */
+        Ifx_Ssw_setAddressReg(a8, __SDATA3(0));
+        Ifx_Ssw_setAddressReg(a9, __SDATA4(0));
 
+        /* Trap vector table initialization is necessary if it is not same as default value */
+        Ifx_Ssw_MTCR(CPU_BTV, (unsigned int)__TRAPTAB(0));
+        /* Base interrupt vector table initialized */
+        Ifx_Ssw_MTCR(CPU_BIV, (unsigned int)__INTTAB(0));
+        /* Interrupt stack pointer is configured */
+        Ifx_Ssw_MTCR(CPU_ISP, (unsigned int)__ISTACK(0));
+    }
     Ifx_Ssw_setCpuEndinitInline(&MODULE_SCU.WDTCPU[0], cpuWdtPassword);
 
     /* CPU and safety watchdogs are enabled by default,

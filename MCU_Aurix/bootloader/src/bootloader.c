@@ -26,11 +26,14 @@
 #include "uds.h"
 #include "session_manager.h"
 #include "memory.h"
+#include "reset_TC375_LK.h"
+#include "reset.h"
 
 uint8_t* rx_uds_message;
 uint32_t rx_total_length;
 
 time_t seconds = time(NULL);
+jumpToASW = 0;
 
 /**
  * @brief: Function to init the bootloader logic
@@ -58,33 +61,11 @@ void init_bootloader(void){
  * @brief: Function to jump to the application software
  */
 void bootloaderJumpToASW(void){
-    //TODO: 
-    uds_close();
-    unsigned int TRAPTABASW = 0x80090100;
-    unsigned int INTTABASW = 0x804F4000;
-    unsigned int ISTACKASW;
-    unsigned int USTACKASW;
+    //Write Flag
+    jumpToASW = 1;
+    softReset(); //Should trigger start up Flow
 
-
-    //TODO: Reset Peripherals, Lock Flash again -> schon durch flash driver
-    //Can, gpio + clock
-    //Not sure how to do it
-
-    //Disable Interrupts
-    IfxCpu_disableInterrupts();
-    //Clear Interrupt flags
-    //TODO: Should be cleared by can_driver no other flags are used ? or should we really clear all can flags again?
-    
-    //Set Vector Table offset
-    Ifx_Ssw_MTCR(CPU_BTV, (unsigned int)__TRAPTABASW); //Base Trap Vector Table
-    Ifx_Ssw_MTCR(CPU_BIV, (unsigned int)__INTTABASW); //Base Interrupt Vector Table
-
-    //Set Stack Pointer
-    Ifx_Ssw_MTCR(CPU_ISP, (unsigned int)__ISTACKASW); //Interrupt Stack Pointer
-    Ifx_Ssw_setAddressReg(a10, __USTACKASW); //User Stack Pointer
     //magic numbers im arbeitspeicher -> jump zum bootloader oder nicht -> App reset
-    //Jump to Start Address                                            
-    Ifx_Ssw_jumpToFunction(ASWStartAddress); //or __asm("ja 0xA0800000"); ?
 }
 
 /**
