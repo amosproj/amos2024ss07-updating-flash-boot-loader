@@ -109,7 +109,7 @@ uint8_t flashingTransferData(uint32_t address, uint8_t* data, uint32_t data_len)
     // TODO: Erase Flash Necessary? See flashWrite internal
 
     // TODO: Check Edge cases -> Decide what to do when data_len % size(uint32_t) > 0!
-    bool flashed = flashWrite(address, (uint32_t*)(&data), data_len / sizeof(uint32_t));
+    bool flashed = flashWrite(address, (uint32_t*)(data), (size_t)data_len / sizeof(uint32_t));
 
     if(!flashed)
         return FBL_RC_FAILURE_PREVENTS_EXEC_OF_REQUESTED_ACTION;
