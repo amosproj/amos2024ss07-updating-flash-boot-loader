@@ -74,6 +74,8 @@ public:
         this->comm = comm;
         this->uds = new UDS(gui_id);
 
+        //TODO: Take care of UDS logging to console/log
+
         // Disconnect everything from comm
         disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
 
