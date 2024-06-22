@@ -31,6 +31,7 @@ private:
     EditableComboBox *editComboBox_speed;
     QComboBox *comboBox_speedUnit;
 
+    QThread *threadComm;
     Communication *comm;
     UDS *uds;
     QThread *threadFlashing;

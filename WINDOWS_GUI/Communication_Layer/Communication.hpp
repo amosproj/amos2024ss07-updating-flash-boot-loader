@@ -58,7 +58,7 @@ private:
     uint8_t multiframe_consecutive_frame_ctr;   // Store counter of last received Consecutive Frame
 
 public:
-	Communication();
+    explicit Communication(QObject *parent = 0);
 	~Communication();
 
     void init(INTERFACE ct);

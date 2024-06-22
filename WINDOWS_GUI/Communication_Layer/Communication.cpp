@@ -5,7 +5,7 @@
 //============================================================================
 // Name        : Communication.cpp
 // Author      : Michael Bauer Wiktor Pilarczyk
-// Version     : 0.2
+// Version     : 0.3
 // Copyright   : MIT
 // Description : Qt Communication Layer implementation
 //============================================================================
@@ -20,7 +20,7 @@
 #include "Communication.hpp"
 #include "../UDS_Spec/uds_comm_spec.h"
 
-Communication::Communication(){
+Communication::Communication(QObject *parent): QObject(parent){
     curr_interface_type = CAN_DRIVER; // Initial with Virtual Driver
     resetMultiFrame();
 

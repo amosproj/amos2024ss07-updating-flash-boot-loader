@@ -43,11 +43,11 @@ void MainWindow::set_uds_connection(enum UDS_CONN conn){
             connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
 
             // UDS TX Signals to Comm TX Slots
-            connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
-            connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
+            connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)), Qt::DirectConnection);
+            connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)), Qt::DirectConnection);
 
             // UDS Receive Signals to GUI Slots
-            connect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), this, SLOT(ecuResponseSlot(QMap<QString,QString>)));
+            connect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), this, SLOT(ecuResponseSlot(QMap<QString,QString>)), Qt::DirectConnection);
             break;
 
         default:
@@ -74,7 +74,7 @@ void MainWindow::connectSignalSlots() {
             &MainWindow::comboBoxIndexChanged);
 
     // GUI Console Print
-    connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)));
+    connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)), Qt::DirectConnection);
     connect(comm, SIGNAL(toConsole(QString)), this, SLOT(appendTextToConsole(QString)), Qt::DirectConnection);
 
     // GUI menu bar
@@ -171,6 +171,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->label_logo->setPixmap(pix);
 
     qInfo("Main: Create Communication Layer");
+    threadComm = new QThread();
     comm = new Communication();
 
     qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
@@ -190,6 +191,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Init the Communication - Need to be after connectSignalsSlots to directly print to console
     comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
     comm->init(Communication::CAN_DRIVER); // Set to CAN
+    comm->moveToThread(threadComm);
 
     // Create both QComboBoxes for later
     editComboBox_speed = new EditableComboBox(this);

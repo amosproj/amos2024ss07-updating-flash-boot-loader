@@ -81,8 +81,8 @@ public:
         connect(this->comm, SIGNAL(rxDataReceived(uint, QByteArray)), this->uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
 
         // UDS TX Signals to Comm TX Slots
-        connect(this->uds, SIGNAL(setID(uint32_t)),    this->comm, SLOT(setIDSlot(uint32_t)));
-        connect(this->uds, SIGNAL(txData(QByteArray)), this->comm, SLOT(txDataSlot(QByteArray)));
+        connect(this->uds, SIGNAL(setID(uint32_t)),    this->comm, SLOT(setIDSlot(uint32_t)), Qt::DirectConnection);
+        connect(this->uds, SIGNAL(txData(QByteArray)), this->comm, SLOT(txDataSlot(QByteArray)), Qt::DirectConnection);
 
         state_attempt_ctr = 0;
         curr_state = PREPARE;
