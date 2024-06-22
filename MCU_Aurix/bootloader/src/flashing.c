@@ -17,6 +17,7 @@
 #include "flash_driver.h"
 
 enum FLASHING_STATE {DOWNLOAD, UPLOAD, TRANSFER_DATA, IDLE};
+uint32 flashBuffer[MAX_ISOTP_MESSAGE_LEN/4];
 
 typedef struct {
     uint32_t buffer;
@@ -56,6 +57,40 @@ static inline bool addrInCoreRangeCheck(uint32_t addr, uint32_t data_len, uint16
             return true;
     }
     return false;
+}
+
+static inline size_t insertDataForFlashing(uint8_t* data, uint32_t data_len){
+    // TODO: Other format necessary? Big vs. Little Endian
+    bool revert = 0;
+
+    uint32_t data_ctr = 0;
+    size_t flash_ctr = 0;
+
+    uint32 temp = 0;
+    uint32 shifted = 0;
+
+    for(int idx = 0; idx < sizeof(flashBuffer) && data_ctr < data_len ; idx++){
+        temp = 0;
+        shifted = 0;
+
+        for(int i = 0; i < sizeof(uint32); i++){
+
+            if(revert){
+                shifted = (uint32)data[data_ctr] << 8*(sizeof(uint32)-1-i);
+            } else{
+                shifted = (uint32)data[data_ctr] << 8*i;
+            }
+            temp |= shifted;
+            data_ctr++;
+
+            if(data_ctr >= data_len)
+                break;
+        }
+
+        flashBuffer[idx] = temp;
+        flash_ctr++;
+    }
+    return flash_ctr;
 }
 
 //============================================================================
@@ -107,9 +142,15 @@ uint8_t flashingTransferData(uint32_t address, uint8_t* data, uint32_t data_len)
     }
 
     // TODO: Erase Flash Necessary? See flashWrite internal
-
     // TODO: Check Edge cases -> Decide what to do when data_len % size(uint32_t) > 0!
-    bool flashed = flashWrite(address, (uint32_t*)(data), (size_t)data_len / sizeof(uint32_t));
+
+    // Leads to CPU Trap
+    //uint32* data_input = (uint32*) data;
+    //bool flashed = flashWrite(address, data_input, (size_t)data_len / sizeof(uint32));
+
+    // Store flash data to temp flash buffer
+    size_t flashLen = insertDataForFlashing(data, data_len);
+    bool flashed = flashWrite(address, flashBuffer, flashLen);
 
     if(!flashed)
         return FBL_RC_FAILURE_PREVENTS_EXEC_OF_REQUESTED_ACTION;
