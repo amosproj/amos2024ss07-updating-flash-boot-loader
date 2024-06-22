@@ -20,16 +20,43 @@ static inline void dummy_function(QByteArray data) {
     qDebug() << "Received " << data;
 }
 
+void MainWindow::set_uds_connection(enum UDS_CONN conn){
+
+
+    // Only consider GUI, Flashing is connected within FlashManager (own UDS instance)
+    switch(conn){
+        case GUI:
+            qDebug("MainWindow: Call of set_uds_connection for GUI");
+            // Comm RX Signal to UDS RX Slot
+            disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
+
+            // UDS TX Signals to Comm TX Slots
+            disconnect(uds, SIGNAL(setID(uint32_t)), 0, 0);
+            disconnect(uds, SIGNAL(txData(QByteArray)), 0, 0);
+
+            // UDS Receive Signals to GUI Slots
+            disconnect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), 0, 0);
+
+            // ####################################################################################
+
+            // Comm RX Signal to UDS RX Slot
+            connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
+
+            // UDS TX Signals to Comm TX Slots
+            connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
+            connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
+
+            // UDS Receive Signals to GUI Slots
+            connect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), this, SLOT(ecuResponseSlot(QMap<QString,QString>)));
+            break;
+
+        default:
+            break;
+    }
+}
+
 void MainWindow::connectSignalSlots() {
-    // Comm RX Signal to UDS RX Slot
-    connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
-
-    // UDS TX Signals to Comm TX Slots
-    connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
-    connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
-
-    // UDS Receive Signals to GUI Slots
-    connect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), this, SLOT(ecuResponseSlot(QMap<QString,QString>)));
+    set_uds_connection(GUI);
 
     // FlashManager Signals
     connect(flashMan, SIGNAL(flashingThreadStarted()), this, SLOT(stopUDSUsage()));
@@ -112,7 +139,7 @@ void MainWindow::connectSignalSlots() {
             }
             else{
                 flashMan->setFile("Testing.test");
-                flashMan->startFlashing(selectedID);
+                flashMan->startFlashing(selectedID, gui_id, comm);
             }
 
         } else {
@@ -152,7 +179,6 @@ MainWindow::MainWindow(QWidget *parent)
     qInfo("Main: Create the FlashManager");
     threadFlashing = new QThread();
     flashMan = new FlashManager();
-    flashMan->setUDS(uds);
     flashMan->moveToThread(threadFlashing);
 
     ui->table_ECU->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -321,6 +347,9 @@ void MainWindow::setFlashButton(FLASH_BTN m){
 //=============================================================================
 
 void MainWindow::startUDSUsage(){
+    // Connect UDS and Comm Layer
+    set_uds_connection(GUI);
+
     // Connect the Connectivity Timer
     connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
 

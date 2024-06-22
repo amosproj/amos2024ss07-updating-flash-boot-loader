@@ -45,10 +45,6 @@ FlashManager::~FlashManager(){
 // Public Method
 //============================================================================
 
-void FlashManager::setUDS(UDS *uds){
-    this->uds = uds;
-}
-
 void FlashManager::setFile(QString file){
     this->file = file;
 
@@ -416,7 +412,7 @@ void FlashManager::finishFlashing(){
     // Update Programming Date
     QByteArray flashdate = getCurrentFlashDate();
     uint8_t *data = (uint8_t*)flashdate.data();
-    //uds->writeDataByIdentifier(ecu_id, FBL_DID_PROGRAMMING_DATE, data, flashdate.size());
+    uds->writeDataByIdentifier(ecu_id, FBL_DID_PROGRAMMING_DATE, data, flashdate.size());
 
 
     // =========================================================================
@@ -433,3 +429,4 @@ void FlashManager::finishFlashing(){
 void FlashManager::runThread(){
     this->doFlashing();
 }
+

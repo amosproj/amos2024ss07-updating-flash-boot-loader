@@ -25,6 +25,7 @@ class MainWindow : public QMainWindow
 private:
     uint8_t gui_id = 0x01;
     enum FLASH_BTN {FLASH, STOP};
+    enum UDS_CONN {GUI, FLASHING};
 
     Ui::MainWindow *ui;
     EditableComboBox *editComboBox_speed;
@@ -45,6 +46,7 @@ public:
     void updateStatus(FlashManager::STATUS s, QString str, int percent);
 
 private:
+    void set_uds_connection(enum UDS_CONN);
     void connectSignalSlots();
     void updateECUList();
 

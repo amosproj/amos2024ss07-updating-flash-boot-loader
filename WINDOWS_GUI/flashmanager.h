@@ -27,6 +27,7 @@
 #include <stdint.h>
 
 #include "UDS_Layer/UDS.hpp"
+#include "Communication_Layer/Communication.hpp"
 
 class FlashManager : public QObject {
     Q_OBJECT
@@ -40,6 +41,7 @@ private:
     uint8_t state_attempt_ctr;                                  // State attempt counter
     uint32_t ecu_id;                                            // ECU ID to flash
     UDS *uds;                                                   // Reference to UDS Layer
+    Communication *comm;                                        // Reference to Comm Layer
     QString file;                                               // Reference to file for flashing
     QMap<uint32_t, QByteArray> flashContent;                    // Map with Address -> continous byte array
 
@@ -57,11 +59,10 @@ public:
     explicit FlashManager(QObject *parent = 0);
     virtual ~FlashManager();
 
-    void setUDS(UDS *uds);
     void setECUID(uint32_t ecu_id);
     void setFile(QString file);
 
-    void startFlashing(uint32_t ecu_id){
+    void startFlashing(uint32_t ecu_id, uint32_t gui_id, Communication* comm){
 
         if(ecu_id <= 0){
             emit errorPrint("FlashManager: Could not start flashing. Wrong ECU ID given");
@@ -70,6 +71,18 @@ public:
         }
 
         this->ecu_id = ecu_id;
+        this->comm = comm;
+        this->uds = new UDS(gui_id);
+
+        // Disconnect everything from comm
+        disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
+
+        // Comm RX Signal to UDS RX Slot
+        connect(this->comm, SIGNAL(rxDataReceived(uint, QByteArray)), this->uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
+
+        // UDS TX Signals to Comm TX Slots
+        connect(this->uds, SIGNAL(setID(uint32_t)),    this->comm, SLOT(setIDSlot(uint32_t)));
+        connect(this->uds, SIGNAL(txData(QByteArray)), this->comm, SLOT(txDataSlot(QByteArray)));
 
         state_attempt_ctr = 0;
         curr_state = PREPARE;
@@ -89,6 +102,13 @@ public:
             _abort = true;
         }
         mutex.unlock();
+
+        // Comm RX Signal to UDS RX Slot
+        disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
+
+        // UDS TX Signals to Comm TX Slots
+        disconnect(uds, SIGNAL(setID(uint32_t)), 0, 0);
+        disconnect(uds, SIGNAL(txData(QByteArray)), 0, 0);
 
         qInfo() << "FlashManager: Stopping Flashing Thread";
         emit flashingStopThreadRequested();
