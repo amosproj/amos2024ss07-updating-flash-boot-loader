@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
-
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : flashing.c
-// Author      : Dorothea Ehrl, Michael Bauer
+// Author      : Dorothea Ehrl, Michael Bauer, Wiktor Pilarczyk
 // Version     : 0.1
 // Copyright   : MIT
 // Description : Manages flash data
@@ -47,6 +47,17 @@ uint32_t flashingGetDIDData(uint16_t DID){
     return data;
 }
 
+static inline bool addrInCoreRangeCheck(uint32_t addr, uint32_t data_len, uint16_t start_addr_ID, uint16_t end_addr_ID) {
+    uint32_t core_start_add = flashingGetDIDData(start_addr_ID);
+    uint32_t core_end_add = flashingGetDIDData(end_addr_ID);
+    if((core_start_add > 0 && core_end_add > 0) && (addr >= core_start_add && addr < core_end_add)){
+        // address belongs to core
+        if(addr + data_len <= core_end_add)
+            return true;
+    }
+    return false;
+}
+
 //============================================================================
 // Public
 //============================================================================
@@ -63,30 +74,11 @@ uint8_t flashingRequestDownload(uint32_t address, uint32_t data_len){
         return FBL_RC_UPLOAD_DOWNLOAD_NOT_ACCEPTED;
 
     // Check on Flash Memory to accept download
-    uint32_t core0_start_add = flashingGetDIDData(FBL_DID_BL_WRITE_START_ADD_CORE0);
-    uint32_t core0_end_add = flashingGetDIDData(FBL_DID_BL_WRITE_END_ADD_CORE0);
-    if((core0_start_add > 0 && core0_end_add > 0) && (address >= core0_start_add && address < core0_end_add)){
-        // address belongs to core 0
-        if(address + data_len > core0_end_add)
-            return FBL_RC_REQUEST_OUT_OF_RANGE;
-
-    }
-
-    uint32_t core1_start_add = flashingGetDIDData(FBL_DID_BL_WRITE_START_ADD_CORE1);
-    uint32_t core1_end_add = flashingGetDIDData(FBL_DID_BL_WRITE_END_ADD_CORE1);
-    if((core1_start_add > 0 && core1_end_add > 0) && (address >= core1_start_add && address < core1_end_add)){
-        // address belongs to core 1
-        if(address + data_len > core1_end_add)
-            return FBL_RC_REQUEST_OUT_OF_RANGE;
-
-    }
-
-    uint32_t core2_start_add = flashingGetDIDData(FBL_DID_BL_WRITE_START_ADD_CORE2);
-    uint32_t core2_end_add = flashingGetDIDData(FBL_DID_BL_WRITE_END_ADD_CORE2);
-    if((core2_start_add > 0 && core2_end_add > 0) && (address >= core2_start_add && address < core2_end_add)){
-        // address belongs to core 2
-        if(address + data_len > core2_end_add)
-            return FBL_RC_REQUEST_OUT_OF_RANGE;
+    if(!addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE0, FBL_DID_BL_WRITE_END_ADD_CORE0) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE1, FBL_DID_BL_WRITE_END_ADD_CORE1) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE2, FBL_DID_BL_WRITE_END_ADD_CORE2))
+    {
+        return FBL_RC_REQUEST_OUT_OF_RANGE;
     }
 
     // Store base address for flashing
