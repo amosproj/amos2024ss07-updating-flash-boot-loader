@@ -376,7 +376,6 @@ void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc){
                 return;
             }
 
-            else
 
             // Only copy if counter is different. Sender needs to make sure that correct sequence is transmitted
             if(iso_RX_Multi->last_consecutive_ctr != data_ptr[0]){
@@ -384,8 +383,10 @@ void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc){
                 iso_RX_Multi->write_ptr += dlc - 1;
             }
 
-            // Send response for Consecutive Frame
-            canTransmitMessage(getID(), &data_ptr[0], 1);
+            if(ISOTP_RX_ACK_CONSECUTIVE_FRAMES){
+                // Send response for Consecutive Frame
+                canTransmitMessage(getID(), &data_ptr[0], 1);
+            }
 
             // Store the counter
             iso_RX_Multi->last_consecutive_ctr = data_ptr[0];
