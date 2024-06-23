@@ -11,7 +11,6 @@
 // Description : Loader initial file
 //============================================================================
 
-#include <time.h>
 
 #include "bootloader.h"
 
@@ -28,11 +27,12 @@
 #include "memory.h"
 #include "reset_TC375_LK.h"
 #include "reset.h"
+#include "Bsp.h"
 
 uint8_t* rx_uds_message;
 uint32_t rx_total_length;
 
-time_t seconds;
+Ifx_TickTime time = 0;
 int jumpToASW = 0;
 
 /**
@@ -47,7 +47,7 @@ void init_bootloader(void){
 
     // Memory
     init_memory();
-    seconds = time(NULL);
+    time = now();
     // Session Manager
     init_session_manager();
 
@@ -64,8 +64,6 @@ void bootloaderJumpToASW(void){
     //Write Flag
     jumpToASW = 1;
     softReset(); //Should trigger start up Flow
-
-    //magic numbers im arbeitspeicher -> jump zum bootloader oder nicht -> App reset
 }
 
 /**
@@ -78,12 +76,12 @@ void cyclicProcessing (void){
     if(rx_total_length != 0){
         ledToggleActivity(0);
         uds_handleRX(rx_uds_message, rx_total_length);
-        time(&seconds); //Assumes no tester present was received
+        time = now(); //Assumes no tester present was received
     }
-//    else if (difftime(time(NULL), seconds) > 5)
-//    {
+        else if (elapsed(time)>5000)
+    {
         bootloaderJumpToASW();
-//    }
+    }
     
 
 }
