@@ -68,6 +68,7 @@ void MainWindow::connectSignalSlots() {
                 qDebug() << "Couldn't open file " + filePath + " " + file.errorString();
                 return;
             }
+            ui->label_version->setText("File version: " + dummy_flash_version(filePath));
             ui->label_size->setText("File size: " + QString::number(file.size()));
             QByteArray data = file.readAll();
             ui->label_content->setText("File content: " + data.left(16).toHex());

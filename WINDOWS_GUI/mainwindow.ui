@@ -211,6 +211,13 @@ li.checked::marker { content: &quot;\2612&quot;; }
            </widget>
           </item>
           <item>
+           <widget class="QLabel" name="label_version">
+            <property name="text">
+             <string>File version:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLabel" name="label_content">
             <property name="text">
              <string>File content:</string>
