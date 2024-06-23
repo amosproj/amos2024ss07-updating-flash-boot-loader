@@ -60,8 +60,6 @@ static inline bool addrInCoreRangeCheck(uint32_t addr, uint32_t data_len, uint16
 }
 
 static inline size_t insertDataForFlashing(uint8_t* data, uint32_t data_len){
-    // TODO: Other format necessary? Big vs. Little Endian
-    bool revert = 0;
 
     uint32_t data_ctr = 0;
     size_t flash_ctr = 0;
@@ -75,7 +73,7 @@ static inline size_t insertDataForFlashing(uint8_t* data, uint32_t data_len){
 
         for(int i = 0; i < sizeof(uint32); i++){
 
-            if(revert){
+            if(FLASHING_FLASHING_ENDIANNESS){
                 shifted = (uint32)data[data_ctr] << 8*(sizeof(uint32)-1-i);
             } else{
                 shifted = (uint32)data[data_ctr] << 8*i;

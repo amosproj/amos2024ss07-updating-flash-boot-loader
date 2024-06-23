@@ -13,6 +13,8 @@
 #ifndef BOOTLOADER_INC_FLASHING_H_
 #define BOOTLOADER_INC_FLASHING_H_
 
+#define FLASHING_FLASHING_ENDIANNESS    (0)     // 0 = Big-endian, 1=Little-endian; // TODO: Other format necessary? Big vs. Little Endian
+
 #include "Ifx_Types.h"
 #include <stdint.h>
 
