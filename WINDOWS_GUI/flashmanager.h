@@ -74,8 +74,6 @@ public:
         this->comm = comm;
         this->uds = new UDS(gui_id);
 
-        //TODO: Take care of UDS logging to console/log
-
         // Disconnect everything from comm
         disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
 
@@ -85,6 +83,10 @@ public:
         // UDS TX Signals to Comm TX Slots
         connect(this->uds, SIGNAL(setID(uint32_t)),    this->comm, SLOT(setIDSlot(uint32_t)), Qt::DirectConnection);
         connect(this->uds, SIGNAL(txData(QByteArray)), this->comm, SLOT(txDataSlot(QByteArray)), Qt::DirectConnection);
+
+        // GUI Console Print
+        connect(this->uds, SIGNAL(toConsole(QString)), this, SLOT(forwardToConsole(QString)), Qt::DirectConnection);
+        connect(this->comm, SIGNAL(toConsole(QString)), this, SLOT(forwardToConsole(QString)), Qt::DirectConnection);
 
         state_attempt_ctr = 0;
         curr_state = PREPARE;
@@ -181,6 +183,12 @@ public slots:
      * @brief Slot to run the flashing Thread
      */
     void runThread();
+
+    /**
+     * @brief Slot to forward to infoPrint
+     * @param text
+     */
+    void forwardToConsole(const QString &text);
 
 };
 

@@ -430,3 +430,7 @@ void FlashManager::runThread(){
     this->doFlashing();
 }
 
+
+void FlashManager::forwardToConsole(const QString &text){
+    emit infoPrint(text);
+}
