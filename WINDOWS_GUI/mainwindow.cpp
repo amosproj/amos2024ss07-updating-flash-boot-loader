@@ -56,7 +56,14 @@ void MainWindow::set_uds_connection(enum UDS_CONN conn){
 }
 
 void MainWindow::connectSignalSlots() {
+
     set_uds_connection(GUI);
+
+    // ValidateManager Signals
+    connect(validMan, SIGNAL(infoPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    connect(validMan, SIGNAL(debugPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    connect(validMan, SIGNAL(errorPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    connect(validMan, SIGNAL(updateLabel(ValidateManager::LABEL, QString)), this, SLOT(updateLabelSlot(ValidateManager::LABEL, QString)));
 
     // FlashManager Signals
     connect(flashMan, SIGNAL(flashingThreadStarted()), this, SLOT(stopUDSUsage()));
@@ -96,10 +103,20 @@ void MainWindow::connectSignalSlots() {
                 qDebug() << "Couldn't open file " + path + " " + file.errorString();
                 return;
             }
-            ui->label_size->setText("File size: " + QString::number(file.size()));
+            ui->label_size->setText("File size:  " + QString::number(file.size()));
             QByteArray data = file.readAll();
-            ui->label_content->setText("File content: " + data.left(16).toHex());
-            dummy_function(data);
+            ui->label_content->setText("File content:  " + data.left(16).toHex());
+
+            // Set file type
+            QFileInfo fileInfo(path);
+            QString fileType = fileInfo.suffix();
+
+            ui->label_type->setText("File type:  " + fileType);
+
+            // Validate file, result is already prepared for furhter calculations
+            validMan->data = validMan->validateFile(data);
+
+            //dummy_function(data);
             file.close();
         }
     });
@@ -182,6 +199,10 @@ MainWindow::MainWindow(QWidget *parent)
     flashMan = new FlashManager();
     flashMan->moveToThread(threadFlashing);
 
+    qInfo("Main: Create the ValidateManager");
+    validMan = new ValidateManager();
+    validMan->uds = uds;
+
     ui->table_ECU->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->table_ECU->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->table_ECU->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -224,6 +245,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+
 void MainWindow::updateStatus(FlashManager::STATUS s, QString str, int percent) {
     QString status = "";
     int val = min(max(0, percent), 100);
@@ -252,8 +274,34 @@ void MainWindow::updateStatus(FlashManager::STATUS s, QString str, int percent) 
         QString rest = this->ui->textBrowser_flash_status->toPlainText();
         this->ui->textBrowser_flash_status->setText(status + str + "\n" + rest);
     }
-
 }
+
+
+void MainWindow::updateLabel(ValidateManager::LABEL s, QString str) {
+    QString status = "";
+
+    switch(s) {
+    case ValidateManager::HEADER:
+        ui->label_header->setText(str);
+        break;
+    case ValidateManager::VALID:
+        ui->label_valid->setText(str);
+        break;
+    case ValidateManager::CONTENT:
+        ui->label_content->setText(str);
+        break;
+    case ValidateManager::SIZE:
+        ui->label_size->setText(str);
+        break;
+    case ValidateManager::TYPE:
+        ui->label_type->setText(str);
+        break;
+    default:
+        qDebug() << "Error wrong status for updateLabel " + QString::number(s);
+        break;
+    }
+}
+
 
 void MainWindow::updateECUList(){
     qInfo() << "Updating ECU List";
@@ -387,6 +435,11 @@ void MainWindow::updateStatusSlot(FlashManager::STATUS s, const QString &str, in
     this->updateStatus(s, str, percent);
 }
 
+void MainWindow::updateLabelSlot(ValidateManager::LABEL s, const QString &str) {
+    qDebug() << "MainWindow: updateStatusSlot " << s << str;
+    this->updateLabel(s, str);
+}
+
 //Will show/hide the new ComboBoxes below the ComboBox for the protocol
 void MainWindow::comboBoxIndexChanged(int index)
 {
@@ -492,3 +545,5 @@ void MainWindow::checkECUconnectivity() {
     }
     ui->label_ECU_status->setStyleSheet("QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color: " + color + "}");
 }
+
+
