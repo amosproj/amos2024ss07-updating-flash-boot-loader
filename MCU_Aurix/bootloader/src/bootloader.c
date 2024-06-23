@@ -63,7 +63,7 @@ void init_bootloader(void){
 void bootloaderJumpToASW(void){
     //Write Flag
     jumpToASW = 1;
-    softReset(); //Should trigger start up Flow
+    softReset(); //Startup
 }
 
 /**
