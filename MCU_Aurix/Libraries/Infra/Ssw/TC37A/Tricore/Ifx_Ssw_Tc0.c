@@ -285,7 +285,7 @@ static void __Core0_start(void)
         Ifx_Ssw_MTCR(CPU_BIV, 0x804F4000);
         /* Interrupt stack pointer is configured */
         Ifx_Ssw_MTCR(CPU_ISP, (unsigned int)__ISTACK(0));
-        asw = (void*) 0x800924b8;
+        asw = (void*) 0x80092130;
     }
     else{
         /* These to be un commented if A8 and A9 are required to be initialized */
