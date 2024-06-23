@@ -14,6 +14,8 @@
 #include <QMap>
 #include <QByteArray>
 
+#include "UDS_Layer/UDS.hpp"
+
 
 
 class ValidateManager : public QObject {
@@ -29,6 +31,8 @@ public:
     QMap<uint32_t, QByteArray> validateFile(QByteArray data);
 
     QMap<uint32_t, QByteArray> data;
+
+    UDS *uds;
 
 private:
          // Add any private member variables or functions here if needed
