@@ -9,7 +9,7 @@
 
 #include "UDS_Layer/UDS.hpp"
 #include "Communication_Layer/Communication.hpp"
-
+#include "flashmanager.h"
 #include "validatemanager.h"
 
 QT_BEGIN_NAMESPACE
@@ -24,25 +24,32 @@ class MainWindow : public QMainWindow
     
 private:
     uint8_t gui_id = 0x01;
+    enum FLASH_BTN {FLASH, STOP};
+    enum UDS_CONN {GUI, FLASHING};
 
     Ui::MainWindow *ui;
     EditableComboBox *editComboBox_speed;
     QComboBox *comboBox_speedUnit;
 
+    QThread *threadComm;
     Communication *comm;
     UDS *uds;
+    QThread *threadFlashing;
+    FlashManager *flashMan;
     QMap<QString, QMap<QString, QString>> eculist;
-
-
+    ValidateManager *validMan;
+    QTimer *ecuConnectivityTimer;
 
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    ValidateManager *validMan;
+    void updateStatus(FlashManager::STATUS s, QString str, int percent);
     void updateLabel(ValidateManager::LABEL s, QString str);
 
+
 private:
+    void set_uds_connection(enum UDS_CONN);
     void connectSignalSlots();
     void updateECUList();
 
@@ -52,11 +59,14 @@ private:
     uint32_t getECUID();
     bool ECUSelected();
 
-    void setupECUForFlashing(uint32_t id);
-    QByteArray getCurrentFlashDate();
-    void udsUpdateProgrammingDate(uint32_t id);
+    void setFlashButton(FLASH_BTN m);
 
 private slots:
+    void startUDSUsage();
+    void stopUDSUsage();
+
+    void updateStatusSlot(FlashManager::STATUS s, const QString &str, int percent);
+
     void comboBoxIndexChanged(int index);
     void appendTextToConsole(const QString &text);
 

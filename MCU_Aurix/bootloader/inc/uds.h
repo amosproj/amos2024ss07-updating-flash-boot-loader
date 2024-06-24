@@ -5,7 +5,7 @@
 //============================================================================
 // Name        : uds.h
 // Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer
-// Version     : 0.2
+// Version     : 0.3
 // Copyright   : MIT
 // Description : Handles UDS messages from CAN bus
 //============================================================================
@@ -21,7 +21,7 @@
 
 struct UDS_Msg {
     uint32_t len;
-    uint8_t data[]; // flexible array member
+    uint8_t* data;
 };
 typedef struct UDS_Msg UDS_Msg;
 
@@ -54,12 +54,12 @@ void uds_read_memory_by_address(uint32_t address, uint16_t noBytesToRead);
 void uds_write_data_by_identifier(uint16_t did, uint8_t* data, uint8_t data_len);
 
 // Upload | Download
-void uds_request_download(void);
-void uds_request_upload(void);
-void uds_transfer_data(uint8_t* data);
-void uds_request_transfer_exit(void);
+void uds_request_download(uint32_t address, uint32_t data_len);
+void uds_request_upload(uint32_t address, uint32_t data_len);
+void uds_transfer_data(uint32_t address, uint8_t* data, uint32_t data_len);
+void uds_request_transfer_exit(uint32_t address);
 
 // Negative Response - Common Response Codes
-void uds_neg_response(uint8_t reg_sid, uint8_t neg_code);
+void uds_neg_response(uint8_t rej_sid, uint8_t neg_code);
 
 #endif /* BOOTLOADER_INC_UDS_H_ */

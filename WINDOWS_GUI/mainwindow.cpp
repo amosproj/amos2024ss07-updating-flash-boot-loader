@@ -8,10 +8,8 @@
 #include <QAction>
 #include <QMessageBox>
 #include <QPixmap>
-#include <QTimer>
 #include <QTableView>
-#include <QDate>
-#include <QTime>
+#include <QTimer>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -22,11 +20,44 @@ static inline void dummy_function(QByteArray data) {
     qDebug() << "Received " << data;
 }
 
-static inline void dummy_flash(QString dev) {
-    qDebug() << "Flash " << dev;
+void MainWindow::set_uds_connection(enum UDS_CONN conn){
+
+
+    // Only consider GUI, Flashing is connected within FlashManager (own UDS instance)
+    switch(conn){
+        case GUI:
+            qDebug("MainWindow: Call of set_uds_connection for GUI");
+            // Comm RX Signal to UDS RX Slot
+            disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
+
+            // UDS TX Signals to Comm TX Slots
+            disconnect(uds, SIGNAL(setID(uint32_t)), 0, 0);
+            disconnect(uds, SIGNAL(txData(QByteArray)), 0, 0);
+
+            // UDS Receive Signals to GUI Slots
+            disconnect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), 0, 0);
+
+            // ####################################################################################
+
+            // Comm RX Signal to UDS RX Slot
+            connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
+
+            // UDS TX Signals to Comm TX Slots
+            connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)), Qt::DirectConnection);
+            connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)), Qt::DirectConnection);
+
+            // UDS Receive Signals to GUI Slots
+            connect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), this, SLOT(ecuResponseSlot(QMap<QString,QString>)), Qt::DirectConnection);
+            break;
+
+        default:
+            break;
+    }
 }
 
 void MainWindow::connectSignalSlots() {
+
+    set_uds_connection(GUI);
 
     // ValidateManager Signals
     connect(validMan, SIGNAL(infoPrint(QString)), this, SLOT(appendTextToConsole(QString)));
@@ -34,22 +65,23 @@ void MainWindow::connectSignalSlots() {
     connect(validMan, SIGNAL(errorPrint(QString)), this, SLOT(appendTextToConsole(QString)));
     connect(validMan, SIGNAL(updateLabel(ValidateManager::LABEL, QString)), this, SLOT(updateLabelSlot(ValidateManager::LABEL, QString)));
 
-    // Comm RX Signal to UDS RX Slot
-    connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
-
-    // UDS TX Signals to Comm TX Slots
-    connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
-    connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
-
-    // UDS Receive Signals to GUI Slots
-    connect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), this, SLOT(ecuResponseSlot(QMap<QString,QString>)));
+    // FlashManager Signals
+    connect(flashMan, SIGNAL(flashingThreadStarted()), this, SLOT(stopUDSUsage()));
+    connect(flashMan, SIGNAL(flashingThreadFinished()), this, SLOT(startUDSUsage()));
+    connect(flashMan, SIGNAL(flashingStartThreadRequested()), threadFlashing, SLOT(start()));
+    connect(threadFlashing, SIGNAL(started()), flashMan, SLOT(runThread()));
+    connect(flashMan, SIGNAL(flashingThreadFinished()), threadFlashing, SLOT(quit()), Qt::DirectConnection);
+    connect(flashMan, SIGNAL(infoPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    connect(flashMan, SIGNAL(debugPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    connect(flashMan, SIGNAL(errorPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    connect(flashMan, SIGNAL(updateStatus(FlashManager::STATUS, QString, int)), this, SLOT(updateStatusSlot(FlashManager::STATUS, QString, int)));
 
     // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
     connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
             &MainWindow::comboBoxIndexChanged);
 
     // GUI Console Print
-    connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)));
+    connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)), Qt::DirectConnection);
     connect(comm, SIGNAL(toConsole(QString)), this, SLOT(appendTextToConsole(QString)), Qt::DirectConnection);
 
     // GUI menu bar
@@ -84,8 +116,6 @@ void MainWindow::connectSignalSlots() {
             // Validate file, result is already prepared for furhter calculations
             validMan->data = validMan->validateFile(data);
 
-
-
             //dummy_function(data);
             file.close();
         }
@@ -113,7 +143,6 @@ void MainWindow::connectSignalSlots() {
     });
 
     // GUI flash
-    /*
     connect(ui->button_flash, &QPushButton::clicked, this, [=]() {
         this->ui->textBrowser_flash_status->clear();
         this->ui->progressBar_flash->setValue(0);
@@ -121,37 +150,24 @@ void MainWindow::connectSignalSlots() {
         if(ui->label_selected_ECU->text() != "") {
             uint32_t selectedID = getECUID();
 
-            appendTextToConsole("\n\nINFO: ONLY DEMO UI - Flashing currently not supported on ECU.");
-            setupECUForFlashing(selectedID);
+            if(ui->button_flash->text().contains("Stop")){
+                flashMan->stopFlashing();
+                threadFlashing->wait();
+            }
+            else{
+                flashMan->setFile("Testing.test");
+                flashMan->startFlashing(selectedID, gui_id, comm);
+            }
 
-            dummy_flash(ui->label_selected_ECU->text());
-            // Just for demonstration purposes
-            updateStatus(RESET, "");
-            updateStatus(UPDATE, "Flashing started for " + ui->label_selected_ECU->text());
-            updateStatus(INFO, "It may take a while");
-
-            for(int j = 1; j < 100; j++)
-                QTimer::singleShot(j*35, [this]{
-                    updateStatus(UPDATE, "Flashing in Progress.. Please Wait");
-                });
-            QTimer::singleShot(100*35, [this, selectedID]{
-                updateStatus(RESET, "");
-                updateStatus(INFO, "Flashing finished!");
-                this->udsUpdateProgrammingDate(selectedID);
-
-                updateStatus(INFO, "Updating ECU List");
-                this->updateECUList();
-            });
         } else {
             this->ui->textBrowser_flash_status->setText("No valid ECU selected");
         }
     });
-    */
 
     // GUI connectivity indicator
-    QTimer *timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
-    timer->start(1000);
+    ecuConnectivityTimer = new QTimer(this);
+    connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
+    ecuConnectivityTimer->start(1000);
 
     //Set baudrate
     connect(this, SIGNAL(baudrateSignal(uint, uint)), comm, SLOT(setBaudrate(uint, uint)), Qt::DirectConnection);
@@ -172,10 +188,16 @@ MainWindow::MainWindow(QWidget *parent)
     ui->label_logo->setPixmap(pix);
 
     qInfo("Main: Create Communication Layer");
+    threadComm = new QThread();
     comm = new Communication();
 
     qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
     uds = new UDS(gui_id);
+
+    qInfo("Main: Create the FlashManager");
+    threadFlashing = new QThread();
+    flashMan = new FlashManager();
+    flashMan->moveToThread(threadFlashing);
 
     qInfo("Main: Create the ValidateManager");
     validMan = new ValidateManager();
@@ -190,7 +212,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Init the Communication - Need to be after connectSignalsSlots to directly print to console
     comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
     comm->init(Communication::CAN_DRIVER); // Set to CAN
-
+    comm->moveToThread(threadComm);
 
     // Create both QComboBoxes for later
     editComboBox_speed = new EditableComboBox(this);
@@ -206,14 +228,54 @@ MainWindow::MainWindow(QWidget *parent)
     connect(editComboBox_speed, QOverload<int>::of(&QComboBox::activated), this, &MainWindow::setBaudrate);
 
     ui->Console->setReadOnly(true);
+
+    // Rename Flash Button to make sure that naming is correct
+    setFlashButton(FLASH);
 }
 
 MainWindow::~MainWindow()
 {
+
+    flashMan->stopFlashing();
+    threadFlashing->wait();
+
     delete uds;
     delete comm;
+    delete flashMan;
     delete ui;
 }
+
+
+void MainWindow::updateStatus(FlashManager::STATUS s, QString str, int percent) {
+    QString status = "";
+    int val = min(max(0, percent), 100);
+    switch(s) {
+        case FlashManager::UPDATE:
+            status = "[UPDATE] ";
+            this->ui->progressBar_flash->setValue(val);
+            break;
+        case FlashManager::INFO:
+            status = "[INFO] ";
+            break;
+        case FlashManager::ERR:
+            status = "[ERROR] ";
+            break;
+        case FlashManager::RESET:
+            status = "";
+            this->ui->progressBar_flash->setValue(0);
+            this->ui->textBrowser_flash_status->setText("");
+            break;
+        default:
+            qDebug() << "Error wrong status for updateStatus " + QString::number(val);
+            break;
+    }
+
+    if(!str.isEmpty()){
+        QString rest = this->ui->textBrowser_flash_status->toPlainText();
+        this->ui->textBrowser_flash_status->setText(status + str + "\n" + rest);
+    }
+}
+
 
 void MainWindow::updateLabel(ValidateManager::LABEL s, QString str) {
     QString status = "";
@@ -315,36 +377,63 @@ bool MainWindow::ECUSelected() {
     return !ui->table_ECU->selectedItems().empty() && !ui->table_ECU->selectedItems().at(0)->text().isEmpty();
 }
 
-void MainWindow::setupECUForFlashing(uint32_t id){
+void MainWindow::setFlashButton(FLASH_BTN m){
 
-    appendTextToConsole("Change Session to Programming Session for selected ECU");
-    uds->diagnosticSessionControl(id, FBL_DIAG_SESSION_PROGRAMMING);
-
-    appendTextToConsole("TODO: Add Security Access once activated");
-}
-
-QByteArray MainWindow::getCurrentFlashDate(){
-
-    QDate date = QDate().currentDate();
-    QTime time = QTime().currentTime();
-    QString date_str = date.toString("ddMMyy");
-    QString time_str = time.toString("HHmmss");
-    QString combi = date_str + time_str;
-    QByteArray bcd = QByteArray::fromHex(QByteArray(combi.toLocal8Bit()));
-
-    return bcd;
-}
-
-void MainWindow::udsUpdateProgrammingDate(uint32_t id){
-    QByteArray flashdate = getCurrentFlashDate();
-    uint8_t *data = (uint8_t*)flashdate.data();
-
-    uds->writeDataByIdentifier(id, FBL_DID_PROGRAMMING_DATE, data, flashdate.size());
+    switch(m){
+        case FLASH:
+            ui->button_flash->setText("Flash");
+            break;
+        case STOP:
+            ui->button_flash->setText("Stop Flashing");
+            break;
+        default:
+            ui->button_flash->setText("Flash");
+            break;
+    }
 }
 
 //=============================================================================
 // Slots
 //=============================================================================
+
+void MainWindow::startUDSUsage(){
+    // Connect UDS and Comm Layer
+    set_uds_connection(GUI);
+
+    // Connect the Connectivity Timer
+    connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
+
+    // Enable all buttons with UDS messages
+    ui->button_reset->setDisabled(false);
+    ui->pushButton_ECU_refresh->setDisabled(false);
+
+    // Update of ECU List
+    this->updateECUList();
+
+    // Also set the Flash Button
+    setFlashButton(FLASH);
+}
+
+/**
+ * @brief This methods stops all UDS activity in MainWindow class.
+ * This is necessary to make sure FlashManager and MainWindow are not using UDS communication at the same time. (Can cause conflicts because of different Threads)
+ */
+void MainWindow::stopUDSUsage(){
+    // Disconnect the Connectivity Timer
+    disconnect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
+
+    // Disable all buttons with UDS messages
+    ui->button_reset->setDisabled(true);
+    ui->pushButton_ECU_refresh->setDisabled(true);
+
+    // Also set the Flash Button
+    setFlashButton(STOP);
+}
+
+void MainWindow::updateStatusSlot(FlashManager::STATUS s, const QString &str, int percent) {
+    //qInfo() << "MainWindow: updateStatusSlot " << s << str << percent;
+    this->updateStatus(s, str, percent);
+}
 
 void MainWindow::updateLabelSlot(ValidateManager::LABEL s, const QString &str) {
     qDebug() << "MainWindow: updateStatusSlot " << s << str;
