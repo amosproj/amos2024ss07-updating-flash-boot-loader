@@ -64,12 +64,13 @@ C:\Infineon\AURIX-Studio-1.9.20\tools\AurixFlasherSoftwareTool_v1.0.8\AurixFlash
 - by selecting a row in the table a microcontroller is selected to perform all operations with
 - for a selected microcontroller the current status is shown below the table: green means connected and red connection lost
 - to reset the selected MCU press the `reset` button
-- to flash the selected MCU press the `flash` button
-- for flashing a file must be given through the file selection
+- for flashing a file must be choosed through the Flash File section
+- to flash the file to the selected MCU press the `flash` button
 
-### File
+### Flash File
 
 - press choose file and select a file for flashing in the file explorer
+- the metada of the file are listed underneath, like version, validity, extension, etc.
 
 ### Communication
 
