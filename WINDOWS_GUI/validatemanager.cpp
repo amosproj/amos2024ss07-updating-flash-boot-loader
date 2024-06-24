@@ -232,3 +232,59 @@ QByteArray ValidateManager::extractData(QByteArray line, char record_type)
 
     return trimmed_line;
 }
+
+
+
+bool addrInCoreRange(uint32_t addr, uint32_t data_len, uint16_t start_addr_ID, uint16_t end_addr_ID, UDS *uds, QString ecu_id){
+
+    unsigned int id_int = ecu_id.toUInt();
+    uint32_t ecu_id_int = (0xFFF0 & id_int) >> 4;
+
+    uint32_t core_start_add = uds->readDataByIdentifier(ecu_id_int, (uint16_t)start_addr_ID);
+    uint32_t core_end_add = uds->readDataByIdentifier(ecu_id_int, (uint16_t)end_addr_ID);
+
+    if((core_start_add > 0 && core_end_add > 0) && (addr >= core_start_add && addr < core_end_add)){
+
+        if(addr + data_len <= core_end_add){
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+bool addrInRange(uint32_t address, uint32_t data_len, UDS *uds, QString ecu_id){
+
+    if( !addrInCoreRange(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE0, FBL_DID_BL_WRITE_END_ADD_CORE0, uds, ecu_id) &&
+        !addrInCoreRange(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE1, FBL_DID_BL_WRITE_END_ADD_CORE1, uds, ecu_id) &&
+        !addrInCoreRange(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE2, FBL_DID_BL_WRITE_END_ADD_CORE2, uds, ecu_id))
+    {
+
+        return true;
+    }
+
+    return false;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

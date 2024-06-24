@@ -15,6 +15,7 @@
 #include <QByteArray>
 
 #include "UDS_Layer/UDS.hpp"
+#include "UDS_Spec/uds_comm_spec.h"
 
 
 

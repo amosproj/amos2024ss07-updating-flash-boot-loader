@@ -113,6 +113,60 @@ void MainWindow::connectSignalSlots() {
 
             ui->label_type->setText("File type:  " + fileType);
 
+            qDebug() << " ";
+            qDebug() << " ";
+            qDebug() << " ";
+            qDebug() << "1" << eculist;
+            qDebug() << " ";
+            //ECUSelected();
+
+            QStringList separated = ui->label_selected_ECU->text().split(": 0x");
+            QString ID_HEX_IDK = separated[1];
+
+            int ID_HEX_IDK2 = ID_HEX_IDK.toInt(NULL, 16);
+
+            QString ID_HEX = QString::number(ID_HEX_IDK2);
+
+
+
+            uint32_t ecu_id = getECUID();
+
+            qDebug() << "ECU ID: " << ecu_id;
+            qDebug() << "separated: " << separated;
+            qDebug() << "ID_HEX: " << ID_HEX;
+            qDebug() << "2" << eculist;
+            qDebug() << " ";
+            qDebug() << " ";
+            qDebug() << " ";
+
+
+            uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_SYSTEM_NAME);
+            uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_PROGRAMMING_DATE);
+            uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
+
+            qDebug() << " ";
+            qDebug() << " ";
+            qDebug() << " ";
+            qDebug() << "3" << eculist;
+            qDebug() << " ";
+
+            qDebug() << "ECULIST MIT INDEX" << eculist[ID_HEX];
+
+            QString DID_string = QString::number(FBL_DID_SYSTEM_NAME);
+            QString temp = eculist[ID_HEX][DID_string];
+
+
+
+            qDebug() << " ";
+
+            qDebug() << "Temp: " << temp << " for " << ID_HEX << " with DID " << DID_string;
+            qDebug() << " ";
+
+            qDebug() << "4" << eculist;
+
+            qDebug() << " ";
+            qDebug() << " ";
+            qDebug() << " ";
             // Validate file, result is already prepared for furhter calculations
             validMan->data = validMan->validateFile(data);
 
