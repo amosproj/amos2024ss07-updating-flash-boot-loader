@@ -47,6 +47,7 @@
 #include "Ifx_Ssw_Infra.h"
 #include "Ifx_Cfg_Ssw.h"
 #include "bootloader.h"
+#include "aswadresses.h"
 /*******************************************************************************
 **                       Macros                                               **
 *******************************************************************************/
@@ -280,12 +281,12 @@ static void __Core0_start(void)
         Ifx_Ssw_setAddressReg(a9, __SDATA4(0));
 
         /* Trap vector table initialization is necessary if it is not same as default value */
-        Ifx_Ssw_MTCR(CPU_BTV, 0x80090100);
+        Ifx_Ssw_MTCR(CPU_BTV, ASW0_TRAPVEC);
         /* Base interrupt vector table initialized */
-        Ifx_Ssw_MTCR(CPU_BIV, 0x804F4000);
+        Ifx_Ssw_MTCR(CPU_BIV, ASW0_INTVEC);
         /* Interrupt stack pointer is configured */
         Ifx_Ssw_MTCR(CPU_ISP, (unsigned int)__ISTACK(0));
-        asw = (void*) 0x80092130;
+        asw = (void*) ASW0_CORE0;
     }
     else{
         /* These to be un commented if A8 and A9 are required to be initialized */
