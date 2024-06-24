@@ -73,7 +73,13 @@ private slots:
     void checkECUconnectivity();
     void setBaudrate();
 
+    QMap<uint32_t, QByteArray> validateFile(QByteArray data);
+    bool validateLine(QByteArray line);
+    QByteArray extractData(QByteArray line, char record_type);
+
 signals:
     void baudrateSignal(unsigned int baudrate, unsigned int commType);
+
+
 };
 #endif // MAINWINDOW_H

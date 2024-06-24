@@ -68,11 +68,20 @@ void MainWindow::connectSignalSlots() {
                 qDebug() << "Couldn't open file " + filePath + " " + file.errorString();
                 return;
             }
-            ui->label_version->setText("File version: " + dummy_flash_version(filePath));
-            ui->label_size->setText("File size: " + QString::number(file.size()));
+            ui->label_size->setText("File size:  " + QString::number(file.size()));
             QByteArray data = file.readAll();
-            ui->label_content->setText("File content: " + data.left(16).toHex());
-            dummy_function(data);
+            ui->label_content->setText("File content:  " + data.left(16).toHex());
+
+            // Set file type
+            QFileInfo fileInfo(filePath);
+            QString fileType = fileInfo.suffix();
+
+            ui->label_type->setText("File type:  " + fileType);
+
+            // Validate file, result is already prepared for furhter calculations
+            QMap<uint32_t, QByteArray> result = validateFile(data);
+
+            //dummy_function(data);
             file.close();
         }
     });
@@ -107,7 +116,7 @@ void MainWindow::connectSignalSlots() {
         } else {
             QLabel* label = qobject_cast<QLabel*>(flashPopup.property("label").value<QObject*>());
             label->setText(QString("You are going to flash from ") + QString(this->ui->table_ECU->selectedItems().at(1)->text())
-                                    + QString(" to ") + dummy_flash_version(filePath));
+                                    + QString(" to ") + fileVersion);
             this->flashPopup.show();
         }
     });
@@ -156,7 +165,7 @@ void MainWindow::setupFlashPopup() {
             updateStatus(RESET, "");
             updateStatus(INFO, "Flashing finished!");
             this->udsUpdateProgrammingDate(selectedID);
-            QByteArray arr = dummy_flash_version(filePath).toLocal8Bit();
+            QByteArray arr = fileVersion.toLocal8Bit();
             this->udsUpdateVersion(selectedID, (uint8_t*)arr.data(), arr.size());
 
             updateStatus(INFO, "Updating ECU List");
@@ -479,4 +488,207 @@ void MainWindow::checkECUconnectivity() {
             color = "red";
     }
     ui->label_ECU_status->setStyleSheet("QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color: " + color + "}");
+}
+
+QMap<uint32_t, QByteArray> MainWindow::validateFile(QByteArray data)
+{
+    QList<QByteArray> lines = data.split('\n');
+    int current_index = 0;
+    int result_index = 0;
+
+    int count_record = -1;
+    int count_lines = 0;
+    int nlines = lines.size();
+
+    bool file_validity = true;
+    bool file_header = false;
+
+    QByteArray new_line;
+    QMap<uint32_t, QByteArray> result;
+
+    // Print each line
+    for (QByteArray& line : lines) {
+
+        // remove '\r' at the end of each line
+        if(current_index != (nlines - 1)){
+
+            line = line.left(line.size() - 1 );
+        }
+
+        char record_type = line.at(1);              // get record type
+        line = line.mid(2);                         // Trim Record type for preprocessing
+
+        // Check validity of one line at a time
+        if(!validateLine(line))
+        {
+
+            file_validity = false;
+        }
+
+        // extract header information
+        if(record_type == '0'){
+
+            QByteArray header;
+
+            line = line.left(line.size() - 2);
+            line = line.right(line.size() - 2);
+
+            file_header = true;
+
+
+            for (int i = 0; i < line.size(); i += 2)
+            {
+                // Convert each pair of hex characters to a byte
+                QString hexPair = line.mid(i, 2);
+
+                char asciiChar = hexPair.toUShort(NULL, 16); // Convert hexPair to integer
+
+                if(asciiChar != NULL){
+
+                    header.append(asciiChar);
+                }
+
+            }
+
+            // Convert QByteArray to QString (assuming it's ASCII)
+            fileVersion = QString::fromLatin1(header);
+        }
+        // preprocess data for flashing and count data records for validation
+        else if(record_type == '1' or record_type == '2' or record_type == '3'){
+
+            new_line = extractData(line, record_type);
+
+            result.insert(result_index, new_line);
+
+            result_index += 1;
+            count_lines += 1;
+        }
+        // preprocess data for flashing
+        else if(record_type == '7' or record_type == '8' or record_type == '9'){
+
+            new_line = extractData(line, record_type);
+
+            result.insert(result_index, new_line);
+
+            result_index += 1;
+        }
+        // optional entry, can be used to validate file
+        else if(record_type == '5' or record_type == '6'){
+
+            line = line.left(line.size() - 2);
+            line = line.right(line.size() - 2);
+
+            if(count_record != -1){
+
+                file_validity = false;
+            }
+
+            count_record = line.toInt(NULL, 16);
+        }
+        // S4 is reserved and should not be used & all other inputs are invalid s19 inputs
+        else {
+
+            qDebug() << "There was an error! with the selected file";
+        }
+
+        current_index += 1;
+    }
+
+    if(file_header != true)
+        fileVersion = QString("N/A");
+
+    // Check if count record is present and is correctly set
+    if(count_record != count_lines and count_record != -1){
+
+        file_validity = false;
+    }
+
+    // Show validity of file in UI
+    if(file_validity)
+    {
+
+        ui->label_valid->setText("File validity:  Valid");
+
+    }
+    else {
+
+        ui->label_valid->setText("File validity:  Not Valid");
+    }
+
+    ui->label_version->setText("File version: " + fileVersion);
+
+    return result;
+}
+
+
+bool MainWindow::validateLine(QByteArray line)
+{
+    int sum = 0;
+    int checksum = line.right(2).toInt(NULL, 16); // Extracts the last two characters
+
+    // Remove the checksum from the original line for further processing
+    QByteArray trimmedLine = line.left(line.size() - 2);
+
+    // Process the line in pairs of hexadecimal values
+    for (int i = 0; i < trimmedLine.size(); i += 2)
+    {
+        // Extract each pair of characters
+        QByteArray hexPair = trimmedLine.mid(i, 2);
+
+        // Convert the hexPair to a hexadecimal value
+        bool ok;
+        uint32_t hexValue = hexPair.toInt(&ok, 16); // Convert hexPair to ushort (16-bit) integer
+
+        if (!ok)
+        {
+            // Handle conversion error
+            qDebug() << "Error converting hexPair:" << hexPair;
+
+            return false;
+        }
+        else
+        {
+
+            sum += hexValue;
+        }
+
+    }
+
+    if(checksum == (0xFF - (sum & 0xFF))){
+
+        return true;
+    }
+
+    return false;
+}
+
+QByteArray MainWindow::extractData(QByteArray line, char record_type)
+{
+    // Trim Count
+    QByteArray trimmed_line = line.left(line.size() - 2);
+    // Trim Checksum
+    trimmed_line = trimmed_line.right(trimmed_line.size() - 2);
+
+    // Pad address
+    if(record_type == '1' or record_type == '9'){
+
+        trimmed_line = trimmed_line.rightJustified(trimmed_line.size() + 4, '0');
+    }
+    else if(record_type == '2' or record_type == '8'){
+
+        trimmed_line = trimmed_line.rightJustified(trimmed_line.size() + 2, '0');
+    }
+    else if(record_type == '3' or record_type == '7'){
+
+        // There is nothing to pad, dont do anything
+    }
+    // Did we encounter a S-record that is not supposed to be here?
+    else{
+
+        qDebug() << "There was an error! with current line!";
+    }
+    
+    ui->label_version->setText("File version: " + fileVersion);
+
+    return trimmed_line;
 }
