@@ -35,6 +35,7 @@ private:
     QComboBox *comboBox_speedUnit;
     QWidget flashPopup;
     QString filePath;
+    QString fileVersion;
 
     Communication *comm;
     UDS *uds;

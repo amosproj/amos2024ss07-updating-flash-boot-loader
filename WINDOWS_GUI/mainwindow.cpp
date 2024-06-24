@@ -687,8 +687,6 @@ QByteArray MainWindow::extractData(QByteArray line, char record_type)
 
         qDebug() << "There was an error! with current line!";
     }
-    
-    ui->label_version->setText("File version: " + fileVersion);
 
     return trimmed_line;
 }
