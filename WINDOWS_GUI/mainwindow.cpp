@@ -8,10 +8,8 @@
 #include <QAction>
 #include <QMessageBox>
 #include <QPixmap>
-#include <QTimer>
 #include <QTableView>
-#include <QDate>
-#include <QTime>
+#include <QTimer>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -22,27 +20,68 @@ static inline void dummy_function(QByteArray data) {
     qDebug() << "Received " << data;
 }
 
-static inline void dummy_flash(QString dev) {
-    qDebug() << "Flash " << dev;
+void MainWindow::set_uds_connection(enum UDS_CONN conn){
+
+
+    // Only consider GUI, Flashing is connected within FlashManager (own UDS instance)
+    switch(conn){
+        case GUI:
+            qDebug("MainWindow: Call of set_uds_connection for GUI");
+            // Comm RX Signal to UDS RX Slot
+            disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
+
+            // UDS TX Signals to Comm TX Slots
+            disconnect(uds, SIGNAL(setID(uint32_t)), 0, 0);
+            disconnect(uds, SIGNAL(txData(QByteArray)), 0, 0);
+
+            // UDS Receive Signals to GUI Slots
+            disconnect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), 0, 0);
+
+            // ####################################################################################
+
+            // Comm RX Signal to UDS RX Slot
+            connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
+
+            // UDS TX Signals to Comm TX Slots
+            connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)), Qt::DirectConnection);
+            connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)), Qt::DirectConnection);
+
+            // UDS Receive Signals to GUI Slots
+            connect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), this, SLOT(ecuResponseSlot(QMap<QString,QString>)), Qt::DirectConnection);
+            break;
+
+        default:
+            break;
+    }
 }
 
 void MainWindow::connectSignalSlots() {
-    // Comm RX Signal to UDS RX Slot
-    connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
 
-    // UDS TX Signals to Comm TX Slots
-    connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
-    connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
+    set_uds_connection(GUI);
 
-    // UDS Receive Signals to GUI Slots
-    connect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), this, SLOT(ecuResponseSlot(QMap<QString,QString>)));
+    // ValidateManager Signals
+    connect(validMan, SIGNAL(infoPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    connect(validMan, SIGNAL(debugPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    connect(validMan, SIGNAL(errorPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    connect(validMan, SIGNAL(updateLabel(ValidateManager::LABEL, QString)), this, SLOT(updateLabelSlot(ValidateManager::LABEL, QString)));
+
+    // FlashManager Signals
+    connect(flashMan, SIGNAL(flashingThreadStarted()), this, SLOT(stopUDSUsage()));
+    connect(flashMan, SIGNAL(flashingThreadFinished()), this, SLOT(startUDSUsage()));
+    connect(flashMan, SIGNAL(flashingStartThreadRequested()), threadFlashing, SLOT(start()));
+    connect(threadFlashing, SIGNAL(started()), flashMan, SLOT(runThread()));
+    connect(flashMan, SIGNAL(flashingThreadFinished()), threadFlashing, SLOT(quit()), Qt::DirectConnection);
+    connect(flashMan, SIGNAL(infoPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    connect(flashMan, SIGNAL(debugPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    connect(flashMan, SIGNAL(errorPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    connect(flashMan, SIGNAL(updateStatus(FlashManager::STATUS, QString, int)), this, SLOT(updateStatusSlot(FlashManager::STATUS, QString, int)));
 
     // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
     connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
             &MainWindow::comboBoxIndexChanged);
 
     // GUI Console Print
-    connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)));
+    connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)), Qt::DirectConnection);
     connect(comm, SIGNAL(toConsole(QString)), this, SLOT(appendTextToConsole(QString)), Qt::DirectConnection);
 
     // GUI menu bar
@@ -75,7 +114,7 @@ void MainWindow::connectSignalSlots() {
             ui->label_type->setText("File type:  " + fileType);
 
             // Validate file, result is already prepared for furhter calculations
-            QMap<uint32_t, QByteArray> result = validateFile(data);
+            validMan->data = validMan->validateFile(data);
 
             //dummy_function(data);
             file.close();
@@ -111,36 +150,30 @@ void MainWindow::connectSignalSlots() {
         if(ui->label_selected_ECU->text() != "") {
             uint32_t selectedID = getECUID();
 
-            appendTextToConsole("\n\nINFO: ONLY DEMO UI - Flashing currently not supported on ECU.");
-            setupECUForFlashing(selectedID);
+            if(ui->button_flash->text().contains("Stop")){
+                flashMan->stopFlashing();
+                threadFlashing->wait();
+            }
+            else{
+                if(validMan != nullptr && validMan->data.size() > 0){
+                    flashMan->setFlashFile(validMan->data);
+                } else {
+                    //flashMan->setTestFile();
+                    this->ui->textBrowser_flash_status->setText("No valid Flash File selected");
+                }
 
-            dummy_flash(ui->label_selected_ECU->text());
-            // Just for demonstration purposes
-            updateStatus(RESET, "");
-            updateStatus(UPDATE, "Flashing started for " + ui->label_selected_ECU->text());
-            updateStatus(INFO, "It may take a while");
+                flashMan->startFlashing(selectedID, gui_id, comm);
+            }
 
-            for(int j = 1; j < 100; j++)
-                QTimer::singleShot(j*35, [this]{
-                    updateStatus(UPDATE, "Flashing in Progress.. Please Wait");
-                });
-            QTimer::singleShot(100*35, [this, selectedID]{
-                updateStatus(RESET, "");
-                updateStatus(INFO, "Flashing finished!");
-                this->udsUpdateProgrammingDate(selectedID);
-
-                updateStatus(INFO, "Updating ECU List");
-                this->updateECUList();
-            });
         } else {
             this->ui->textBrowser_flash_status->setText("No valid ECU selected");
         }
     });
 
     // GUI connectivity indicator
-    QTimer *timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
-    timer->start(1000);
+    ecuConnectivityTimer = new QTimer(this);
+    connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
+    ecuConnectivityTimer->start(1000);
 
     //Set baudrate
     connect(this, SIGNAL(baudrateSignal(uint, uint)), comm, SLOT(setBaudrate(uint, uint)), Qt::DirectConnection);
@@ -161,10 +194,20 @@ MainWindow::MainWindow(QWidget *parent)
     ui->label_logo->setPixmap(pix);
 
     qInfo("Main: Create Communication Layer");
+    threadComm = new QThread();
     comm = new Communication();
 
     qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
     uds = new UDS(gui_id);
+
+    qInfo("Main: Create the FlashManager");
+    threadFlashing = new QThread();
+    flashMan = new FlashManager();
+    flashMan->moveToThread(threadFlashing);
+
+    qInfo("Main: Create the ValidateManager");
+    validMan = new ValidateManager();
+    validMan->uds = uds;
 
     ui->table_ECU->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->table_ECU->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -175,7 +218,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Init the Communication - Need to be after connectSignalsSlots to directly print to console
     comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
     comm->init(Communication::CAN_DRIVER); // Set to CAN
-
+    comm->moveToThread(threadComm);
 
     // Create both QComboBoxes for later
     editComboBox_speed = new EditableComboBox(this);
@@ -191,36 +234,39 @@ MainWindow::MainWindow(QWidget *parent)
     connect(editComboBox_speed, QOverload<int>::of(&QComboBox::activated), this, &MainWindow::setBaudrate);
 
     ui->Console->setReadOnly(true);
+
+    // Rename Flash Button to make sure that naming is correct
+    setFlashButton(FLASH);
 }
 
 MainWindow::~MainWindow()
 {
+
+    flashMan->stopFlashing();
+    threadFlashing->wait();
+
     delete uds;
     delete comm;
+    delete flashMan;
     delete ui;
 }
 
-void MainWindow::updateStatus(MainWindow::status s, QString str) {
-    QString status = "";
-    int val = 0;
-    switch(s) {
-        case UPDATE:
-            status = "[UPDATE] ";
-            //qDebug() << this->ui->progressBar_flash->value();
-            val = this->ui->progressBar_flash->value() + 1;
-            if(val % 10)
-                status = "";
 
-            if(val <= 100)
-                this->ui->progressBar_flash->setValue(val);
+void MainWindow::updateStatus(FlashManager::STATUS s, QString str, int percent) {
+    QString status = "";
+    int val = min(max(0, percent), 100);
+    switch(s) {
+        case FlashManager::UPDATE:
+            status = "[UPDATE] ";
+            this->ui->progressBar_flash->setValue(val);
             break;
-        case INFO:
+        case FlashManager::INFO:
             status = "[INFO] ";
             break;
-        case ERR:
+        case FlashManager::ERR:
             status = "[ERROR] ";
             break;
-        case RESET:
+        case FlashManager::RESET:
             status = "";
             this->ui->progressBar_flash->setValue(0);
             this->ui->textBrowser_flash_status->setText("");
@@ -230,12 +276,38 @@ void MainWindow::updateStatus(MainWindow::status s, QString str) {
             break;
     }
 
-    if(!status.isEmpty()){
+    if(!str.isEmpty()){
         QString rest = this->ui->textBrowser_flash_status->toPlainText();
         this->ui->textBrowser_flash_status->setText(status + str + "\n" + rest);
     }
-
 }
+
+
+void MainWindow::updateLabel(ValidateManager::LABEL s, QString str) {
+    QString status = "";
+
+    switch(s) {
+    case ValidateManager::HEADER:
+        ui->label_header->setText(str);
+        break;
+    case ValidateManager::VALID:
+        ui->label_valid->setText(str);
+        break;
+    case ValidateManager::CONTENT:
+        ui->label_content->setText(str);
+        break;
+    case ValidateManager::SIZE:
+        ui->label_size->setText(str);
+        break;
+    case ValidateManager::TYPE:
+        ui->label_type->setText(str);
+        break;
+    default:
+        qDebug() << "Error wrong status for updateLabel " + QString::number(s);
+        break;
+    }
+}
+
 
 void MainWindow::updateECUList(){
     qInfo() << "Updating ECU List";
@@ -311,36 +383,68 @@ bool MainWindow::ECUSelected() {
     return !ui->table_ECU->selectedItems().empty() && !ui->table_ECU->selectedItems().at(0)->text().isEmpty();
 }
 
-void MainWindow::setupECUForFlashing(uint32_t id){
+void MainWindow::setFlashButton(FLASH_BTN m){
 
-    appendTextToConsole("Change Session to Programming Session for selected ECU");
-    uds->diagnosticSessionControl(id, FBL_DIAG_SESSION_PROGRAMMING);
-
-    appendTextToConsole("TODO: Add Security Access once activated");
-}
-
-QByteArray MainWindow::getCurrentFlashDate(){
-
-    QDate date = QDate().currentDate();
-    QTime time = QTime().currentTime();
-    QString date_str = date.toString("ddMMyy");
-    QString time_str = time.toString("HHmmss");
-    QString combi = date_str + time_str;
-    QByteArray bcd = QByteArray::fromHex(QByteArray(combi.toLocal8Bit()));
-
-    return bcd;
-}
-
-void MainWindow::udsUpdateProgrammingDate(uint32_t id){
-    QByteArray flashdate = getCurrentFlashDate();
-    uint8_t *data = (uint8_t*)flashdate.data();
-
-    uds->writeDataByIdentifier(id, FBL_DID_PROGRAMMING_DATE, data, flashdate.size());
+    switch(m){
+        case FLASH:
+            ui->button_flash->setText("Flash");
+            break;
+        case STOP:
+            ui->button_flash->setText("Stop Flashing");
+            break;
+        default:
+            ui->button_flash->setText("Flash");
+            break;
+    }
 }
 
 //=============================================================================
 // Slots
 //=============================================================================
+
+void MainWindow::startUDSUsage(){
+    // Connect UDS and Comm Layer
+    set_uds_connection(GUI);
+
+    // Connect the Connectivity Timer
+    connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
+
+    // Enable all buttons with UDS messages
+    ui->button_reset->setDisabled(false);
+    ui->pushButton_ECU_refresh->setDisabled(false);
+
+    // Update of ECU List
+    this->updateECUList();
+
+    // Also set the Flash Button
+    setFlashButton(FLASH);
+}
+
+/**
+ * @brief This methods stops all UDS activity in MainWindow class.
+ * This is necessary to make sure FlashManager and MainWindow are not using UDS communication at the same time. (Can cause conflicts because of different Threads)
+ */
+void MainWindow::stopUDSUsage(){
+    // Disconnect the Connectivity Timer
+    disconnect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
+
+    // Disable all buttons with UDS messages
+    ui->button_reset->setDisabled(true);
+    ui->pushButton_ECU_refresh->setDisabled(true);
+
+    // Also set the Flash Button
+    setFlashButton(STOP);
+}
+
+void MainWindow::updateStatusSlot(FlashManager::STATUS s, const QString &str, int percent) {
+    //qInfo() << "MainWindow: updateStatusSlot " << s << str << percent;
+    this->updateStatus(s, str, percent);
+}
+
+void MainWindow::updateLabelSlot(ValidateManager::LABEL s, const QString &str) {
+    qDebug() << "MainWindow: updateStatusSlot " << s << str;
+    this->updateLabel(s, str);
+}
 
 //Will show/hide the new ComboBoxes below the ComboBox for the protocol
 void MainWindow::comboBoxIndexChanged(int index)
@@ -448,208 +552,4 @@ void MainWindow::checkECUconnectivity() {
     ui->label_ECU_status->setStyleSheet("QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color: " + color + "}");
 }
 
-QMap<uint32_t, QByteArray> MainWindow::validateFile(QByteArray data)
-{
-    QList<QByteArray> lines = data.split('\n');
-    int current_index = 0;
-    int result_index = 0;
 
-    int count_record = -1;
-    int count_lines = 0;
-    int nlines = lines.size();
-
-    bool file_validity = true;
-    bool file_header = false;
-
-    QByteArray new_line;
-    QMap<uint32_t, QByteArray> result;
-
-    // Print each line
-    for (QByteArray& line : lines) {
-
-        // remove '\r' at the end of each line
-        if(current_index != (nlines - 1)){
-
-            line = line.left(line.size() - 1 );
-        }
-
-        char record_type = line.at(1);              // get record type
-        line = line.mid(2);                         // Trim Record type for preprocessing
-
-        // Check validity of one line at a time
-        if(!validateLine(line))
-        {
-
-            file_validity = false;
-        }
-
-        // extract header information
-        if(record_type == '0'){
-
-            QByteArray header;
-
-            line = line.left(line.size() - 2);
-            line = line.right(line.size() - 2);
-
-            file_header = true;
-
-
-            for (int i = 0; i < line.size(); i += 2)
-            {
-                // Convert each pair of hex characters to a byte
-                QString hexPair = line.mid(i, 2);
-
-                char asciiChar = hexPair.toUShort(NULL, 16); // Convert hexPair to integer
-
-                if(asciiChar != NULL){
-
-                    header.append(asciiChar);
-                }
-
-            }
-
-            // Convert QByteArray to QString (assuming it's ASCII)
-            QString asciiString = QString::fromLatin1(header);
-
-
-            ui->label_header->setText("File header:  " + asciiString);
-
-        }
-        // preprocess data for flashing and count data records for validation
-        else if(record_type == '1' or record_type == '2' or record_type == '3'){
-
-            new_line = extractData(line, record_type);
-
-            result.insert(result_index, new_line);
-
-            result_index += 1;
-            count_lines += 1;
-        }
-        // preprocess data for flashing
-        else if(record_type == '7' or record_type == '8' or record_type == '9'){
-
-            new_line = extractData(line, record_type);
-
-            result.insert(result_index, new_line);
-
-            result_index += 1;
-        }
-        // optional entry, can be used to validate file
-        else if(record_type == '5' or record_type == '6'){
-
-            line = line.left(line.size() - 2);
-            line = line.right(line.size() - 2);
-
-            if(count_record != -1){
-
-                file_validity = false;
-            }
-
-            count_record = line.toInt(NULL, 16);
-        }
-        // S4 is reserved and should not be used & all other inputs are invalid s19 inputs
-        else {
-
-            qDebug() << "There was an error! with the selected file";
-        }
-
-        current_index += 1;
-    }
-
-    if(file_header != true){
-
-        ui->label_header->setText("File header:  N/A");
-    }
-
-    // Check if count record is present and is correctly set
-    if(count_record != count_lines and count_record != -1){
-
-        file_validity = false;
-    }
-
-    // Show validity of file in UI
-    if(file_validity)
-    {
-
-        ui->label_valid->setText("File validity:  Valid");
-
-    }
-    else {
-
-        ui->label_valid->setText("File validity:  Not Valid");
-    }
-
-
-    return result;
-}
-
-
-bool MainWindow::validateLine(QByteArray line)
-{
-    int sum = 0;
-    int checksum = line.right(2).toInt(NULL, 16); // Extracts the last two characters
-
-    // Remove the checksum from the original line for further processing
-    QByteArray trimmedLine = line.left(line.size() - 2);
-
-    // Process the line in pairs of hexadecimal values
-    for (int i = 0; i < trimmedLine.size(); i += 2)
-    {
-        // Extract each pair of characters
-        QByteArray hexPair = trimmedLine.mid(i, 2);
-
-        // Convert the hexPair to a hexadecimal value
-        bool ok;
-        uint32_t hexValue = hexPair.toInt(&ok, 16); // Convert hexPair to ushort (16-bit) integer
-
-        if (!ok)
-        {
-            // Handle conversion error
-            qDebug() << "Error converting hexPair:" << hexPair;
-
-            return false;
-        }
-        else
-        {
-
-            sum += hexValue;
-        }
-
-    }
-
-    if(checksum == (0xFF - (sum & 0xFF))){
-
-        return true;
-    }
-
-    return false;
-}
-
-QByteArray MainWindow::extractData(QByteArray line, char record_type)
-{
-    // Trim Count
-    QByteArray trimmed_line = line.left(line.size() - 2);
-    // Trim Checksum
-    trimmed_line = trimmed_line.right(trimmed_line.size() - 2);
-
-    // Pad address
-    if(record_type == '1' or record_type == '9'){
-
-        trimmed_line = trimmed_line.rightJustified(trimmed_line.size() + 4, '0');
-    }
-    else if(record_type == '2' or record_type == '8'){
-
-        trimmed_line = trimmed_line.rightJustified(trimmed_line.size() + 2, '0');
-    }
-    else if(record_type == '3' or record_type == '7'){
-
-        // There is nothing to pad, dont do anything
-    }
-    // Did we encounter a S-record that is not supposed to be here?
-    else{
-
-        qDebug() << "There was an error! with current line!";
-    }
-
-    return trimmed_line;
-}
