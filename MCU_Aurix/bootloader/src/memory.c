@@ -196,7 +196,9 @@ uint8_t* readData(uint16_t identifier, uint8_t* len, uint8_t* nrc){
 
     switch(identifier){
         case FBL_DID_SYSTEM_NAME:
-            *len = sizeof(memData.did_system_name);
+            *len = 0;
+            while(*len < FBL_DID_SYSTEM_NAME_BYTES_SIZE && memData.did_system_name[*len] != '\0')
+                ++*len;
             uint8_t* data = prepare_system_name_message(len, memData.did_system_name);
             return data;
 
