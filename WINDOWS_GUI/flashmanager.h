@@ -60,7 +60,8 @@ public:
     virtual ~FlashManager();
 
     void setECUID(uint32_t ecu_id);
-    void setFile(QString file);
+    void setTestFile();
+    void setFlashFile(QMap<uint32_t, QByteArray> data);
 
     void startFlashing(uint32_t ecu_id, uint32_t gui_id, Communication* comm){
 

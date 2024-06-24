@@ -45,40 +45,36 @@ FlashManager::~FlashManager(){
 // Public Method
 //============================================================================
 
-void FlashManager::setFile(QString file){
-    this->file = file;
-
+void FlashManager::setTestFile(){
     // TESTING
-    if(file.endsWith(".test")){
+    emit infoPrint("TESTMODE detected. Creating demo data");
 
-        emit infoPrint("TESTMODE detected. Creating demo data");
+    // Content for flashing
+    QByteArray flashdate = getCurrentFlashDate();
+    emit infoPrint("Demodata: "+flashdate.toHex());
 
-        // Content for flashing
-        QByteArray flashdate = getCurrentFlashDate();
-        emit infoPrint("Demodata: "+flashdate.toHex());
+    // Create some test bytes to flash to MCU
+    QByteArray testBytes;
+    testBytes.resize((size_t)TESTFILE_BYTES);
 
-        // Create some test bytes to flash to MCU
-        QByteArray testBytes;
-        testBytes.resize((size_t)TESTFILE_BYTES);
+    uint32_t testDataCtr = 0;
+    for(int i = 0; i < testBytes.size(); i++){
+        if(testDataCtr % TESTFILE_PADDING_BYTES == 0)
+            testDataCtr = 0;
 
-        uint32_t testDataCtr = 0;
-        for(int i = 0; i < testBytes.size(); i++){
-            if(testDataCtr % TESTFILE_PADDING_BYTES == 0)
-                testDataCtr = 0;
+        if(testDataCtr < flashdate.size())
+            testBytes[i] = flashdate[testDataCtr];
+        else
+            testBytes[i] = 0x00;
 
-            if(testDataCtr < flashdate.size())
-                testBytes[i] = flashdate[testDataCtr];
-            else
-                testBytes[i] = 0x00;
-
-            testDataCtr++;
-        }
-        flashContent[TESTFILE_START_ADD] = testBytes;
+        testDataCtr++;
     }
-    else{
-        emit errorPrint("FlashManager: Flashing of files is not yet implemented");
-        // TODO: set flashContent for single addresses
-    }
+    flashContent[TESTFILE_START_ADD] = testBytes;
+}
+
+void FlashManager::setFlashFile(QMap<uint32_t, QByteArray> data){
+    flashContent.clear();
+    flashContent = data;
 }
 
 //============================================================================

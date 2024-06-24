@@ -155,7 +155,13 @@ void MainWindow::connectSignalSlots() {
                 threadFlashing->wait();
             }
             else{
-                flashMan->setFile("Testing.test");
+                if(validMan != nullptr && validMan->data.size() > 0){
+                    flashMan->setFlashFile(validMan->data);
+                } else {
+                    //flashMan->setTestFile();
+                    this->ui->textBrowser_flash_status->setText("No valid Flash File selected");
+                }
+
                 flashMan->startFlashing(selectedID, gui_id, comm);
             }
 
