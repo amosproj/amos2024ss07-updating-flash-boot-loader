@@ -26,10 +26,6 @@ static inline void dummy_flash(QString dev) {
     qDebug() << "Flash " << dev;
 }
 
-static inline QString dummy_flash_version(QString path) {
-    return QString("AMOS TESTING");
-}
-
 void MainWindow::connectSignalSlots() {
     // Comm RX Signal to UDS RX Slot
     connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
@@ -115,7 +111,7 @@ void MainWindow::connectSignalSlots() {
             this->ui->textBrowser_flash_status->setText("Flash file NOT selected");
         } else {
             QLabel* label = qobject_cast<QLabel*>(flashPopup.property("label").value<QObject*>());
-            label->setText(QString("You are going to flash from ") + QString(this->ui->table_ECU->selectedItems().at(1)->text())
+            label->setText(QString("You are going to flash from ") + QString(this->ui->table_ECU->selectedItems().at(2)->text())
                                     + QString(" to ") + fileVersion);
             this->flashPopup.show();
         }
