@@ -46,11 +46,33 @@ Further documentation about the build process can be found in [bootloader build]
 
 - extract the elf file from the latest release
 - flash the elf file to the Aurix MCU
-- the DAS tool from the Aurix IDE can be used for this
+- the Flashing tool from the Aurix IDE can be used for this
+```
+C:\Infineon\AURIX-Studio-1.9.20\tools\AurixFlasherSoftwareTool_v1.0.8\AurixFlasher.exe -elf MCU_Aurix.elf
+```
 - or [build and flash it yourself](../MCU_Aurix/Readme.md) in the Aurix IDE
-
-<!-- - flash aurix or use DAS and elf  -->
 
 ## GUI Walkthrough
 
-<!-- todo -->
+- the Licences can be found in the upper left corner
+- the GUI is separated in different sections: ECU, File and Communication
+
+### ECU
+
+- currently connected Microcontrollers are listed here in a table
+- to refresh the currently connected microcontrollers, press the `refresh` button
+- by selecting a row in the table a microcontroller is selected to perform all operations with
+- for a selected microcontroller the current status is shown below the table: green means connected and red connection lost
+- to reset the selected MCU press the `reset` button
+- to flash the selected MCU press the `flash` button
+- for flashing a file must be given through the file selection
+
+### File
+
+- press choose file and select a file for flashing in the file explorer
+
+### Communication
+
+- the communication protocol with the MCU can be choosen, the default is CAN
+- A log of the last CAN messages since opening the GUI is also shown in this section
+- to clear the log press `clear console`
