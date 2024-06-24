@@ -117,6 +117,7 @@ extern "C" {
 //////////////////////////////////////////////////////////////////////////////
 // Read Data By Identifier (0x22)
 //////////////////////////////////////////////////////////////////////////////
+#define FBL_DID_APP_ID                                              (0xF181)
 #define FBL_DID_SYSTEM_NAME                                         (0xF197)
 #define FBL_DID_PROGRAMMING_DATE                                    (0xF199)
 #define FBL_DID_BL_KEY_ADDRESS                                      (0xFD00)

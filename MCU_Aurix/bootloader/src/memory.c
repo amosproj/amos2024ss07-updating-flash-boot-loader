@@ -19,6 +19,7 @@
 #include "flash_driver.h"
 
 typedef struct {
+        uint8_t did_app_id[FBL_DID_APP_ID_BYTES_SIZE];
         uint8_t did_system_name[FBL_DID_SYSTEM_NAME_BYTES_SIZE];
         uint8_t did_programming_date[FBL_DID_PROGRAMMING_DATE_BYTES_SIZE];
         uint8_t did_bl_key_address[FBL_DID_BL_KEY_ADDRESS_BYTES_SIZE];
@@ -124,6 +125,10 @@ void init_memory(void){
 
     // Check Init
     if(!init){
+        
+        uint8_t did_app_id[] = FBL_DID_APP_ID_DEFAULT;
+        write_to_variable(sizeof(did_app_id), did_app_id, memData.did_app_id);
+
         // Info: Size of default System name usually < 32 Byte
         uint8_t did_system_name[] = FBL_DID_SYSTEM_NAME_DEFAULT;
         write_to_variable(sizeof(did_system_name), did_system_name, memData.did_system_name);
@@ -195,12 +200,17 @@ uint8_t* readData(uint16_t identifier, uint8_t* len, uint8_t* nrc){
     *nrc = 0;
 
     switch(identifier){
+        case FBL_DID_APP_ID:
+            *len = 0;
+            while(*len < FBL_DID_APP_ID_BYTES_SIZE && memData.did_app_id[*len] != '\0')
+                ++*len;
+            return prepare_system_name_message(len, memData.did_app_id);
+
         case FBL_DID_SYSTEM_NAME:
             *len = 0;
             while(*len < FBL_DID_SYSTEM_NAME_BYTES_SIZE && memData.did_system_name[*len] != '\0')
                 ++*len;
-            uint8_t* data = prepare_system_name_message(len, memData.did_system_name);
-            return data;
+            return prepare_system_name_message(len, memData.did_system_name);
 
         case FBL_DID_PROGRAMMING_DATE:
             *len = FBL_DID_PROGRAMMING_DATE_BYTES_SIZE;
@@ -261,6 +271,13 @@ uint8_t* readData(uint16_t identifier, uint8_t* len, uint8_t* nrc){
 uint8_t writeData(uint16_t identifier, uint8_t* data, uint8_t len){
     // Store values to local variables if we have enough space to keep answer times short -> Write in case of writeData
     switch(identifier){
+        case FBL_DID_APP_ID:
+            if(len > FBL_DID_APP_ID_BYTES_SIZE)
+                return FBL_RC_REQUEST_OUT_OF_RANGE;
+            
+            write_to_variable(len, data, memData.did_app_id);
+            break;
+
         case FBL_DID_SYSTEM_NAME:
             if(len > FBL_DID_SYSTEM_NAME_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;

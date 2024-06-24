@@ -291,6 +291,7 @@ void MainWindow::updateECUList(){
             uint32_t ecu_id = (0xFFF0 & id_int) >> 4;
             if(id_int > 0){
                 uds->readDataByIdentifier(ecu_id, (uint16_t) FBL_DID_SYSTEM_NAME);
+                uds->readDataByIdentifier(ecu_id, (uint16_t) FBL_DID_APP_ID);
                 uds->readDataByIdentifier(ecu_id, (uint16_t) FBL_DID_PROGRAMMING_DATE);
             }
         }
@@ -320,14 +321,18 @@ void MainWindow::updateECUTableView(QMap<QString, QMap<QString, QString>> eculis
     int ctr = 0;
     for(QString ID : eculist.keys()){
         uint32_t id_int = ID.toUInt();
-        if(id_int > 0 && ui->table_ECU->columnCount() >= 3){
+        if(id_int > 0 && ui->table_ECU->columnCount() >= 4){
             QTableWidgetItem *ecu = ui->table_ECU->item(ctr, 0);
             ecu->setText(QString("0x%1").arg(id_int, 8, 16, QLatin1Char( '0' )));
 
             QTableWidgetItem *system_name = ui->table_ECU->item(ctr, 1);
             system_name->setText(eculist[ID][QString::number(FBL_DID_SYSTEM_NAME)]);
 
-            QTableWidgetItem *programming_date = ui->table_ECU->item(ctr, 2);
+            
+            QTableWidgetItem *app_version = ui->table_ECU->item(ctr, 2);
+            app_version->setText(eculist[ID][QString::number(FBL_DID_APP_ID)]);
+
+            QTableWidgetItem *programming_date = ui->table_ECU->item(ctr, 3);
             programming_date->setText(eculist[ID][QString::number(FBL_DID_PROGRAMMING_DATE)]);
         }
         ctr++;
@@ -377,7 +382,7 @@ void MainWindow::udsUpdateProgrammingDate(uint32_t id){
 }
 
 void MainWindow::udsUpdateVersion(uint32_t id, uint8_t *data, uint8_t data_size) {
-    uds->writeDataByIdentifier(id, FBL_DID_SYSTEM_NAME, data, data_size);
+    uds->writeDataByIdentifier(id, FBL_DID_APP_ID, data, data_size);
 }
 
 //=============================================================================

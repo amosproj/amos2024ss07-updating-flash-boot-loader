@@ -81,6 +81,11 @@
              </column>
              <column>
               <property name="text">
+               <string>Version</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
                <string>Last Flash Date</string>
               </property>
              </column>

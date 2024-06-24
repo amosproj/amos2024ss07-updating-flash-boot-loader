@@ -21,6 +21,7 @@
 #define DID_DATA_FLASH_ADDR                                         0xAF000000
 
 // Size in uint8_t bytes
+#define FBL_DID_APP_ID_BYTES_SIZE                                   (32)
 #define FBL_DID_SYSTEM_NAME_BYTES_SIZE                              (32)
 #define FBL_DID_PROGRAMMING_DATE_BYTES_SIZE                         (6)
 #define FBL_DID_BL_KEY_ADDRESS_BYTES_SIZE                           (4)
@@ -35,6 +36,7 @@
 #define FBL_DID_BL_WRITE_END_ADD_CORE2_BYTES_SIZE                   (4)
 
 // Size need to match above mentioned defines
+#define FBL_DID_APP_ID_DEFAULT                                      "amos basic"
 #define FBL_DID_SYSTEM_NAME_DEFAULT                                 "AMOS FBL 24"
 #define FBL_DID_PROGRAMMING_DATE_DEFAULT                            {0x17, 0x04, 0x24, 0x10, 0x15, 0x00}
 #define FBL_DID_BL_KEY_ADDRESS_DEFAULT                              {0xA0, 0x4F, 0x80, 0x09}
