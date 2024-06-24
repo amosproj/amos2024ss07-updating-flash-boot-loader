@@ -34,8 +34,8 @@ set(PROJECT_SOURCES
         UDS_Layer/UDS.hpp
         UDS_Spec/uds_comm_spec.cpp
         UDS_Spec/uds_comm_spec.h
-        crc.c
-        crc.h
+        CCRC32.h
+        CCRC32.cpp
     )
 
 file(GLOB VECTOR_LIB "C:/Users/Public/Documents/Vector/XL\ Driver\ Library\ */bin")

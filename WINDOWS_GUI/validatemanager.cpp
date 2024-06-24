@@ -10,10 +10,13 @@
 //============================================================================
 
 #include "validatemanager.h"
+#include "CCRC32.h"
+#include <string.h>
 
 ValidateManager::ValidateManager() {
 
     data.clear();
+    fileChecksum = 0;
 
 }
 
@@ -231,4 +234,27 @@ QByteArray ValidateManager::extractData(QByteArray line, char record_type)
     }
 
     return trimmed_line;
+}
+
+uint ValidateManager::calculateFileChecksum(QMap<uint32_t, QByteArray> data)
+{
+    int numEntries = data.size();
+    const char *dataCharP;
+    QString dataString = "";
+
+    for (int index = 0; index < numEntries; index++) {
+        QByteArray nextLine = data.value(index);
+        nextLine.remove(0, 8); //removes address from entry
+        QString newData = QString(nextLine);
+        dataString += newData;
+    }
+
+    QByteArray conversion = dataString.toLocal8Bit();
+
+    dataCharP = conversion.data();
+
+    CCRC32 crc;
+	crc.Initialize();
+    
+    return crc.FullCRC((const unsigned char *)dataCharP, strlen(dataCharP));;
 }

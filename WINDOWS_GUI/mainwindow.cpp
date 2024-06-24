@@ -115,6 +115,9 @@ void MainWindow::connectSignalSlots() {
 
             // Validate file, result is already prepared for furhter calculations
             validMan->data = validMan->validateFile(data);
+            validMan->fileChecksum = validMan->calculateFileChecksum(validMan->data);
+            appendTextToConsole(QString::number(validMan->fileChecksum, 16));
+
 
             //dummy_function(data);
             file.close();
