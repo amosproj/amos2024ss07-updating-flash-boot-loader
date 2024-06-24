@@ -20,7 +20,6 @@ ValidateManager::ValidateManager() {
 
 QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 {
-
     QList<QByteArray> lines = data.split('\n');
     int current_index = 0;
     int result_index = 0;
@@ -37,6 +36,11 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
     // Print each line
     for (QByteArray& line : lines) {
+
+        if(line.size() == 0){
+
+            break;
+        }
 
         // remove '\r' at the end of each line
         if(current_index != (nlines - 1)){
@@ -121,8 +125,9 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
         // S4 is reserved and should not be used & all other inputs are invalid s19 inputs
         else {
 
-            qDebug() << "There was an error with the selected file!";
-            emit errorPrint("ERROR: There was an error with the selected file! \n");
+            qDebug() << "There was an error with the selected file! Record type: " << record_type << line;
+            emit errorPrint((&"ERROR: There was an error with the selected file! Record Type: " [ record_type]));
+            emit errorPrint("ERROR: Test");
         }
 
         current_index += 1;
