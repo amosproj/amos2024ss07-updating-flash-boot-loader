@@ -10,6 +10,7 @@
 #include "UDS_Layer/UDS.hpp"
 #include "Communication_Layer/Communication.hpp"
 #include "flashmanager.h"
+#include "validatemanager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -21,21 +22,22 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
     
-
 private:
     uint8_t gui_id = 0x01;
     enum FLASH_BTN {FLASH, STOP};
+    enum UDS_CONN {GUI, FLASHING};
 
     Ui::MainWindow *ui;
     EditableComboBox *editComboBox_speed;
     QComboBox *comboBox_speedUnit;
 
+    QThread *threadComm;
     Communication *comm;
     UDS *uds;
     QThread *threadFlashing;
     FlashManager *flashMan;
     QMap<QString, QMap<QString, QString>> eculist;
-
+    ValidateManager *validMan;
     QTimer *ecuConnectivityTimer;
 
 public:
@@ -43,8 +45,11 @@ public:
     ~MainWindow();
 
     void updateStatus(FlashManager::STATUS s, QString str, int percent);
+    void updateLabel(ValidateManager::LABEL s, QString str);
+
 
 private:
+    void set_uds_connection(enum UDS_CONN);
     void connectSignalSlots();
     void updateECUList();
 
@@ -65,6 +70,8 @@ private slots:
     void comboBoxIndexChanged(int index);
     void appendTextToConsole(const QString &text);
 
+    void updateLabelSlot(ValidateManager::LABEL s, const QString &str);
+
     void ecuResponseSlot(const QMap<QString, QString> &data);
     void on_pushButton_ECU_refresh_clicked();
     void on_clearConsoleButton_clicked();
@@ -73,5 +80,7 @@ private slots:
 
 signals:
     void baudrateSignal(unsigned int baudrate, unsigned int commType);
+
+
 };
 #endif // MAINWINDOW_H

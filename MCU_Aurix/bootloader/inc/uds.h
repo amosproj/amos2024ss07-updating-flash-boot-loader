@@ -21,7 +21,7 @@
 
 struct UDS_Msg {
     uint32_t len;
-    uint8_t* data; // flexible array member
+    uint8_t* data;
 };
 typedef struct UDS_Msg UDS_Msg;
 

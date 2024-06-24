@@ -12,6 +12,8 @@
 #ifndef BOOTLOADER_INC_ISOTP_H_
 #define BOOTLOADER_INC_ISOTP_H_
 
+#define ISOTP_RX_ACK_CONSECUTIVE_FRAMES    (1)
+
 #include "can_driver.h"
 #include "uds_comm_spec.h"
 #include "can_driver_TC375_LK.h"

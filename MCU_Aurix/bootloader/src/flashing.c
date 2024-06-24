@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Dorothea Ehrl <dorothea.ehrl@fau.de>
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
-
+// SPDX-FileCopyrightText: 2024 Wiktor Pilarczyk <wiktorpilar99@gmail.com>
 
 //============================================================================
 // Name        : flashing.c
-// Author      : Dorothea Ehrl, Michael Bauer
+// Author      : Dorothea Ehrl, Michael Bauer, Wiktor Pilarczyk
 // Version     : 0.1
 // Copyright   : MIT
 // Description : Manages flash data
@@ -17,6 +17,7 @@
 #include "flash_driver.h"
 
 enum FLASHING_STATE {DOWNLOAD, UPLOAD, TRANSFER_DATA, IDLE};
+uint32 flashBuffer[MAX_ISOTP_MESSAGE_LEN/4];
 
 typedef struct {
     uint32_t buffer;
@@ -47,6 +48,49 @@ uint32_t flashingGetDIDData(uint16_t DID){
     return data;
 }
 
+static inline bool addrInCoreRangeCheck(uint32_t addr, uint32_t data_len, uint16_t start_addr_ID, uint16_t end_addr_ID) {
+    uint32_t core_start_add = flashingGetDIDData(start_addr_ID);
+    uint32_t core_end_add = flashingGetDIDData(end_addr_ID);
+    if((core_start_add > 0 && core_end_add > 0) && (addr >= core_start_add && addr < core_end_add)){
+        // address belongs to core
+        if(addr + data_len <= core_end_add)
+            return true;
+    }
+    return false;
+}
+
+static inline size_t insertDataForFlashing(uint8_t* data, uint32_t data_len){
+
+    uint32_t data_ctr = 0;
+    size_t flash_ctr = 0;
+
+    uint32 temp = 0;
+    uint32 shifted = 0;
+
+    for(int idx = 0; idx < sizeof(flashBuffer) && data_ctr < data_len ; idx++){
+        temp = 0;
+        shifted = 0;
+
+        for(int i = 0; i < sizeof(uint32); i++){
+
+            if(FLASHING_FLASHING_ENDIANNESS){
+                shifted = (uint32)data[data_ctr] << 8*(sizeof(uint32)-1-i);
+            } else{
+                shifted = (uint32)data[data_ctr] << 8*i;
+            }
+            temp |= shifted;
+            data_ctr++;
+
+            if(data_ctr >= data_len)
+                break;
+        }
+
+        flashBuffer[idx] = temp;
+        flash_ctr++;
+    }
+    return flash_ctr;
+}
+
 //============================================================================
 // Public
 //============================================================================
@@ -63,30 +107,11 @@ uint8_t flashingRequestDownload(uint32_t address, uint32_t data_len){
         return FBL_RC_UPLOAD_DOWNLOAD_NOT_ACCEPTED;
 
     // Check on Flash Memory to accept download
-    uint32_t core0_start_add = flashingGetDIDData(FBL_DID_BL_WRITE_START_ADD_CORE0);
-    uint32_t core0_end_add = flashingGetDIDData(FBL_DID_BL_WRITE_END_ADD_CORE0);
-    if((core0_start_add > 0 && core0_end_add > 0) && (address >= core0_start_add && address < core0_end_add)){
-        // address belongs to core 0
-        if(address + data_len > core0_end_add)
-            return FBL_RC_REQUEST_OUT_OF_RANGE;
-
-    }
-
-    uint32_t core1_start_add = flashingGetDIDData(FBL_DID_BL_WRITE_START_ADD_CORE1);
-    uint32_t core1_end_add = flashingGetDIDData(FBL_DID_BL_WRITE_END_ADD_CORE1);
-    if((core1_start_add > 0 && core1_end_add > 0) && (address >= core1_start_add && address < core1_end_add)){
-        // address belongs to core 1
-        if(address + data_len > core1_end_add)
-            return FBL_RC_REQUEST_OUT_OF_RANGE;
-
-    }
-
-    uint32_t core2_start_add = flashingGetDIDData(FBL_DID_BL_WRITE_START_ADD_CORE2);
-    uint32_t core2_end_add = flashingGetDIDData(FBL_DID_BL_WRITE_END_ADD_CORE2);
-    if((core2_start_add > 0 && core2_end_add > 0) && (address >= core2_start_add && address < core2_end_add)){
-        // address belongs to core 2
-        if(address + data_len > core2_end_add)
-            return FBL_RC_REQUEST_OUT_OF_RANGE;
+    if(!addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE0, FBL_DID_BL_WRITE_END_ADD_CORE0) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE1, FBL_DID_BL_WRITE_END_ADD_CORE1) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE2, FBL_DID_BL_WRITE_END_ADD_CORE2))
+    {
+        return FBL_RC_REQUEST_OUT_OF_RANGE;
     }
 
     // Store base address for flashing
@@ -115,9 +140,15 @@ uint8_t flashingTransferData(uint32_t address, uint8_t* data, uint32_t data_len)
     }
 
     // TODO: Erase Flash Necessary? See flashWrite internal
-
     // TODO: Check Edge cases -> Decide what to do when data_len % size(uint32_t) > 0!
-    bool flashed = flashWrite(address, (uint32_t*)(&data), data_len / sizeof(uint32_t));
+
+    // Leads to CPU Trap
+    //uint32* data_input = (uint32*) data;
+    //bool flashed = flashWrite(address, data_input, (size_t)data_len / sizeof(uint32));
+
+    // Store flash data to temp flash buffer
+    size_t flashLen = insertDataForFlashing(data, data_len);
+    bool flashed = flashWrite(address, flashBuffer, flashLen);
 
     if(!flashed)
         return FBL_RC_FAILURE_PREVENTS_EXEC_OF_REQUESTED_ACTION;

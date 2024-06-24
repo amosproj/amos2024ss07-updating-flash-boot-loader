@@ -16,8 +16,8 @@
 #define MAX_TRIES_PER_STATE         5          // Max Attempts per state
 #define WAITTIME_AFTER_ATTEMPT      1000        // Waittime in ms
 
-#define TESTFILE_START_ADD          0xA0300000  // Start Address for flashing
-#define TESTFILE_BYTES              0x16FFFF    // ~1.5 MB
+#define TESTFILE_START_ADD          0xA0090000  // Start Address for flashing
+#define TESTFILE_BYTES              0x0016FFFF  // ~1.5 MB
 #define TESTFILE_PADDING_BYTES      7           // Padding between test data
 
 #include <QObject>
@@ -27,6 +27,7 @@
 #include <stdint.h>
 
 #include "UDS_Layer/UDS.hpp"
+#include "Communication_Layer/Communication.hpp"
 
 class FlashManager : public QObject {
     Q_OBJECT
@@ -40,6 +41,7 @@ private:
     uint8_t state_attempt_ctr;                                  // State attempt counter
     uint32_t ecu_id;                                            // ECU ID to flash
     UDS *uds;                                                   // Reference to UDS Layer
+    Communication *comm;                                        // Reference to Comm Layer
     QString file;                                               // Reference to file for flashing
     QMap<uint32_t, QByteArray> flashContent;                    // Map with Address -> continous byte array
 
@@ -57,11 +59,11 @@ public:
     explicit FlashManager(QObject *parent = 0);
     virtual ~FlashManager();
 
-    void setUDS(UDS *uds);
     void setECUID(uint32_t ecu_id);
-    void setFile(QString file);
+    void setTestFile();
+    void setFlashFile(QMap<uint32_t, QByteArray> data);
 
-    void startFlashing(uint32_t ecu_id){
+    void startFlashing(uint32_t ecu_id, uint32_t gui_id, Communication* comm){
 
         if(ecu_id <= 0){
             emit errorPrint("FlashManager: Could not start flashing. Wrong ECU ID given");
@@ -70,6 +72,22 @@ public:
         }
 
         this->ecu_id = ecu_id;
+        this->comm = comm;
+        this->uds = new UDS(gui_id);
+
+        // Disconnect everything from comm
+        disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
+
+        // Comm RX Signal to UDS RX Slot
+        connect(this->comm, SIGNAL(rxDataReceived(uint, QByteArray)), this->uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
+
+        // UDS TX Signals to Comm TX Slots
+        connect(this->uds, SIGNAL(setID(uint32_t)),    this->comm, SLOT(setIDSlot(uint32_t)), Qt::DirectConnection);
+        connect(this->uds, SIGNAL(txData(QByteArray)), this->comm, SLOT(txDataSlot(QByteArray)), Qt::DirectConnection);
+
+        // GUI Console Print
+        connect(this->uds, SIGNAL(toConsole(QString)), this, SLOT(forwardToConsole(QString)), Qt::DirectConnection);
+        connect(this->comm, SIGNAL(toConsole(QString)), this, SLOT(forwardToConsole(QString)), Qt::DirectConnection);
 
         state_attempt_ctr = 0;
         curr_state = PREPARE;
@@ -89,6 +107,13 @@ public:
             _abort = true;
         }
         mutex.unlock();
+
+        // Comm RX Signal to UDS RX Slot
+        disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
+
+        // UDS TX Signals to Comm TX Slots
+        disconnect(uds, SIGNAL(setID(uint32_t)), 0, 0);
+        disconnect(uds, SIGNAL(txData(QByteArray)), 0, 0);
 
         qInfo() << "FlashManager: Stopping Flashing Thread";
         emit flashingStopThreadRequested();
@@ -159,6 +184,12 @@ public slots:
      * @brief Slot to run the flashing Thread
      */
     void runThread();
+
+    /**
+     * @brief Slot to forward to infoPrint
+     * @param text
+     */
+    void forwardToConsole(const QString &text);
 
 };
 

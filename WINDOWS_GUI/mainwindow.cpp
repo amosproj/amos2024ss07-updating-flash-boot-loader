@@ -20,16 +20,50 @@ static inline void dummy_function(QByteArray data) {
     qDebug() << "Received " << data;
 }
 
+void MainWindow::set_uds_connection(enum UDS_CONN conn){
+
+
+    // Only consider GUI, Flashing is connected within FlashManager (own UDS instance)
+    switch(conn){
+        case GUI:
+            qDebug("MainWindow: Call of set_uds_connection for GUI");
+            // Comm RX Signal to UDS RX Slot
+            disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
+
+            // UDS TX Signals to Comm TX Slots
+            disconnect(uds, SIGNAL(setID(uint32_t)), 0, 0);
+            disconnect(uds, SIGNAL(txData(QByteArray)), 0, 0);
+
+            // UDS Receive Signals to GUI Slots
+            disconnect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), 0, 0);
+
+            // ####################################################################################
+
+            // Comm RX Signal to UDS RX Slot
+            connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
+
+            // UDS TX Signals to Comm TX Slots
+            connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)), Qt::DirectConnection);
+            connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)), Qt::DirectConnection);
+
+            // UDS Receive Signals to GUI Slots
+            connect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), this, SLOT(ecuResponseSlot(QMap<QString,QString>)), Qt::DirectConnection);
+            break;
+
+        default:
+            break;
+    }
+}
+
 void MainWindow::connectSignalSlots() {
-    // Comm RX Signal to UDS RX Slot
-    connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
 
-    // UDS TX Signals to Comm TX Slots
-    connect(uds, SIGNAL(setID(uint32_t)),    comm, SLOT(setIDSlot(uint32_t)));
-    connect(uds, SIGNAL(txData(QByteArray)), comm, SLOT(txDataSlot(QByteArray)));
+    set_uds_connection(GUI);
 
-    // UDS Receive Signals to GUI Slots
-    connect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), this, SLOT(ecuResponseSlot(QMap<QString,QString>)));
+    // ValidateManager Signals
+    connect(validMan, SIGNAL(infoPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    connect(validMan, SIGNAL(debugPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    connect(validMan, SIGNAL(errorPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    connect(validMan, SIGNAL(updateLabel(ValidateManager::LABEL, QString)), this, SLOT(updateLabelSlot(ValidateManager::LABEL, QString)));
 
     // FlashManager Signals
     connect(flashMan, SIGNAL(flashingThreadStarted()), this, SLOT(stopUDSUsage()));
@@ -47,7 +81,7 @@ void MainWindow::connectSignalSlots() {
             &MainWindow::comboBoxIndexChanged);
 
     // GUI Console Print
-    connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)));
+    connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)), Qt::DirectConnection);
     connect(comm, SIGNAL(toConsole(QString)), this, SLOT(appendTextToConsole(QString)), Qt::DirectConnection);
 
     // GUI menu bar
@@ -69,10 +103,20 @@ void MainWindow::connectSignalSlots() {
                 qDebug() << "Couldn't open file " + path + " " + file.errorString();
                 return;
             }
-            ui->label_size->setText("File size: " + QString::number(file.size()));
+            ui->label_size->setText("File size:  " + QString::number(file.size()));
             QByteArray data = file.readAll();
-            ui->label_content->setText("File content: " + data.left(16).toHex());
-            dummy_function(data);
+            ui->label_content->setText("File content:  " + data.left(16).toHex());
+
+            // Set file type
+            QFileInfo fileInfo(path);
+            QString fileType = fileInfo.suffix();
+
+            ui->label_type->setText("File type:  " + fileType);
+
+            // Validate file, result is already prepared for furhter calculations
+            validMan->data = validMan->validateFile(data);
+
+            //dummy_function(data);
             file.close();
         }
     });
@@ -111,8 +155,14 @@ void MainWindow::connectSignalSlots() {
                 threadFlashing->wait();
             }
             else{
-                flashMan->setFile("Testing.test");
-                flashMan->startFlashing(selectedID);
+                if(validMan != nullptr && validMan->data.size() > 0){
+                    flashMan->setFlashFile(validMan->data);
+                } else {
+                    //flashMan->setTestFile();
+                    this->ui->textBrowser_flash_status->setText("No valid Flash File selected");
+                }
+
+                flashMan->startFlashing(selectedID, gui_id, comm);
             }
 
         } else {
@@ -144,6 +194,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->label_logo->setPixmap(pix);
 
     qInfo("Main: Create Communication Layer");
+    threadComm = new QThread();
     comm = new Communication();
 
     qInfo("Main: Create UDS Layer and connect Communcation Layer to it");
@@ -152,8 +203,11 @@ MainWindow::MainWindow(QWidget *parent)
     qInfo("Main: Create the FlashManager");
     threadFlashing = new QThread();
     flashMan = new FlashManager();
-    flashMan->setUDS(uds);
     flashMan->moveToThread(threadFlashing);
+
+    qInfo("Main: Create the ValidateManager");
+    validMan = new ValidateManager();
+    validMan->uds = uds;
 
     ui->table_ECU->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->table_ECU->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -164,6 +218,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Init the Communication - Need to be after connectSignalsSlots to directly print to console
     comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
     comm->init(Communication::CAN_DRIVER); // Set to CAN
+    comm->moveToThread(threadComm);
 
     // Create both QComboBoxes for later
     editComboBox_speed = new EditableComboBox(this);
@@ -196,6 +251,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+
 void MainWindow::updateStatus(FlashManager::STATUS s, QString str, int percent) {
     QString status = "";
     int val = min(max(0, percent), 100);
@@ -224,8 +280,34 @@ void MainWindow::updateStatus(FlashManager::STATUS s, QString str, int percent) 
         QString rest = this->ui->textBrowser_flash_status->toPlainText();
         this->ui->textBrowser_flash_status->setText(status + str + "\n" + rest);
     }
-
 }
+
+
+void MainWindow::updateLabel(ValidateManager::LABEL s, QString str) {
+    QString status = "";
+
+    switch(s) {
+    case ValidateManager::HEADER:
+        ui->label_header->setText(str);
+        break;
+    case ValidateManager::VALID:
+        ui->label_valid->setText(str);
+        break;
+    case ValidateManager::CONTENT:
+        ui->label_content->setText(str);
+        break;
+    case ValidateManager::SIZE:
+        ui->label_size->setText(str);
+        break;
+    case ValidateManager::TYPE:
+        ui->label_type->setText(str);
+        break;
+    default:
+        qDebug() << "Error wrong status for updateLabel " + QString::number(s);
+        break;
+    }
+}
+
 
 void MainWindow::updateECUList(){
     qInfo() << "Updating ECU List";
@@ -321,6 +403,9 @@ void MainWindow::setFlashButton(FLASH_BTN m){
 //=============================================================================
 
 void MainWindow::startUDSUsage(){
+    // Connect UDS and Comm Layer
+    set_uds_connection(GUI);
+
     // Connect the Connectivity Timer
     connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
 
@@ -354,6 +439,11 @@ void MainWindow::stopUDSUsage(){
 void MainWindow::updateStatusSlot(FlashManager::STATUS s, const QString &str, int percent) {
     //qInfo() << "MainWindow: updateStatusSlot " << s << str << percent;
     this->updateStatus(s, str, percent);
+}
+
+void MainWindow::updateLabelSlot(ValidateManager::LABEL s, const QString &str) {
+    qDebug() << "MainWindow: updateStatusSlot " << s << str;
+    this->updateLabel(s, str);
 }
 
 //Will show/hide the new ComboBoxes below the ComboBox for the protocol
@@ -461,3 +551,5 @@ void MainWindow::checkECUconnectivity() {
     }
     ui->label_ECU_status->setStyleSheet("QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color: " + color + "}");
 }
+
+
