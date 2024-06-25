@@ -46,8 +46,6 @@
 #include "Ifx_Ssw.h"
 #include "Ifx_Ssw_Infra.h"
 #include "Ifx_Cfg_Ssw.h"
-#include "bootloader.h"
-#include "aswadresses.h"
 /*******************************************************************************
 **                       Macros                                               **
 *******************************************************************************/
@@ -272,34 +270,17 @@ static void __Core0_start(void)
     /* Set A0 Pointer to access global variables with small data addressing */
     Ifx_Ssw_setAddressReg(a0, __SDATA1(0));
 
-    void (*asw)(void) = 0;
-    
-    if (jumpToASW)
-    {
-        /* These to be un commented if A8 and A9 are required to be initialized */
-        Ifx_Ssw_setAddressReg(a8, __SDATA3(0));
-        Ifx_Ssw_setAddressReg(a9, __SDATA4(0));
+    /* These to be un commented if A8 and A9 are required to be initialized */
+    Ifx_Ssw_setAddressReg(a8, __SDATA3(0));
+    Ifx_Ssw_setAddressReg(a9, __SDATA4(0));
 
-        /* Trap vector table initialization is necessary if it is not same as default value */
-        Ifx_Ssw_MTCR(CPU_BTV, ASW0_TRAPVEC);
-        /* Base interrupt vector table initialized */
-        Ifx_Ssw_MTCR(CPU_BIV, ASW0_INTVEC);
-        /* Interrupt stack pointer is configured */
-        Ifx_Ssw_MTCR(CPU_ISP, (unsigned int)__ISTACK(0));
-        asw = (void*) ASW0_CORE0;
-    }
-    else{
-        /* These to be un commented if A8 and A9 are required to be initialized */
-        Ifx_Ssw_setAddressReg(a8, __SDATA3(0));
-        Ifx_Ssw_setAddressReg(a9, __SDATA4(0));
+    /* Trap vector table initialization is necessary if it is not same as default value */
+    Ifx_Ssw_MTCR(CPU_BTV, (unsigned int)__TRAPTAB(0));
+    /* Base interrupt vector table initialized */
+    Ifx_Ssw_MTCR(CPU_BIV, (unsigned int)__INTTAB(0));
+    /* Interrupt stack pointer is configured */
+    Ifx_Ssw_MTCR(CPU_ISP, (unsigned int)__ISTACK(0));
 
-        /* Trap vector table initialization is necessary if it is not same as default value */
-        Ifx_Ssw_MTCR(CPU_BTV, (unsigned int)__TRAPTAB(0));
-        /* Base interrupt vector table initialized */
-        Ifx_Ssw_MTCR(CPU_BIV, (unsigned int)__INTTAB(0));
-        /* Interrupt stack pointer is configured */
-        Ifx_Ssw_MTCR(CPU_ISP, (unsigned int)__ISTACK(0));
-    }
     Ifx_Ssw_setCpuEndinitInline(&MODULE_SCU.WDTCPU[0], cpuWdtPassword);
 
     /* CPU and safety watchdogs are enabled by default,
@@ -309,13 +290,13 @@ static void __Core0_start(void)
     Ifx_Ssw_disableSafetyWatchdog(safetyWdtPassword);
 
     /* Hook functions to initialize application specific HW extensions */
-	hardware_init_hook();
+    hardware_init_hook();
 
-	/* Initialization of C runtime variables and CPP constructors and destructors */
-	(void)Ifx_Ssw_doCppInit();
+    /* Initialization of C runtime variables and CPP constructors and destructors */
+    (void)Ifx_Ssw_doCppInit();
 
-	/* Hook functions to initialize application specific SW extensions */
-	software_init_hook();
+    /* Hook functions to initialize application specific SW extensions */
+    software_init_hook();
 
     Ifx_Ssw_enableSafetyWatchdog(safetyWdtPassword);
 
@@ -335,16 +316,11 @@ static void __Core0_start(void)
     }
 #else /* IFX_CFG_SSW_RETURN_FROM_MAIN */
     extern void core0_main(void);
-
-    void (*start)(void) = core0_main;
-    if (asw != 0){
-        start = asw;
-    }
-    Ifx_Ssw_jumpToFunction(start);    /* Jump to main function of CPU0 */
+    Ifx_Ssw_jumpToFunction(core0_main);    /* Jump to main function of CPU0 */
 #endif /* IFX_CFG_SSW_RETURN_FROM_MAIN */
 
-	/* Go into infinite loop, normally the code shall not reach here */
-	Ifx_Ssw_infiniteLoop();
+    /* Go into infinite loop, normally the code shall not reach here */
+    Ifx_Ssw_infiniteLoop();
 }
 
 
