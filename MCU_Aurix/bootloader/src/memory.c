@@ -19,6 +19,7 @@
 #include "flash_driver.h"
 
 typedef struct {
+        uint8_t did_app_id[FBL_DID_APP_ID_BYTES_SIZE];
         uint8_t did_system_name[FBL_DID_SYSTEM_NAME_BYTES_SIZE];
         uint8_t did_programming_date[FBL_DID_PROGRAMMING_DATE_BYTES_SIZE];
         uint8_t did_bl_key_address[FBL_DID_BL_KEY_ADDRESS_BYTES_SIZE];
@@ -45,19 +46,6 @@ static inline void write_to_variable(uint8_t len, uint8_t *data, uint8_t* var){
     }
 }
 
-static inline uint8_t *prepare_system_name_message(uint8_t *len, uint8_t *data){
-    uint8_t* ret_data = (uint8_t*)calloc(*len, sizeof(uint8_t));
-    for(int i = 0; i < *len; i++){
-        ret_data[i] = data[i];
-        if(ret_data[i] == 0x00){ // End of String
-            *len = i+1;
-            break;
-        }
-    }
-
-    return ret_data;
-}
-
 static inline uint8_t *prepare_message(uint8_t *len, uint8_t *data){
     uint8_t* ret_data = (uint8_t*)calloc(*len, sizeof(uint8_t));
     for(int i = 0; i < *len; i++){
@@ -66,13 +54,23 @@ static inline uint8_t *prepare_message(uint8_t *len, uint8_t *data){
     return ret_data;
 }
 
-static inline boolean validateSystemName(uint8_t *data, uint32_t len){
-    if (len > FBL_DID_SYSTEM_NAME_BYTES_SIZE)
+static inline uint8_t *prepare_name_message(uint8_t *len, uint8_t *data){
+    for(int i = 0; i < *len; i++) {
+        if(data[i] == '\0') {
+            *len = i;
+            break;
+        }
+    }
+    return prepare_message(len, data);
+}
+
+static inline boolean validateName(uint8_t *data, uint32_t len, uint32_t maxLen){
+    if (len > maxLen)
         return false;
 
     for(int i = 0; i < len; i++){
         // Directly stop at Null character
-        if(data[i] != '\0' )
+        if(data[i] == '\0' )
             return true;
 
         // Only allow from ASCII Space (32) to Tilde (126)
@@ -85,8 +83,11 @@ static inline boolean validateSystemName(uint8_t *data, uint32_t len){
 static boolean validateMemory(){
     boolean valid = true;
 
+    // Check on the application version
+    if(!validateName(memData.did_app_id, FBL_DID_APP_ID_BYTES_SIZE, FBL_DID_APP_ID_BYTES_SIZE))
+        valid = false;
     // Check on the system Name
-    if(!validateSystemName(memData.did_system_name, FBL_DID_SYSTEM_NAME_BYTES_SIZE))
+    if(!validateName(memData.did_system_name, FBL_DID_SYSTEM_NAME_BYTES_SIZE, FBL_DID_SYSTEM_NAME_BYTES_SIZE))
         valid = false;
 
     // Check on valid date in BCD format [dd][MM][yy][HH][mm][ss]
@@ -124,6 +125,10 @@ void init_memory(void){
 
     // Check Init
     if(!init){
+        
+        uint8_t did_app_id[] = FBL_DID_APP_ID_DEFAULT;
+        write_to_variable(sizeof(did_app_id), did_app_id, memData.did_app_id);
+
         // Info: Size of default System name usually < 32 Byte
         uint8_t did_system_name[] = FBL_DID_SYSTEM_NAME_DEFAULT;
         write_to_variable(sizeof(did_system_name), did_system_name, memData.did_system_name);
@@ -195,10 +200,13 @@ uint8_t* readData(uint16_t identifier, uint8_t* len, uint8_t* nrc){
     *nrc = 0;
 
     switch(identifier){
+        case FBL_DID_APP_ID:
+            *len = FBL_DID_APP_ID_BYTES_SIZE;
+            return prepare_name_message(len, memData.did_app_id);
+
         case FBL_DID_SYSTEM_NAME:
-            *len = sizeof(memData.did_system_name);
-            uint8_t* data = prepare_system_name_message(len, memData.did_system_name);
-            return data;
+            *len = FBL_DID_SYSTEM_NAME_BYTES_SIZE;
+            return prepare_name_message(len, memData.did_system_name);
 
         case FBL_DID_PROGRAMMING_DATE:
             *len = FBL_DID_PROGRAMMING_DATE_BYTES_SIZE;
@@ -237,7 +245,6 @@ uint8_t* readData(uint16_t identifier, uint8_t* len, uint8_t* nrc){
             *len = FBL_DID_BL_WRITE_END_ADD_CORE1_BYTES_SIZE;
             return prepare_message(len, memData.did_bl_write_end_add_core1);
 
-
         case FBL_DID_BL_WRITE_START_ADD_CORE2:
             *len = FBL_DID_BL_WRITE_START_ADD_CORE2_BYTES_SIZE;
             return prepare_message(len, memData.did_bl_write_start_add_core2);
@@ -259,14 +266,27 @@ uint8_t* readData(uint16_t identifier, uint8_t* len, uint8_t* nrc){
 uint8_t writeData(uint16_t identifier, uint8_t* data, uint8_t len){
     // Store values to local variables if we have enough space to keep answer times short -> Write in case of writeData
     switch(identifier){
+        case FBL_DID_APP_ID:
+            if(len > FBL_DID_APP_ID_BYTES_SIZE)
+                return FBL_RC_REQUEST_OUT_OF_RANGE;
+            if(!validateName(data,  len, FBL_DID_APP_ID_BYTES_SIZE))
+                return FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT;
+            
+            write_to_variable(len, data, memData.did_app_id);
+            if(len < FBL_DID_APP_ID_BYTES_SIZE)
+                memData.did_app_id[len] = '\0';
+            break;
+
         case FBL_DID_SYSTEM_NAME:
             if(len > FBL_DID_SYSTEM_NAME_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
 
-            if(!validateSystemName(data,  len))
+            if(!validateName(data,  len, FBL_DID_SYSTEM_NAME_BYTES_SIZE))
                 return FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT;
 
             write_to_variable(len, data, memData.did_system_name);
+            if(len < FBL_DID_SYSTEM_NAME_BYTES_SIZE)
+                memData.did_system_name[len] = '\0';
             break;
 
         case FBL_DID_PROGRAMMING_DATE:

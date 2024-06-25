@@ -817,6 +817,8 @@ QString UDS::translateNegResp(uint8_t nrc){
  */
 QString UDS::translateDID(uint16_t DID){
     switch(DID){
+        case FBL_DID_APP_ID:
+            return QString("Application identifier"); break;
         case FBL_DID_SYSTEM_NAME:
             return QString("System Name"); break;
         case FBL_DID_PROGRAMMING_DATE:
@@ -857,6 +859,8 @@ QString UDS::readDIDData(uint16_t DID, uint8_t* data, uint32_t no_bytes){
 
     QString retText = "";
     switch(DID){
+        case FBL_DID_APP_ID:
+            return QString::fromLocal8Bit(&data[0]); break;
         case FBL_DID_SYSTEM_NAME:
             return QString::fromLocal8Bit(&data[0]); break;
 
