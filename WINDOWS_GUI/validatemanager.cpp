@@ -21,14 +21,14 @@ ValidateManager::ValidateManager() {
 QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 {
     QList<QByteArray> lines = data.split('\n');
-
-    int block_start = -1;
-    int block_end = -1;
+    uint32_t block_address_end = 0;
 
     int current_index = 0;
-    int result_index = 0;
+    int block_index = 0;
 
     int count_record = -1;
+    int jump_record = -1;
+
     int count_lines = 0;
     int nlines = lines.size();
 
@@ -36,7 +36,7 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
     bool file_header = false;
 
     QByteArray new_line;
-    QMap<uint32_t, QByteArray> result;
+    QByteArray result;
     QMap<uint32_t, QByteArray> block_result;
 
     // Print each line
@@ -101,25 +101,79 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
             new_line = extractData(line, record_type);
 
-            result.insert(result_index, new_line);
+            uint32_t data_len = (new_line.size() - 8);
 
-            result_index += 1;
-            count_lines += 1;
+            QString address_string = new_line.left(8);
+            uint32_t address_start = address_string.toUInt(NULL, 16);
+
+            /*
+            qDebug() << "BBBBBBBBBBBBBBBBBB";
+
+            qDebug() << "address string: ";
+            qDebug() << address_string;
+            qDebug() << "address start";
+            qDebug() << address_start;
+            qDebug() << "address_end";
+            qDebug() << block_address_end;
+            qDebug() << "length";
+            qDebug() << data_len;
+
+
+            qDebug() << "BBBBBBBBBBBBBBBBBB";
+            qDebug() << " ";
+            */
+
+            if(result.isEmpty()){
+
+                result.append(new_line.right(data_len + 8));
+                count_lines += 1;
+
+            }
+            else if(block_address_end == address_start){
+
+                result.append(new_line.right(data_len));
+                count_lines += 1;
+            }
+            else{
+
+                block_result.insert(block_index, result);
+
+                result.clear();
+                block_index += 1;
+
+                result.append(new_line.right(data_len + 8));
+                count_lines += 1;
+            }
+
+            // calculate new ending of this block
+            block_address_end = address_start + (data_len / 2);
         }
         // preprocess data for flashing
         else if(record_type == '7' or record_type == '8' or record_type == '9'){
 
+            if(jump_record != -1){
+
+                emit infoPrint("INFO: File not Valid! Too many termination records.\n");
+                file_validity = false;
+                break;
+            }
+
+            if(current_index == (nlines - 1)){
+
+                block_result.insert(block_index, result);
+
+                result.clear();
+                block_index += 1;
+            }
+
             new_line = extractData(line, record_type);
 
-            result.insert(result_index, new_line);
+            block_result.insert(block_index, new_line);
 
-            result_index += 1;
+            block_index += 1;
         }
         // optional entry, can be used to validate file
         else if(record_type == '5' or record_type == '6'){
-
-            line = line.left(line.size() - 2);
-            line = line.right(line.size() - 2);
 
             if(count_record != -1){
 
@@ -127,6 +181,9 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
                 file_validity = false;
                 break;
             }
+
+            line = line.left(line.size() - 2);
+            line = line.right(line.size() - 2);
 
             count_record = line.toInt(NULL, 16);
         }
@@ -142,12 +199,28 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
         current_index += 1;
     }
 
+    if(!result.isEmpty()){
+
+        block_result.insert(block_index, result);
+        result.clear();
+        block_index += 1;
+    }
+
+    /*
+    qDebug() << "TTTTTTTTTTTTTTTTTT";
+
+    qDebug() << "block_result: ";
+    qDebug() << block_result;
+
+    qDebug() << "TTTTTTTTTTTTTTTTTT";
+    */
+
     if(file_validity){
 
-        for (QByteArray& block : result) {
+        for (QByteArray& block : block_result) {
 
             QByteArray addr = block.left(8);
-            uint32_t addr_int = addr.toInt(NULL, 16);
+            uint32_t addr_int = addr.toUInt(NULL, 16);
 
             uint32_t data_len = block.size() - 8;
 
@@ -160,8 +233,6 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
         }
     }
-
-
 
     if(!file_header){
 
@@ -188,7 +259,7 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
     }
 
 
-    return result;
+    return block_result;
 }
 
 
@@ -208,7 +279,7 @@ bool ValidateManager::validateLine(QByteArray line)
 
         // Convert the hexPair to a hexadecimal value
         bool ok;
-        uint32_t hexValue = hexPair.toInt(&ok, 16); // Convert hexPair to ushort (16-bit) integer
+        int hexValue = hexPair.toInt(&ok, 16); // Convert hexPair to ushort (16-bit) integer
 
         if (!ok)
         {
@@ -271,7 +342,7 @@ bool ValidateManager::addrInCoreRange(uint32_t addr, uint32_t data_len,  uint16_
     QString core_start_add_string = core_addr[core]["start"];
     QString core_end_add_string = core_addr[core]["end"];
 
-    if(core_start_add_string == "Not yet supported" || core_end_add_string == "Not yet supported"){
+    if(core_start_add_string == "Not yet supported" || core_end_add_string == "Not yet supported" || core_start_add_string == "" || core_end_add_string == ""){
 
         *supported = false;
         qDebug() << "INFO: Address Validation not supported for core" << core << "!";
@@ -279,8 +350,8 @@ bool ValidateManager::addrInCoreRange(uint32_t addr, uint32_t data_len,  uint16_
         return true;
     }
 
-    uint32_t core_start_add = core_start_add_string.toInt(NULL, 16);
-    uint32_t core_end_add = core_end_add_string.toInt(NULL, 16);;
+    uint32_t core_start_add = core_start_add_string.toUInt(NULL, 16);
+    uint32_t core_end_add = core_end_add_string.toUInt(NULL, 16);
 
     if((core_start_add > 0 && core_end_add > 0) && (addr >= core_start_add && addr < core_end_add)){
 

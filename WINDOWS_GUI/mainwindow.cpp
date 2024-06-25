@@ -134,7 +134,6 @@ void MainWindow::connectSignalSlots() {
             QMessageBox::about(nullptr, "WARNING!",
                                "Please select an ECU in the table on the left first!  \n\n");
         }
-
     });
 
     // GUI select ECU
