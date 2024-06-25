@@ -96,7 +96,6 @@ void MainWindow::connectSignalSlots() {
 
     // GUI choose file
     connect(ui->button_file, &QPushButton::clicked, this, [=]() {
-
         if(ECUSelected()){
 
             updateValidManager();
@@ -119,18 +118,14 @@ void MainWindow::connectSignalSlots() {
 
                 ui->label_type->setText("File type:  " + fileType);
 
-
-                //
                 // Validate file, result is already prepared for furhter calculations
                 validMan->data = validMan->validateFile(data);
-
 
                 //dummy_function(data);
                 file.close();
             }
         }
         else{
-
             QMessageBox::about(nullptr, "WARNING!",
                                "Please select an ECU in the table on the left first!  \n\n");
         }
@@ -162,7 +157,16 @@ void MainWindow::connectSignalSlots() {
         this->ui->textBrowser_flash_status->clear();
         this->ui->progressBar_flash->setValue(0);
 
-        if(ui->label_selected_ECU->text() != "") {
+        if(ui->label_selected_ECU->text() == "") {
+            this->ui->textBrowser_flash_status->setText("No valid ECU selected");
+        } else {
+            /*
+            QLabel* label = qobject_cast<QLabel*>(flashPopup.property("label").value<QObject*>());
+            label->setText(QString("You are going to flash from \'") + QString(this->ui->table_ECU->selectedItems().at(2)->text())
+                                    + QString("\' to \'") + ui->label_version->text().mid(14) + QString("\'"));
+            this->flashPopup.show();
+            */
+
             uint32_t selectedID = getECUID();
 
             if(ui->button_flash->text().contains("Stop")){
@@ -170,12 +174,15 @@ void MainWindow::connectSignalSlots() {
                 threadFlashing->wait();
             }
             else{
-                flashMan->setFile("Testing.test");
+                if(validMan != nullptr && validMan->data.size() > 0){
+                    flashMan->setFlashFile(validMan->data);
+                } else {
+                    //flashMan->setTestFile();
+                    this->ui->textBrowser_flash_status->setText("No valid Flash File selected");
+                }
+
                 flashMan->startFlashing(selectedID, gui_id, comm);
             }
-
-        } else {
-            this->ui->textBrowser_flash_status->setText("No valid ECU selected");
         }
     });
 
@@ -187,6 +194,48 @@ void MainWindow::connectSignalSlots() {
     //Set baudrate
     connect(this, SIGNAL(baudrateSignal(uint, uint)), comm, SLOT(setBaudrate(uint, uint)), Qt::DirectConnection);
 
+}
+
+void MainWindow::setupFlashPopup() {
+    QVBoxLayout *layout = new QVBoxLayout;
+
+    QLabel *labelPopup = new QLabel;
+    flashPopup.setProperty("label", QVariant::fromValue(static_cast<QObject*>(labelPopup)));
+
+    QPushButton *buttonYes = new QPushButton("Yes");
+    QPushButton *buttonNo = new QPushButton("No");
+
+    
+    QObject::connect(buttonYes, &QPushButton::clicked, this, [&]() {
+        flashPopup.close();
+        
+        uint32_t selectedID = getECUID();
+
+        if(ui->button_flash->text().contains("Stop")){
+            flashMan->stopFlashing();
+            threadFlashing->wait();
+        }
+        else{
+            if(validMan != nullptr && validMan->data.size() > 0){
+                flashMan->setFlashFile(validMan->data);
+            } else {
+                //flashMan->setTestFile();
+                this->ui->textBrowser_flash_status->setText("No valid Flash File selected");
+            }
+
+            flashMan->startFlashing(selectedID, gui_id, comm);
+        }
+    });
+
+    QObject::connect(buttonNo, &QPushButton::clicked, [&]() {
+        flashPopup.close();
+    });
+
+    layout->addWidget(labelPopup);
+    layout->addWidget(buttonYes);
+    layout->addWidget(buttonNo);
+
+    flashPopup.setLayout(layout);
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -220,6 +269,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->table_ECU->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->table_ECU->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->table_ECU->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+    setupFlashPopup();
 
     connectSignalSlots();
 
@@ -295,7 +346,7 @@ void MainWindow::updateLabel(ValidateManager::LABEL s, QString str) {
 
     switch(s) {
     case ValidateManager::HEADER:
-        ui->label_header->setText(str);
+        ui->label_version->setText(str);
         break;
     case ValidateManager::VALID:
         ui->label_valid->setText(str);
@@ -375,6 +426,7 @@ void MainWindow::updateECUList(){
             uint32_t ecu_id = (0xFFF0 & id_int) >> 4;
             if(id_int > 0){
                 uds->readDataByIdentifier(ecu_id, (uint16_t) FBL_DID_SYSTEM_NAME);
+                uds->readDataByIdentifier(ecu_id, (uint16_t) FBL_DID_APP_ID);
                 uds->readDataByIdentifier(ecu_id, (uint16_t) FBL_DID_PROGRAMMING_DATE);
             }
         }
@@ -404,14 +456,18 @@ void MainWindow::updateECUTableView(QMap<QString, QMap<QString, QString>> eculis
     int ctr = 0;
     for(QString ID : eculist.keys()){
         uint32_t id_int = ID.toUInt();
-        if(id_int > 0 && ui->table_ECU->columnCount() >= 3){
+        if(id_int > 0 && ui->table_ECU->columnCount() >= 4){
             QTableWidgetItem *ecu = ui->table_ECU->item(ctr, 0);
             ecu->setText(QString("0x%1").arg(id_int, 8, 16, QLatin1Char( '0' )));
 
             QTableWidgetItem *system_name = ui->table_ECU->item(ctr, 1);
             system_name->setText(eculist[ID][QString::number(FBL_DID_SYSTEM_NAME)]);
 
-            QTableWidgetItem *programming_date = ui->table_ECU->item(ctr, 2);
+            
+            QTableWidgetItem *app_version = ui->table_ECU->item(ctr, 2);
+            app_version->setText(eculist[ID][QString::number(FBL_DID_APP_ID)]);
+
+            QTableWidgetItem *programming_date = ui->table_ECU->item(ctr, 3);
             programming_date->setText(eculist[ID][QString::number(FBL_DID_PROGRAMMING_DATE)]);
         }
         ctr++;
@@ -457,6 +513,10 @@ void MainWindow::setFlashButton(FLASH_BTN m){
             ui->button_flash->setText("Flash");
             break;
     }
+}
+
+void MainWindow::udsUpdateVersion(uint32_t id, uint8_t *data, uint8_t data_size) {
+    uds->writeDataByIdentifier(id, FBL_DID_APP_ID, data, data_size);
 }
 
 //=============================================================================
@@ -612,5 +672,3 @@ void MainWindow::checkECUconnectivity() {
     }
     ui->label_ECU_status->setStyleSheet("QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color: " + color + "}");
 }
-
-
