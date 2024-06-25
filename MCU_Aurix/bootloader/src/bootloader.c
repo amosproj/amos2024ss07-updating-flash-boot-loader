@@ -62,8 +62,12 @@ void init_bootloader(void){
  */
 void bootloaderJumpToASW(void){
     //Write Flag
-    jumpToASW = 1;
-    softReset(); //Startup
+
+    void (*asw_main) (int) = (void*) 0xA0090000;
+    Ifx__non_return_call(asw_main);
+
+//    jumpToASW = 1;
+//    softReset(); //Startup
 }
 
 /**
@@ -78,7 +82,7 @@ void cyclicProcessing (void){
         uds_handleRX(rx_uds_message, rx_total_length);
         time = now(); //Assumes no tester present was received
     }
-        else if (elapsed(time)>5000)
+    else if (elapsed(time) > (5 * IfxStm_getFrequency(BSP_DEFAULT_TIMER)))
     {
         bootloaderJumpToASW();
     }
