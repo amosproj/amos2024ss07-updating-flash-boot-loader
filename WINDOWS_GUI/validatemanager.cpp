@@ -86,7 +86,7 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
             // Convert QByteArray to QString (assuming it's ASCII)
             QString asciiString = QString::fromLatin1(header);
 
-            emit updateLabel(ValidateManager::HEADER, "File header:  " + asciiString);
+            emit updateLabel(ValidateManager::HEADER, "File version: " + asciiString);
 
 
         }
@@ -135,7 +135,7 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
     if(file_header != true){
 
-        emit updateLabel(ValidateManager::HEADER, "File header:  N/A");
+        emit updateLabel(ValidateManager::HEADER, "File version: N/A");
     }
 
     // Check if count record is present and is correctly set
