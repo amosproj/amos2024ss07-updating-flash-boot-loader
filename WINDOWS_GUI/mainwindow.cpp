@@ -160,29 +160,11 @@ void MainWindow::connectSignalSlots() {
         if(ui->label_selected_ECU->text() == "") {
             this->ui->textBrowser_flash_status->setText("No valid ECU selected");
         } else {
-            /*
+
             QLabel* label = qobject_cast<QLabel*>(flashPopup.property("label").value<QObject*>());
             label->setText(QString("You are going to flash from \'") + QString(this->ui->table_ECU->selectedItems().at(2)->text())
                                     + QString("\' to \'") + ui->label_version->text().mid(14) + QString("\'"));
             this->flashPopup.show();
-            */
-
-            uint32_t selectedID = getECUID();
-
-            if(ui->button_flash->text().contains("Stop")){
-                flashMan->stopFlashing();
-                threadFlashing->wait();
-            }
-            else{
-                if(validMan != nullptr && validMan->data.size() > 0){
-                    flashMan->setFlashFile(validMan->data);
-                } else {
-                    flashMan->setTestFile();
-                    this->ui->textBrowser_flash_status->setText("No valid Flash File selected. Demo Mode triggered");
-                }
-
-                flashMan->startFlashing(selectedID, gui_id, comm);
-            }
         }
     });
 
@@ -219,8 +201,8 @@ void MainWindow::setupFlashPopup() {
             if(validMan != nullptr && validMan->data.size() > 0){
                 flashMan->setFlashFile(validMan->data);
             } else {
-                //flashMan->setTestFile();
-                this->ui->textBrowser_flash_status->setText("No valid Flash File selected");
+                flashMan->setTestFile();
+                this->ui->textBrowser_flash_status->setText("No valid Flash File selected. Demo Mode triggered");
             }
 
             flashMan->startFlashing(selectedID, gui_id, comm);
