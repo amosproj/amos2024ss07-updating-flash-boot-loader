@@ -11,10 +11,29 @@
 
 #include "validatemanager.h"
 
+#include <QDebug>
+
 ValidateManager::ValidateManager() {
 
     data.clear();
 
+}
+
+uint32_t getAddr(uint32_t addr){
+    //TODO: Change after decision about how to handle addresses: A00.... vs 800...
+    if((addr & 0x80000000) > 0)
+        addr |= 0xA0000000;
+
+    return addr;
+}
+
+QByteArray getData(QByteArray tempData) {
+    QByteArray transformedData;
+    for (int i = 0; i < tempData.size(); i += 2) {
+        QString hexByte = tempData.mid(i, 2);
+        transformedData.append((uint8_t)(0xFF & hexByte.toUInt(NULL, 16)));
+    }
+    return transformedData;
 }
 
 
@@ -24,7 +43,6 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
     uint32_t block_address_end = 0;
 
     int current_index = 0;
-    int block_index = 0;
 
     int count_record = -1;
     int jump_record = -1;
@@ -135,11 +153,9 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
                 count_lines += 1;
             }
             else{
-
-                block_result.insert(block_index, result);
+                block_result.insert(getAddr(result.left(8).toUInt(NULL, 16)), getData(result.right(result.size()-8)));
 
                 result.clear();
-                block_index += 1;
 
                 result.append(new_line.right(data_len + 8));
                 count_lines += 1;
@@ -151,6 +167,8 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
         // preprocess data for flashing
         else if(record_type == '7' or record_type == '8' or record_type == '9'){
 
+            emit infoPrint("INFO: Jump addresses not supported!");
+            continue;
             if(jump_record != -1){
 
                 emit infoPrint("INFO: File not Valid! Too many termination records.\n");
@@ -159,18 +177,15 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
             }
 
             if(current_index == (nlines - 1)){
-
-                block_result.insert(block_index, result);
+                block_result.insert(getAddr(result.left(8).toUInt(NULL, 16)), getData(result.right(result.size()-8)));
 
                 result.clear();
-                block_index += 1;
             }
 
             new_line = extractData(line, record_type);
 
-            block_result.insert(block_index, new_line);
-
-            block_index += 1;
+            // TODO: How to handle jump addresses?
+            //block_result.insert(block_index, new_line);
         }
         // optional entry, can be used to validate file
         else if(record_type == '5' or record_type == '6'){
@@ -201,9 +216,8 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
     if(!result.isEmpty()){
 
-        block_result.insert(block_index, result);
+        block_result.insert(getAddr(result.left(8).toUInt(NULL, 16)), getData(result.right(result.size()-8)));
         result.clear();
-        block_index += 1;
     }
 
     /*
@@ -217,16 +231,14 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
     if(file_validity){
 
-        for (QByteArray& block : block_result) {
+        for (uint32_t addr : block_result.keys()) {
 
-            QByteArray addr = block.left(8);
-            uint32_t addr_int = addr.toUInt(NULL, 16);
+            QByteArray block = block_result[addr];
+            uint32_t data_len = block.size();
 
-            uint32_t data_len = block.size() - 8;
+            if(!addrInRange(addr, data_len)){
 
-            if(!addrInRange(addr_int, data_len)){
-
-                emit infoPrint("INFO: File not Valid! Data would be written into reserved memory.\n");
+                emit infoPrint("INFO: File not Valid! Data with len "+QString("0x%1").arg(data_len, 2, 16, QLatin1Char( '0' ))+" would be written into reserved memory. -> Address: "+ QString("0x%1").arg(addr, 2, 16, QLatin1Char( '0' ))+"\n");
                 file_validity = false;
                 break;
             }
@@ -345,7 +357,7 @@ bool ValidateManager::addrInCoreRange(uint32_t addr, uint32_t data_len,  uint16_
     if(core_start_add_string == "Not yet supported" || core_end_add_string == "Not yet supported" || core_start_add_string == "" || core_end_add_string == ""){
 
         *supported = false;
-        qDebug() << "INFO: Address Validation not supported for core" << core << "!";
+        //qDebug() << "INFO: Address Validation not supported for core" << core << "!";
 
         return true;
     }
@@ -355,7 +367,7 @@ bool ValidateManager::addrInCoreRange(uint32_t addr, uint32_t data_len,  uint16_
 
     if((core_start_add > 0 && core_end_add > 0) && (addr >= core_start_add && addr < core_end_add)){
 
-        if(addr + data_len <= core_end_add){
+        if(addr + (data_len-1) <= core_end_add){
 
             return true;
         }
@@ -369,8 +381,8 @@ bool ValidateManager::addrInRange(uint32_t address, uint32_t data_len){
 
     bool supported = true;
 
-    if( addrInCoreRange(address, data_len, 0, &supported) &&
-        addrInCoreRange(address, data_len, 1, &supported) &&
+    if( addrInCoreRange(address, data_len, 0, &supported) ||
+        addrInCoreRange(address, data_len, 1, &supported) ||
         addrInCoreRange(address, data_len, 2, &supported))
     {
 
