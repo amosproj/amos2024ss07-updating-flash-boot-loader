@@ -21,6 +21,7 @@
 #define DID_DATA_FLASH_ADDR                                         0xAF000000
 
 // Size in uint8_t bytes
+// Info: Changing of size may effect other modules -> Flashing
 #define FBL_DID_APP_ID_BYTES_SIZE                                   (32)
 #define FBL_DID_SYSTEM_NAME_BYTES_SIZE                              (32)
 #define FBL_DID_PROGRAMMING_DATE_BYTES_SIZE                         (6)

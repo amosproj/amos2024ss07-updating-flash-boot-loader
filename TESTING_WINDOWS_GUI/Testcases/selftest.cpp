@@ -124,7 +124,7 @@ void Selftest::messageChecker(const unsigned int id, const QByteArray &rec){
 
         // Create the relevant message
         uint8_t transfer_data[] = {0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5};
-        msg = _create_transfer_data(&len, 0xA0090000, transfer_data, sizeof(transfer_data));
+        msg = _create_transfer_data(&len, 0xA0090000, 0, transfer_data, sizeof(transfer_data));
     }
 
     else if(rec[0] == FBL_REQUEST_TRANSFER_EXIT){

@@ -7,13 +7,14 @@
 //============================================================================
 // Name        : uds.c
 // Author      : Dorothea Ehrl, Sebastian Rodriguez, Michael Bauer, Wiktor Pilarczyk
-// Version     : 0.2
+// Version     : 0.3
 // Copyright   : MIT
 // Description : UDS Layer implementation
 //============================================================================
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "uds.h"
 #include "isotp.h"
@@ -33,6 +34,7 @@ static isoTP* iso;
 static uint8_t getSID(UDS_Msg *msg);
 static uint16_t getDID(UDS_Msg *msg);
 static uint32_t getMemoryAddress(UDS_Msg *msg);
+static uint32_t getFlashingBytes(UDS_Msg *msg);
 static uint16_t getNoBytes(UDS_Msg *msg);
 
 //============================================================================
@@ -53,11 +55,9 @@ void uds_close(void){
 //============================================================================
 
 void uds_handleRX(uint8_t* data, uint32_t data_len){
-    uint8_t array[sizeof(uint32_t) + data_len ]; // TODO change if incoming data format is different
-
-    UDS_Msg* msg = (UDS_Msg*) array;
+    UDS_Msg* msg = malloc(sizeof(UDS_Msg));
     msg->len = data_len;
-    memcpy(msg->data, data, data_len);
+    msg->data = data;
 
     // Flag for session control
     boolean responded = 1;
@@ -150,16 +150,36 @@ void uds_handleRX(uint8_t* data, uint32_t data_len){
             uds_write_data_by_identifier(did, msg->data + 3, msg->len - 3);
             break;
         case FBL_REQUEST_DOWNLOAD:
-            uds_request_download();
+            if(msg->len != 9){
+                uds_neg_response(SID, FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT);
+                return;
+            }
+
+            uds_request_download(getMemoryAddress(msg), getFlashingBytes(msg));
             break;
         case FBL_REQUEST_UPLOAD:
-            uds_request_upload();
+            if(msg->len != 9){
+                uds_neg_response(SID, FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT);
+                return;
+            }
+
+            uds_request_upload(getMemoryAddress(msg), getFlashingBytes(msg));
             break;
         case FBL_TRANSFER_DATA:
-            uds_transfer_data(data);
+            if(msg->len < 5){
+                uds_neg_response(SID, FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT);
+                return;
+            }
+
+            uds_transfer_data(getMemoryAddress(msg), msg->data + 5, msg->len - 5);
             break;
         case FBL_REQUEST_TRANSFER_EXIT:
-            uds_request_transfer_exit();
+            if(msg->len != 5){
+                uds_neg_response(SID, FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT);
+                return;
+            }
+
+            uds_request_transfer_exit(getMemoryAddress(msg));
             break;
         default:
             responded = 0;
@@ -170,6 +190,9 @@ void uds_handleRX(uint8_t* data, uint32_t data_len){
         // Call session control to indicate that valid communication was received
         sessionControl();
     }
+
+    // Important: Free the UDS msg variable
+    free(msg);
 }
 
 //============================================================================
@@ -316,40 +339,102 @@ void uds_write_data_by_identifier(uint16_t did, uint8_t* data, uint8_t data_len)
 /**
  * Method to send the response for request download
  */
-void uds_request_download(void){
+void uds_request_download(uint32_t address, uint32_t data_len){
+    uint8_t nrc = flashingRequestDownload(address, data_len);
+    if(nrc){
+        uds_neg_response(FBL_REQUEST_DOWNLOAD, nrc);
+        return;
+    }
 
-    // TODO needs to be implemented
+    // Prepare TX
+    tx_reset_isotp_buffer(iso);
+    iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
+
+    // Read out the flashing buffer size from flashing
+    uint32_t flashingBuffer = flashingGetFlashBufferSize();
+
+    // Create msg
+    int len;
+    uint8_t *msg = _create_request_download(&len, RESPONSE, address, flashingBuffer);
+    isotp_send(iso, msg, len);
+    free(msg);
 }
 
 /**
  * Method to send the response for request upload
  */
-void uds_request_upload(void){
-    // TODO needs to be implemented
+void uds_request_upload(uint32_t address, uint32_t data_len){
+    uint8_t nrc = flashingRequestUpload(address, data_len);
+    if(nrc){
+        uds_neg_response(FBL_REQUEST_UPLOAD, nrc);
+        return;
+    }
+
+    // Prepare TX
+    tx_reset_isotp_buffer(iso);
+    iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
+
+    // Read out the flashing buffer size from flashing
+    uint32_t flashingBuffer = flashingGetFlashBufferSize();
+
+    // Create msg
+    int len;
+    uint8_t *msg = _create_request_upload(&len, RESPONSE, address, flashingBuffer);
+    isotp_send(iso, msg, len);
+    free(msg);
 }
 
 /**
  * Method to process the transfer data, no response is provided
  */
-void uds_transfer_data(uint8_t* data){
-    // TODO needs to be implemented
+void uds_transfer_data(uint32_t address, uint8_t* data, uint32_t data_len){
+    uint8_t nrc = flashingTransferData(address, data, data_len);
+    if(nrc){
+        uds_neg_response(FBL_TRANSFER_DATA, nrc);
+        return;
+    }
+
+    // Prepare TX
+    tx_reset_isotp_buffer(iso);
+    iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
+
+    // Create msg
+    int len;
+    uint8_t *msg = _create_transfer_data(&len, RESPONSE, address, 0, 0);
+    isotp_send(iso, msg, len);
+    free(msg);
 }
 
 /**
  * Method to send the response for transfer exit
  */
-void uds_request_transfer_exit(void){
-    // TODO needs to be implemented
+void uds_request_transfer_exit(uint32_t address){
+
+    uint8_t nrc = flashingTransferExit(address);
+    if(nrc){
+        uds_neg_response(FBL_REQUEST_TRANSFER_EXIT, nrc);
+        return;
+    }
+
+    // Prepare TX
+    tx_reset_isotp_buffer(iso);
+    iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
+
+    // Create msg
+    int len;
+    uint8_t *msg = _create_request_transfer_exit(&len, RESPONSE, address);
+    isotp_send(iso, msg, len);
+    free(msg);
 }
 
 //============================================================================
 // Negative Response - Common Response Codes
 
-void uds_neg_response(uint8_t reg_sid ,uint8_t neg_code){
+void uds_neg_response(uint8_t rej_sid ,uint8_t neg_code){
     tx_reset_isotp_buffer(iso);
     iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
     int len;
-    uint8_t *msg = _create_neg_response(&len, reg_sid, neg_code);
+    uint8_t *msg = _create_neg_response(&len, rej_sid, neg_code);
     isotp_send(iso, msg, len);
     free(msg);
 }
@@ -387,6 +472,18 @@ static uint32_t getMemoryAddress(UDS_Msg *msg){
     addr |= (msg->data[3] << 8);
     addr |= msg->data[4];
     return addr;
+}
+
+static uint32_t getFlashingBytes(UDS_Msg *msg){
+    if (msg->len < 9){
+        return 0;
+    }
+    uint32_t bytes = 0;
+    bytes |= (msg->data[5] << 24);
+    bytes |= (msg->data[6] << 16);
+    bytes |= (msg->data[7] << 8);
+    bytes |= msg->data[8];
+    return bytes;
 }
 
 static uint16_t getNoBytes(UDS_Msg *msg){

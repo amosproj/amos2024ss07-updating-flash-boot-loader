@@ -20,6 +20,8 @@ set(PROJECT_SOURCES
         mainwindow.ui
         editableComboBox.h
         editablecombobox.cpp
+        flashmanager.h
+        flashmanager.cpp
         Communication/CommInterface.cpp
         Communication/CommInterface.hpp
         Communication/Can_Wrapper.cpp
@@ -45,6 +47,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         application.qrc
+        validatemanager.h validatemanager.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET WINDOWS_GUI APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
