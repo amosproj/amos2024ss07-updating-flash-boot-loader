@@ -36,7 +36,7 @@ public:
     enum STATUS {UPDATE, INFO, ERR, RESET };
 
 private:
-    enum STATE_MACHINE {PREPARE, START_FLASHING, REQ_DOWNLOAD, TRANSFER_DATA, FINISH, IDLE, ERR_STATE};
+    enum STATE_MACHINE {PREPARE, START_FLASHING, REQ_DOWNLOAD, TRANSFER_DATA, VALIDATE, FINISH, IDLE, ERR_STATE};
     STATE_MACHINE curr_state, prev_state;                       // States
     uint8_t state_attempt_ctr;                                  // State attempt counter
     uint32_t ecu_id;                                            // ECU ID to flash
@@ -44,6 +44,7 @@ private:
     Communication *comm;                                        // Reference to Comm Layer
     QString file;                                               // Reference to file for flashing
     QMap<uint32_t, QByteArray> flashContent;                    // Map with Address -> continous byte array
+    QMap<uint32_t, uint32_t> fileChecksums;
 
     size_t flashedBytesCtr;                                     // Counter for flashed bytes
     uint32_t flashCurrentAdd;                                   // Stores the current address to be flashed
@@ -62,6 +63,7 @@ public:
     void setECUID(uint32_t ecu_id);
     void setTestFile();
     void setFlashFile(QMap<uint32_t, QByteArray> data);
+    void setFileChecksums(QMap<uint32_t, uint32_t> checksums);
 
     void startFlashing(uint32_t ecu_id, uint32_t gui_id, Communication* comm){
 
@@ -128,6 +130,7 @@ private:
     void startFlashing();
     void requestDownload();
     void transferData();
+    void validateFlashing();
     void finishFlashing();
 
 signals:

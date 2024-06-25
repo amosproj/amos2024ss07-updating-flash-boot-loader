@@ -16,7 +16,7 @@
 ValidateManager::ValidateManager() {
 
     data.clear();
-    fileChecksum = 0;
+    checksums.clear();
 
 }
 
@@ -236,8 +236,8 @@ QByteArray ValidateManager::extractData(QByteArray line, char record_type)
     return trimmed_line;
 }
 
-uint ValidateManager::calculateFileChecksum(QMap<uint32_t, QByteArray> data)
-{
+QMap<uint32_t, uint32_t> ValidateManager::calculateFileChecksums(QMap<uint32_t, QByteArray> data)
+{   /*
     int numEntries = data.size();
     const char *dataCharP;
     QString dataString = "";
@@ -256,5 +256,19 @@ uint ValidateManager::calculateFileChecksum(QMap<uint32_t, QByteArray> data)
     CCRC32 crc;
 	crc.Initialize();
     
-    return crc.FullCRC((const unsigned char *)dataCharP, strlen(dataCharP));;
+    return crc.FullCRC((const unsigned char *)dataCharP, strlen(dataCharP));*/
+    
+    QMap<uint32_t, uint32_t> result;
+
+    for (auto [key, value] : data.asKeyValueRange()) {
+        CCRC32 crc;
+        crc.Initialize();
+
+        const char *nextLine = value.data();
+
+        uint32_t checksum = (uint32_t) crc.FullCRC((const unsigned char *) nextLine, strlen(nextLine));
+        result.insert(key, checksum);
+    }
+
+    return result;
 }

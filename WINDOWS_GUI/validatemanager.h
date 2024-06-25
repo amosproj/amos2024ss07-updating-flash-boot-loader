@@ -29,10 +29,10 @@ public:
     enum LABEL {HEADER, VALID, CONTENT, SIZE, TYPE};
 
     QMap<uint32_t, QByteArray> validateFile(QByteArray data);
-    uint32_t calculateFileChecksum(QMap<uint32_t, QByteArray> data);
+    QMap<uint32_t, uint32_t> calculateFileChecksums(QMap<uint32_t, QByteArray> data);
 
     QMap<uint32_t, QByteArray> data;
-    uint32_t fileChecksum;
+    QMap<uint32_t, uint32_t> checksums;
 
     UDS *uds;
 

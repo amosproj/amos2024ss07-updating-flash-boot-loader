@@ -115,9 +115,7 @@ void MainWindow::connectSignalSlots() {
 
             // Validate file, result is already prepared for furhter calculations
             validMan->data = validMan->validateFile(data);
-            validMan->fileChecksum = validMan->calculateFileChecksum(validMan->data);
-            appendTextToConsole(QString::number(validMan->fileChecksum, 16));
-
+            validMan->checksums = validMan->calculateFileChecksums(validMan->data);
 
             //dummy_function(data);
             file.close();
@@ -160,6 +158,7 @@ void MainWindow::connectSignalSlots() {
             else{
                 if(validMan != nullptr && validMan->data.size() > 0){
                     flashMan->setFlashFile(validMan->data);
+                    flashMan->setFileChecksums(validMan->checksums);
                 } else {
                     //flashMan->setTestFile();
                     this->ui->textBrowser_flash_status->setText("No valid Flash File selected");

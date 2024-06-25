@@ -324,7 +324,6 @@ uint8_t *flashRead(uint32 flashStartAddr, size_t dataBytesToRead){
 /* Calculates Checksum for the given part of memory used to verify flash after flashing */
 uint32 flashCalculateChecksum(uint32 flashStartAddr, size_t length) {
 
-    //TODO vllt anpassen auf single byte
     crc_t crc = crc_init();
 
     for (uint32 addr = flashStartAddr; addr < flashStartAddr + length * sizeof(uint32); addr += sizeof(uint32)) {

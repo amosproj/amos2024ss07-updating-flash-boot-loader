@@ -24,6 +24,7 @@ uint8_t flashingRequestDownload(uint32_t address, uint32_t data_len);
 uint8_t flashingRequestUpload(uint32_t address, uint32_t data_len);
 uint8_t flashingTransferData(uint32_t address, uint8_t* data, uint32_t data_len);
 uint8_t flashingTransferExit(uint32_t address);
+uint32_t flashingGetChecksum();
 
 uint32_t flashingGetFlashBufferSize();
 

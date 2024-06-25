@@ -49,6 +49,7 @@ private:
     bool rx_msg_neg_resp;                       // Indication of Negative Response
 
     uint32_t ecu_rec_buffer_size;               // Used for Request Download response -> ECU indicates the buffer size that could used for transfer data
+    uint32_t ecu_rec_checksum;                      // Used for request upload response to store checksum calculated by the ECU
 
 public:
     UDS();
@@ -60,6 +61,7 @@ public:
 
     // UDS RX -> Extracted to variables
     uint32_t getECUTransferDataBufferSize();
+    uint32_t getECUChecksum();
 
     // UDS TX
     // Sending out broadcast for tester present

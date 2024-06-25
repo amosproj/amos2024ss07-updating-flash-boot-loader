@@ -77,6 +77,11 @@ void FlashManager::setFlashFile(QMap<uint32_t, QByteArray> data){
     flashContent = data;
 }
 
+void FlashManager::setFileChecksums(QMap<uint32_t, uint32_t> checksums) {
+    fileChecksums.clear();
+    fileChecksums = checksums;
+}
+
 //============================================================================
 // Private Helper Method
 //============================================================================
@@ -147,6 +152,10 @@ void FlashManager::doFlashing(){
             case TRANSFER_DATA:
                 transferData();
                 break;
+
+            case VALIDATE:
+                validateFlashing();
+                break; 
 
             case FINISH:
                 finishFlashing();
@@ -310,7 +319,7 @@ void FlashManager::requestDownload(){
 
     // Calculate the packages
     flashCurrentPackages = bytes.size() % flashCurrentBufferSize > 0 ? bytes.size() / flashCurrentBufferSize + 1 : bytes.size() / flashCurrentBufferSize;
-    QString info = "Requesting Download OK. According to the buffer size of the ECU the data need to be splittet into "+QString::number(flashCurrentPackages)+" packages";
+    QString info = "Requesting Download OK. According to the buffer size of the ECU the data need to be split into "+QString::number(flashCurrentPackages)+" packages";
     emit infoPrint(info);
     emit updateStatus(INFO, info, 0);
 
@@ -397,6 +406,36 @@ void FlashManager::transferData(){
     emit updateStatus(INFO, "Flash file fully transmitted.", 0);
 
     QThread::msleep(2000);
+    curr_state = VALIDATE;
+}
+
+void FlashManager::validateFlashing(){
+
+    for (auto [key, value] : fileChecksums.asKeyValueRange()) {
+        
+        UDS::RESP resp = UDS::RESP::RX_NO_RESPONSE;
+        // nicht sicher ob flashContent.value(key).length() funktioniert da einträge aus flashContent gelöscht werden?
+        resp = uds->requestUpload(ecu_id, key, flashContent.value(key).length());
+
+        if (resp != UDS::TX_RX_OK) {
+            emit errorPrint("FlashManager: ERROR - Requesting upload failed");
+            //???
+            break;
+        }
+
+        uint32_t ecuChecksum = uds->getECUChecksum();
+        if (ecuChecksum == 0) {
+            emit errorPrint("FlashManager: ERROR - Checksum transmission failed");
+            break;
+        }
+
+        if (ecuChecksum != value) {
+            emit errorPrint("FlashManager: ERROR - Calculated checksums didn't match");
+            curr_state = ERR_STATE;
+        }
+        
+    }
+
     curr_state = FINISH;
 }
 
