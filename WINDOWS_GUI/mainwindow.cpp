@@ -96,83 +96,45 @@ void MainWindow::connectSignalSlots() {
 
     // GUI choose file
     connect(ui->button_file, &QPushButton::clicked, this, [=]() {
-        QString path = QFileDialog::getOpenFileName(nullptr, "Choose File");
-        if(!path.isEmpty()) {
-            QFile file(path);
-            if(!file.open(QFile::ReadOnly)) {
-                qDebug() << "Couldn't open file " + path + " " + file.errorString();
-                return;
+
+        if(ECUSelected()){
+
+            updateValidManager();
+
+            QString path = QFileDialog::getOpenFileName(nullptr, "Choose File");
+            if(!path.isEmpty()) {
+
+                QFile file(path);
+                if(!file.open(QFile::ReadOnly)) {
+                    qDebug() << "Couldn't open file " + path + " " + file.errorString();
+                    return;
+                }
+                ui->label_size->setText("File size:  " + QString::number(file.size()));
+                QByteArray data = file.readAll();
+                ui->label_content->setText("File content:  " + data.left(16).toHex());
+
+                // Set file type
+                QFileInfo fileInfo(path);
+                QString fileType = fileInfo.suffix();
+
+                ui->label_type->setText("File type:  " + fileType);
+
+
+                //
+                // Validate file, result is already prepared for furhter calculations
+                validMan->data = validMan->validateFile(data);
+
+
+                //dummy_function(data);
+                file.close();
             }
-            ui->label_size->setText("File size:  " + QString::number(file.size()));
-            QByteArray data = file.readAll();
-            ui->label_content->setText("File content:  " + data.left(16).toHex());
-
-            // Set file type
-            QFileInfo fileInfo(path);
-            QString fileType = fileInfo.suffix();
-
-            ui->label_type->setText("File type:  " + fileType);
-
-            qDebug() << " ";
-            qDebug() << " ";
-            qDebug() << " ";
-            qDebug() << "1" << eculist;
-            qDebug() << " ";
-            //ECUSelected();
-
-            QStringList separated = ui->label_selected_ECU->text().split(": 0x");
-            QString ID_HEX_IDK = separated[1];
-
-            int ID_HEX_IDK2 = ID_HEX_IDK.toInt(NULL, 16);
-
-            QString ID_HEX = QString::number(ID_HEX_IDK2);
-
-
-
-            uint32_t ecu_id = getECUID();
-
-            qDebug() << "ECU ID: " << ecu_id;
-            qDebug() << "separated: " << separated;
-            qDebug() << "ID_HEX: " << ID_HEX;
-            qDebug() << "2" << eculist;
-            qDebug() << " ";
-            qDebug() << " ";
-            qDebug() << " ";
-
-
-            uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_SYSTEM_NAME);
-            uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_PROGRAMMING_DATE);
-            uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
-
-            qDebug() << " ";
-            qDebug() << " ";
-            qDebug() << " ";
-            qDebug() << "3" << eculist;
-            qDebug() << " ";
-
-            qDebug() << "ECULIST MIT INDEX" << eculist[ID_HEX];
-
-            QString DID_string = QString::number(FBL_DID_SYSTEM_NAME);
-            QString temp = eculist[ID_HEX][DID_string];
-
-
-
-            qDebug() << " ";
-
-            qDebug() << "Temp: " << temp << " for " << ID_HEX << " with DID " << DID_string;
-            qDebug() << " ";
-
-            qDebug() << "4" << eculist;
-
-            qDebug() << " ";
-            qDebug() << " ";
-            qDebug() << " ";
-            // Validate file, result is already prepared for furhter calculations
-            validMan->data = validMan->validateFile(data);
-
-            //dummy_function(data);
-            file.close();
         }
+        else{
+
+            QMessageBox::about(nullptr, "WARNING!",
+                               "Please select an ECU in the table on the left first!  \n\n");
+        }
+
     });
 
     // GUI select ECU
@@ -255,7 +217,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     qInfo("Main: Create the ValidateManager");
     validMan = new ValidateManager();
-    validMan->uds = uds;
 
     ui->table_ECU->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->table_ECU->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -332,7 +293,6 @@ void MainWindow::updateStatus(FlashManager::STATUS s, QString str, int percent) 
 
 
 void MainWindow::updateLabel(ValidateManager::LABEL s, QString str) {
-    QString status = "";
 
     switch(s) {
     case ValidateManager::HEADER:
@@ -355,6 +315,49 @@ void MainWindow::updateLabel(ValidateManager::LABEL s, QString str) {
         break;
     }
 }
+
+void MainWindow::updateValidManager() {
+
+    uint32_t ecu_id = getECUID();
+
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
+
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
+
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
+
+    validMan->core_addr.clear();
+
+    // Short break to process the incoming signals
+    QTimer::singleShot(25, [this]{
+
+        QString ID_HEX = getECUHEXID();
+
+        QString core0_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
+        QString core0_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
+
+        QString core1_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
+        QString core1_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
+
+        QString core2_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
+        QString core2_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
+
+
+        validMan->core_addr[0]["start"] = eculist[ID_HEX][core0_start];
+        validMan->core_addr[0]["end"] = eculist[ID_HEX][core0_end];
+
+        validMan->core_addr[1]["start"] = eculist[ID_HEX][core1_start];
+        validMan->core_addr[1]["end"] = eculist[ID_HEX][core1_end];
+
+        validMan->core_addr[2]["start"] = eculist[ID_HEX][core2_start];
+        validMan->core_addr[2]["end"] = eculist[ID_HEX][core2_end];
+    });
+}
+
+
 
 
 void MainWindow::updateECUList(){
@@ -425,6 +428,17 @@ uint32_t MainWindow::getECUID() {
     QString ID_HEX = separated[1];
     bool ok;
     return (0xFFF0 & ID_HEX.toUInt(&ok, 16)) >> 4;
+}
+
+QString MainWindow::getECUHEXID() {
+    QStringList separated = ui->label_selected_ECU->text().split(": 0x");
+    QString ID_HEX = separated[1];
+
+    // Convert hex string to integer
+    bool ok;
+    int ID_INT = ID_HEX.toInt(&ok, 16);
+
+    return QString::number(ID_INT);
 }
 
 bool MainWindow::ECUSelected() {

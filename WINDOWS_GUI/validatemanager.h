@@ -14,10 +14,8 @@
 #include <QMap>
 #include <QByteArray>
 
-#include "UDS_Layer/UDS.hpp"
-#include "UDS_Spec/uds_comm_spec.h"
-
-
+// Forward declaration of MainWindow
+class MainWindow;
 
 class ValidateManager : public QObject {
 
@@ -33,7 +31,7 @@ public:
 
     QMap<uint32_t, QByteArray> data;
 
-    UDS *uds;
+    QMap<uint16_t, QMap<QString, QString>> core_addr;
 
 private:
          // Add any private member variables or functions here if needed
@@ -41,6 +39,10 @@ private:
     bool validateLine(QByteArray line);
     QByteArray extractData(QByteArray line, char record_type);
 
+    bool addrInCoreRange(uint32_t addr, uint32_t data_len,  uint16_t core, bool* supported);
+    bool addrInRange(uint32_t address, uint32_t data_len);
+
+    MainWindow* mainWindow;
 
 
 signals:

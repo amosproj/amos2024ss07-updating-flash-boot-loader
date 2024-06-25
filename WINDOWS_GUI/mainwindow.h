@@ -57,7 +57,10 @@ private:
     void updateECUTableView(QMap<QString, QMap<QString, QString>> eculist);
 
     uint32_t getECUID();
+    QString getECUHEXID();
     bool ECUSelected();
+
+    void updateValidManager();
 
     void setFlashButton(FLASH_BTN m);
 

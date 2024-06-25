@@ -21,6 +21,10 @@ ValidateManager::ValidateManager() {
 QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 {
     QList<QByteArray> lines = data.split('\n');
+
+    int block_start = -1;
+    int block_end = -1;
+
     int current_index = 0;
     int result_index = 0;
 
@@ -33,6 +37,7 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
     QByteArray new_line;
     QMap<uint32_t, QByteArray> result;
+    QMap<uint32_t, QByteArray> block_result;
 
     // Print each line
     for (QByteArray& line : lines) {
@@ -54,8 +59,9 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
         // Check validity of one line at a time
         if(!validateLine(line))
         {
-
+            emit infoPrint("INFO: File not valid! Checksum of a line did not match the expected value.\n");
             file_validity = false;
+            break;
         }
 
         // extract header information
@@ -117,7 +123,9 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
             if(count_record != -1){
 
+                emit infoPrint("INFO: File not Valid! Too many count records.\n");
                 file_validity = false;
+                break;
             }
 
             count_record = line.toInt(NULL, 16);
@@ -126,21 +134,44 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
         else {
 
             qDebug() << "There was an error with the selected file! Record type: " << record_type << line;
-            emit errorPrint((&"ERROR: There was an error with the selected file! Record Type: " [ record_type]));
+            emit errorPrint(("ERROR: There was an error with the selected file! Record Type: " + QString::number(record_type) + "\n"));
             emit errorPrint("ERROR: Test");
+            break;
         }
 
         current_index += 1;
     }
 
-    if(file_header != true){
+    if(file_validity){
+
+        for (QByteArray& block : result) {
+
+            QByteArray addr = block.left(8);
+            uint32_t addr_int = addr.toInt(NULL, 16);
+
+            uint32_t data_len = block.size() - 8;
+
+            if(!addrInRange(addr_int, data_len)){
+
+                emit infoPrint("INFO: File not Valid! Data would be written into reserved memory.\n");
+                file_validity = false;
+                break;
+            }
+
+        }
+    }
+
+
+
+    if(!file_header){
 
         emit updateLabel(ValidateManager::HEADER, "File header:  N/A");
     }
 
     // Check if count record is present and is correctly set
-    if(count_record != count_lines and count_record != -1){
+    if(file_validity && count_record != count_lines && count_record != -1){
 
+        emit infoPrint("INFO: File not valid! Count record does not match the number of data records.\n");
         file_validity = false;
     }
 
@@ -226,8 +257,8 @@ QByteArray ValidateManager::extractData(QByteArray line, char record_type)
     // Did we encounter a S-record that is not supposed to be here?
     else{
 
-        qDebug() << "There was an error! with current line!";
-        emit errorPrint("There was an error with current line!\n");
+        qDebug() << "ERROR: There was an error! with current line!";
+        emit errorPrint("ERROR: There was an error with current line!\n");
     }
 
     return trimmed_line;
@@ -235,13 +266,21 @@ QByteArray ValidateManager::extractData(QByteArray line, char record_type)
 
 
 
-bool addrInCoreRange(uint32_t addr, uint32_t data_len, uint16_t start_addr_ID, uint16_t end_addr_ID, UDS *uds, QString ecu_id){
+bool ValidateManager::addrInCoreRange(uint32_t addr, uint32_t data_len,  uint16_t core, bool* supported){
 
-    unsigned int id_int = ecu_id.toUInt();
-    uint32_t ecu_id_int = (0xFFF0 & id_int) >> 4;
+    QString core_start_add_string = core_addr[core]["start"];
+    QString core_end_add_string = core_addr[core]["end"];
 
-    uint32_t core_start_add = uds->readDataByIdentifier(ecu_id_int, (uint16_t)start_addr_ID);
-    uint32_t core_end_add = uds->readDataByIdentifier(ecu_id_int, (uint16_t)end_addr_ID);
+    if(core_start_add_string == "Not yet supported" || core_end_add_string == "Not yet supported"){
+
+        *supported = false;
+        qDebug() << "INFO: Address Validation not supported for core" << core << "!";
+
+        return true;
+    }
+
+    uint32_t core_start_add = core_start_add_string.toInt(NULL, 16);
+    uint32_t core_end_add = core_end_add_string.toInt(NULL, 16);;
 
     if((core_start_add > 0 && core_end_add > 0) && (addr >= core_start_add && addr < core_end_add)){
 
@@ -255,12 +294,20 @@ bool addrInCoreRange(uint32_t addr, uint32_t data_len, uint16_t start_addr_ID, u
 }
 
 
-bool addrInRange(uint32_t address, uint32_t data_len, UDS *uds, QString ecu_id){
+bool ValidateManager::addrInRange(uint32_t address, uint32_t data_len){
 
-    if( !addrInCoreRange(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE0, FBL_DID_BL_WRITE_END_ADD_CORE0, uds, ecu_id) &&
-        !addrInCoreRange(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE1, FBL_DID_BL_WRITE_END_ADD_CORE1, uds, ecu_id) &&
-        !addrInCoreRange(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE2, FBL_DID_BL_WRITE_END_ADD_CORE2, uds, ecu_id))
+    bool supported = true;
+
+    if( addrInCoreRange(address, data_len, 0, &supported) &&
+        addrInCoreRange(address, data_len, 1, &supported) &&
+        addrInCoreRange(address, data_len, 2, &supported))
     {
+
+        if(!supported){
+
+            emit infoPrint("INFO: Address validation not supported for one or more cores! Please check debugging output! \n");
+
+        }
 
         return true;
     }
