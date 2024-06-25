@@ -830,6 +830,8 @@ QString UDS::translateNegResp(uint8_t nrc){
  */
 QString UDS::translateDID(uint16_t DID){
     switch(DID){
+        case FBL_DID_APP_ID:
+            return QString("Application identifier"); break;
         case FBL_DID_SYSTEM_NAME:
             return QString("System Name"); break;
         case FBL_DID_PROGRAMMING_DATE:
@@ -870,6 +872,8 @@ QString UDS::readDIDData(uint16_t DID, uint8_t* data, uint32_t no_bytes){
 
     QString retText = "";
     switch(DID){
+        case FBL_DID_APP_ID:
+            return QString::fromLocal8Bit(&data[0]); break;
         case FBL_DID_SYSTEM_NAME:
             return QString::fromLocal8Bit(&data[0]); break;
 
@@ -891,25 +895,43 @@ QString UDS::readDIDData(uint16_t DID, uint8_t* data, uint32_t no_bytes){
             return retText; break;
 
         case FBL_DID_BL_KEY_ADDRESS:
-             return QString("Not yet supported"); break;
+            for(int i=0; i < no_bytes; i++)
+                retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+            return retText; break;
         case FBL_DID_BL_KEY_GOOD_VALUE:
-            return QString("Not yet supported"); break;
+            for(int i=0; i < no_bytes; i++)
+                retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+            return retText; break;
         case FBL_DID_CAN_BASE_MASK:
-            return QString("Not yet supported"); break;
+            for(int i=0; i < no_bytes; i++)
+                retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+            return retText; break;
         case FBL_DID_CAN_ID:
             return QString("Not yet supported"); break;
         case FBL_DID_BL_WRITE_START_ADD_CORE0:
-            return QString("Not yet supported"); break;
+            for(int i=0; i < no_bytes; i++)
+                retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+            return retText; break;
         case FBL_DID_BL_WRITE_END_ADD_CORE0:
-            return QString("Not yet supported"); break;
+            for(int i=0; i < no_bytes; i++)
+                retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+            return retText; break;
         case FBL_DID_BL_WRITE_START_ADD_CORE1:
-            return QString("Not yet supported"); break;
+            for(int i=0; i < no_bytes; i++)
+                retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+            return retText; break;
         case FBL_DID_BL_WRITE_END_ADD_CORE1:
-            return QString("Not yet supported"); break;
+            for(int i=0; i < no_bytes; i++)
+                retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+            return retText; break;
         case FBL_DID_BL_WRITE_START_ADD_CORE2:
-            return QString("Not yet supported"); break;
+            for(int i=0; i < no_bytes; i++)
+                retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+            return retText; break;
         case FBL_DID_BL_WRITE_END_ADD_CORE2:
-            return QString("Not yet supported"); break;
+            for(int i=0; i < no_bytes; i++)
+                retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+            return retText; break;
         default:
             return QString("Data Identifier unknown");
     }

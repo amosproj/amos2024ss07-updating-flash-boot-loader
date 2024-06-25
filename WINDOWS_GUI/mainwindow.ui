@@ -81,6 +81,11 @@
              </column>
              <column>
               <property name="text">
+               <string>Version</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
                <string>Last Flash Date</string>
               </property>
              </column>
@@ -211,9 +216,9 @@ li.checked::marker { content: &quot;\2612&quot;; }
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_header">
+           <widget class="QLabel" name="label_version">
             <property name="text">
-             <string>File header: </string>
+             <string>File version:</string>
             </property>
            </widget>
           </item>

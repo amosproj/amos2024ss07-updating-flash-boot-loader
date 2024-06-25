@@ -30,6 +30,8 @@ private:
     Ui::MainWindow *ui;
     EditableComboBox *editComboBox_speed;
     QComboBox *comboBox_speedUnit;
+    QWidget flashPopup;
+    QString filePath;
 
     QThread *threadComm;
     Communication *comm;
@@ -57,8 +59,14 @@ private:
     void updateECUTableView(QMap<QString, QMap<QString, QString>> eculist);
 
     uint32_t getECUID();
+    QString getECUHEXID();
     bool ECUSelected();
 
+    void updateValidManager();
+
+    void udsUpdateVersion(uint32_t id, uint8_t *data, uint8_t data_size);
+
+    void setupFlashPopup();
     void setFlashButton(FLASH_BTN m);
 
 private slots:
