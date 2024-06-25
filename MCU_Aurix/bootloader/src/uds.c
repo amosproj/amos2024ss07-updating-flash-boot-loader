@@ -262,6 +262,7 @@ void uds_read_data_by_identifier(uint16_t did){
     uint8_t* data = readData(did, &len, &nrc);
     if(nrc){
         uds_neg_response(FBL_READ_DATA_BY_IDENTIFIER, nrc);
+        free(data);
         return;
     }
 

@@ -111,8 +111,8 @@ void MainWindow::connectSignalSlots() {
             this->ui->textBrowser_flash_status->setText("Flash file NOT selected");
         } else {
             QLabel* label = qobject_cast<QLabel*>(flashPopup.property("label").value<QObject*>());
-            label->setText(QString("You are going to flash from ") + QString(this->ui->table_ECU->selectedItems().at(2)->text())
-                                    + QString(" to ") + fileVersion);
+            label->setText(QString("You are going to flash from \'") + QString(this->ui->table_ECU->selectedItems().at(2)->text())
+                                    + QString("\' to \'") + fileVersion + QString("\'"));
             this->flashPopup.show();
         }
     });
