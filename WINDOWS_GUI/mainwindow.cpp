@@ -196,10 +196,11 @@ void MainWindow::setupFlashPopup() {
                 this->ui->textBrowser_flash_status->setText("No valid Flash File selected");
             }
             
-            QByteArray arr = ui->label_version->text().mid(14).toLocal8Bit();
-            udsUpdateVersion(selectedID, (uint8_t*)arr.data(), arr.size());
-
             flashMan->startFlashing(selectedID, gui_id, comm);
+            QTimer::singleShot(500, [this]{
+                QByteArray arr = ui->label_version->text().mid(14).toLocal8Bit();
+                udsUpdateVersion(getECUID(), (uint8_t*)arr.data(), arr.size());
+            });
         }
     });
 
