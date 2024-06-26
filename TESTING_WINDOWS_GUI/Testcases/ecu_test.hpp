@@ -34,7 +34,7 @@ private:
 
     uint8_t did_system_name_len = 17; // Name including end of string sign
     uint8_t did_system_name[FBL_DID_SYSTEM_NAME_BYTES_SIZE] = "Another ECU Name";
-    uint8_t did_programming_date[FBL_DID_PROGRAMMING_DATE_BYTES_SIZE] = {0x01, 0x06, 0x25, 0x12, 0x23, 0x45};
+    uint8_t did_programming_date[FBL_DID_PROGRAMMING_DATE_BYTES_SIZE] = {0x01, 0x06, 0x25, 0x12, 0x23, 0x99};
     uint8_t did_bl_key_address[FBL_DID_BL_KEY_ADDRESS_BYTES_SIZE] = {0x0A, 0xF4, 0x08, 0x90};
     uint8_t did_bl_key_good_value[FBL_DID_BL_KEY_GOOD_VALUE_BYTES_SIZE] = {0x39, 0x68, 0x3C, 0x5A};
     uint8_t did_can_base_mask[FBL_DID_CAN_BASE_MASK_BYTES_SIZE] = {0xFF, 0xFF};

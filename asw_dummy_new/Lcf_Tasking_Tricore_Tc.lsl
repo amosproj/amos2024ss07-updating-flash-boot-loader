@@ -74,21 +74,21 @@
 #define LCF_HEAP1_OFFSET    (LCF_USTACK1_OFFSET - LCF_HEAP_SIZE)
 #define LCF_HEAP2_OFFSET    (LCF_USTACK2_OFFSET - LCF_HEAP_SIZE)
 
-#define LCF_INTVEC0_START 0x802FE000
-#define LCF_INTVEC1_START 0x805FC000
-#define LCF_INTVEC2_START 0x805FE000
+#define LCF_INTVEC0_START 0x804F4000
+#define LCF_INTVEC1_START 0x804F4100
+#define LCF_INTVEC2_START 0x804F4200
 
 #define LCF_TRAPVEC0_START 0x80090100
-#define LCF_TRAPVEC1_START 0x80300000
-#define LCF_TRAPVEC2_START 0x80300100
+#define LCF_TRAPVEC1_START 0x804F4300
+#define LCF_TRAPVEC2_START 0x804F4400
 
 #define LCF_STARTPTR_CPU0 0x80090000
-#define LCF_STARTPTR_CPU1 0x80300200
-#define LCF_STARTPTR_CPU2 0x80300220
+#define LCF_STARTPTR_CPU1 0x804F4500
+#define LCF_STARTPTR_CPU2 0x804F4620
 
 #define LCF_STARTPTR_NC_CPU0 0xA0090000
-#define LCF_STARTPTR_NC_CPU1 0xA0300200
-#define LCF_STARTPTR_NC_CPU2 0xA0300220
+#define LCF_STARTPTR_NC_CPU1 0xA04F4500
+#define LCF_STARTPTR_NC_CPU2 0xA04F4620
 
 #define INTTAB0             (LCF_INTVEC0_START)
 #define INTTAB1             (LCF_INTVEC1_START)
@@ -100,6 +100,22 @@
 #define RESET LCF_STARTPTR_NC_CPU0
 
 #include "tc1v1_6_2.lsl"
+
+/***************************** RESERVED AREAS ********************************/
+/******************************** PFLASH0 ************************************/
+#define RESERVED_AREA_P0_0                      0xA0040000
+#define RESERVED_AREA_P0_0_SIZE                 320k
+
+#define RESERVED_AREA_P0_1                      0xA0200000
+#define RESERVED_AREA_P0_1_SIZE                 1M
+
+/******************************** PFLASH1 ************************************/
+#define RESERVED_AREA_P1_0                      0xA0300000
+#define RESERVED_AREA_P1_0_SIZE                 16k
+
+#define RESERVED_AREA_P1_1                      0xA0500000
+#define RESERVED_AREA_P1_1_SIZE                 1M
+/*****************************************************************************/
 
 // Specify a multi-core processor environment (mpe)
 
@@ -214,15 +230,6 @@ derivative tc37
         map not_cached (dest=bus:sri, dest_offset=0xa0000000, reserved, size=256K);
     } */
 
-    memory pfls0_reserved0
-    {
-        mau = 8;
-        size = 320K;
-        type = rom;
-        map     cached (dest=bus:sri, dest_offset=0x80040000,           size=320K);
-        map not_cached (dest=bus:sri, dest_offset=0xa0040000, reserved, size=320K);
-    }
-
     memory pfls0_asw_core0
     {
         mau = 8;
@@ -230,24 +237,6 @@ derivative tc37
         type = rom;
         map     cached (dest=bus:sri, dest_offset=0x80090000,           size=0x170000);
         map not_cached (dest=bus:sri, dest_offset=0xa0090000, reserved, size=0x170000);
-    }
-
-    memory pfls0_reserved1
-    {
-        mau = 8;
-        size = 0x100000;
-        type = rom;
-        map     cached (dest=bus:sri, dest_offset=0x80200000,           size=0x100000);
-        map not_cached (dest=bus:sri, dest_offset=0xa0200000, reserved, size=0x100000);
-    }
-    
-    memory pfls1_reserved0
-    {
-        mau = 8;
-        size = 0x4000;
-        type = rom;
-        map     cached (dest=bus:sri, dest_offset=0x80300000,           size=0x4000);
-        map not_cached (dest=bus:sri, dest_offset=0xa0300000, reserved, size=0x4000);
     }
 
     memory pfls1_asw_core1
@@ -275,15 +264,6 @@ derivative tc37
         type = rom;
         map     cached (dest=bus:sri, dest_offset=0x804FC000,           size=0x3FFF);
         map not_cached (dest=bus:sri, dest_offset=0xa04FC000, reserved, size=0x3FFF);
-    }
-
-    memory pfls1_reserved1
-    {
-        mau = 8;
-        size = 0x100000;
-        type = rom;
-        map     cached (dest=bus:sri, dest_offset=0x80500000,           size=0x100000);
-        map not_cached (dest=bus:sri, dest_offset=0xa0500000, reserved, size=0x100000);
     }
     
     memory dfls0
@@ -335,7 +315,15 @@ derivative tc37
         heap "heap" (min_size = (1k), fixed, align = 8);
     }    
 #endif
-    
+
+    section_setup :vtc:linear
+    {
+        reserved RESERVED_AREA_P0_0 .. RESERVED_AREA_P0_0+RESERVED_AREA_P0_0_SIZE;
+        reserved RESERVED_AREA_P0_1 .. RESERVED_AREA_P0_1+RESERVED_AREA_P0_1_SIZE;
+        reserved RESERVED_AREA_P1_0 .. RESERVED_AREA_P1_0+RESERVED_AREA_P1_0_SIZE;
+        reserved RESERVED_AREA_P1_1 .. RESERVED_AREA_P1_1+RESERVED_AREA_P1_1_SIZE;
+    }
+
     section_setup :vtc:linear
     {
         start_address
