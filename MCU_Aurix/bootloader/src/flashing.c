@@ -103,20 +103,22 @@ void flashingInit(void){
 
 uint8_t flashingRequestDownload(uint32_t address, uint32_t data_len){
 
-    if (flashing_int_data.state != IDLE)
-        return FBL_RC_UPLOAD_DOWNLOAD_NOT_ACCEPTED;
+    // Not used since request download should always be able to reset
+    //if (flashing_int_data.state != IDLE)
+    //    return FBL_RC_UPLOAD_DOWNLOAD_NOT_ACCEPTED;
 
     // Check on Flash Memory to accept download
     if(!addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE0, FBL_DID_BL_WRITE_END_ADD_CORE0) &&
        !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE1, FBL_DID_BL_WRITE_END_ADD_CORE1) &&
        !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE2, FBL_DID_BL_WRITE_END_ADD_CORE2))
     {
+        flashing_int_data.state = IDLE;
         return FBL_RC_REQUEST_OUT_OF_RANGE;
     }
 
     // Store base address for flashing
     flashing_int_data.startAddr = address;
-    flashing_int_data.endAddr = address + data_len;
+    flashing_int_data.endAddr = flashing_int_data.startAddr + data_len - 1; // Idx 0 also counts
 
     // Identify the max package size
     flashing_int_data.buffer = MAX_ISOTP_MESSAGE_LEN - 8; // Excluding: SID + address (5 bytes), keep some buffer
@@ -135,7 +137,7 @@ uint8_t flashingTransferData(uint32_t address, uint8_t* data, uint32_t data_len)
     if (flashing_int_data.state != TRANSFER_DATA || flashing_int_data.startAddr == 0 || flashing_int_data.endAddr == 0)
         return FBL_RC_REQUEST_SEQUENCE_ERROR;
 
-    if(address < flashing_int_data.startAddr || address > flashing_int_data.endAddr){
+    if(address < flashing_int_data.startAddr || address+(data_len-1) > flashing_int_data.endAddr){ // Idx 0 also counts
         return FBL_RC_REQUEST_OUT_OF_RANGE;
     }
 

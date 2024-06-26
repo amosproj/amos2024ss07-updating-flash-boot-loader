@@ -171,7 +171,7 @@ void MainWindow::connectSignalSlots() {
     // GUI connectivity indicator
     ecuConnectivityTimer = new QTimer(this);
     connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
-    ecuConnectivityTimer->start(1000);
+    ecuConnectivityTimer->start(ECU_CONNECTIVITY_TIMER);
 
     //Set baudrate
     connect(this, SIGNAL(baudrateSignal(uint, uint)), comm, SLOT(setBaudrate(uint, uint)), Qt::DirectConnection);
