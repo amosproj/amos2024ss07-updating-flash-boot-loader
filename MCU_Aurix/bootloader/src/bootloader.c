@@ -28,6 +28,7 @@
 #include "reset_TC375_LK.h"
 #include "reset.h"
 #include "Bsp.h"
+#include "aswadresses.h"
 
 uint8_t* rx_uds_message;
 uint32_t rx_total_length;
@@ -63,7 +64,7 @@ void init_bootloader(void){
 void bootloaderJumpToASW(void){
     //Write Flag
 
-    void (*asw_main) (int) = (void*) 0xA0090000;
+    void (*asw_main) (int) = (void*) ASW_STADD;
     Ifx__non_return_call(asw_main);
 
 //    jumpToASW = 1;
