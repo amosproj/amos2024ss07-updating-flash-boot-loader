@@ -122,6 +122,7 @@ public:
 private:
     QByteArray getCurrentFlashDate();
     size_t getOverallByteSize();
+    void own_sleep(uint32_t millis); // TODO: REMOVE AFTER DEBUGGING
 
     void doFlashing();
     void prepareFlashing();

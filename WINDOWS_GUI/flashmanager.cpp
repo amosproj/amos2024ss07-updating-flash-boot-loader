@@ -105,6 +105,12 @@ size_t FlashManager::getOverallByteSize(){
     return numberOfBytes;
 }
 
+// TODO: REMOVE AFTER DEBUGGING
+void FlashManager::own_sleep(uint32_t millis){
+    QDateTime start = QDateTime::currentDateTime();
+    while(start.msecsTo(QDateTime::currentDateTime()) < millis){};
+}
+
 //============================================================================
 // Private Method
 //============================================================================
@@ -266,6 +272,8 @@ void FlashManager::startFlashing(){
 
 void FlashManager::requestDownload(){
 
+    own_sleep(200); // TODO: REMOVE AFTER DEBUGGING
+
     mutex.lock();
     bool abort = _abort;
     mutex.unlock();
@@ -353,6 +361,8 @@ void FlashManager::transferData(){
 
         emit infoPrint("Package "+QString::number(package+1)+"/"+QString::number(flashCurrentPackages)+": Transfer Data for flash address "+QString("0x%8").arg(curr_flash_add, 8, 16, QLatin1Char( '0' ))+ " ("+QString::number(curr_flash_bytes)+" bytes)");
         resp = uds->transferData(ecu_id, curr_flash_add, data+curr_flash_byte_ptr, curr_flash_bytes);
+
+        own_sleep(200); // TODO: REMOVE AFTER DEBUGGING
 
         if(resp != UDS::TX_RX_OK){
             emit errorPrint("ERROR: Transfer Data failed");
