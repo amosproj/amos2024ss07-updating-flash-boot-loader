@@ -107,8 +107,8 @@ size_t FlashManager::getOverallByteSize(){
 
 // TODO: REMOVE AFTER DEBUGGING
 void FlashManager::own_sleep(uint32_t millis){
-    QDateTime start = QDateTime::currentDateTime();
-    while(start.msecsTo(QDateTime::currentDateTime()) < millis){};
+    //QDateTime start = QDateTime::currentDateTime();
+    //while(start.msecsTo(QDateTime::currentDateTime()) < millis){};
 }
 
 //============================================================================

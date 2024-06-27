@@ -14,6 +14,8 @@
 
 #define VERBOSE_UDS     0                       // switch for verbose console information
 
+#define RX_EXP_DATA_BUFFER_SIZE                 (32)
+
 #include <QObject>
 #include <QByteArray>
 #include <QMutex>
@@ -43,7 +45,7 @@ private:
     QMutex comm_mutex;                          // Protects _comm
 
     unsigned int rx_exp_id;                     // ID to be expected for response of TX
-    uint8_t *rx_exp_data;                       // Data to be expected from ECU, if possible
+    uint8_t rx_exp_data[RX_EXP_DATA_BUFFER_SIZE];                       // Data to be expected from ECU, if possible
     int rx_no_bytes;                            // No bytes to be expected from ECU
     bool rx_msg_valid;                          // Indication of Message Interpreter if UDS Msg was valid
     bool rx_msg_neg_resp;                       // Indication of Negative Response
@@ -94,6 +96,7 @@ public:
 
 
 private:
+    void rxMsgCopyToBuffer(uint8_t* data, int len);
     void messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes);
 
     RESP checkOnFreeTX();
