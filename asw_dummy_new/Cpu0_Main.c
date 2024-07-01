@@ -37,38 +37,29 @@
 
 #include <stdio.h>
 
-//extern version_info global_info;
-
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
 
 void process_can(uint32_t* rxData, IfxCan_DataLengthCode dlc){
 
-    if(dlc <= 0)
+    if(dlc <= 4)
     {
-        // TODO do nothing?
         return;
     }
 
-//    uint8_t* data_ptr = (uint8_t*)rxData;
-//
-//    FILE * f3 = fopen("terminal window 3", "rw");
-//    fprintf(f3, "Hello, window 3.\n");
-//    fprintf(f3, "dlc: %d\n", dlc);
-//    for (int i = 0; i < dlc; i++)
-//    {
-//        fprintf(f3, "0x%02hhX ", data_ptr[i]);
-//    }
-//    uint32_t data = *rxData;
-//    fprintf(f3, "0x%x\n", data);
-//    fprintf(f3, "\n");
-//    fclose(f3);
+    uint8_t* data_ptr = (uint8_t*)rxData;
 
-    uint32_t reset_msg = 0x00013e02; // Currently tester present
-
-    if (reset_msg == *rxData){
-        triggerSwReset(IfxScuRcu_ResetType_application);
+    // check if every byte equals the reset msg byte
+    uint8_t reset_msg_byte = 0xFF;
+    for (int i = 0; i < dlc; i++)
+    {
+        if (data_ptr[i] != reset_msg_byte)
+        {
+            return;
+        }
     }
+
+    triggerSwReset(IfxScuRcu_ResetType_application);
 }
 
 void core0_main(void)
