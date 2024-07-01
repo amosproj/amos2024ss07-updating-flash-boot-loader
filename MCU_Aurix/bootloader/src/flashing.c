@@ -45,6 +45,7 @@ uint32_t flashingGetDIDData(uint16_t DID){
             data |= read[3];
         }
     }
+    free(read);
     return data;
 }
 
