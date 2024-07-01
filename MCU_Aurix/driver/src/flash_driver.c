@@ -381,24 +381,33 @@ uint32_t flashCalculateChecksum(uint32 flashStartAddr, uint32 length) {
     char fourByteString[9];
     char nextByte[3];
     nextByte[2] = '\0';
+    uint8 fourCount = addr % 4; //used to iterate over 4 byte each, to avoid using % operator as often 
+    
+    if (fourCount != 0) {
+        nextFourBytes = MEM(addr - fourCount);
+    }
  
     crc_t crc = crc_init();
     
     while (addr < flashStartAddr + length) {
-        if (addr % 4 == 0) {
+        if (fourCount == 0) {
             nextFourBytes = MEM(addr);
             snprintf(fourByteString, sizeof(fourByteString), "%08x", nextFourBytes);
             nextByte[0] = fourByteString[6];
             nextByte[1] = fourByteString[7];
-        } else if (addr % 4 == 1) {
+            fourCount++;
+        } else if (fourCount == 1) {
             nextByte[0] = fourByteString[4];
             nextByte[1] = fourByteString[5];
-        } else if (addr % 4 == 2) {
+            fourCount++;
+        } else if (fourCount == 2) {
             nextByte[0] = fourByteString[2];
             nextByte[1] = fourByteString[3];
+            fourCount++;
         } else {
             nextByte[0] = fourByteString[0];
             nextByte[1] = fourByteString[1];
+            fourCount = 0;
         }
 
         crc = crc_update(crc, nextByte, strlen(nextByte));
