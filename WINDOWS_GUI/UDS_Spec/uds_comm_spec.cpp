@@ -449,11 +449,14 @@ uint8_t *_create_write_data_by_ident(int *len, uint8_t response, uint16_t did, u
  * Specification for Upload | Download
  */
 
-void upload_download_message(uint8_t *msg, uint32_t addr, uint8_t response, uint32_t bytes_size) {
+void upload_download_message(uint8_t *msg, int len, uint32_t addr, uint8_t response, uint32_t bytes_size) {
     msg[1] = (uint8_t)((addr>>24) & 0xFF);                      // Address Byte 4
     msg[2] = (uint8_t)((addr>>16) & 0xFF);                      // Address Byte 3
     msg[3] = (uint8_t)((addr>>8)  & 0xFF);                      // Address Byte 2
     msg[4] = (uint8_t)((addr)     & 0xFF);                      // Address Byte 1
+
+    if(len < 9)
+        return;
 
     // Request = Number of Bytes, Response = Buffer Side on Receiver side (bigger messages get rejected during transfer)
     msg[5] = (uint8_t)((bytes_size>>24) & 0xFF);            // Size Byte 4
@@ -467,7 +470,7 @@ uint8_t *_create_request_download(int *len, uint8_t response, uint32_t addr, uin
     uint8_t *msg = prepare_message(len, response, FBL_REQUEST_DOWNLOAD, 0, 9);
     if (msg == NULL)
         return msg;
-    upload_download_message(msg, addr, response, bytes_size);
+    upload_download_message(msg, *len, addr, response, bytes_size);
 
     return msg;
 }
@@ -478,7 +481,7 @@ uint8_t *_create_request_upload(int *len, uint8_t response, uint32_t addr, uint3
     if (msg == NULL)
         return msg;
 
-    upload_download_message(msg, addr, response, bytes_size);
+    upload_download_message(msg, *len, addr, response, bytes_size);
     return msg;
 }
 
@@ -493,7 +496,7 @@ uint8_t *_create_transfer_data(int *len, uint8_t response, uint32_t addr, uint8_
     if (msg == NULL)
         return msg;
 
-    upload_download_message(msg, addr, 1, 0);
+    upload_download_message(msg, *len, addr, 1, 0);
     for(uint32_t i = 0; i < data_len; i++)
         msg[5+i] = data[i];                                     // Payload
     return msg;

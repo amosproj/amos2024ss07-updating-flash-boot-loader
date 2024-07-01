@@ -93,16 +93,36 @@ QByteArray FlashManager::getCurrentFlashDate(){
     return bcd;
 }
 
+void FlashManager::fillOverallByteSize(){
+
+    for(uint32_t add: flashContent.keys()){
+        flashContentSize[add] = flashContent[add].size();
+    }
+}
+
 size_t FlashManager::getOverallByteSize(){
     size_t numberOfBytes = 0;
 
-    for(uint32_t add: flashContent.keys()){
-        QByteArray bytes = flashContent[add];
-        if(bytes != nullptr)
-            numberOfBytes += bytes.size();
+    for(uint32_t add: flashContentSize.keys()){
+        numberOfBytes += flashContentSize[add];
     }
 
     return numberOfBytes;
+}
+
+void FlashManager::updateGUIProgressBar(){
+
+    double bytes_counter = 0;
+    for(uint32_t add: flashedBytes.keys()){
+        bytes_counter += flashedBytes[add];
+    }
+    emit updateStatus(UPDATE, "", (size_t)(bytes_counter/getOverallByteSize()*100));
+}
+
+// TODO: REMOVE AFTER DEBUGGING
+void FlashManager::own_sleep(uint32_t millis){
+    QDateTime start = QDateTime::currentDateTime();
+    while(start.msecsTo(QDateTime::currentDateTime()) < millis){};
 }
 
 //============================================================================
@@ -188,7 +208,9 @@ void FlashManager::doFlashing(){
                 uds->requestTransferExit(ecu_id, flashCurrentAdd);
 
                 // Reset the package counter => Need to restart the flashing for first address
-                flashCurrentPackageCtr = 0;
+                //flashCurrentPackageCtr = 0; // No Reset: Partial Flashing allowed
+
+                // Change to Request Download again
                 curr_state = REQ_DOWNLOAD;
             }
         }
@@ -232,6 +254,8 @@ void FlashManager::prepareFlashing(){
 
     // Reset the counter for flashed bytes
     flashedBytesCtr = 0;
+    flashedBytes.clear();
+    fillOverallByteSize();
 
     curr_state = START_FLASHING;
 }
@@ -265,6 +289,8 @@ void FlashManager::startFlashing(){
 }
 
 void FlashManager::requestDownload(){
+
+    //own_sleep(200); // TODO: REMOVE AFTER DEBUGGING
 
     mutex.lock();
     bool abort = _abort;
@@ -314,6 +340,10 @@ void FlashManager::requestDownload(){
     emit infoPrint(info);
     emit updateStatus(INFO, info, 0);
 
+
+    // Prepare the flashed bytes map
+    flashedBytes[flashCurrentAdd] = 0;
+
     mutex.lock();
     abort = _abort;
     mutex.unlock();
@@ -354,6 +384,8 @@ void FlashManager::transferData(){
         emit infoPrint("Package "+QString::number(package+1)+"/"+QString::number(flashCurrentPackages)+": Transfer Data for flash address "+QString("0x%8").arg(curr_flash_add, 8, 16, QLatin1Char( '0' ))+ " ("+QString::number(curr_flash_bytes)+" bytes)");
         resp = uds->transferData(ecu_id, curr_flash_add, data+curr_flash_byte_ptr, curr_flash_bytes);
 
+        //own_sleep(200); // TODO: REMOVE AFTER DEBUGGING
+
         if(resp != UDS::TX_RX_OK){
             emit errorPrint("ERROR: Transfer Data failed");
             return;
@@ -363,8 +395,9 @@ void FlashManager::transferData(){
         flashCurrentPackageCtr = package;
 
         // Update the GUI progress bar
-        flashedBytesCtr += curr_flash_bytes;
-        emit updateStatus(UPDATE, "", (size_t)(((double)flashedBytesCtr)/getOverallByteSize()*100));
+        //TODO: Fix progress bar if flashing starts again for same address - Currently only adding
+        flashedBytes[flashCurrentAdd] += curr_flash_bytes;
+        updateGUIProgressBar();
 
         mutex.lock();
         abort = _abort;

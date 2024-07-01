@@ -4,6 +4,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#define ECU_CONNECTIVITY_TIMER      (1000) // ms between UDS tester present msg -> Default: 1000
+
 #include <QMainWindow>
 #include "editableComboBox.h"
 
@@ -59,7 +61,10 @@ private:
     void updateECUTableView(QMap<QString, QMap<QString, QString>> eculist);
 
     uint32_t getECUID();
+    QString getECUHEXID();
     bool ECUSelected();
+
+    void updateValidManager();
 
     void udsUpdateVersion(uint32_t id, uint8_t *data, uint8_t data_size);
 

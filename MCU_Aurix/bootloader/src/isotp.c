@@ -343,7 +343,7 @@ void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc){
                 uds_neg_response(data_ptr[1], FBL_RC_BUSY_REPEAT_REQUEST);
                 return;
             }
-            else if(MAX_ISOTP_MESSAGE_LEN - (iso_RX_Multi->write_ptr - iso_RX_Multi->data) < dlc){
+            else {
                 // Client sends new ISO TP and old is not fully processed -> Current message in the buffer is ignored
                 rx_reset_isotp_multi_buffer();
             }
@@ -358,7 +358,6 @@ void process_can_to_isotp(uint32_t* rxData, IfxCan_DataLengthCode dlc){
             uint8_t *flow_ctrl = tx_flow_control_frame(&flow_ctrl_len, 0, 0, 0, 0);
             canTransmitMessage(getID(), flow_ctrl, flow_ctrl_len);
             free(flow_ctrl);
-
         }
 
         // Consecutive Frame
