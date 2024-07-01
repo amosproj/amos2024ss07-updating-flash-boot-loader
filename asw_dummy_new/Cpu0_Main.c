@@ -35,14 +35,12 @@
 #include "can_driver.h"
 #include "reset_TC375_LK.h"
 
-#include <stdio.h>
-
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
 
 void process_can(uint32_t* rxData, IfxCan_DataLengthCode dlc){
 
-    if(dlc <= 4)
+    if(dlc != 8)
     {
         return;
     }
@@ -77,7 +75,6 @@ void core0_main(void)
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
     
     ledInitDriver();
-
     canInitDriver(process_can);
 
     while(1)
