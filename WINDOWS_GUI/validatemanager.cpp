@@ -13,29 +13,20 @@
 
 #include <QDebug>
 
+
+//============================================================================
+// Constructor
+//============================================================================
+
 ValidateManager::ValidateManager() {
 
     data.clear();
 
 }
 
-uint32_t getAddr(uint32_t addr){
-    //TODO: Change after decision about how to handle addresses: A00.... vs 800...
-    if((addr & 0x80000000) > 0)
-        addr |= 0xA0000000;
-
-    return addr;
-}
-
-QByteArray getData(QByteArray tempData) {
-    QByteArray transformedData;
-    for (int i = 0; i < tempData.size(); i += 2) {
-        QString hexByte = tempData.mid(i, 2);
-        transformedData.append((uint8_t)(0xFF & hexByte.toUInt(NULL, 16)));
-    }
-    return transformedData;
-}
-
+//============================================================================
+// Public Method
+//============================================================================
 
 QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 {
@@ -124,23 +115,6 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
             QString address_string = new_line.left(8);
             uint32_t address_start = address_string.toUInt(NULL, 16);
 
-            /*
-            qDebug() << "BBBBBBBBBBBBBBBBBB";
-
-            qDebug() << "address string: ";
-            qDebug() << address_string;
-            qDebug() << "address start";
-            qDebug() << address_start;
-            qDebug() << "address_end";
-            qDebug() << block_address_end;
-            qDebug() << "length";
-            qDebug() << data_len;
-
-
-            qDebug() << "BBBBBBBBBBBBBBBBBB";
-            qDebug() << " ";
-            */
-
             if(result.isEmpty()){
 
                 result.append(new_line.right(data_len + 8));
@@ -220,15 +194,6 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
         result.clear();
     }
 
-    /*
-    qDebug() << "TTTTTTTTTTTTTTTTTT";
-
-    qDebug() << "block_result: ";
-    qDebug() << block_result;
-
-    qDebug() << "TTTTTTTTTTTTTTTTTT";
-    */
-
     if(file_validity){
 
         for (uint32_t addr : block_result.keys()) {
@@ -270,10 +235,12 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
         emit updateLabel(ValidateManager::VALID, "File validity:  Not Valid");
     }
 
-
     return block_result;
 }
 
+//============================================================================
+// Private Method
+//============================================================================
 
 bool ValidateManager::validateLine(QByteArray line)
 {
@@ -347,8 +314,6 @@ QByteArray ValidateManager::extractData(QByteArray line, char record_type)
     return trimmed_line;
 }
 
-
-
 bool ValidateManager::addrInCoreRange(uint32_t addr, uint32_t data_len,  uint16_t core, bool* supported){
 
     QString core_start_add_string = core_addr[core]["start"];
@@ -386,35 +351,35 @@ bool ValidateManager::addrInRange(uint32_t address, uint32_t data_len){
         addrInCoreRange(address, data_len, 2, &supported))
     {
 
-        if(!supported){
-
-            emit infoPrint("INFO: Address validation not supported for one or more cores! Please check debugging output! \n");
-
-        }
-
         return true;
+    }
+
+    if(!supported){
+
+        emit infoPrint("INFO: Address validation not supported for one or more cores! Please check debugging output! \n");
+
     }
 
     return false;
 }
 
+//============================================================================
+// Private Helper Method
+//============================================================================
 
+QByteArray ValidateManager::getData(QByteArray tempData) {
+    QByteArray transformedData;
+    for (int i = 0; i < tempData.size(); i += 2) {
+        QString hexByte = tempData.mid(i, 2);
+        transformedData.append((uint8_t)(0xFF & hexByte.toUInt(NULL, 16)));
+    }
+    return transformedData;
+}
 
+uint32_t ValidateManager::getAddr(uint32_t addr){
+    //TODO: Change after decision about how to handle addresses: A00.... vs 800...
+    if((addr & 0x80000000) > 0)
+        addr |= 0xA0000000;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return addr;
+}

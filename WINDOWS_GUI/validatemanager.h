@@ -23,18 +23,19 @@ class ValidateManager : public QObject {
 
 public:
 
-    ValidateManager();
-
     enum LABEL {HEADER, VALID, CONTENT, SIZE, TYPE};
+
+    QMap<uint32_t, QByteArray> data;
+    QMap<uint16_t, QMap<QString, QString>> core_addr;
+
+public:
+
+    ValidateManager();
+    virtual ~ValidateManager();
 
     QMap<uint32_t, QByteArray> validateFile(QByteArray data);
 
-    QMap<uint32_t, QByteArray> data;
-
-    QMap<uint16_t, QMap<QString, QString>> core_addr;
-
 private:
-         // Add any private member variables or functions here if needed
 
     bool validateLine(QByteArray line);
     QByteArray extractData(QByteArray line, char record_type);
@@ -42,7 +43,8 @@ private:
     bool addrInCoreRange(uint32_t addr, uint32_t data_len,  uint16_t core, bool* supported);
     bool addrInRange(uint32_t address, uint32_t data_len);
 
-    MainWindow* mainWindow;
+    uint32_t getAddr(uint32_t addr);
+    QByteArray getData(QByteArray tempData);
 
 
 signals:
