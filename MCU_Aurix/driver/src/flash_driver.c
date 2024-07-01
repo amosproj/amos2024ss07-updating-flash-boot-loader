@@ -257,7 +257,8 @@ static bool flashWriteData(IfxFlash_FlashType flashModule, uint32 flashStartAddr
     return true;
 }
 
-/* This function calls the correct writing function, either flashWriteProgramm or flashWriteData, depending on flashStartAddr,
+/**
+ *  This function calls the correct writing function, either flashWriteProgramm or flashWriteData, depending on flashStartAddr,
  * so the programmer doesn't have to differentiate between writing pflash and dflash */
 bool flashWrite(uint32 flashStartAddr, uint32 data[], size_t dataSize) {
     if (flashStartAddr >= DATA_FLASH_0_BASE_ADDR && flashStartAddr < DATA_FLASH_0_END_ADDR)
@@ -321,19 +322,91 @@ uint8_t *flashRead(uint32 flashStartAddr, size_t dataBytesToRead){
     return data;
 }
 
-/* Calculates Checksum for the given part of memory used to verify flash after flashing */
-uint32 flashCalculateChecksum(uint32 flashStartAddr, size_t length) {
+/**  
+ * Calculates Checksum for the given part of memory used to verify flash after flashing 
+ *   @param flashStartAddr must be divisible by 4 in order for the memory access to work
+ */
+
+uint32_t flashCalculateChecksum(uint32 flashStartAddr, uint32 length) {
+
+    /*uint32 addr = flashStartAddr;
+    uint32 nextFourBytes;
+    char stringBytes[9];
 
     crc_t crc = crc_init();
 
-    for (uint32 addr = flashStartAddr; addr < flashStartAddr + length * sizeof(uint32); addr += sizeof(uint32)) {
-        uint32 nextFourBytes = MEM(addr);
-        char stringBytes[9];
+    /*for (uint32 addr = flashStartAddr; addr < flashStartAddr + length; addr++) {
+        uint8 nextFourBytes = MEM(addr); //adresse kann nicht so ausgelesen werden muss immer 4 byte holen und dann den richtigen teil holen
+        char stringBytes[3];
         snprintf(stringBytes, sizeof(stringBytes), "%x", nextFourBytes);
         crc = crc_update(crc, (unsigned char *) stringBytes, strlen(stringBytes));
     }
 
+    while (addr < flashStartAddr + length) {
+        nextFourBytes = MEM(addr);
+        uint8 indexInString = 0;
+
+        //reverse nextFourBytes Byte-wise and insert in stringBytes to add into crc calc
+        while (indexInString < 8) {
+            uint32 lowestByte = nextFourBytes % 0x100;
+            nextFourBytes /= 0x100;
+
+            snprintf(stringBytes + indexInString, 3, "%02x", lowestByte);
+            
+            indexInString += 2;
+        }
+
+
+        if (addr + 3 < flashStartAddr + length) {
+            //all 4 bytes read from memory can be factored in for crc calc
+        } else if (addr + 2 < flashStartAddr + length) {
+            stringBytes[6] = '\0'; //remove last byte since it is not included in address range
+        } else if (addr + 1 < flashStartAddr + length) {
+            stringBytes[4] = '\0'; //remove last two bytes
+        } else {
+            stringBytes[2] = '\0'; //only one byte is included in address range
+        }
+
+        crc = crc_update(crc, stringBytes, strlen(stringBytes));
+
+        addr += 4;
+    }
+
     crc = crc_finalize(crc);
 
-    return (uint32) crc;
+    return (uint32_t) crc;*/
+
+    uint32 addr = flashStartAddr;
+    uint32 nextFourBytes;
+    char fourByteString[9];
+    char nextByte[3];
+    nextByte[2] = '\0';
+ 
+    crc_t crc = crc_init();
+    
+    while (addr < flashStartAddr + length) {
+        if (addr % 4 == 0) {
+            nextFourBytes = MEM(addr);
+            snprintf(fourByteString, sizeof(fourByteString), "%08x", nextFourBytes);
+            nextByte[0] = fourByteString[6];
+            nextByte[1] = fourByteString[7];
+        } else if (addr % 4 == 1) {
+            nextByte[0] = fourByteString[4];
+            nextByte[1] = fourByteString[5];
+        } else if (addr % 4 == 2) {
+            nextByte[0] = fourByteString[2];
+            nextByte[1] = fourByteString[3];
+        } else {
+            nextByte[0] = fourByteString[0];
+            nextByte[1] = fourByteString[1];
+        }
+
+        crc = crc_update(crc, nextByte, strlen(nextByte));
+
+        addr++;
+    }
+
+    crc = crc_finalize(crc);
+
+    return (uint32_t) crc;
 }

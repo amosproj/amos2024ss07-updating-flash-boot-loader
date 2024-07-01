@@ -139,7 +139,7 @@ uint8_t flashingRequestUpload(uint32_t address, uint32_t data_len){
     
     flashing_int_data.checksum = flashCalculateChecksum(address, data_len);
     
-    return FBL_RC_SERVICE_NOT_SUPPORTED;
+    return 0;
 }
 
 uint8_t flashingTransferData(uint32_t address, uint8_t* data, uint32_t data_len){

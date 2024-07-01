@@ -44,6 +44,6 @@
 bool flashWrite(uint32 flashStartAddr, uint32 data[], size_t dataSize);
 bool flashVerify(uint32 flashStartAddr, uint32 data[], size_t dataSize);
 uint8_t *flashRead(uint32 flashStartAddr, size_t dataBytesToRead);
-uint32 flashCalculateChecksum(uint32 flashStartAddr, size_t lengthInBytes);
+uint32_t flashCalculateChecksum(uint32 flashStartAddr, uint32 lengthInBytes);
 
 #endif /* FLASH_H_ */
