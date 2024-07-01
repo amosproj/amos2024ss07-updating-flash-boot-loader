@@ -4,7 +4,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#define ECU_CONNECTIVITY_TIMER      (10000) // ms between UDS tester present msg -> TODO: change back to 1000ms
+#define ECU_CONNECTIVITY_TIMER      (1000) // ms between UDS tester present msg -> Default: 1000
 
 #include <QMainWindow>
 #include "editableComboBox.h"
