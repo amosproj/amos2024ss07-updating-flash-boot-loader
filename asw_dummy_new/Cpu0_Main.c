@@ -30,10 +30,135 @@
 
 #include "led_driver.h"
 #include "aswdummy.h"
+#include "can_driver_TC375_LK.h"
+#include "can_driver.h"
 
 //extern version_info global_info;
 
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
+
+
+/*
+ * @brief                       This function extracts the isoTP message from multiple CAN messages.
+ *                              It is called inside the receive interrupt 'canIsrRxFifo0Handler' of the CAN driver.
+ *
+ * @param rxData                This is a pointer to the received data.
+ *
+ * @param dlc                   Data Length Code, this represents the length of the currently received CAN message.
+ *
+ */
+void process_can(uint32_t* rxData, IfxCan_DataLengthCode dlc){
+
+    ledToggleActivity(1);
+
+//    if(dlc <= 0) // Need to assume that the data is also empty, using FBL_NEGATIVE_RESPONSE instead
+//        uds_neg_response(FBL_NEGATIVE_RESPONSE, FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT);
+//
+//    uint8_t* data_ptr = (uint8_t*)rxData;
+//
+//    //######################################################################################################
+//    // Single Frame Processing
+//
+//    // Single Frame get length of whole isoTP message
+//    if(((0xF0 & rxData[0]) >> 4) == 0){
+//
+//        if(MAX_FRAME_LEN_CANFD - (iso_RX_Single->write_ptr - iso_RX_Single->data) < dlc || iso_RX_Single->ready_to_read != 0){
+//            uds_neg_response(data_ptr[1], FBL_RC_BUSY_REPEAT_REQUEST);
+//            return;
+//        }
+//
+//        iso_RX_Single->data_in_len = 0xF & data_ptr[0];
+//
+//        memcpy(iso_RX_Single->write_ptr, &data_ptr[1], dlc - 1);
+//        iso_RX_Single->write_ptr += dlc - 1;
+//
+//        if(iso_RX_Single->write_ptr - iso_RX_Single->data >= iso_RX_Single->data_in_len){
+//            iso_RX_Single->ready_to_read = 1;
+//        }
+//    }
+//
+//    //######################################################################################################
+//    // Multi Frame Processing
+//    else{
+//
+//        // First Frame get length of whole isoTP message
+//        if(((0xF0 & rxData[0]) >> 4) == 1){
+//
+//            if(iso_RX_Multi->ready_to_read != 0){
+//                // Client sends new ISO TP but old is still not processed -> Reject until old is processed
+//                uds_neg_response(data_ptr[1], FBL_RC_BUSY_REPEAT_REQUEST);
+//                return;
+//            }
+//            else if(MAX_ISOTP_MESSAGE_LEN - (iso_RX_Multi->write_ptr - iso_RX_Multi->data) < dlc){
+//                // Client sends new ISO TP and old is not fully processed -> Current message in the buffer is ignored
+//                rx_reset_isotp_multi_buffer();
+//            }
+//
+//            iso_RX_Multi->data_in_len = (((uint32_t)(data_ptr[0] & 0x0F)) << 8) | data_ptr[1];
+//
+//            memcpy(iso_RX_Multi->write_ptr, &data_ptr[2], dlc - 2);
+//            iso_RX_Multi->write_ptr += dlc - 2;
+//
+//            // Send Flow Control Frame as response
+//            uint32_t flow_ctrl_len = 0;
+//            uint8_t *flow_ctrl = tx_flow_control_frame(&flow_ctrl_len, 0, 0, 0, 0);
+//            canTransmitMessage(getID(), flow_ctrl, flow_ctrl_len);
+//            free(flow_ctrl);
+//
+//        }
+//
+//        // Consecutive Frame
+//        else if(((0xF0 & rxData[0]) >> 4) == 2){
+//
+//            if(iso_RX_Multi->ready_to_read != 0){
+//                // Client sends new ISO TP but old is still not processed -> Reject until old is processed
+//                uds_neg_response(FBL_NEGATIVE_RESPONSE, FBL_RC_BUSY_REPEAT_REQUEST);
+//                return;
+//            }
+//
+//            else if(MAX_ISOTP_MESSAGE_LEN - (iso_RX_Multi->write_ptr - iso_RX_Multi->data) < dlc){
+//                // Client sends consecutive frame but buffer is full
+//                uds_neg_response(FBL_NEGATIVE_RESPONSE, FBL_RC_REQUEST_OUT_OF_RANGE);
+//                return;
+//            }
+//
+//
+//            // Only copy if counter is different. Sender needs to make sure that correct sequence is transmitted
+//            if(iso_RX_Multi->last_consecutive_ctr != data_ptr[0]){
+//                memcpy(iso_RX_Multi->write_ptr, &data_ptr[1], dlc - 1);
+//                iso_RX_Multi->write_ptr += dlc - 1;
+//            }
+//
+//            if(ISOTP_RX_ACK_CONSECUTIVE_FRAMES){
+//                // Send response for Consecutive Frame
+//                canTransmitMessage(getID(), &data_ptr[0], 1);
+//            }
+//
+//            // Store the counter
+//            iso_RX_Multi->last_consecutive_ctr = data_ptr[0];
+//        }
+//
+//        // Flow Control
+//        else if(((0xF0 & rxData[0]) >> 4) == 3){
+//
+//            // Check for current isoTP TX and set bytes accordingly
+//            if(iso_TX != NULL){
+//                // TODO: Implement UDS Comm Spec method to readout the variables and fill iso_TX
+//            }
+//        }
+//
+//        // ERROR
+//        else{
+//            uds_neg_response(data_ptr[0], FBL_RC_GENERAL_REJECT);
+//        }
+//
+//        // Set ready_to_read if all bytes have been received for one isoTP message
+//        if(iso_RX_Multi->write_ptr - iso_RX_Multi->data >= iso_RX_Multi->data_in_len){
+//            iso_RX_Multi->ready_to_read = 1;
+//        }
+//    }
+//    return;
+}
 
 void core0_main(void)
 {
@@ -51,9 +176,10 @@ void core0_main(void)
     
     ledInitDriver();
 
+    canInitDriver(process_can);
 
     while(1)
     {
-        alternating_blinking();
+//        alternating_blinking();
     }
 }
