@@ -57,7 +57,7 @@ static inline uint8_t *prepare_message(uint8_t *len, uint8_t *data){
 static inline uint8_t *prepare_name_message(uint8_t *len, uint8_t *data){
     for(int i = 0; i < *len; i++) {
         if(data[i] == '\0') {
-            *len = i;
+            *len = i + 1;
             break;
         }
     }
