@@ -64,7 +64,8 @@ int main() {
 	int c;
 	boolean init;
 	unsigned int txID = 0x01;
-	byte data[]={1,2,3,4,5,6,7,8};
+//	byte data[]={1,2,3,4,5,6,7,8};
+	byte data[]={0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
 
 	CAN_Wrapper can = CAN_Wrapper(500000);
 	init = can.initDriver();
