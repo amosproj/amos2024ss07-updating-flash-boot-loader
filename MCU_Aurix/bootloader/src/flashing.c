@@ -54,7 +54,7 @@ static inline bool addrInCoreRangeCheck(uint32_t addr, uint32_t data_len, uint16
     uint32_t core_end_add = flashingGetDIDData(end_addr_ID);
     if((core_start_add > 0 && core_end_add > 0) && (addr >= core_start_add && addr < core_end_add)){
         // address belongs to core
-        if(addr + data_len <= core_end_add)
+        if(addr + (data_len-1) <= core_end_add)
             return true;
     }
     return false;
