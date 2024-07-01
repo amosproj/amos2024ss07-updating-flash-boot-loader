@@ -46,6 +46,8 @@ private:
     QMap<uint32_t, QByteArray> flashContent;                    // Map with Address -> continous byte array
     QMap<uint32_t, uint32_t> fileChecksums;
     QMap<uint32_t, uint32_t> addressToLength;
+    QMap<uint32_t, uint32_t> flashContentSize;                  // Map with total size of content for every address
+    QMap<uint32_t, uint32_t> flashedBytes;                      // Map with sum of flashed bytes for every address
 
     size_t flashedBytesCtr;                                     // Counter for flashed bytes
     uint32_t flashCurrentAdd;                                   // Stores the current address to be flashed
@@ -125,7 +127,10 @@ public:
 
 private:
     QByteArray getCurrentFlashDate();
+    void fillOverallByteSize();
     size_t getOverallByteSize();
+    void updateGUIProgressBar();
+    void own_sleep(uint32_t millis); // TODO: REMOVE AFTER DEBUGGING
 
     void doFlashing();
     void prepareFlashing();

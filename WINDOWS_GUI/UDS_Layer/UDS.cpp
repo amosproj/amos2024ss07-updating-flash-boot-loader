@@ -78,6 +78,12 @@ static inline const bool rxMsgValid(const bool neg_resp, const bool eq, const ui
     return ans;
 }
 
+void UDS::rxMsgCopyToBuffer(uint8_t* data, int len){
+    for(int i = 0; i < len && i < RX_EXP_DATA_BUFFER_SIZE; i++) {
+        rx_exp_data[i] = data[i];
+    }
+}
+
 void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
 
     // Initialize the Msg flags
@@ -292,7 +298,7 @@ void UDS::txMessageSend(uint32_t id, uint8_t *msg, int len) {
 }
 
 const UDS::RESP UDS::rxMessageValid(uint32_t waittime) {
-    if(rx_exp_data == nullptr || rx_no_bytes == 0)
+    if(rx_no_bytes == 0)
         return RX_ERROR;
 
     // 5. Wait on RX message interpreter
@@ -330,7 +336,10 @@ UDS::RESP UDS::reqIdentification() { // broadcast for tester present
     txMessageSend(id, msg, len);    
 
     rx_no_bytes = 0;
-    rx_exp_data = _create_tester_present(&rx_no_bytes, 1, 1);
+    uint8_t *temp_rx_exp_data = _create_tester_present(&rx_no_bytes, 1, 1);
+    rxMsgCopyToBuffer(temp_rx_exp_data, rx_no_bytes);
+    free(temp_rx_exp_data);
+
     // Release the communication flag
     comm_mutex.lock();
     _comm = false;
@@ -365,7 +374,9 @@ UDS::RESP UDS::diagnosticSessionControl(uint32_t id, uint8_t session) {
     txMessageSend(send_id, msg, len);
 
     rx_no_bytes = 0;
-    rx_exp_data = _create_diagnostic_session_control(&rx_no_bytes, 1, session);
+    uint8_t *temp_rx_exp_data = _create_diagnostic_session_control(&rx_no_bytes, 1, session);
+    rxMsgCopyToBuffer(temp_rx_exp_data, rx_no_bytes);
+    free(temp_rx_exp_data);
     return rxMessageValid(rx_max_waittime_general);
 }
 
@@ -393,7 +404,9 @@ UDS::RESP UDS::ecuReset(uint32_t id, uint8_t reset_type) {
     txMessageSend(send_id, msg, len);
 
     rx_no_bytes = 0;
-    rx_exp_data = _create_ecu_reset(&rx_no_bytes, 1, reset_type);
+    uint8_t *temp_rx_exp_data = _create_ecu_reset(&rx_no_bytes, 1, reset_type);
+    rxMsgCopyToBuffer(temp_rx_exp_data, rx_no_bytes);
+    free(temp_rx_exp_data);
     return rxMessageValid(rx_max_waittime_general);
 }
 
@@ -420,7 +433,9 @@ UDS::RESP UDS::securityAccessRequestSEED(uint32_t id) {
     txMessageSend(send_id, msg, len);
 
     rx_no_bytes = 0;
-    rx_exp_data = _create_security_access(&rx_no_bytes, 1, FBL_SEC_ACCESS_SEED, 0, 0);
+    uint8_t *temp_rx_exp_data = _create_security_access(&rx_no_bytes, 1, FBL_SEC_ACCESS_SEED, 0, 0);
+    rxMsgCopyToBuffer(temp_rx_exp_data, rx_no_bytes);
+    free(temp_rx_exp_data);
     return rxMessageValid(rx_max_waittime_general);
 }
 
@@ -449,7 +464,9 @@ UDS::RESP UDS::securityAccessVerifyKey(uint32_t id, uint8_t *key, uint8_t key_le
     txMessageSend(send_id, msg, len);
 
     rx_no_bytes = 0;
-    rx_exp_data = _create_security_access(&rx_no_bytes, 1, FBL_SEC_ACCESS_VERIFY_KEY, 0, 0);
+    uint8_t *temp_rx_exp_data = _create_security_access(&rx_no_bytes, 1, FBL_SEC_ACCESS_VERIFY_KEY, 0, 0);
+    rxMsgCopyToBuffer(temp_rx_exp_data, rx_no_bytes);
+    free(temp_rx_exp_data);
     return rxMessageValid(rx_max_waittime_general);
 }
 
@@ -476,7 +493,6 @@ UDS::RESP UDS::testerPresent(uint32_t id) {
     txMessageSend(send_id, msg, len);
 
     // Create the data that is expected, here: Mainly no response is expected.
-    rx_exp_data = nullptr;
     rx_no_bytes = 0;
 
     // Release the communication flag
@@ -513,7 +529,9 @@ UDS::RESP UDS::testerPresentResponse(uint32_t id) {
     txMessageSend(send_id, msg, len);
 
     rx_no_bytes = 0;
-	rx_exp_data = _create_tester_present(&rx_no_bytes, 1, FBL_TESTER_PRES_WITH_RESPONSE);
+    uint8_t *temp_rx_exp_data = _create_tester_present(&rx_no_bytes, 1, FBL_TESTER_PRES_WITH_RESPONSE);
+    rxMsgCopyToBuffer(temp_rx_exp_data, rx_no_bytes);
+    free(temp_rx_exp_data);
     return rxMessageValid(rx_max_waittime_general);
 }
 
@@ -544,7 +562,9 @@ UDS::RESP UDS::readDataByIdentifier(uint32_t id, uint16_t identifier) {
 
     // 5. Create the data that is expected, Here: As response data is not filled, but is expected in the response
     rx_no_bytes = 0;
-    rx_exp_data = _create_read_data_by_ident(&rx_no_bytes, 1, identifier, 0, 0);
+    uint8_t *temp_rx_exp_data = _create_read_data_by_ident(&rx_no_bytes, 1, identifier, 0, 0);
+    rxMsgCopyToBuffer(temp_rx_exp_data, rx_no_bytes);
+    free(temp_rx_exp_data);
     return rxMessageValid(rx_max_waittime_general);
 }
 
@@ -573,7 +593,9 @@ UDS::RESP UDS::readMemoryByAddress(uint32_t id, uint32_t address, uint16_t no_by
     txMessageSend(send_id, msg, len);
 
     rx_no_bytes = 0;
-    rx_exp_data = _create_read_memory_by_address(&rx_no_bytes, 1, address, no_bytes, 0, 0);
+    uint8_t *temp_rx_exp_data = _create_read_memory_by_address(&rx_no_bytes, 1, address, no_bytes, 0, 0);
+    rxMsgCopyToBuffer(temp_rx_exp_data, rx_no_bytes);
+    free(temp_rx_exp_data);
     return rxMessageValid(rx_max_waittime_general);
 }
 
@@ -603,7 +625,9 @@ UDS::RESP UDS::writeDataByIdentifier(uint32_t id, uint16_t identifier, uint8_t* 
     txMessageSend(send_id, msg, len);  
 
     rx_no_bytes = 0;
-    rx_exp_data = _create_write_data_by_ident(&rx_no_bytes, 1, identifier, 0, 0);
+    uint8_t *temp_rx_exp_data = _create_write_data_by_ident(&rx_no_bytes, 1, identifier, 0, 0);
+    rxMsgCopyToBuffer(temp_rx_exp_data, rx_no_bytes);
+    free(temp_rx_exp_data);
     return rxMessageValid(rx_max_waittime_general);
 }
 
@@ -633,7 +657,9 @@ UDS::RESP UDS::requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes)
     txMessageSend(send_id, msg, len);  
 
     rx_no_bytes = 0;
-    rx_exp_data = _create_request_download(&rx_no_bytes, 1, address, 0); // ECU need to response with the buffer size for bytes_size
+    uint8_t *temp_rx_exp_data = _create_request_download(&rx_no_bytes, 1, address, 0); // ECU need to response with the buffer size for bytes_size
+    rxMsgCopyToBuffer(temp_rx_exp_data, rx_no_bytes);
+    free(temp_rx_exp_data);
     return rxMessageValid(rx_max_waittime_general);
 }
 
@@ -662,7 +688,9 @@ UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes) {
     txMessageSend(send_id, msg, len);  
 
     rx_no_bytes = 0;
-    rx_exp_data = _create_request_upload(&rx_no_bytes, 1, address, 0); // ECU need to response with the buffer size for bytes_size
+    uint8_t *temp_rx_exp_data = _create_request_upload(&rx_no_bytes, 1, address, 0); // ECU need to response with the buffer size for bytes_size
+    rxMsgCopyToBuffer(temp_rx_exp_data, rx_no_bytes);
+    free(temp_rx_exp_data);
     return rxMessageValid(rx_max_waittime_general);
 }
 
@@ -687,15 +715,16 @@ UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint32
     qInfo("<< UDS: Transfer Data\n");
     emit toConsole("<< UDS: Transfer Data" + id_str);
 
-
 	int len;
     uint8_t *msg = _create_transfer_data(&len, 0, address, data, data_len);
     txMessageSend(send_id, msg, len);  
 
     // Create the data that is expected
     rx_no_bytes = 0;
-    rx_exp_data = _create_transfer_data(&rx_no_bytes, 1, address, 0, 0);
-    return rxMessageValid(rx_max_waittime_flashing);
+    uint8_t *temp_rx_exp_data = _create_transfer_data(&rx_no_bytes, 1, address, 0, 0);
+    rxMsgCopyToBuffer(temp_rx_exp_data, rx_no_bytes);
+    free(temp_rx_exp_data);
+    return rxMessageValid(rx_max_waittime_general);
 }
 
 /**
@@ -722,7 +751,9 @@ UDS::RESP UDS::requestTransferExit(uint32_t id, uint32_t address) {
     txMessageSend(send_id, msg, len);  
 
     rx_no_bytes = 0;
-    rx_exp_data = _create_request_transfer_exit(&rx_no_bytes, 1, address);
+    uint8_t *temp_rx_exp_data = _create_request_transfer_exit(&rx_no_bytes, 1, address);
+    rxMsgCopyToBuffer(temp_rx_exp_data, rx_no_bytes);
+    free(temp_rx_exp_data);
     return rxMessageValid(rx_max_waittime_general);
 }
 
@@ -758,7 +789,6 @@ UDS::RESP UDS::negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_c
     txMessageSend(send_id, msg, len);  
 
     // 5. Create the data that is expected, here: Mainly no response is expected.
-    rx_exp_data = nullptr;
     rx_no_bytes = 0;
 
     // Release the communication flag
