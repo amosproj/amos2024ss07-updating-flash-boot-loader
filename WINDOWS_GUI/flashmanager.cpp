@@ -93,13 +93,18 @@ QByteArray FlashManager::getCurrentFlashDate(){
     return bcd;
 }
 
+void FlashManager::fillOverallByteSize(){
+
+    for(uint32_t add: flashContent.keys()){
+        flashContentSize[add] = flashContent[add].size();
+    }
+}
+
 size_t FlashManager::getOverallByteSize(){
     size_t numberOfBytes = 0;
 
-    for(uint32_t add: flashContent.keys()){
-        QByteArray bytes = flashContent[add];
-        if(bytes != nullptr)
-            numberOfBytes += bytes.size();
+    for(uint32_t add: flashContentSize.keys()){
+        numberOfBytes += flashContentSize[add];
     }
 
     return numberOfBytes;
@@ -249,6 +254,8 @@ void FlashManager::prepareFlashing(){
 
     // Reset the counter for flashed bytes
     flashedBytesCtr = 0;
+    flashedBytes.clear();
+    fillOverallByteSize();
 
     curr_state = START_FLASHING;
 }
