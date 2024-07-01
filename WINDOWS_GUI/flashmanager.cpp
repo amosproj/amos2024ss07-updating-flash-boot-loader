@@ -105,10 +105,19 @@ size_t FlashManager::getOverallByteSize(){
     return numberOfBytes;
 }
 
+void FlashManager::updateGUIProgressBar(){
+
+    double bytes_counter = 0;
+    for(uint32_t add: flashedBytes.keys()){
+        bytes_counter += flashedBytes[add];
+    }
+    emit updateStatus(UPDATE, "", (size_t)(bytes_counter/getOverallByteSize()*100));
+}
+
 // TODO: REMOVE AFTER DEBUGGING
 void FlashManager::own_sleep(uint32_t millis){
-    //QDateTime start = QDateTime::currentDateTime();
-    //while(start.msecsTo(QDateTime::currentDateTime()) < millis){};
+    QDateTime start = QDateTime::currentDateTime();
+    while(start.msecsTo(QDateTime::currentDateTime()) < millis){};
 }
 
 //============================================================================
@@ -194,7 +203,9 @@ void FlashManager::doFlashing(){
                 uds->requestTransferExit(ecu_id, flashCurrentAdd);
 
                 // Reset the package counter => Need to restart the flashing for first address
-                flashCurrentPackageCtr = 0;
+                //flashCurrentPackageCtr = 0; // No Reset: Partial Flashing allowed
+
+                // Change to Request Download again
                 curr_state = REQ_DOWNLOAD;
             }
         }
@@ -272,7 +283,7 @@ void FlashManager::startFlashing(){
 
 void FlashManager::requestDownload(){
 
-    //own_sleep(200); // TODO: REMOVE AFTER DEBUGGING
+    own_sleep(200); // TODO: REMOVE AFTER DEBUGGING
 
     mutex.lock();
     bool abort = _abort;
@@ -321,6 +332,10 @@ void FlashManager::requestDownload(){
     QString info = "Requesting Download OK. According to the buffer size of the ECU the data need to be splittet into "+QString::number(flashCurrentPackages)+" packages";
     emit infoPrint(info);
     emit updateStatus(INFO, info, 0);
+
+
+    // Prepare the flashed bytes map
+    flashedBytes[flashCurrentAdd] = 0;
 
     mutex.lock();
     abort = _abort;
@@ -373,8 +388,9 @@ void FlashManager::transferData(){
         flashCurrentPackageCtr = package;
 
         // Update the GUI progress bar
-        flashedBytesCtr += curr_flash_bytes;
-        emit updateStatus(UPDATE, "", (size_t)(((double)flashedBytesCtr)/getOverallByteSize()*100));
+        //TODO: Fix progress bar if flashing starts again for same address - Currently only adding
+        flashedBytes[flashCurrentAdd] += curr_flash_bytes;
+        updateGUIProgressBar();
 
         mutex.lock();
         abort = _abort;

@@ -44,6 +44,7 @@ private:
     Communication *comm;                                        // Reference to Comm Layer
     QString file;                                               // Reference to file for flashing
     QMap<uint32_t, QByteArray> flashContent;                    // Map with Address -> continous byte array
+    QMap<uint32_t, uint32_t> flashedBytes;                      // Map with sum of flashed bytes for every address
 
     size_t flashedBytesCtr;                                     // Counter for flashed bytes
     uint32_t flashCurrentAdd;                                   // Stores the current address to be flashed
@@ -122,6 +123,7 @@ public:
 private:
     QByteArray getCurrentFlashDate();
     size_t getOverallByteSize();
+    void updateGUIProgressBar();
     void own_sleep(uint32_t millis); // TODO: REMOVE AFTER DEBUGGING
 
     void doFlashing();
