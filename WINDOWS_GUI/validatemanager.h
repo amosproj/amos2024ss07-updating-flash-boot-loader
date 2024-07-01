@@ -14,9 +14,6 @@
 #include <QMap>
 #include <QByteArray>
 
-// Forward declaration of MainWindow
-class MainWindow;
-
 class ValidateManager : public QObject {
 
     Q_OBJECT
