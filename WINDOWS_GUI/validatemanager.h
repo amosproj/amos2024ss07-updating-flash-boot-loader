@@ -29,6 +29,8 @@ public:
 
     QMap<uint32_t, QByteArray> validateFile(QByteArray data);
     QMap<uint32_t, uint32_t> calculateFileChecksums(QMap<uint32_t, QByteArray> data);
+    QMap<uint32_t, uint32_t> calculateAddressLengths(QMap<uint32_t, QByteArray> data);
+
 
     QMap<uint32_t, QByteArray> data;
     QMap<uint32_t, uint32_t> checksums;

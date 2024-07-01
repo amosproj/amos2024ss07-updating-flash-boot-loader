@@ -82,6 +82,11 @@ void FlashManager::setFileChecksums(QMap<uint32_t, uint32_t> checksums) {
     fileChecksums = checksums;
 }
 
+void FlashManager::setLengths(QMap<uint32_t, uint32_t> lengths) {
+    addressToLength.clear();
+    addressToLength = lengths;
+}
+
 //============================================================================
 // Private Helper Method
 //============================================================================
@@ -411,11 +416,13 @@ void FlashManager::transferData(){
 
 void FlashManager::validateFlashing(){
 
+    int index = 0;
     for (auto [key, value] : fileChecksums.asKeyValueRange()) {
         
         UDS::RESP resp = UDS::RESP::RX_NO_RESPONSE;
         // nicht sicher ob flashContent.value(key).length() funktioniert da einträge aus flashContent gelöscht werden?
-        resp = uds->requestUpload(ecu_id, key, flashContent.value(key).length());
+        emit debugPrint("address: " + QString::number(key) + ", length: " + QString::number(addressToLength.value(key)));
+        resp = uds->requestUpload(ecu_id, key, addressToLength.value(key));
 
         if (resp != UDS::TX_RX_OK) {
             emit errorPrint("FlashManager: ERROR - Requesting upload failed");
@@ -430,10 +437,10 @@ void FlashManager::validateFlashing(){
         }
 
         if (ecuChecksum != value) {
-            emit errorPrint("FlashManager: ERROR - Calculated checksums didn't match");
+            emit errorPrint("FlashManager: ERROR in Block " + QString::number(index) + " - Calculated checksums didn't match, should be: " + QString::number(value) + ", but was: " + QString::number(ecuChecksum));
             curr_state = ERR_STATE;
         }
-        
+        index++;
     }
 
     curr_state = FINISH;

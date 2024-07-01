@@ -387,6 +387,17 @@ QMap<uint32_t, uint32_t> ValidateManager::calculateFileChecksums(QMap<uint32_t, 
     return result;
 }
 
+QMap<uint32_t, uint32_t> ValidateManager::calculateAddressLengths(QMap<uint32_t, QByteArray> data) {
+
+    QMap<uint32_t, uint32_t> result;
+
+    for (auto [key, value] : data.asKeyValueRange()) {
+        result.insert(key, value.length());
+    }
+
+    return result;
+}
+
 
 bool ValidateManager::addrInCoreRange(uint32_t addr, uint32_t data_len,  uint16_t core, bool* supported){
 

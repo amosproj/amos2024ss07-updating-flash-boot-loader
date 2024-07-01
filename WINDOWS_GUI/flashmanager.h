@@ -45,6 +45,7 @@ private:
     QString file;                                               // Reference to file for flashing
     QMap<uint32_t, QByteArray> flashContent;                    // Map with Address -> continous byte array
     QMap<uint32_t, uint32_t> fileChecksums;
+    QMap<uint32_t, uint32_t> addressToLength;
 
     size_t flashedBytesCtr;                                     // Counter for flashed bytes
     uint32_t flashCurrentAdd;                                   // Stores the current address to be flashed
@@ -64,6 +65,7 @@ public:
     void setTestFile();
     void setFlashFile(QMap<uint32_t, QByteArray> data);
     void setFileChecksums(QMap<uint32_t, uint32_t> checksums);
+    void setLengths(QMap<uint32_t, uint32_t> lengths);
 
     void startFlashing(uint32_t ecu_id, uint32_t gui_id, Communication* comm){
 
