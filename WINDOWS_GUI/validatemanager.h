@@ -24,6 +24,7 @@ public:
 
     QMap<uint32_t, QByteArray> data;
     QMap<uint16_t, QMap<QString, QString>> core_addr;
+    QMap<uint32_t, uint32_t> checksums;
 
 public:
 
@@ -32,13 +33,7 @@ public:
 
     QMap<uint32_t, QByteArray> validateFile(QByteArray data);
     QMap<uint32_t, uint32_t> calculateFileChecksums(QMap<uint32_t, QByteArray> data);
-    QMap<uint32_t, uint32_t> calculateAddressLengths(QMap<uint32_t, QByteArray> data);
-
-
-    QMap<uint32_t, QByteArray> data;
-    QMap<uint32_t, uint32_t> checksums;
-
-    QMap<uint16_t, QMap<QString, QString>> core_addr;
+    QMap<uint32_t, uint32_t> calculateAddressLengths(QMap<uint32_t, QByteArray> data); 
 
 private:
 
