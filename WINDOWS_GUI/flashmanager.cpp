@@ -290,7 +290,7 @@ void FlashManager::startFlashing(){
 
 void FlashManager::requestDownload(){
 
-    own_sleep(200); // TODO: REMOVE AFTER DEBUGGING
+    //own_sleep(200); // TODO: REMOVE AFTER DEBUGGING
 
     mutex.lock();
     bool abort = _abort;
