@@ -17,7 +17,7 @@
 #define WAITTIME_AFTER_ATTEMPT      1000        // Waittime in ms
 
 #define TESTFILE_START_ADD          0xA0090000  // Start Address for flashing
-#define TESTFILE_BYTES              0x0016FFFF  // ~1.5 MB
+#define TESTFILE_BYTES              0x00000010  // ~1.5 MB
 #define TESTFILE_PADDING_BYTES      7           // Padding between test data
 
 #include <QObject>
@@ -68,6 +68,7 @@ public:
     void setFlashFile(QMap<uint32_t, QByteArray> data);
     void setFileChecksums(QMap<uint32_t, uint32_t> checksums);
     void setLengths(QMap<uint32_t, uint32_t> lengths);
+    QMap<uint32_t, QByteArray> getFlashContent(void);
 
     void startFlashing(uint32_t ecu_id, uint32_t gui_id, Communication* comm){
 

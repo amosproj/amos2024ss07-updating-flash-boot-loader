@@ -87,6 +87,10 @@ void FlashManager::setLengths(QMap<uint32_t, uint32_t> lengths) {
     addressToLength = lengths;
 }
 
+QMap<uint32_t, QByteArray> FlashManager::getFlashContent(void) {
+    return flashContent;
+}
+
 //============================================================================
 // Private Helper Method
 //============================================================================
@@ -475,6 +479,8 @@ void FlashManager::validateFlashing(){
         }
         index++;
     }
+
+    emit infoPrint("FlashManager: Flashing successful");
 
     curr_state = FINISH;
 }

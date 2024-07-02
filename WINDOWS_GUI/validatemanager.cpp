@@ -53,6 +53,7 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
     QByteArray new_line;
     QByteArray result;
+    QMap<uint32_t, QByteArray> uncompressed_result;
     QMap<uint32_t, QByteArray> block_result;
 
     // Print each line
@@ -134,6 +135,7 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
                 count_lines += 1;
             }
             else{
+                uncompressed_result.insert(getAddr(result.left(8).toUInt(NULL, 16)), result.right(result.size()-8));
                 block_result.insert(getAddr(result.left(8).toUInt(NULL, 16)), getData(result.right(result.size()-8)));
 
                 result.clear();
@@ -158,6 +160,7 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
             }
 
             if(current_index == (nlines - 1)){
+                uncompressed_result.insert(getAddr(result.left(8).toUInt(NULL, 16)), result.right(result.size()-8));
                 block_result.insert(getAddr(result.left(8).toUInt(NULL, 16)), getData(result.right(result.size()-8)));
 
                 result.clear();
@@ -196,7 +199,7 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
     }
 
     if(!result.isEmpty()){
-
+        uncompressed_result.insert(getAddr(result.left(8).toUInt(NULL, 16)), result.right(result.size()-8));
         block_result.insert(getAddr(result.left(8).toUInt(NULL, 16)), getData(result.right(result.size()-8)));
         result.clear();
     }
@@ -241,7 +244,7 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
         emit updateLabel(ValidateManager::VALID, "File validity:  Not Valid");
     }
-
+    uncompressedData = uncompressed_result;
     return block_result;
 }
 
@@ -345,11 +348,16 @@ QMap<uint32_t, uint32_t> ValidateManager::calculateFileChecksums(QMap<uint32_t, 
     
     QMap<uint32_t, uint32_t> result;
 
-    for (auto [key, value] : data.asKeyValueRange()) {
+    for (auto [key, value] : uncompressedData.asKeyValueRange()) {
         CCRC32 crc;
         crc.Initialize();
 
-        const char *nextLine = value.data();
+        QByteArray line = value;
+
+        char *nextLine = line.data();
+
+        QString str = QString(nextLine);
+        emit debugPrint(str);
 
         uint32_t checksum = (uint32_t) crc.FullCRC((const unsigned char *) nextLine, strlen(nextLine));
         result.insert(key, checksum);
@@ -438,4 +446,17 @@ uint32_t ValidateManager::getAddr(uint32_t addr){
         addr |= 0xA0000000;
 
     return addr;
+}
+
+char *ValidateManager::extractNumbers(QByteArray line) {
+    char *number = (char *) malloc(line.size() + 1);
+    for (int i = 0; i < line.size(); i += 2) {
+        bool ok;
+        QByteArray hexPair = line.mid(i, 2);
+        int asInt = hexPair.toInt(&ok, 16);
+
+        snprintf(number + i, 3, "%02x", asInt);
+    }
+
+    return number;
 }

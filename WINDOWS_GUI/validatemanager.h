@@ -37,6 +37,8 @@ public:
 
 private:
 
+    QMap<uint32_t, QByteArray> uncompressedData;
+
     bool validateLine(QByteArray line);
     QByteArray extractData(QByteArray line, char record_type);
 
@@ -45,6 +47,7 @@ private:
 
     uint32_t getAddr(uint32_t addr);
     QByteArray getData(QByteArray tempData);
+    char *extractNumbers(QByteArray line);
 
 
 signals:
