@@ -27,13 +27,38 @@
 #include "Ifx_Types.h"
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
+#include "IfxScuRcu.h"
 
 #include "led_driver.h"
 #include "aswdummy.h"
-
-//extern version_info global_info;
+#include "can_driver_TC375_LK.h"
+#include "can_driver.h"
+#include "reset_TC375_LK.h"
 
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
+
+
+void process_can(uint32_t* rxData, IfxCan_DataLengthCode dlc){
+
+    if(dlc != 8)
+    {
+        return;
+    }
+
+    uint8_t* data_ptr = (uint8_t*)rxData;
+
+    // check if every byte equals the reset msg byte
+    uint8_t reset_msg_byte = 0xFF;
+    for (int i = 0; i < dlc; i++)
+    {
+        if (data_ptr[i] != reset_msg_byte)
+        {
+            return;
+        }
+    }
+
+    triggerSwReset(IfxScuRcu_ResetType_application);
+}
 
 void core0_main(void)
 {
@@ -50,7 +75,7 @@ void core0_main(void)
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
     
     ledInitDriver();
-
+    canInitDriver(process_can);
 
     while(1)
     {
