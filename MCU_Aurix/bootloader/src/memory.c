@@ -40,13 +40,13 @@ Memory_Data memData;
 //============================================================================
 // Internal helper function
 //============================================================================
-static inline void write_to_variable(size_t len, uint8_t *data, uint8_t* var){
+static inline void write_to_variable(uint8_t len, uint8_t *data, uint8_t* var){
     for(int i = 0; i < len; i++){
         var[i] = data[i];
     }
 }
 
-static inline uint8_t *prepare_message(size_t *len, uint8_t *data){
+static inline uint8_t *prepare_message(uint8_t *len, uint8_t *data){
     uint8_t* ret_data = (uint8_t*)calloc(*len, sizeof(uint8_t));
     for(int i = 0; i < *len; i++){
         ret_data[i] = data[i];
@@ -54,7 +54,7 @@ static inline uint8_t *prepare_message(size_t *len, uint8_t *data){
     return ret_data;
 }
 
-static inline uint8_t *prepare_name_message(size_t *len, uint8_t *data){
+static inline uint8_t *prepare_name_message(uint8_t *len, uint8_t *data){
     for(int i = 0; i < *len; i++) {
         if(data[i] == '\0') {
             *len = i + 1;
@@ -202,56 +202,56 @@ uint8_t* readData(uint16_t identifier, uint8_t* len, uint8_t* nrc){
     switch(identifier){
         case FBL_DID_APP_ID:
             *len = FBL_DID_APP_ID_BYTES_SIZE;
-            return prepare_name_message((size_t*) len, memData.did_app_id);
+            return prepare_name_message(len, memData.did_app_id);
 
         case FBL_DID_SYSTEM_NAME:
             *len = FBL_DID_SYSTEM_NAME_BYTES_SIZE;
-            return prepare_name_message((size_t*) len, memData.did_system_name);
+            return prepare_name_message(len, memData.did_system_name);
 
         case FBL_DID_PROGRAMMING_DATE:
             *len = FBL_DID_PROGRAMMING_DATE_BYTES_SIZE;
-            return prepare_message((size_t*) len, memData.did_programming_date);
+            return prepare_message(len, memData.did_programming_date);
 
         case FBL_DID_BL_KEY_ADDRESS:
             *len = FBL_DID_BL_KEY_ADDRESS_BYTES_SIZE;
-            return prepare_message((size_t*) len, memData.did_bl_key_address);
+            return prepare_message(len, memData.did_bl_key_address);
 
         case FBL_DID_BL_KEY_GOOD_VALUE:
             *len = FBL_DID_BL_KEY_GOOD_VALUE_BYTES_SIZE;
-            return prepare_message((size_t*) len, memData.did_bl_key_good_value);
+            return prepare_message(len, memData.did_bl_key_good_value);
 
         case FBL_DID_CAN_BASE_MASK:
             *len = FBL_DID_CAN_BASE_MASK_BYTES_SIZE;
-            return prepare_message((size_t*) len, memData.did_can_base_mask);
+            return prepare_message(len, memData.did_can_base_mask);
 
         case FBL_DID_CAN_ID:
             *len = FBL_DID_CAN_ID_BYTES_SIZE;
-            return prepare_message((size_t*) len, memData.did_can_id);
+            return prepare_message(len, memData.did_can_id);
 
         case FBL_DID_BL_WRITE_START_ADD_CORE0:
             *len = FBL_DID_BL_WRITE_START_ADD_CORE0_BYTES_SIZE;
-            return prepare_message((size_t*) len, memData.did_bl_write_start_add_core0);
+            return prepare_message(len, memData.did_bl_write_start_add_core0);
 
         case FBL_DID_BL_WRITE_END_ADD_CORE0:
             *len = FBL_DID_BL_WRITE_END_ADD_CORE0_BYTES_SIZE;
-            return prepare_message((size_t*) len, memData.did_bl_write_end_add_core0);
+            return prepare_message(len, memData.did_bl_write_end_add_core0);
 
 
         case FBL_DID_BL_WRITE_START_ADD_CORE1:
             *len = FBL_DID_BL_WRITE_START_ADD_CORE1_BYTES_SIZE;
-            return prepare_message((size_t*) len, memData.did_bl_write_start_add_core1);
+            return prepare_message(len, memData.did_bl_write_start_add_core1);
 
         case FBL_DID_BL_WRITE_END_ADD_CORE1:
             *len = FBL_DID_BL_WRITE_END_ADD_CORE1_BYTES_SIZE;
-            return prepare_message((size_t*) len, memData.did_bl_write_end_add_core1);
+            return prepare_message(len, memData.did_bl_write_end_add_core1);
 
         case FBL_DID_BL_WRITE_START_ADD_CORE2:
             *len = FBL_DID_BL_WRITE_START_ADD_CORE2_BYTES_SIZE;
-            return prepare_message((size_t*) len, memData.did_bl_write_start_add_core2);
+            return prepare_message(len, memData.did_bl_write_start_add_core2);
 
         case FBL_DID_BL_WRITE_END_ADD_CORE2:
             *len = FBL_DID_BL_WRITE_END_ADD_CORE2_BYTES_SIZE;
-            return prepare_message((size_t*) len, memData.did_bl_write_end_add_core2);
+            return prepare_message(len, memData.did_bl_write_end_add_core2);
 
         default:
             break;
