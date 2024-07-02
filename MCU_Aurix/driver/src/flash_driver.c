@@ -91,7 +91,7 @@ static void writePFlash(IfxFlash_FlashType flashModule, uint32_t startingAddr, u
         g_functionsFromPSPR.enterPageMode(pageAddr); // enter page mode to be able to write in page
 
         /* Wait until page mode is entered */
-        g_functionsFromPSPR.waitUnbusy(PMU_FLASH_MODULE, PROGRAM_FLASH_0);
+        g_functionsFromPSPR.waitUnbusy(PMU_FLASH_MODULE, flashModule);
 
         /* Write 32 bytes (8 double words) into the assembly buffer */
         for(offset = 0; (offset * sizeof(uint32)) < PFLASH_PAGE_LENGTH; offset += 2)
@@ -110,7 +110,7 @@ static void writePFlash(IfxFlash_FlashType flashModule, uint32_t startingAddr, u
         IfxScuWdt_setSafetyEndinitInline(endInitSafetyPassword);        /* Enable EndInit protection                */
 
         /* Wait until the page is written in the Program Flash memory */
-        g_functionsFromPSPR.waitUnbusy(PMU_FLASH_MODULE, PROGRAM_FLASH_0);
+        g_functionsFromPSPR.waitUnbusy(PMU_FLASH_MODULE, flashModule);
     }
 }
 
@@ -228,7 +228,7 @@ static bool flashWriteData(IfxFlash_FlashType flashModule, uint32_t flashStartAd
     IfxScuWdt_setSafetyEndinit(endInitSafetyPassword);          /* Enable EndInit protection                        */
 
     /* Wait until the sector is erased */
-    IfxFlash_waitUnbusy(flashModule, DATA_FLASH_0);
+    IfxFlash_waitUnbusy(PMU_FLASH_MODULE, flashModule);
 
     /* --------------- WRITE PROCESS --------------- */
     for(page = 0; page < num_pages; page++)
@@ -239,7 +239,7 @@ static bool flashWriteData(IfxFlash_FlashType flashModule, uint32_t flashStartAd
         IfxFlash_enterPageMode(page_addr);  // enter page mode to be able to write in page
 
         /* Wait until page mode is entered */
-        IfxFlash_waitUnbusy(flashModule, DATA_FLASH_0);
+        IfxFlash_waitUnbusy(PMU_FLASH_MODULE, flashModule);
 
 
         IfxFlash_loadPage2X32(page_addr, data_for_page[0], data_for_page[1]); /* Load two words of 32 bits each */
@@ -250,7 +250,7 @@ static bool flashWriteData(IfxFlash_FlashType flashModule, uint32_t flashStartAd
         IfxScuWdt_setSafetyEndinit(endInitSafetyPassword);      /* Enable EndInit protection                        */
 
         /* Wait until the data is written in the Data Flash memory */
-        IfxFlash_waitUnbusy(flashModule, DATA_FLASH_0);
+        IfxFlash_waitUnbusy(PMU_FLASH_MODULE, flashModule);
     }
     return true;
 }
