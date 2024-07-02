@@ -96,8 +96,15 @@ void MainWindow::connectSignalSlots() {
         QMessageBox::about(nullptr, "Code license",
                        "Our code was developed under MIT license.");
     });
-    connect(ui->defaultDir, &QAction::triggered, this, [=]() {
+    connect(ui->menuDefaultDir, &QAction::triggered, this, [=]() {
         rootDir = defaultRootDir;
+    });
+    connect(ui->menuGUIMode, &QAction::triggered, this, [=]() {
+        ui->groupBox_console->setVisible(!ui->groupBox_console->isVisible());
+        QString mode = "regular";
+        if(ui->groupBox_console->isVisible())
+            mode = "professional";
+        QMessageBox::about(nullptr, "GUI mode switch", "Switched to " + mode + " mode");
     });
 
 
@@ -238,13 +245,15 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
-    defaultRootDir = QCoreApplication::applicationDirPath();
-    QSettings settings("AMOS", "FBL");
-    rootDir = settings.value("savedRootDir", QCoreApplication::applicationDirPath()).toString();
-    qInfo() << "Saved root directory: " + rootDir;
-
     ui->setupUi(this);
     this->setFixedSize(this->geometry().width(),this->geometry().height());
+
+
+    defaultRootDir = QCoreApplication::applicationDirPath();
+    QSettings settings("AMOS", "FBL");
+    ui->groupBox_console->setVisible(!settings.value("savedMode", defaultRootDir).toBool());
+    rootDir = settings.value("savedRootDir", defaultRootDir).toString();
+    qInfo() << "Saved root directory: " + rootDir;
 
     this->setWindowIcon(QIcon::fromTheme("FlashBootloader",
                                          QIcon(":/application/images/icon.png")));
@@ -674,9 +683,9 @@ void MainWindow::checkECUconnectivity() {
     ui->label_ECU_status->setStyleSheet("QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color: " + color + "}");
 }
 
-void MainWindow::closeEvent(QCloseEvent *event)
-{
+void MainWindow::closeEvent(QCloseEvent *event) {
     QSettings settings("AMOS", "FBL");
     settings.setValue("savedRootDir", rootDir);
+    settings.setValue("savedMode", !ui->groupBox_console->isVisible());
     QMainWindow::closeEvent(event);
 }
