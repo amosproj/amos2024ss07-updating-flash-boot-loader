@@ -156,7 +156,7 @@ int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size){
 
     //Sends CAN Message, only if BUS is empty
     while( IfxCan_Status_notSentBusy ==
-           IfxCan_Can_sendMessage(&can_g.canTXandRXNode, &can_g.txMsg, &can_g.txData[0]))
+           IfxCan_Can_sendMessage(&can_g.canTXandRXNode, &can_g.txMsg, (uint32*) &can_g.txData[0]))
     {
 
     }
