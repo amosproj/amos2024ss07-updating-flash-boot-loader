@@ -44,6 +44,9 @@ private:
     ValidateManager *validMan;
     QTimer *ecuConnectivityTimer;
 
+protected:
+    void closeEvent(QCloseEvent *event) override;
+
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();

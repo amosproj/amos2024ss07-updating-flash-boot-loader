@@ -11,6 +11,7 @@
 #include <QTableView>
 #include <QTimer>
 #include <QFileInfo>
+#include <QSettings>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -229,6 +230,10 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
+    QSettings settings("AMOS", "FBL");
+    rootDir = settings.value("savedRootDir", "/default/path").toString();
+    qInfo() << "Saved root directory: " + rootDir;
+
     ui->setupUi(this);
     this->setFixedSize(this->geometry().width(),this->geometry().height());
 
@@ -658,4 +663,11 @@ void MainWindow::checkECUconnectivity() {
             color = "red";
     }
     ui->label_ECU_status->setStyleSheet("QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color: " + color + "}");
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    QSettings settings("AMOS", "FBL");
+    settings.setValue("savedRootDir", rootDir);
+    QMainWindow::closeEvent(event);
 }
