@@ -10,6 +10,9 @@
 #include <QPixmap>
 #include <QTableView>
 #include <QTimer>
+#include <QFileInfo>
+#include <QSettings>
+#include <QCoreApplication>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -93,16 +96,22 @@ void MainWindow::connectSignalSlots() {
         QMessageBox::about(nullptr, "Code license",
                        "Our code was developed under MIT license.");
     });
+    connect(ui->defaultDir, &QAction::triggered, this, [=]() {
+        rootDir = defaultRootDir;
+    });
+
+
 
     // GUI choose file
     connect(ui->button_file, &QPushButton::clicked, this, [=]() {
         if(ECUSelected()){
 
             updateValidManager();
-
-            QString path = QFileDialog::getOpenFileName(nullptr, "Choose File");
+            if(!QFileInfo::exists(rootDir))
+                rootDir = defaultRootDir;
+            qDebug() << "Choosing the file - root directory: " + rootDir;;
+            QString path = QFileDialog::getOpenFileName(nullptr, "Choose File", rootDir);
             if(!path.isEmpty()) {
-
                 QFile file(path);
                 if(!file.open(QFile::ReadOnly)) {
                     qDebug() << "Couldn't open file " + path + " " + file.errorString();
@@ -115,8 +124,9 @@ void MainWindow::connectSignalSlots() {
                 // Set file type
                 QFileInfo fileInfo(path);
                 QString fileType = fileInfo.suffix();
-
                 ui->label_type->setText("File type:  " + fileType);
+
+                rootDir = fileInfo.absolutePath();
 
                 // Validate file, result is already prepared for furhter calculations
                 validMan->data = validMan->validateFile(data);
@@ -228,6 +238,11 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
+    defaultRootDir = QCoreApplication::applicationDirPath();
+    QSettings settings("AMOS", "FBL");
+    rootDir = settings.value("savedRootDir", QCoreApplication::applicationDirPath()).toString();
+    qInfo() << "Saved root directory: " + rootDir;
+
     ui->setupUi(this);
     this->setFixedSize(this->geometry().width(),this->geometry().height());
 
@@ -657,4 +672,11 @@ void MainWindow::checkECUconnectivity() {
             color = "red";
     }
     ui->label_ECU_status->setStyleSheet("QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color: " + color + "}");
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    QSettings settings("AMOS", "FBL");
+    settings.setValue("savedRootDir", rootDir);
+    QMainWindow::closeEvent(event);
 }

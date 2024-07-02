@@ -33,7 +33,8 @@ private:
     EditableComboBox *editComboBox_speed;
     QComboBox *comboBox_speedUnit;
     QWidget flashPopup;
-    QString filePath;
+    QString rootDir;
+    QString defaultRootDir;
 
     QThread *threadComm;
     Communication *comm;
@@ -43,6 +44,9 @@ private:
     QMap<QString, QMap<QString, QString>> eculist;
     ValidateManager *validMan;
     QTimer *ecuConnectivityTimer;
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
 
 public:
     MainWindow(QWidget *parent = nullptr);
