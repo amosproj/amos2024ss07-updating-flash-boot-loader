@@ -457,8 +457,7 @@ void FlashManager::validateFlashing(){
     for (auto [key, value] : fileChecksums.asKeyValueRange()) {
         
         UDS::RESP resp = UDS::RESP::RX_NO_RESPONSE;
-        // nicht sicher ob flashContent.value(key).length() funktioniert da einträge aus flashContent gelöscht werden?
-        emit debugPrint("address: " + QString::number(key) + ", length: " + QString::number(addressToLength.value(key)));
+
         resp = uds->requestUpload(ecu_id, key, addressToLength.value(key));
 
         if (resp != UDS::TX_RX_OK) {
@@ -474,7 +473,7 @@ void FlashManager::validateFlashing(){
         }
 
         if (ecuChecksum != value) {
-            emit errorPrint("FlashManager: ERROR in Block " + QString::number(index) + " - Calculated checksums didn't match, should be: " + QString::number(value) + ", but was: " + QString::number(ecuChecksum));
+            emit errorPrint("FlashManager: ERROR in Block with address " + QString::number(key) + " - Calculated checksums didn't match, should be: " + QString::number(value) + ", but was: " + QString::number(ecuChecksum));
             curr_state = ERR_STATE;
         }
         index++;

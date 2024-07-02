@@ -358,6 +358,7 @@ QMap<uint32_t, uint32_t> ValidateManager::calculateFileChecksums(QMap<uint32_t, 
 
         QString str = QString(nextLine);
         emit debugPrint(str);
+        emit debugPrint("lol");
 
         uint32_t checksum = (uint32_t) crc.FullCRC((const unsigned char *) nextLine, strlen(nextLine));
         result.insert(key, checksum);
