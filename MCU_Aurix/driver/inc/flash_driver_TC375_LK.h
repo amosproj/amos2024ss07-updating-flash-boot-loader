@@ -40,7 +40,7 @@
 #define DATA_FLASH_1_END_ADDR       0xAFC1FFFF
 
 // TODO are these the correct addresses for PF? Depending on segments there are multiple possible addr listed in manual
-#define PROGRAM_FLASH_0_BASE_ADDR   0xA00E0000 // TODO eig 0xA0000000
+#define PROGRAM_FLASH_0_BASE_ADDR   0xA0090000 // TODO eig 0xA0000000
 #define PROGRAM_FLASH_0_END_ADDR    0xA02FFFFF
 
 #define PROGRAM_FLASH_1_BASE_ADDR   0xA0300000

@@ -24,14 +24,15 @@ class CommInterface : public QObject{
     Q_OBJECT
 
 protected:
-    uint8_t type;       // 0 = Virtual Driver, 1 = CAN, 2 = CAN_FD
-    uint8_t own_id;     // ID to identify the interface
+    uint8_t type;                   // 0 = Virtual Driver, 1 = CAN, 2 = CAN_FD
+    uint8_t own_id;                 // ID to identify the interface
 
-    uint32_t id;        // ID for transmitting
+    uint32_t id;                    // ID for transmitting
+    uint32_t rxFilterMask;          // Filter Masked to ignore RX msg that do not match prefix
 
-    bool _abort;        // Thread Handling
-    bool _working;      // Thread Handling
-    QMutex mutex;       // Protects _abort and _working
+    bool _abort;                    // Thread Handling
+    bool _working;                  // Thread Handling
+    QMutex mutex;                   // Protects _abort and _working
 
 public:
     explicit CommInterface(QObject *parent = 0);
@@ -70,6 +71,10 @@ protected:
 	virtual void setID(uint32_t id){
 		this->id = id;
 	}
+
+    virtual void setFilterMask(uint32_t mask){
+        this->rxFilterMask = mask;
+    }
 
 	virtual uint8_t initDriver();
     virtual uint8_t txData(uint8_t *data, uint8_t no_bytes);
@@ -146,6 +151,12 @@ public slots:
      * @param data ByteArray with data to be transmitted
      */
     void txDataSlot(const QByteArray &data);
+
+    /**
+     * @brief Slot to change baudrate
+     * @param baudrate
+     */
+    virtual void setChannelBaudrate(unsigned int baudrate);
 
 };
 

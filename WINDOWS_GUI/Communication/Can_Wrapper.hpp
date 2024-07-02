@@ -19,6 +19,7 @@
 
 #define DEBUGGING_CAN_DRIVER    0 		// switch for debugging prints
 #define VERBOSE_CAN_DRIVER      0       // switch for verbose console information
+#define RX_TX_CAN_DRIVER        0       // switch for verbose RX + TX information to console
 
 #define RECEIVE_EVENT_SIZE 		1 		// do not edit! Currently 1 is supported only
 #define RX_QUEUE_SIZE			4096 	// internal driver queue size in CAN events
@@ -58,6 +59,7 @@ class CAN_Wrapper : public CommInterface {
 		~CAN_Wrapper();
 
         void setID(uint32_t id) override;
+        void setFilterMask(uint32_t mask) override;
 		uint8_t initDriver() override;
 
         uint8_t txData(uint8_t *data, uint8_t no_bytes) override;
@@ -70,12 +72,15 @@ class CAN_Wrapper : public CommInterface {
 		XLstatus openPort();
 		XLstatus closePort();
 
-		XLstatus setBaudrate(unsigned int baudrate);
 		XLstatus actChannels();
 		XLstatus setNotification();
+        XLstatus setBaudrate(unsigned int baudrate);
 
 		// debugging methods
 		void _printConfig();
+
+    public slots:
+        void setChannelBaudrate(unsigned int baudrate) override;
 };
 
 

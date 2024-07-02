@@ -21,6 +21,7 @@ CommInterface::CommInterface(QObject *parent): QObject(parent){
 	this->id = 0;
 	this->type = 0;
 	this->own_id = 0;
+    this->rxFilterMask = 0;
 
     // RX Thread is stopped by default
     this->_working =false;
@@ -88,4 +89,12 @@ void CommInterface::txDataSlot(const QByteArray &data){
         this->txData(msg, data.size());
         free(msg);
     }
+}
+
+/**
+ * @brief default implementation for setBaudrate
+ * @param baudrate
+ */
+void CommInterface::setChannelBaudrate(unsigned int baudrate) {
+    emit errorPrint("Baudrate of the selected channel cannot be changed");
 }

@@ -14,6 +14,8 @@
 
 #define VERBOSE_UDS     0                       // switch for verbose console information
 
+#define RX_EXP_DATA_BUFFER_SIZE                 (32)
+
 #include <QObject>
 #include <QByteArray>
 #include <QMutex>
@@ -34,18 +36,21 @@ private:
     uint8_t init;                               // Init flag
 
     // Timeout control
-    uint32_t tx_max_waittime_free_tx = 1000;    // ms - Wait time before TX aborts
-    uint32_t rx_max_waittime_general = 500;     // ms - Wait time before RX aborts
-    uint32_t rx_max_waittime_long    = 2000;    // ms - Long wait time before RX aborts
+    uint32_t tx_max_waittime_free_tx    = 1000; // ms - Wait time before TX aborts
+    uint32_t rx_max_waittime_general    = 500;  // ms - Wait time before RX aborts
+    uint32_t rx_max_waittime_long       = 2000; // ms - Long wait time before RX aborts
+    uint32_t rx_max_waittime_flashing   = 2000; // ms - Flashing wait time before RX aborts
 
     bool _comm;                                 // For communication usage, only synchronized TX+RX is possible
     QMutex comm_mutex;                          // Protects _comm
 
     unsigned int rx_exp_id;                     // ID to be expected for response of TX
-    uint8_t *rx_exp_data;                       // Data to be expected from ECU, if possible
+    uint8_t rx_exp_data[RX_EXP_DATA_BUFFER_SIZE];                       // Data to be expected from ECU, if possible
     int rx_no_bytes;                            // No bytes to be expected from ECU
     bool rx_msg_valid;                          // Indication of Message Interpreter if UDS Msg was valid
     bool rx_msg_neg_resp;                       // Indication of Negative Response
+
+    uint32_t ecu_rec_buffer_size;               // Used for Request Download response -> ECU indicates the buffer size that could used for transfer data
 
 public:
     UDS();
@@ -55,6 +60,10 @@ public:
     // Switch for Synchronous TX/RX vs. Async TX Mode
     void setSyncMode(bool synchronized);
 
+    // UDS RX -> Extracted to variables
+    uint32_t getECUTransferDataBufferSize();
+
+    // UDS TX
     // Sending out broadcast for tester present
     RESP reqIdentification();
 
@@ -75,17 +84,19 @@ public:
 	// Specification for Upload | Download
     RESP requestDownload(uint32_t id, uint32_t address, uint32_t no_bytes);
     RESP requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes);
-    RESP transferData(uint32_t id, uint32_t address, uint8_t* data, uint8_t data_len);
+    RESP transferData(uint32_t id, uint32_t address, uint8_t* data, uint32_t data_len);
     RESP requestTransferExit(uint32_t id, uint32_t address);
 
 	// Supported Common Response Codes
     RESP negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_code);
+
     QString translateNegResp(uint8_t nrc);
     QString translateDID(uint16_t DID);
     QString readDIDData(uint16_t DID, uint8_t* data, uint32_t no_bytes);
 
 
 private:
+    void rxMsgCopyToBuffer(uint8_t* data, int len);
     void messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes);
 
     RESP checkOnFreeTX();

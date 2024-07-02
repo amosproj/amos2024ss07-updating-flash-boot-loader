@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1200</width>
-    <height>700</height>
+    <width>1208</width>
+    <height>721</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
       <x>20</x>
       <y>60</y>
       <width>1150</width>
-      <height>583</height>
+      <height>613</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -77,6 +77,11 @@
              <column>
               <property name="text">
                <string>Systemname</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Version</string>
               </property>
              </column>
              <column>
@@ -211,6 +216,20 @@ li.checked::marker { content: &quot;\2612&quot;; }
            </widget>
           </item>
           <item>
+           <widget class="QLabel" name="label_version">
+            <property name="text">
+             <string>File version:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_valid">
+            <property name="text">
+             <string>File validity</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLabel" name="label_content">
             <property name="text">
              <string>File content:</string>
@@ -218,11 +237,22 @@ li.checked::marker { content: &quot;\2612&quot;; }
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_size">
-            <property name="text">
-             <string>File size:</string>
-            </property>
-           </widget>
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QLabel" name="label_size">
+              <property name="text">
+               <string>File size:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_type">
+              <property name="text">
+               <string>File type: </string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
@@ -310,7 +340,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1200</width>
+     <width>1208</width>
      <height>21</height>
     </rect>
    </property>
