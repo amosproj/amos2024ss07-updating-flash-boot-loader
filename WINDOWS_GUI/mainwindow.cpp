@@ -10,6 +10,7 @@
 #include <QPixmap>
 #include <QTableView>
 #include <QTimer>
+#include <QFileInfo>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -100,9 +101,8 @@ void MainWindow::connectSignalSlots() {
 
             updateValidManager();
 
-            QString path = QFileDialog::getOpenFileName(nullptr, "Choose File");
+            QString path = QFileDialog::getOpenFileName(nullptr, "Choose File", rootDir);
             if(!path.isEmpty()) {
-
                 QFile file(path);
                 if(!file.open(QFile::ReadOnly)) {
                     qDebug() << "Couldn't open file " + path + " " + file.errorString();
@@ -115,8 +115,9 @@ void MainWindow::connectSignalSlots() {
                 // Set file type
                 QFileInfo fileInfo(path);
                 QString fileType = fileInfo.suffix();
-
                 ui->label_type->setText("File type:  " + fileType);
+
+                rootDir = fileInfo.absolutePath();
 
                 // Validate file, result is already prepared for furhter calculations
                 validMan->data = validMan->validateFile(data);

@@ -33,7 +33,7 @@ private:
     EditableComboBox *editComboBox_speed;
     QComboBox *comboBox_speedUnit;
     QWidget flashPopup;
-    QString filePath;
+    QString rootDir;
 
     QThread *threadComm;
     Communication *comm;
