@@ -177,10 +177,13 @@ void MainWindow::connectSignalSlots() {
         if(ui->label_selected_ECU->text() == "") {
             this->ui->textBrowser_flash_status->setText("No valid ECU selected");
         } else {
-
             QLabel* label = qobject_cast<QLabel*>(flashPopup.property("label").value<QObject*>());
-            label->setText(QString("You are going to flash from \'") + QString(this->ui->table_ECU->selectedItems().at(2)->text())
-                                    + QString("\' to \'") + ui->label_version->text().mid(14) + QString("\'"));
+            QString info = "You are going to stop flashing.";
+            if(!ui->button_flash->text().contains("Stop"))
+                info = QString("You are going to flash from \'") + QString(this->ui->table_ECU->selectedItems().at(2)->text())
+                                    + QString("\' to \'") + ui->label_version->text().mid(14) + QString("\'");
+            
+            label->setText(info);
             this->flashPopup.show();
         }
     });
