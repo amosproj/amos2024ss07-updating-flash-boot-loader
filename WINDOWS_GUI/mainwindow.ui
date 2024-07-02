@@ -209,13 +209,6 @@ li.checked::marker { content: &quot;\2612&quot;; }
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_file_flash">
           <item>
-           <widget class="QRadioButton" name="radio_button_def_dir">
-            <property name="text">
-             <string>Use default directory path</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QPushButton" name="button_file">
             <property name="text">
              <string>Choose file:</string>
@@ -358,7 +351,14 @@ li.checked::marker { content: &quot;\2612&quot;; }
     <addaction name="menuLicenseQT"/>
     <addaction name="menuLicenseMIT"/>
    </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+    <addaction name="defaultDir"/>
+   </widget>
    <addaction name="menuLicense"/>
+   <addaction name="menuSettings"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="menuLicenseQT">
@@ -369,6 +369,11 @@ li.checked::marker { content: &quot;\2612&quot;; }
   <action name="menuLicenseMIT">
    <property name="text">
     <string>MIT license</string>
+   </property>
+  </action>
+  <action name="defaultDir">
+   <property name="text">
+    <string>Reset to default directory</string>
    </property>
   </action>
  </widget>

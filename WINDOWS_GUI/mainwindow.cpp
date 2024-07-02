@@ -96,14 +96,19 @@ void MainWindow::connectSignalSlots() {
         QMessageBox::about(nullptr, "Code license",
                        "Our code was developed under MIT license.");
     });
+    connect(ui->defaultDir, &QAction::triggered, this, [=]() {
+        rootDir = defaultRootDir;
+    });
+
+
 
     // GUI choose file
     connect(ui->button_file, &QPushButton::clicked, this, [=]() {
         if(ECUSelected()){
 
             updateValidManager();
-            if(ui->radio_button_def_dir->isChecked() || !QFileInfo::exists(rootDir))
-                rootDir = QCoreApplication::applicationDirPath();
+            if(!QFileInfo::exists(rootDir))
+                rootDir = defaultRootDir;
             qDebug() << "Choosing the file - root directory: " + rootDir;;
             QString path = QFileDialog::getOpenFileName(nullptr, "Choose File", rootDir);
             if(!path.isEmpty()) {
@@ -233,6 +238,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
+    defaultRootDir = QCoreApplication::applicationDirPath();
     QSettings settings("AMOS", "FBL");
     rootDir = settings.value("savedRootDir", QCoreApplication::applicationDirPath()).toString();
     qInfo() << "Saved root directory: " + rootDir;

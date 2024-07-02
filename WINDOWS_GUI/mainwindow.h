@@ -34,6 +34,7 @@ private:
     QComboBox *comboBox_speedUnit;
     QWidget flashPopup;
     QString rootDir;
+    QString defaultRootDir;
 
     QThread *threadComm;
     Communication *comm;
