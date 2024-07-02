@@ -125,7 +125,7 @@ void show_flash(void)
     ledInitDriver();
 
     size_t data_size = 64;
-    uint32 data[data_size];
+    uint32_t data[data_size];
     for(size_t i = 0; i < data_size; i++)
     {
         data[i] = i;

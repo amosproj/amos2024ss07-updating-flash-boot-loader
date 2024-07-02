@@ -14,6 +14,8 @@
 #include "uds.h"
 #include "memory.h"
 
+#include <string.h>
+
 isoTP* iso_TX;
 
 isoTP_RX* iso_RX_Single;
