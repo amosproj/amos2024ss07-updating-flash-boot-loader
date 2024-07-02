@@ -208,7 +208,7 @@ void FlashManager::doFlashing(){
                 uds->requestTransferExit(ecu_id, flashCurrentAdd);
 
                 // Reset the package counter => Need to restart the flashing for first address
-                //flashCurrentPackageCtr = 0; // No Reset: Partial Flashing allowed
+                flashCurrentPackageCtr = 0; // No Reset: Partial Flashing allowed
 
                 // Change to Request Download again
                 curr_state = REQ_DOWNLOAD;

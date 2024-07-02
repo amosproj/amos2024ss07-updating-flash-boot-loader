@@ -8,22 +8,35 @@
 #include <QDebug>
 #include "mainwindow.h"
 
-#include <stdio.h>
+//#include <stdio.h>
+
+
+
+#include <QMutex>
 
 QFile logFile;
 
+QMutex handlerMutex;
+
 void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+
     static const char *typeStr[] = {"[DEBUG]   ", "[WARNING] ", "[CRITICAL]", "[FATAL]   ", "[INFO]    "};
+
     QString logMsg = QString("%1 %2 %3")
-                        .arg(QDateTime::currentDateTime().toString("hh:mm:ss dd-MM-yyyy"))
-                        .arg(typeStr[type])
-                        .arg(msg);
+
+                         .arg(QDateTime::currentDateTime().toString("hh:mm:ss dd-MM-yyyy"))
+
+                         .arg(typeStr[type])
+
+                         .arg(msg);
+
+    handlerMutex.lock();
 
     QTextStream out(&logFile);
-    out << logMsg << "\n";
 
-    if (type == QtFatalMsg)
-        abort();
+    out << logMsg << Qt::endl;
+
+    handlerMutex.unlock();
 }
 
 void trimLogFile(const QString &filePath, int maxLines = 5000) {
@@ -42,7 +55,7 @@ void trimLogFile(const QString &filePath, int maxLines = 5000) {
         if (file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
             QTextStream out(&file);
             for (const QString &line : lines)
-                out << line << "\n";
+                out << line << Qt::endl;
             file.close();
         }
     }
@@ -51,12 +64,15 @@ void trimLogFile(const QString &filePath, int maxLines = 5000) {
 int main(int argc, char *argv[])
 {
     QString logFilePath = "GUI.log";
+
     trimLogFile(logFilePath);
     logFile.setFileName(logFilePath);
     if(!logFile.open( QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
         qWarning() << "Log file openning failed";
         return 1;
     }
+
+
     qInstallMessageHandler(messageHandler);
 
     QApplication a(argc, argv);

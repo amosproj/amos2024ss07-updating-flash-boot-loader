@@ -711,7 +711,7 @@ UDS::RESP UDS::transferData(uint32_t id, uint32_t address, uint8_t* data, uint32
     uint8_t *temp_rx_exp_data = _create_transfer_data(&rx_no_bytes, 1, address, 0, 0);
     rxMsgCopyToBuffer(temp_rx_exp_data, rx_no_bytes);
     free(temp_rx_exp_data);
-    return rxMessageValid(rx_max_waittime_general);
+    return rxMessageValid(rx_max_waittime_flashing);
 }
 
 /**
