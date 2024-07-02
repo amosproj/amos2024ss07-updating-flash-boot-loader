@@ -14,6 +14,8 @@
 #include "led_driver.h"
 #include "led_driver_TC375_LK.h"
 
+#include "Ifx_types.h"
+
 void (*processDataFunction)(uint32_t*, IfxCan_DataLengthCode);
 
 //TODO: Implement the processDataFunction we want to use

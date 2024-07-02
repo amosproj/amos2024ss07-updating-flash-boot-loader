@@ -15,10 +15,10 @@
 /**********/
 /*INCLUDES*/
 /*********/
+#include "Ifx_types.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-
 
 int canTransmitMessage(uint32_t canMessageID, uint8_t* data, size_t size);
 
