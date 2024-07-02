@@ -209,6 +209,13 @@ li.checked::marker { content: &quot;\2612&quot;; }
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_file_flash">
           <item>
+           <widget class="QRadioButton" name="radio_button_def_dir">
+            <property name="text">
+             <string>Use default directory path</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="button_file">
             <property name="text">
              <string>Choose file:</string>

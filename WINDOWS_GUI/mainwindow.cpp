@@ -12,6 +12,7 @@
 #include <QTimer>
 #include <QFileInfo>
 #include <QSettings>
+#include <QCoreApplication>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -101,7 +102,9 @@ void MainWindow::connectSignalSlots() {
         if(ECUSelected()){
 
             updateValidManager();
-
+            if(ui->radio_button_def_dir->isChecked() || !QFileInfo::exists(rootDir))
+                rootDir = QCoreApplication::applicationDirPath();
+            qDebug() << "Choosing the file - root directory: " + rootDir;;
             QString path = QFileDialog::getOpenFileName(nullptr, "Choose File", rootDir);
             if(!path.isEmpty()) {
                 QFile file(path);
@@ -231,7 +234,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     QSettings settings("AMOS", "FBL");
-    rootDir = settings.value("savedRootDir", "/default/path").toString();
+    rootDir = settings.value("savedRootDir", QCoreApplication::applicationDirPath()).toString();
     qInfo() << "Saved root directory: " + rootDir;
 
     ui->setupUi(this);
