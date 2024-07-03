@@ -453,7 +453,6 @@ void FlashManager::transferData(){
 
 void FlashManager::validateFlashing(){
 
-    int index = 0;
     for (auto [key, value] : fileChecksums.asKeyValueRange()) {
         
         UDS::RESP resp = UDS::RESP::RX_NO_RESPONSE;
@@ -462,7 +461,6 @@ void FlashManager::validateFlashing(){
 
         if (resp != UDS::TX_RX_OK) {
             emit errorPrint("FlashManager: ERROR - Requesting upload failed");
-            //???
             break;
         }
 
@@ -473,10 +471,10 @@ void FlashManager::validateFlashing(){
         }
 
         if (ecuChecksum != value) {
-            emit errorPrint("FlashManager: ERROR in Block with address " + QString::number(key) + " - Calculated checksums didn't match, should be: " + QString::number(value) + ", but was: " + QString::number(ecuChecksum));
+            emit errorPrint("FlashManager: ERROR in Block with address 0x" + QString::number(key, 16) + " and length: "  + QString::number(addressToLength.value(key)) + " - Calculated checksums didn't match.");
+            emit errorPrint("Should be: 0x" + QString::number(value, 16) + ", but was: 0x" + QString::number(ecuChecksum, 16) + "\n");
             curr_state = ERR_STATE;
         }
-        index++;
     }
 
     emit infoPrint("FlashManager: Flashing successful");

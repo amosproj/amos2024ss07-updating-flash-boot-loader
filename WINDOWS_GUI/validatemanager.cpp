@@ -357,8 +357,6 @@ QMap<uint32_t, uint32_t> ValidateManager::calculateFileChecksums(QMap<uint32_t, 
         char *nextLine = line.data();
 
         QString str = QString(nextLine);
-        emit debugPrint(str);
-        emit debugPrint("lol");
 
         uint32_t checksum = (uint32_t) crc.FullCRC((const unsigned char *) nextLine, strlen(nextLine));
         result.insert(key, checksum);
@@ -447,17 +445,4 @@ uint32_t ValidateManager::getAddr(uint32_t addr){
         addr |= 0xA0000000;
 
     return addr;
-}
-
-char *ValidateManager::extractNumbers(QByteArray line) {
-    char *number = (char *) malloc(line.size() + 1);
-    for (int i = 0; i < line.size(); i += 2) {
-        bool ok;
-        QByteArray hexPair = line.mid(i, 2);
-        int asInt = hexPair.toInt(&ok, 16);
-
-        snprintf(number + i, 3, "%02x", asInt);
-    }
-
-    return number;
 }

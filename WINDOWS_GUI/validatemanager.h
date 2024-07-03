@@ -47,7 +47,6 @@ private:
 
     uint32_t getAddr(uint32_t addr);
     QByteArray getData(QByteArray tempData);
-    char *extractNumbers(QByteArray line);
 
 
 signals:
