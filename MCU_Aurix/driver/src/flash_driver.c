@@ -93,7 +93,7 @@ static void writePFlash(IfxFlash_FlashType flashModule, uint32 startingAddr, uin
         g_functionsFromPSPR.enterPageMode(pageAddr); // enter page mode to be able to write in page
 
         /* Wait until page mode is entered */
-        g_functionsFromPSPR.waitUnbusy(PMU_FLASH_MODULE, PROGRAM_FLASH_0);
+        g_functionsFromPSPR.waitUnbusy(PMU_FLASH_MODULE, flashModule);
 
         /* Write 32 bytes (8 double words) into the assembly buffer */
         for(offset = 0; (offset * sizeof(uint32)) < PFLASH_PAGE_LENGTH; offset += 2)
@@ -112,7 +112,7 @@ static void writePFlash(IfxFlash_FlashType flashModule, uint32 startingAddr, uin
         IfxScuWdt_setSafetyEndinitInline(endInitSafetyPassword);        /* Enable EndInit protection                */
 
         /* Wait until the page is written in the Program Flash memory */
-        g_functionsFromPSPR.waitUnbusy(PMU_FLASH_MODULE, PROGRAM_FLASH_0);
+        g_functionsFromPSPR.waitUnbusy(PMU_FLASH_MODULE, flashModule);
     }
 }
 
@@ -230,7 +230,7 @@ static bool flashWriteData(IfxFlash_FlashType flashModule, uint32 flashStartAddr
     IfxScuWdt_setSafetyEndinit(endInitSafetyPassword);          /* Enable EndInit protection                        */
 
     /* Wait until the sector is erased */
-    IfxFlash_waitUnbusy(flashModule, DATA_FLASH_0);
+    IfxFlash_waitUnbusy(PMU_FLASH_MODULE, flashModule);
 
     /* --------------- WRITE PROCESS --------------- */
     for(page = 0; page < num_pages; page++)
@@ -241,7 +241,7 @@ static bool flashWriteData(IfxFlash_FlashType flashModule, uint32 flashStartAddr
         IfxFlash_enterPageMode(page_addr);  // enter page mode to be able to write in page
 
         /* Wait until page mode is entered */
-        IfxFlash_waitUnbusy(flashModule, DATA_FLASH_0);
+        IfxFlash_waitUnbusy(PMU_FLASH_MODULE, flashModule);
 
 
         IfxFlash_loadPage2X32(page_addr, data_for_page[0], data_for_page[1]); /* Load two words of 32 bits each */
@@ -252,7 +252,7 @@ static bool flashWriteData(IfxFlash_FlashType flashModule, uint32 flashStartAddr
         IfxScuWdt_setSafetyEndinit(endInitSafetyPassword);      /* Enable EndInit protection                        */
 
         /* Wait until the data is written in the Data Flash memory */
-        IfxFlash_waitUnbusy(flashModule, DATA_FLASH_0);
+        IfxFlash_waitUnbusy(PMU_FLASH_MODULE, flashModule);
     }
     return true;
 }
@@ -324,7 +324,7 @@ uint8_t *flashRead(uint32 flashStartAddr, size_t dataBytesToRead){
 
 /**  
  * Calculates Checksum for the given part of memory used to verify flash after flashing 
- *   @param flashStartAddr must be divisible by 4 in order for the memory access to work
+ *   only works if enough RAM is available to put put entire memorycontent into RAM
  */
 
 uint32_t flashCalculateChecksum(uint32 flashStartAddr, uint32 length) {
@@ -374,7 +374,7 @@ uint32_t flashCalculateChecksum(uint32 flashStartAddr, uint32 length) {
 
     crc = crc_finalize(crc);
 
-    return (uint32_t) crc;*/
+    return (uint32_t) crc;
 
     uint32 addr = flashStartAddr;
     uint32 nextFourBytes;
@@ -418,4 +418,69 @@ uint32_t flashCalculateChecksum(uint32 flashStartAddr, uint32 length) {
     crc = crc_finalize(crc);
 
     return (uint32_t) crc;
+    //length is in bytes -> 2 chars per byte + one char for '\0'
+    char flashContent[length * 2 + 1];
+    uint32_t addr = flashStartAddr;
+    uint32_t endAddr = flashStartAddr + length;
+    uint32_t indexInString = 0;
+
+    while (addr < endAddr) {
+        uint32_t nextFourBytes = MEM(addr);
+
+        //reverse nextFourBytes Byte-wise and insert in stringBytes to add into crc calc
+        for (int i = 0; i < 4; i++) {
+            if (addr + i >= endAddr) {
+                break;
+            }
+            uint32_t lowestByte = nextFourBytes % 0x100;
+            nextFourBytes /= 0x100;
+
+            snprintf(flashContent + indexInString, 3, "%02x", lowestByte);
+
+            indexInString += 2;
+        }
+
+        addr += 4;
+    }
+
+    flashContent[length * 2] = '\0';
+
+    crc_t crc = crc_init();
+
+    crc = crc_update(crc, (const char *) flashContent, strlen(flashContent));
+
+    crc = crc_finalize(crc);
+
+    return (uint32_t) crc;*/
+
+    char flashContent[length * 2 + 1];
+    uint32_t addr = flashStartAddr;
+    uint32_t endAddr = flashStartAddr + length;
+    uint32_t index = 0;
+    char characters[] = "0123456789ABCDEF";
+
+    while (addr < endAddr) {
+        uint32_t nextFourBytes = MEM(addr);
+
+        for (int i = 0; i < 4; i++) {
+            uint8_t nextChar = nextFourBytes % 0x100;
+            nextFourBytes /= 0x100;
+            uint8_t lower = nextChar % 0x10;
+            uint8_t higher = nextChar /0x10;
+
+            flashContent[index] = characters[higher];
+            index++;
+            flashContent[index] = characters[lower];
+            index++;
+        }
+
+        addr += 4;
+    }
+    flashContent[length * 2] = '\0';
+    crc_t crc = crc_init();
+    crc = crc_update(crc, (const char *) flashContent, strlen(flashContent));
+    crc = crc_finalize(crc);
+
+    return (uint32_t) crc;
+
 }
