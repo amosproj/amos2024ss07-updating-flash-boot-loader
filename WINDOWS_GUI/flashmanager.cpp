@@ -461,13 +461,13 @@ void FlashManager::validateFlashing(){
 
         if (resp != UDS::TX_RX_OK) {
             emit errorPrint("FlashManager: ERROR - Requesting upload failed");
-            break;
+
         }
 
         uint32_t ecuChecksum = uds->getECUChecksum();
         if (ecuChecksum == 0) {
             emit errorPrint("FlashManager: ERROR - Checksum transmission failed");
-            break;
+
         }
 
         if (ecuChecksum != value) {
