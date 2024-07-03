@@ -50,6 +50,7 @@ private:
     bool rx_msg_valid;                          // Indication of Message Interpreter if UDS Msg was valid
     bool rx_msg_neg_resp;                       // Indication of Negative Response
 
+    uint8_t ecu_rec_nrc;                        // Used for any last UDS Message NRC
     uint32_t ecu_rec_buffer_size;               // Used for Request Download response -> ECU indicates the buffer size that could used for transfer data
 
 public:
@@ -61,6 +62,7 @@ public:
     void setSyncMode(bool synchronized);
 
     // UDS RX -> Extracted to variables
+    uint8_t getECUNegativeResponse();
     uint32_t getECUTransferDataBufferSize();
 
     // UDS TX
