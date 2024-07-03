@@ -17,7 +17,7 @@
 #include "flash_driver.h"
 
 enum FLASHING_STATE {DOWNLOAD, UPLOAD, TRANSFER_DATA, IDLE};
-uint32 flashBuffer[MAX_ISOTP_MESSAGE_LEN/4];
+uint32_t flashBuffer[MAX_ISOTP_MESSAGE_LEN/4];
 
 typedef struct {
     uint32_t buffer;
@@ -182,7 +182,7 @@ uint8_t flashingTransferExit(uint32_t address){
     return 0;
 }
 
-uint32_t flashingGetFlashBufferSize(){
+uint32_t flashingGetFlashBufferSize(void){
     return flashing_int_data.buffer;
 }
 

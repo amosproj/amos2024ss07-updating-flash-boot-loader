@@ -12,7 +12,7 @@
 #ifndef RESET_H_
 #define RESET_H_
 
-void softReset();
-void hardReset();
+void softReset(void);
+void hardReset(void);
 
 #endif

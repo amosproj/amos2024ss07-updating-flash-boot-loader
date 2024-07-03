@@ -113,7 +113,7 @@ static boolean validateMemory(){
 void init_memory(void){
 
     // Reading from memory
-    uint32_t len = sizeof(memData);
+    size_t len = sizeof(memData);
     uint8_t *dataRead = flashRead((uint32)DID_DATA_FLASH_ADDR, len);
 
     // Copy content to Variables

@@ -1,0 +1,75 @@
+Title	URL	Assignees	Status	Labels
+[MCU] Create dummy ASW for demonstration purposes	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/48	sebas-rodri	Feature Archive	Est. size = 5, Real size = 3, Sprint 7
+Check license of 2 .dll files in release .zip file	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/90	wiklam	Feature Archive	Est. size = 3, Real size = 3, Sprint 7
+[MCU] Adjust linker-script for bootloader	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/86	ibexq	Feature Archive	Est. size = 5, Real size = 3, Sprint 7
+Clarify License Text	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/67	ibexq	Feature Archive	Est. size = 3, Real size = 3, Sprint 6
+Review transitive include of e.g. "lib/vxlapi.h" in CAN_Wrapper	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/30	MikeFAU	Feature Archive	Est. size = 3, Real size = 1, Sprint 4
+[MCU] Implement Real Bus in CAN Driver	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/31	sebas-rodri	Feature Archive	Est. size = 5, Real size = 8, Sprint 4
+[WIN] UDS Tx	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/42	MikeFAU	Feature Archive	Est. size = 5, Real size = 3, Sprint 4
+[WIN] UDS messageInterpreter (Rx)	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/41	wiklam	Feature Archive	Est. size = 5, Real size = 3, Sprint 4
+Integrate CAN Wrapper with GUI	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/19	PaulRoy1	Feature Archive	Est. size = 3, Real size = 8, Sprint 3
+[MCU] Build Process	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/34	ibexq	Feature Archive	Est. size = 3, Real size = 2, Sprint 3
+Implement UDS Communication Specification	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/35	MikeFAU	Feature Archive	Est. size = 3, Needs Code Review, Real size = 3, Sprint 3
+Document / obtain documentation for relevant part of UDS	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/21	MikeFAU	Feature Archive	Est. size = 3, Needs Code Review, Real size = 5, Sprint 3
+[MCU] Create / modify existing project to demonstrate module functionality	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/25	ibexq	Feature Archive	Est. size = 3, Real size = 2, Sprint 3
+[GUI] QT App Build process	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/33	wiklam	Feature Archive	Est. size = 3, Real size = 5, Sprint 3
+[UI] Implement "Updating in progress" indicator	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/7	wiklam	Feature Archive	Est. size = 2, Real size = 2, Sprint 3
+Design a Mockup for ECU Listing UI	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/27	wiklam	Feature Archive	Est. size = 3, Real size = 3, Sprint 3
+Implement a function to select CAN-HW	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/17	wlklsn	Feature Archive	Est. size = 5, Real size = 3, Sprint 3
+[MCU] CAN driver	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/10	sebas-rodri	Feature Archive	Est. size = 5, Real size = 5, Sprint 2
+[MCU] LED driver	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/9	PaulRoy1	Feature Archive	Est. size = 5, Real size = 2, Sprint 2
+[MCU] Flash driver	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/11	ibexq	Feature Archive	Est. size = 5, Real size = 5, Sprint 2
+Create Logo	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/1	AndreasFreund	Feature Archive	Sprint 1
+Get familiar with CAN-Bus, Aurix IDE, MCU programming	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/3	AndreasFreund, ibexq, MikeFAU, Nahrain1, PaulRoy1, sebas-rodri, wiklam, wlklsn	Feature Archive	Sprint 1
+Create *.s19 to Binary converter	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/6	wlklsn	Feature Archive	Est. size = 3, Real size = 3, Sprint 2
+Align on a GUI framework	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/4	MikeFAU, sebas-rodri, wiklam	Feature Archive	Sprint 1
+Implement a function for file browsing, selecting, and simple processing	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/5	wiklam	Feature Archive	Est. size = 5, Real size = 5, Sprint 2
+Create the description of the planned software architecture	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/14	ibexq, MikeFAU, PaulRoy1, sebas-rodri, wiklam, wlklsn	Feature Archive	Est. size = 3, Real size = 2, Sprint 2
+[Win] CAN Wrapper	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/12	MikeFAU	Feature Archive	Est. size = 5, Real size = 5, Sprint 2
+Initialize Readme file	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/15	MikeFAU	Feature Archive	documentation, Est. size = 1, Real size = 1, Sprint 2
+Initialize software bill of materials	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/13	ibexq, MikeFAU, PaulRoy1, sebas-rodri, wiklam, wlklsn	Feature Archive	Est. size = 1, Real size = 1, Sprint 2
+Packaging of Windows Aplication - .zip / Installer	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/23	PaulRoy1	Feature Archive	Est. size = 2, Real size = 2, Sprint 5
+[Bugfix] Investigate bytes lost maybe in IsoTP	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/75	sebas-rodri, wlklsn	Feature Archive	Bugfix, Est. size = 5, Real size = 3, Sprint 6, transmission
+Move buildscripts into subdirectories	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/73	wlklsn	Feature Archive	build, Est. size = 1, Real size = 1, Sprint 6
+[Win] Fix CAN-Bus not opening, when already in use by other app, e.g. CANoe	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/52	MikeFAU	Feature Archive	Bugfix, Est. size = 1, Real size = 1, Sprint 6
+Populate MCU List from CAN Bus	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/51	MikeFAU	Feature Archive	Est. size = 2, Real size = 2, Sprint 6
+Midterm Refactoring and Bugfixing	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/81	MikeFAU	Feature Archive	Bugfix, Est. size = 3, Real size = 3, refactoring, Sprint 6
+Update Software Architecture Diagram	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/72	MikeFAU	Feature Archive	Est. size = 3, Real size = 2, Sprint 6
+Restart the ECU (soft reset) over GUI	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/18	wiklam	Feature Archive	Est. size = 3, Real size = 3, Sprint 5, Sprint 6
+[GUI] Add Clear Log Button	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/66	sebas-rodri	Feature Archive	Est. size = 2, Real size = 2, Sprint 6
+Refactoring of drivers	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/69	PaulRoy1	Feature Archive	Est. size = 5, Real size = 5, refactoring, Sprint 6
+[WIN] Add connectivity indicator	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/87	wiklam	Feature Archive	Est. size = 3, Real size = 3, Sprint 7
+[MCU] Implement flash date display and flash persistence module	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/8	MikeFAU	Feature Archive	Est. size = 5, Real size = 5, Sprint 7
+[MCU] UDS messageInterpreter (Rx)	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/43	ibexq, sebas-rodri	Feature Archive	Est. size = 5, Real size = 5, Sprint 4, Sprint 5
+Build Process Video	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/47	ibexq	Feature Archive	Sprint 5
+[WIN] Communication Layer (IsoTP)	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/39	MikeFAU	Feature Archive	Est. size = 5, Real size = 8, Sprint 4, Sprint 5
+[MCU] UDS Tx	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/44	ibexq, sebas-rodri	Feature Archive	Est. size = 5, Real size = 5, Sprint 4, Sprint 5
+[MCU] Communication Layer (IsoTP)	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/40	wlklsn	Feature Archive	Est. size = 8, Real size = 8, Sprint 4, Sprint 5
+GUI changes	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/68	wiklam	Feature Archive	Est. size = 5, Real size = 5, Sprint 6
+[WIN] Implement the CAN bus bitrate selection	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/85	PaulRoy1	Feature Archive	Est. size = 3, Real size = 3, Sprint 7
+[MCU] Clarify Flash Layout w/ Hella and Implement it	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/103	ibexq	Feature Archive	Est. size = 3, Real size = 3, Sprint 8
+Update User Documentation for Hella	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/107	ibexq	Awaiting Review	Est. size = 2, Real size = 2
+Display Version Information before Flashing	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/93	wiklam	Awaiting Review	Est. size = 2, Sprint 8
+[MCU] Prepare and Jump to ASW from Bootloader	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/95	sebas-rodri	Feature Archive	Est. size = 8, Sprint 8
+Flash ECU Firmware	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/20	MikeFAU	In Progress	Core Feature, Est. size = 8, Sprint 8
+[WIN] Validation of firmware file	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/24	wlklsn	In Progress	Est. size = 8, Sprint 7, Sprint 8
+[MCU] Verify firmware update Post-Flashing	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/97	PaulRoy1	In Progress	Est. size = 5, Sprint 8
+[MCU] Reboot to Bootloader from ASW	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/96	ibexq	In Progress	Est. size = 3
+Generate Log File	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/99	wiklam	In Progress	Est. size = 3
+Create professional and regular GUI modes	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/112		Product Backlog	
+[GUI] Remember last folder path	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/116		Product Backlog	
+User Authentication for Flashing Process	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/117		Product Backlog	
+[WIN][MCU] Flow Control IsoTP	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/118		Product Backlog	
+Create Porting Guide	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/119		Product Backlog	
+[MCU] Key Mechanism in Flash	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/102		Product Backlog	
+Integrate User Documentation into GUI	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/120		Product Backlog	
+[MCU] CAN FD Driver 	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/109		Product Backlog	
+[WIN] Integrate CAN FD into Wrapper & GUI	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/110		Product Backlog	
+[WIN][MCU] Adjust ISO-TP for CAN-FD			Product Backlog	
+Create CANoe config for IsoTP, UDS compliance testing	https://github.com/amosproj/amos2024ss07-updating-flash-boot-loader/issues/111		Product Backlog	
+Makefile for MCU			Product Backlog	
+[ALL] Implement header for UDS identifier constants from documentation			Product Backlog	
+Search for possible improvements for flash memory management ( ?)			Product Backlog	
+display memory usage and availability in the GUI			Product Backlog	
+Make GUI user-friendly (suggestions for resolving issues to the user, automatic retry in case of transient errors?)			Product Backlog	
+Implement Logging for Diagnostic Sessions			Product Backlog	

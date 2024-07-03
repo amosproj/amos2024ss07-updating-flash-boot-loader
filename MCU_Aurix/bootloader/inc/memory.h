@@ -47,7 +47,7 @@
 #define FBL_DID_BL_WRITE_START_ADD_CORE0_DEFAULT                    {0xA0, 0x09, 0x00, 0x00}
 #define FBL_DID_BL_WRITE_END_ADD_CORE0_DEFAULT                      {0xA0, 0x1F, 0xFF, 0xFF}
 #define FBL_DID_BL_WRITE_START_ADD_CORE1_DEFAULT                    {0xA0, 0x30, 0x40, 0x00}
-#define FBL_DID_BL_WRITE_END_ADD_CORE1_DEFAULT                      {0xA0, 0x4F, 0xF7, 0xFF}
+#define FBL_DID_BL_WRITE_END_ADD_CORE1_DEFAULT                      {0xA0, 0x4F, 0xFF, 0xFF}     // Includes ASW Core 1 + Key Data + Calibration Data
 #define FBL_DID_BL_WRITE_START_ADD_CORE2_DEFAULT                    {0xFF, 0xFF, 0xFF, 0xFF}
 #define FBL_DID_BL_WRITE_END_ADD_CORE2_DEFAULT                      {0xFF, 0xFF, 0xFF, 0xFF}
 

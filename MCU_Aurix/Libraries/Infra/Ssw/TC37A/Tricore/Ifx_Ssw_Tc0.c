@@ -290,13 +290,13 @@ static void __Core0_start(void)
     Ifx_Ssw_disableSafetyWatchdog(safetyWdtPassword);
 
     /* Hook functions to initialize application specific HW extensions */
-	hardware_init_hook();
+    hardware_init_hook();
 
-	/* Initialization of C runtime variables and CPP constructors and destructors */
-	(void)Ifx_Ssw_doCppInit();
+    /* Initialization of C runtime variables and CPP constructors and destructors */
+    (void)Ifx_Ssw_doCppInit();
 
-	/* Hook functions to initialize application specific SW extensions */
-	software_init_hook();
+    /* Hook functions to initialize application specific SW extensions */
+    software_init_hook();
 
     Ifx_Ssw_enableSafetyWatchdog(safetyWdtPassword);
 
@@ -319,8 +319,8 @@ static void __Core0_start(void)
     Ifx_Ssw_jumpToFunction(core0_main);    /* Jump to main function of CPU0 */
 #endif /* IFX_CFG_SSW_RETURN_FROM_MAIN */
 
-	/* Go into infinite loop, normally the code shall not reach here */
-	Ifx_Ssw_infiniteLoop();
+    /* Go into infinite loop, normally the code shall not reach here */
+    Ifx_Ssw_infiniteLoop();
 }
 
 

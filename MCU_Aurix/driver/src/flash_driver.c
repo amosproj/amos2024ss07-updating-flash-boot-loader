@@ -40,7 +40,7 @@
 #define ERASEPFLASH_ADDR            (WRITEPAGE_ADDR + WRITEPAGE_LEN)
 #define WRITEPFLASH_ADDR            (ERASEPFLASH_ADDR + ERASEPFLASH_LEN)
 
-#define MEM(address)                *((uint32 *)(address))      /* Macro to simplify the access to a memory address */
+#define MEM(address)                *((uint32_t *)(address))      /* Macro to simplify the access to a memory address */
 
 typedef struct
 {
@@ -49,8 +49,8 @@ typedef struct
     uint8 (*enterPageMode)(uint32 pageAddr);
     void (*load2X32bits)(uint32 pageAddr, uint32 wordL, uint32 wordU);
     void (*writePage)(uint32 pageAddr);
-    void (*erasePFlash)(IfxFlash_FlashType flashModule, uint32 sectorAddr, uint32 numSectors);
-    void (*writePFlash)(IfxFlash_FlashType flashModule, uint32 startingAddr, uint32 numPages, uint32 data[], size_t dataSize);
+    void (*erasePFlash)(IfxFlash_FlashType flashModule, uint32_t sectorAddr, uint32_t numSectors);
+    void (*writePFlash)(IfxFlash_FlashType flashModule, uint32_t startingAddr, uint32_t numPages, uint32_t data[], size_t dataSize);
 } Flash_Function;
 
 Flash_Function g_functionsFromPSPR;
@@ -59,7 +59,7 @@ Flash_Function g_functionsFromPSPR;
  * copyFunctionsToPSPR(). Because of this, inside the function, only routines from the PSPR or inline functions
  * can be called, otherwise a Context Type (CTYP) trap can be triggered.
  */
-static void erasePFlash(IfxFlash_FlashType flashModule, uint32 sectorAddr, uint32 numSectors)
+static void erasePFlash(IfxFlash_FlashType flashModule, uint32_t sectorAddr, uint32_t numSectors)
 {
     /* Get the current password of the Safety WatchDog module */
     uint16 endInitSafetyPassword = IfxScuWdt_getSafetyWatchdogPasswordInline();
@@ -76,18 +76,18 @@ static void erasePFlash(IfxFlash_FlashType flashModule, uint32 sectorAddr, uint3
  * Because of this, inside the function, only routines from the PSPR or inline functions can be called,
  * otherwise a Context Type (CTYP) trap can be triggered.
  */
-static void writePFlash(IfxFlash_FlashType flashModule, uint32 startingAddr, uint32 numPages, uint32 data[], size_t dataSize)
+static void writePFlash(IfxFlash_FlashType flashModule, uint32_t startingAddr, uint32_t numPages, uint32_t data[], size_t dataSize)
 {
-    uint32 page;
-    uint32 offset;
+    uint32_t page;
+    uint32_t offset;
 
     /* Get the current password of the Safety WatchDog module */
     uint16 endInitSafetyPassword = IfxScuWdt_getSafetyWatchdogPasswordInline();
-    uint32 index = 0;
+    uint32_t index = 0;
 
     for(page = 0; page < numPages; page++)
     {
-        uint32 pageAddr = startingAddr + (page * PFLASH_PAGE_LENGTH);
+        uint32_t pageAddr = startingAddr + (page * PFLASH_PAGE_LENGTH);
         uint32* data_for_page = (uint32*) (((uint8*) data) + (page * PFLASH_PAGE_LENGTH));
 
         g_functionsFromPSPR.enterPageMode(pageAddr); // enter page mode to be able to write in page
@@ -144,10 +144,10 @@ static void copyFunctionsToPSPR(void)
     g_functionsFromPSPR.writePFlash = (void *)WRITEPFLASH_ADDR;
 }
 
-static uint32 getNumPerSize(size_t sectionLength, size_t dataSize)
+static uint32_t getNumPerSize(size_t sectionLength, size_t dataSize)
 {
-    dataSize *= sizeof(uint32); // dataSize is in uint32 values, but bytes needed
-    uint32 num_pages = dataSize / sectionLength;
+    dataSize *= sizeof(uint32_t); // dataSize is in uint32_t values, but bytes needed
+    uint32_t num_pages = dataSize / sectionLength;
     if (dataSize % sectionLength) // we need a page more because there is data left that does not fill a full page
     {
         num_pages++;
@@ -155,32 +155,32 @@ static uint32 getNumPerSize(size_t sectionLength, size_t dataSize)
     return num_pages;
 }
 
-static uint32 getDFlashNumPages(size_t dataSize)
+static uint32_t getDFlashNumPages(size_t dataSize)
 {
     return getNumPerSize(DFLASH_PAGE_LENGTH, dataSize);
 }
 
-static uint32 getDFlashNumSectors(size_t dataSize)
+static uint32_t getDFlashNumSectors(size_t dataSize)
 {
     return getNumPerSize(DFLASH_SECTOR_LENGTH, dataSize);
 }
 
-static uint32 getPFlashNumPages(size_t dataSize)
+static uint32_t getPFlashNumPages(size_t dataSize)
 {
     return getNumPerSize(PFLASH_PAGE_LENGTH, dataSize);
 }
 
-static uint32 getPFlashNumSectors(size_t dataSize)
+static uint32_t getPFlashNumSectors(size_t dataSize)
 {
     return getNumPerSize(PFLASH_SECTOR_LENGTH, dataSize);
 }
 
 /* This function verifies that the data at the given address matches the data of the array data*/
-bool flashVerify(uint32 flashStartAddr, uint32 data[], size_t dataSize) 
+bool flashVerify(uint32_t flashStartAddr, uint32_t data[], size_t dataSize)
 {
-    uint32 dataIndex = 0;
+    uint32_t dataIndex = 0;
 
-    for (uint32 address = flashStartAddr; address < flashStartAddr + dataSize * sizeof(uint32); address += sizeof(uint32)) 
+    for (uint32_t address = flashStartAddr; address < flashStartAddr + dataSize * sizeof(uint32); address += sizeof(uint32))
     {
         if (MEM(address) != data[dataIndex])
         {
@@ -192,10 +192,10 @@ bool flashVerify(uint32 flashStartAddr, uint32 data[], size_t dataSize)
 }
 
 /* This function flashes the Program Flash memory calling the routines from the PSPR */
-static bool flashWriteProgram(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32 data[], size_t dataSize)
+static bool flashWriteProgram(IfxFlash_FlashType flashModule, uint32_t flashStartAddr, uint32_t data[], size_t dataSize)
 {
-    uint32 num_sectors = getPFlashNumSectors(dataSize);
-    uint32 num_pages = getPFlashNumPages(dataSize);
+    uint32_t num_sectors = getPFlashNumSectors(dataSize);
+    uint32_t num_pages = getPFlashNumPages(dataSize);
 
     boolean interruptState = IfxCpu_disableInterrupts();
 
@@ -213,12 +213,12 @@ static bool flashWriteProgram(IfxFlash_FlashType flashModule, uint32 flashStartA
  * It is not needed to run this function from the PSPR, thus functions from the Program Flash memory can be called
  * inside.
  */
-static bool flashWriteData(IfxFlash_FlashType flashModule, uint32 flashStartAddr, uint32 data[], size_t dataSize)
+static bool flashWriteData(IfxFlash_FlashType flashModule, uint32_t flashStartAddr, uint32_t data[], size_t dataSize)
 {
-    uint32 num_sectors = getDFlashNumSectors(dataSize);
-    uint32 num_pages = getDFlashNumPages(dataSize);
+    uint32_t num_sectors = getDFlashNumSectors(dataSize);
+    uint32_t num_pages = getDFlashNumPages(dataSize);
 
-    uint32 page;
+    uint32_t page;
 
     /* --------------- ERASE PROCESS --------------- */
     uint16 endInitSafetyPassword = IfxScuWdt_getSafetyWatchdogPassword(); /* Get the current password of the Safety WatchDog module */
@@ -235,7 +235,7 @@ static bool flashWriteData(IfxFlash_FlashType flashModule, uint32 flashStartAddr
     /* --------------- WRITE PROCESS --------------- */
     for(page = 0; page < num_pages; page++)
     {
-        uint32 page_addr = flashStartAddr + (page * DFLASH_PAGE_LENGTH);
+        uint32_t page_addr = flashStartAddr + (page * DFLASH_PAGE_LENGTH);
         uint32* data_for_page = (uint32*) (((uint8*) data) + (page * DFLASH_PAGE_LENGTH));
 
         IfxFlash_enterPageMode(page_addr);  // enter page mode to be able to write in page
@@ -260,7 +260,7 @@ static bool flashWriteData(IfxFlash_FlashType flashModule, uint32 flashStartAddr
 /**
  *  This function calls the correct writing function, either flashWriteProgramm or flashWriteData, depending on flashStartAddr,
  * so the programmer doesn't have to differentiate between writing pflash and dflash */
-bool flashWrite(uint32 flashStartAddr, uint32 data[], size_t dataSize) {
+bool flashWrite(uint32_t flashStartAddr, uint32_t data[], size_t dataSize) {
     if (flashStartAddr >= DATA_FLASH_0_BASE_ADDR && flashStartAddr < DATA_FLASH_0_END_ADDR)
     {
         if (flashStartAddr + dataSize >= DATA_FLASH_0_END_ADDR) {
@@ -298,17 +298,17 @@ bool flashWrite(uint32 flashStartAddr, uint32 data[], size_t dataSize) {
  * This function reads the given number of bytes into the dataReadFromFlash buffer. The caller need to make sure to free the buffer.
  * Internally the buffer is created by using calloc
  */
-uint8_t *flashRead(uint32 flashStartAddr, size_t dataBytesToRead){
+uint8_t *flashRead(uint32_t flashStartAddr, size_t dataBytesToRead){
 
     uint8_t *data = (uint8_t*)calloc((uint32_t)dataBytesToRead, sizeof(uint8_t));
     if(data != NULL){
 
         size_t uint32_bytes = dataBytesToRead / sizeof(uint32) + 1;
-        uint32 dataRead = 0;
-        uint32 byteCtr = 0;
+        uint32_t dataRead = 0;
+        uint32_t byteCtr = 0;
         uint8_t *byteExtracted = 0;
 
-        for(uint32 address = flashStartAddr; (address < flashStartAddr + uint32_bytes * sizeof(uint32)) && byteCtr < dataBytesToRead; address += sizeof(uint32)){
+        for(uint32_t address = flashStartAddr; (address < flashStartAddr + uint32_bytes * sizeof(uint32)) && byteCtr < dataBytesToRead; address += sizeof(uint32)){
             dataRead = MEM(address);
             byteExtracted = (uint8_t*)(&dataRead);
 
@@ -328,131 +328,6 @@ uint8_t *flashRead(uint32 flashStartAddr, size_t dataBytesToRead){
  */
 
 uint32_t flashCalculateChecksum(uint32 flashStartAddr, uint32 length) {
-
-    /*uint32 addr = flashStartAddr;
-    uint32 nextFourBytes;
-    char stringBytes[9];
-
-    crc_t crc = crc_init();
-
-    /*for (uint32 addr = flashStartAddr; addr < flashStartAddr + length; addr++) {
-        uint8 nextFourBytes = MEM(addr); //adresse kann nicht so ausgelesen werden muss immer 4 byte holen und dann den richtigen teil holen
-        char stringBytes[3];
-        snprintf(stringBytes, sizeof(stringBytes), "%x", nextFourBytes);
-        crc = crc_update(crc, (unsigned char *) stringBytes, strlen(stringBytes));
-    }
-
-    while (addr < flashStartAddr + length) {
-        nextFourBytes = MEM(addr);
-        uint8 indexInString = 0;
-
-        //reverse nextFourBytes Byte-wise and insert in stringBytes to add into crc calc
-        while (indexInString < 8) {
-            uint32 lowestByte = nextFourBytes % 0x100;
-            nextFourBytes /= 0x100;
-
-            snprintf(stringBytes + indexInString, 3, "%02x", lowestByte);
-            
-            indexInString += 2;
-        }
-
-
-        if (addr + 3 < flashStartAddr + length) {
-            //all 4 bytes read from memory can be factored in for crc calc
-        } else if (addr + 2 < flashStartAddr + length) {
-            stringBytes[6] = '\0'; //remove last byte since it is not included in address range
-        } else if (addr + 1 < flashStartAddr + length) {
-            stringBytes[4] = '\0'; //remove last two bytes
-        } else {
-            stringBytes[2] = '\0'; //only one byte is included in address range
-        }
-
-        crc = crc_update(crc, stringBytes, strlen(stringBytes));
-
-        addr += 4;
-    }
-
-    crc = crc_finalize(crc);
-
-    return (uint32_t) crc;
-
-    uint32 addr = flashStartAddr;
-    uint32 nextFourBytes;
-    char fourByteString[9];
-    char nextByte[3];
-    nextByte[2] = '\0';
-    uint8 fourCount = addr % 4; //used to iterate over 4 byte each, to avoid using % operator as often 
-    
-    if (fourCount != 0) {
-        nextFourBytes = MEM(addr - fourCount);
-    }
- 
-    crc_t crc = crc_init();
-    
-    while (addr < flashStartAddr + length) {
-        if (fourCount == 0) {
-            nextFourBytes = MEM(addr);
-            snprintf(fourByteString, sizeof(fourByteString), "%08x", nextFourBytes);
-            nextByte[0] = fourByteString[6];
-            nextByte[1] = fourByteString[7];
-            fourCount++;
-        } else if (fourCount == 1) {
-            nextByte[0] = fourByteString[4];
-            nextByte[1] = fourByteString[5];
-            fourCount++;
-        } else if (fourCount == 2) {
-            nextByte[0] = fourByteString[2];
-            nextByte[1] = fourByteString[3];
-            fourCount++;
-        } else {
-            nextByte[0] = fourByteString[0];
-            nextByte[1] = fourByteString[1];
-            fourCount = 0;
-        }
-
-        crc = crc_update(crc, nextByte, strlen(nextByte));
-
-        addr++;
-    }
-
-    crc = crc_finalize(crc);
-
-    return (uint32_t) crc;
-    //length is in bytes -> 2 chars per byte + one char for '\0'
-    char flashContent[length * 2 + 1];
-    uint32_t addr = flashStartAddr;
-    uint32_t endAddr = flashStartAddr + length;
-    uint32_t indexInString = 0;
-
-    while (addr < endAddr) {
-        uint32_t nextFourBytes = MEM(addr);
-
-        //reverse nextFourBytes Byte-wise and insert in stringBytes to add into crc calc
-        for (int i = 0; i < 4; i++) {
-            if (addr + i >= endAddr) {
-                break;
-            }
-            uint32_t lowestByte = nextFourBytes % 0x100;
-            nextFourBytes /= 0x100;
-
-            snprintf(flashContent + indexInString, 3, "%02x", lowestByte);
-
-            indexInString += 2;
-        }
-
-        addr += 4;
-    }
-
-    flashContent[length * 2] = '\0';
-
-    crc_t crc = crc_init();
-
-    crc = crc_update(crc, (const char *) flashContent, strlen(flashContent));
-
-    crc = crc_finalize(crc);
-
-    return (uint32_t) crc;*/
-
     char flashContent[3];
     flashContent[2] = '\0';
     uint32_t addr = flashStartAddr;
@@ -486,5 +361,4 @@ uint32_t flashCalculateChecksum(uint32 flashStartAddr, uint32 length) {
     crc = crc_finalize(crc);
 
     return (uint32_t) crc;
-
 }

@@ -10,6 +10,9 @@
 #include <QPixmap>
 #include <QTableView>
 #include <QTimer>
+#include <QFileInfo>
+#include <QSettings>
+#include <QCoreApplication>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -93,16 +96,29 @@ void MainWindow::connectSignalSlots() {
         QMessageBox::about(nullptr, "Code license",
                        "Our code was developed under MIT license.");
     });
+    connect(ui->menuDefaultDir, &QAction::triggered, this, [=]() {
+        rootDir = defaultRootDir;
+    });
+    connect(ui->menuGUIMode, &QAction::triggered, this, [=]() {
+        ui->groupBox_console->setVisible(!ui->groupBox_console->isVisible());
+        QString mode = "regular";
+        if(ui->groupBox_console->isVisible())
+            mode = "professional";
+        QMessageBox::about(nullptr, "GUI mode switch", "Switched to " + mode + " mode");
+    });
+
+
 
     // GUI choose file
     connect(ui->button_file, &QPushButton::clicked, this, [=]() {
         if(ECUSelected()){
 
             updateValidManager();
-
-            QString path = QFileDialog::getOpenFileName(nullptr, "Choose File");
+            if(!QFileInfo::exists(rootDir))
+                rootDir = defaultRootDir;
+            qDebug() << "Choosing the file - root directory: " + rootDir;;
+            QString path = QFileDialog::getOpenFileName(nullptr, "Choose File", rootDir);
             if(!path.isEmpty()) {
-
                 QFile file(path);
                 if(!file.open(QFile::ReadOnly)) {
                     qDebug() << "Couldn't open file " + path + " " + file.errorString();
@@ -115,8 +131,9 @@ void MainWindow::connectSignalSlots() {
                 // Set file type
                 QFileInfo fileInfo(path);
                 QString fileType = fileInfo.suffix();
-
                 ui->label_type->setText("File type:  " + fileType);
+
+                rootDir = fileInfo.absolutePath();
 
                 // Validate file, result is already prepared for furhter calculations
                 validMan->data = validMan->validateFile(data);
@@ -161,10 +178,13 @@ void MainWindow::connectSignalSlots() {
         if(ui->label_selected_ECU->text() == "") {
             this->ui->textBrowser_flash_status->setText("No valid ECU selected");
         } else {
-
             QLabel* label = qobject_cast<QLabel*>(flashPopup.property("label").value<QObject*>());
-            label->setText(QString("You are going to flash from \'") + QString(this->ui->table_ECU->selectedItems().at(2)->text())
-                                    + QString("\' to \'") + ui->label_version->text().mid(14) + QString("\'"));
+            QString info = "You are going to stop flashing.";
+            if(!ui->button_flash->text().contains("Stop"))
+                info = QString("You are going to flash from \'") + QString(this->ui->table_ECU->selectedItems().at(2)->text())
+                                    + QString("\' to \'") + ui->label_version->text().mid(14) + QString("\'");
+            
+            label->setText(info);
             this->flashPopup.show();
         }
     });
@@ -209,8 +229,12 @@ void MainWindow::setupFlashPopup() {
                 flashMan->setLengths(validMan->calculateAddressLengths(flashMan->getFlashContent()));
                 this->ui->textBrowser_flash_status->setText("No valid Flash File selected. Demo Mode triggered");
             }
-
+            
             flashMan->startFlashing(selectedID, gui_id, comm);
+            QTimer::singleShot(500, [this]{
+                QByteArray arr = ui->label_version->text().mid(14).toLocal8Bit();
+                udsUpdateVersion(getECUID(), (uint8_t*)arr.data(), arr.size());
+            });
         }
     });
 
@@ -231,6 +255,13 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     this->setFixedSize(this->geometry().width(),this->geometry().height());
+
+
+    defaultRootDir = QCoreApplication::applicationDirPath();
+    QSettings settings("AMOS", "FBL");
+    ui->groupBox_console->setVisible(!settings.value("savedMode", defaultRootDir).toBool());
+    rootDir = settings.value("savedRootDir", defaultRootDir).toString();
+    qInfo() << "Saved root directory: " + rootDir;
 
     this->setWindowIcon(QIcon::fromTheme("FlashBootloader",
                                          QIcon(":/application/images/icon.png")));
@@ -658,4 +689,11 @@ void MainWindow::checkECUconnectivity() {
             color = "red";
     }
     ui->label_ECU_status->setStyleSheet("QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color: " + color + "}");
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+    QSettings settings("AMOS", "FBL");
+    settings.setValue("savedRootDir", rootDir);
+    settings.setValue("savedMode", !ui->groupBox_console->isVisible());
+    QMainWindow::closeEvent(event);
 }
