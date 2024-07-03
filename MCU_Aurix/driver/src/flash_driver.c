@@ -453,32 +453,36 @@ uint32_t flashCalculateChecksum(uint32 flashStartAddr, uint32 length) {
 
     return (uint32_t) crc;*/
 
-    char flashContent[length * 2 + 1];
+    char flashContent[3];
+    flashContent[2] = '\0';
     uint32_t addr = flashStartAddr;
     uint32_t endAddr = flashStartAddr + length;
-    uint32_t index = 0;
     char characters[] = "0123456789ABCDEF";
+
+    crc_t crc = crc_init();
 
     while (addr < endAddr) {
         uint32_t nextFourBytes = MEM(addr);
 
         for (int i = 0; i < 4; i++) {
-            uint8_t nextChar = nextFourBytes % 0x100;
-            nextFourBytes /= 0x100;
-            uint8_t lower = nextChar % 0x10;
-            uint8_t higher = nextChar /0x10;
+            if (addr + i >= endAddr) {
+                break;
+            }
+            uint8_t lower = nextFourBytes % 0x10;
+            nextFourBytes /= 0x10;
+            //uint8_t lower = nextChar % 0x10;
+            uint8_t higher = nextFourBytes % 0x10;
+            nextFourBytes /= 0x10;
 
-            flashContent[index] = characters[higher];
-            index++;
-            flashContent[index] = characters[lower];
-            index++;
+            flashContent[0] = characters[higher];
+            flashContent[1] = characters[lower];
+
+            crc = crc_update(crc, (const char *) flashContent, strlen(flashContent));
         }
 
         addr += 4;
     }
-    flashContent[length * 2] = '\0';
-    crc_t crc = crc_init();
-    crc = crc_update(crc, (const char *) flashContent, strlen(flashContent));
+
     crc = crc_finalize(crc);
 
     return (uint32_t) crc;
