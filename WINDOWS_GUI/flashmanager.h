@@ -54,6 +54,7 @@ private:
     uint32_t flashCurrentPackages;                              // Stores the current number of packes for flashCurrentAdd;
     uint32_t flashCurrentBufferSize;                            // Stores the current buffer size per
     uint32_t flashCurrentPackageCtr;                            // Stores the current counter of the package
+    size_t last_update_gui_progressbar;                         // Stores the last percent of the GUI progressbar
 
     bool _abort;                                                // Thread Handling
     bool _working;                                              // Thread Handling
@@ -93,7 +94,7 @@ public:
         connect(this->uds, SIGNAL(txData(QByteArray)), this->comm, SLOT(txDataSlot(QByteArray)), Qt::DirectConnection);
 
         // GUI Console Print
-        connect(this->uds, SIGNAL(toConsole(QString)), this, SLOT(forwardToConsole(QString)), Qt::DirectConnection);
+        //connect(this->uds, SIGNAL(toConsole(QString)), this, SLOT(forwardToConsole(QString)), Qt::DirectConnection);
         connect(this->comm, SIGNAL(toConsole(QString)), this, SLOT(forwardToConsole(QString)), Qt::DirectConnection);
 
         state_attempt_ctr = 0;
