@@ -116,7 +116,11 @@ void FlashManager::updateGUIProgressBar(){
     for(uint32_t add: flashedBytes.keys()){
         bytes_counter += flashedBytes[add];
     }
-    emit updateStatus(UPDATE, "", (size_t)(bytes_counter/getOverallByteSize()*100));
+    size_t new_value = (size_t)(bytes_counter/getOverallByteSize()*100);
+    if(new_value != last_update_gui_progressbar){
+        last_update_gui_progressbar = new_value;
+        emit updateStatus(UPDATE, "", new_value);
+    }
 }
 
 // TODO: REMOVE AFTER DEBUGGING
@@ -238,6 +242,7 @@ void FlashManager::prepareFlashing(){
 
     emit updateStatus(RESET, "", 0);
     emit updateStatus(INFO, "Preparing ECU for flashing", 0);
+    last_update_gui_progressbar = 0;
 
     // =========================================================================
     // Prepare ECU
@@ -290,7 +295,7 @@ void FlashManager::startFlashing(){
 
 void FlashManager::requestDownload(){
 
-    //own_sleep(200); // TODO: REMOVE AFTER DEBUGGING
+    own_sleep(200); // TODO: REMOVE AFTER DEBUGGING
 
     mutex.lock();
     bool abort = _abort;
