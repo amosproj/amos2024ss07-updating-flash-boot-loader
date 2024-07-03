@@ -16,6 +16,8 @@
 #define MAX_TRIES_PER_STATE         5           // Max Attempts per state
 #define MAX_TRIES_PER_FLASH_ADD     10          // Max Attemps per flash address
 #define WAITTIME_AFTER_ATTEMPT      500         // Waittime in ms
+#define TIME_DELTA_GUI_LOG          500         // Delta in ms between GUI Updates for Console and Flashing log
+#define TIME_DELTA_GUI_FLASHING_LOG 1000        // Delta in ms between GUI Updates for Console and Flashing log
 
 #define TESTFILE_PADDING_BYTES      7           // Padding between test data
 #define TESTFILE_CORE0_START_ADD    0xA0090000  // Start Address for flashing Core 0
@@ -31,6 +33,8 @@
 #include <QMutex>
 #include <QDebug>
 #include <QQueue>
+#include <QDateTime>
+#include <QPair>
 
 #include <stdint.h>
 
@@ -41,7 +45,7 @@ class FlashManager : public QObject {
     Q_OBJECT
 
 public:
-    enum STATUS {UPDATE, INFO, ERR, RESET };
+    enum STATUS {UPDATE, INFO, ERR, RESET};
 
 private:
     enum STATE_MACHINE {PREPARE, START_FLASHING, REQ_DOWNLOAD, TRANSFER_DATA, FINISH, IDLE, ERR_STATE};
@@ -63,7 +67,11 @@ private:
     uint32_t flashCurrentPackageCtr;                            // Stores the current counter of the package
 
     size_t last_update_gui_progressbar;                         // Stores the last percent of the GUI progressbar
-    //QQueue<QString> messageQueue;                               // Stores Messages for the GUI Update
+
+    QDateTime lastGUIUpdateConsoleLog;                          // Stores the last timestamp of Update of GUI Console
+    QQueue<QString> queueGUIConsoleLog;                         // Stores Messages for the GUI Update
+    QDateTime lastGUIUpdateFlashingLog;                         // Stores the last timestamp of Update of GUI Flashing Log
+    QQueue<QPair<STATUS, QString>> queueGUIFlashingLog;                        // Stores Messages for the GUI Update
 
     bool _abort;                                                // Thread Handling
     bool _working;                                              // Thread Handling
@@ -121,6 +129,11 @@ public:
         }
         mutex.unlock();
 
+        // Finally print all the left over queued logs
+        queuedGUIConsoleLog("", 1);
+        queuedGUIFlashingLog(INFO, "", 1);
+
+
         // Comm RX Signal to UDS RX Slot
         disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
 
@@ -137,6 +150,8 @@ private:
     void fillOverallByteSize();
     size_t getOverallByteSize();
     void updateGUIProgressBar();
+    void queuedGUIConsoleLog(QString info, bool forced=0);
+    void queuedGUIFlashingLog(FlashManager::STATUS s, QString info, bool forced=0);
 
     void doFlashing();
     void prepareFlashing();
