@@ -74,9 +74,9 @@ void MainWindow::connectSignalSlots() {
     connect(flashMan, SIGNAL(flashingStartThreadRequested()), threadFlashing, SLOT(start()));
     connect(threadFlashing, SIGNAL(started()), flashMan, SLOT(runThread()));
     connect(flashMan, SIGNAL(flashingThreadFinished()), threadFlashing, SLOT(quit()), Qt::DirectConnection);
-    connect(flashMan, SIGNAL(infoPrint(QString)), this, SLOT(appendTextToConsole(QString)));
-    connect(flashMan, SIGNAL(debugPrint(QString)), this, SLOT(appendTextToConsole(QString)));
-    connect(flashMan, SIGNAL(errorPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    //connect(flashMan, SIGNAL(infoPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    //connect(flashMan, SIGNAL(debugPrint(QString)), this, SLOT(appendTextToConsole(QString)));
+    //connect(flashMan, SIGNAL(errorPrint(QString)), this, SLOT(appendTextToConsole(QString)));
     connect(flashMan, SIGNAL(updateStatus(FlashManager::STATUS, QString, int)), this, SLOT(updateStatusSlot(FlashManager::STATUS, QString, int)));
 
     // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
