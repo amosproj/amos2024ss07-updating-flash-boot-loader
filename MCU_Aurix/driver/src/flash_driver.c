@@ -327,7 +327,7 @@ uint8_t *flashRead(uint32_t flashStartAddr, size_t dataBytesToRead){
  *   only works if enough RAM is available to put put entire memorycontent into RAM
  */
 
-uint32_t flashCalculateChecksum(uint32 flashStartAddr, uint32 length) {
+uint32_t flashCalculateChecksum(uint32_t flashStartAddr, uint32_t length) {
     char flashContent[3];
     flashContent[2] = '\0';
     uint32_t addr = flashStartAddr;
