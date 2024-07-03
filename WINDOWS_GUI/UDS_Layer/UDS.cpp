@@ -194,6 +194,7 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
             // Check on the relevant message - Adress is correct
             rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
             if(rx_msg_valid){
+                this->ecu_rec_buffer_size = 0;
                 this->ecu_rec_buffer_size |= (data[5] << 24);
                 this->ecu_rec_buffer_size |= (data[6] << 16);
                 this->ecu_rec_buffer_size |= (data[7] << 8);
@@ -212,6 +213,7 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
             // Check on the relevant message - Adress is correct
             rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
             if (rx_msg_valid) {
+                this->ecu_rec_checksum = 0;
                 this->ecu_rec_checksum |= (data[5] << 24);
                 this->ecu_rec_checksum |= (data[6] << 16);
                 this->ecu_rec_checksum |= (data[7] << 8);
@@ -219,7 +221,7 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
             } else {
                 this->ecu_rec_checksum = 0;
             }
-            
+            //qInfo() << QString("0x%1").arg(ecu_rec_checksum, 2, 16, QLatin1Char( '0' ));
             break;
 
         case FBL_TRANSFER_DATA:
