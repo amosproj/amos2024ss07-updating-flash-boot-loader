@@ -47,29 +47,107 @@ FlashManager::~FlashManager(){
 
 void FlashManager::setTestFile(){
     // TESTING
-    emit infoPrint("TESTMODE detected. Creating demo data");
+    queuedGUIConsoleLog("###############################################\nTESTMODE detected. Creating demo data", 0);
+
+    // ####################################################################
+    // Core 0 ASW
 
     // Content for flashing
-    QByteArray flashdate = getCurrentFlashDate();
-    emit infoPrint("Demodata: "+flashdate.toHex());
+    QByteArray flashdateCore0 = getCurrentFlashDate();
+    queuedGUIConsoleLog("Demodata Core 0: "+flashdateCore0.toHex());
 
     // Create some test bytes to flash to MCU
-    QByteArray testBytes;
-    testBytes.resize((size_t)TESTFILE_BYTES);
+    QByteArray testBytesCore0;
+    testBytesCore0.resize((size_t)TESTFILE_CORE0_BYTES);
 
-    uint32_t testDataCtr = 0;
-    for(int i = 0; i < testBytes.size(); i++){
-        if(testDataCtr % TESTFILE_PADDING_BYTES == 0)
-            testDataCtr = 0;
+    uint32_t testDataCtrCore0 = 0;
+    for(int i = 0; i < testBytesCore0.size(); i++){
+        if(testDataCtrCore0 % TESTFILE_PADDING_BYTES == 0)
+            testDataCtrCore0 = 0;
 
-        if(testDataCtr < flashdate.size())
-            testBytes[i] = flashdate[testDataCtr];
+        if(testDataCtrCore0 < flashdateCore0.size())
+            testBytesCore0[i] = flashdateCore0[testDataCtrCore0];
         else
-            testBytes[i] = 0x00;
+            testBytesCore0[i] = 0x00;
 
-        testDataCtr++;
+        testDataCtrCore0++;
     }
-    flashContent[TESTFILE_START_ADD] = testBytes;
+    flashContent[TESTFILE_CORE0_START_ADD] = testBytesCore0;
+
+    // ####################################################################
+    // Core 1 ASW
+
+    // Content for flashing
+    QByteArray flashdateCore1 = getCurrentFlashDate();
+    queuedGUIConsoleLog("Demodata Core 1: "+flashdateCore1.toHex());
+
+    // Create some test bytes to flash to MCU
+    QByteArray testBytesCore1;
+    testBytesCore1.resize((size_t)TESTFILE_CORE1_BYTES);
+
+    uint32_t testDataCtrCore1 = 0;
+    for(int i = 0; i < testBytesCore1.size(); i++){
+        if(testDataCtrCore1 % TESTFILE_PADDING_BYTES == 0)
+            testDataCtrCore1 = 0;
+
+        if(testDataCtrCore1 < flashdateCore1.size())
+            testBytesCore1[i] = flashdateCore1[testDataCtrCore1];
+        else
+            testBytesCore1[i] = 0x00;
+
+        testDataCtrCore1++;
+    }
+    flashContent[TESTFILE_CORE1_START_ADD] = testBytesCore1;
+
+    // ####################################################################
+    // ASW Key Start
+
+    // Content for flashing
+    QByteArray flashdateASWKey = getCurrentFlashDate();
+    queuedGUIConsoleLog("Demodata ASW Key: "+flashdateASWKey.toHex());
+
+    // Create some test bytes to flash to MCU
+    QByteArray testBytesASWKey;
+    testBytesASWKey.resize((size_t)TESTFILE_ASW_KEY_BYTES);
+
+    uint32_t testDataCtrASWKey = 0;
+    for(int i = 0; i < testBytesASWKey.size(); i++){
+        if(testDataCtrASWKey % TESTFILE_PADDING_BYTES == 0)
+            testDataCtrASWKey = 0;
+
+        if(testDataCtrASWKey < flashdateASWKey.size())
+            testBytesASWKey[i] = flashdateASWKey[testDataCtrASWKey];
+        else
+            testBytesASWKey[i] = 0x00;
+
+        testDataCtrASWKey++;
+    }
+    flashContent[TESTFILE_ASW_KEY_START_ADD] = testBytesASWKey;
+
+    // ####################################################################
+    // ASW Calibration Data
+
+    // Content for flashing
+    QByteArray flashdateCALData = getCurrentFlashDate();
+    queuedGUIConsoleLog("Demodata Calibration Data: "+flashdateCALData.toHex());
+
+    // Create some test bytes to flash to MCU
+    QByteArray testBytesCalData;
+    testBytesCalData.resize((size_t)TESTFILE_CAL_DATA_BYTES);
+
+    uint32_t testDataCtrCalData = 0;
+    for(int i = 0; i < testBytesCalData.size(); i++){
+        if(testDataCtrCalData % TESTFILE_PADDING_BYTES == 0)
+            testDataCtrCalData = 0;
+
+        if(testDataCtrCalData < flashdateCALData.size())
+            testBytesCalData[i] = flashdateCALData[testDataCtrCalData];
+        else
+            testBytesCalData[i] = 0x00;
+
+        testDataCtrCalData++;
+    }
+    flashContent[TESTFILE_CAL_DATA_START_ADD] = testBytesCalData;
 }
 
 void FlashManager::setFlashFile(QMap<uint32_t, QByteArray> data){
@@ -137,10 +215,71 @@ void FlashManager::updateGUIProgressBar(){
     }
 }
 
-// TODO: REMOVE AFTER DEBUGGING
-void FlashManager::own_sleep(uint32_t millis){
-    QDateTime start = QDateTime::currentDateTime();
-    while(start.msecsTo(QDateTime::currentDateTime()) < millis){};
+void FlashManager::queuedGUIConsoleLog(QString info, bool forced){
+    bool update = false;
+    if(forced || lastGUIUpdateConsoleLog.msecsTo(QDateTime::currentDateTime()) > TIME_DELTA_GUI_LOG){
+        update = true;
+    }
+
+    if(!info.isEmpty())
+        queueGUIConsoleLog.enqueue(info);
+
+    if (update){
+        QString updateString = "";
+        while(!queueGUIConsoleLog.isEmpty()){
+            updateString.append(queueGUIConsoleLog.dequeue() + "\n");
+        }
+        if(!updateString.isEmpty()){
+            emit infoPrint(updateString);
+            lastGUIUpdateConsoleLog = QDateTime::currentDateTime();
+        }
+    }
+}
+
+void FlashManager::queuedGUIFlashingLog(FlashManager::STATUS s, QString info, bool forced){
+
+    if(s != INFO && s != ERR){
+        qInfo() << "queuedGUIFlashingLog - Wrong usage.";
+        return;
+    }
+
+    bool update = false;
+
+    if(forced || lastGUIUpdateFlashingLog.msecsTo(QDateTime::currentDateTime()) > TIME_DELTA_GUI_FLASHING_LOG){
+        update = true;
+    }
+
+    if(!info.isEmpty()){
+        QPair<STATUS, QString> addValue;
+        addValue.first = s;
+        addValue.second = info;
+        queueGUIFlashingLog.enqueue(addValue);
+    }
+
+    if(update){
+        STATUS tempStatus = INFO;
+        QString updateString = "";
+        while(!queueGUIFlashingLog.isEmpty()){
+            QPair<STATUS, QString> queueVal = queueGUIFlashingLog.dequeue();
+            if(queueVal.first == tempStatus){
+                updateString.append(queueVal.second + "\n");
+            }
+            else{
+                // Detected change in status, send out to GUI flashing log
+                emit updateStatus(tempStatus, updateString, 0);
+
+                updateString = "";
+                tempStatus = queueVal.first;
+                updateString.append(queueVal.second);
+            }
+        }
+
+        if(!updateString.isEmpty()){
+            // send out to GUI flashing log
+            emit updateStatus(tempStatus, updateString, 0);
+            lastGUIUpdateFlashingLog = QDateTime::currentDateTime();
+        }
+    }
 }
 
 //============================================================================
@@ -149,9 +288,9 @@ void FlashManager::own_sleep(uint32_t millis){
 
 void FlashManager::doFlashing(){
 
-    qInfo() << "FlashManager: Started flashing.\n";
-    emit infoPrint("###############################################\nFlashManager: Started flashing.\n###############################################\n");
     emit flashingThreadStarted();
+    qInfo() << "FlashManager: Started flashing.\n";
+    queuedGUIConsoleLog("###############################################\nFlashManager: Started flashing.\n###############################################\n");
 
     while(this->_working) {
         // Check if thread should be canceled
@@ -161,6 +300,10 @@ void FlashManager::doFlashing(){
 
         if(abort)
             break;
+
+        // Check the print queues
+        queuedGUIConsoleLog("");
+        queuedGUIFlashingLog(INFO, "");
 
         // Set the previous state to the last known current state
         prev_state = curr_state;
@@ -209,6 +352,10 @@ void FlashManager::doFlashing(){
                 break;
         }
 
+        // Check the print queues
+        queuedGUIConsoleLog("");
+        queuedGUIFlashingLog(INFO, "");
+
         // Check if execution of current state changed it to the next one
         if(curr_state != prev_state)
             state_attempt_ctr = 0;
@@ -222,7 +369,7 @@ void FlashManager::doFlashing(){
 
         if(state_attempt_ctr > 0 && curr_state != IDLE){
             qInfo() << "\nFlashManager: Change to next state not possible. Waiting "+QString::number((uint32_t)WAITTIME_AFTER_ATTEMPT) + " ms before starting next attempt\n\n";
-            emit infoPrint("\nFlashManager: Change to next state not possible. Waiting "+QString::number((uint32_t)WAITTIME_AFTER_ATTEMPT) + " ms before starting next attempt\n\n");
+            emit errorPrint("\nFlashManager: Change to next state not possible. Waiting "+QString::number((uint32_t)WAITTIME_AFTER_ATTEMPT) + " ms before starting next attempt\n\n");
             QThread::msleep((unsigned long)WAITTIME_AFTER_ATTEMPT);
 
             if(curr_state == TRANSFER_DATA){
@@ -236,6 +383,10 @@ void FlashManager::doFlashing(){
                 curr_state = REQ_DOWNLOAD;
             }
         }
+
+        // Check the print queues
+        queuedGUIConsoleLog("");
+        queuedGUIFlashingLog(INFO, "");
     }
 
     // Set _working to false, meaning the process can't be aborted anymore.
@@ -243,36 +394,51 @@ void FlashManager::doFlashing(){
     _working = false;
     mutex.unlock();
 
-    qInfo() << "FlashManager: Stopped flashing.\n";
-    emit infoPrint("###############################################\nFlashManager: Stopped flashing.\n###############################################\n");
-    emit flashingThreadFinished();
-
     // Reset progress bar
+    queuedGUIFlashingLog(INFO, "", 1);
     emit updateStatus(FlashManager::UPDATE, "", 0);
+
+    qInfo() << "FlashManager: Stopped flashing.\n";
+    queuedGUIConsoleLog("###############################################\nFlashManager: Stopped flashing.\n###############################################\n");
+    emit flashingThreadFinished();
 }
 
 void FlashManager::prepareFlashing(){
 
-    emit infoPrint("###############################\nFlashManager: Preparing Flashing Process\n###############################\n");
+    queuedGUIConsoleLog("###############################\nFlashManager: Preparing Flashing Process\n###############################\n");
 
     // =========================================================================
     // Prepare GUI
 
+    lastGUIUpdateConsoleLog = QDateTime::currentDateTime();
+    lastGUIUpdateFlashingLog = QDateTime::currentDateTime();
+
     emit updateStatus(RESET, "", 0);
-    emit updateStatus(INFO, "Preparing ECU for flashing", 0);
+    queuedGUIFlashingLog(INFO, "Preparing ECU for flashing");
     last_update_gui_progressbar = 0;
 
     // =========================================================================
     // Prepare ECU
     UDS::RESP resp = UDS::RESP::RX_NO_RESPONSE;
 
-    emit infoPrint("Change Session to Programming Session for selected ECU");
+    queuedGUIConsoleLog("Change Session to Programming Session for selected ECU");
     resp = uds->diagnosticSessionControl(ecu_id, FBL_DIAG_SESSION_PROGRAMMING);
 
-    if(resp != UDS::TX_RX_OK)
-        return;
+    if(resp != UDS::TX_RX_OK){
+        // Check on response more detailed
+        if(uds->getECUNegativeResponse() > 0){
+            // Negative Response received, ECU is responding
+            // Strategy: Try again
+            return;
+        }
 
-    emit infoPrint("TODO: Add Security Access once activated");
+        // No Response from ECU
+        curr_state = ERR_STATE;
+        emit errorPrint("No Response from selected ECU - Aborting.");
+        return;
+    }
+
+    //queuedGUIConsoleLog("TODO: Add Security Access once activated");
     //resp = uds->securityAccessRequestSEED(ecu_id);
 
     // Reset the counter for flashed bytes
@@ -285,13 +451,11 @@ void FlashManager::prepareFlashing(){
 
 void FlashManager::startFlashing(){
 
-    emit infoPrint("###############################\nFlashManager: Executing Flashing\n###############################\n");
-
-    // emit updateStatus(UPDATE, "Flashing started for " + ui->label_selected_ECU->text(), 0);
+    queuedGUIConsoleLog("###############################\nFlashManager: Executing Flashing\n###############################\n");
 
     if(flashContent.isEmpty()){
         emit errorPrint("FlashManager: Provided flash file has no content");
-        emit updateStatus(ERR, "Provided flash file has no content", 0);
+        queuedGUIFlashingLog(ERR, "Provided flash file has no content");
         curr_state = IDLE;
         return;
     }
@@ -303,7 +467,7 @@ void FlashManager::startFlashing(){
     if(abort)
         return;
 
-    emit updateStatus(INFO, "Starting with flashing", 0);
+    queuedGUIFlashingLog(INFO, "Starting with flashing");
 
     // Setup the variables
     flashCurrentAdd = flashContent.firstKey();
@@ -313,8 +477,6 @@ void FlashManager::startFlashing(){
 
 void FlashManager::requestDownload(){
 
-    own_sleep(200); // TODO: REMOVE AFTER DEBUGGING
-
     mutex.lock();
     bool abort = _abort;
     mutex.unlock();
@@ -322,17 +484,10 @@ void FlashManager::requestDownload(){
     if(abort)
         return;
 
-
     if(flashCurrentAdd == 0){
         emit errorPrint("FlashManager: Flash Address is not setup for Request Download");
-        emit updateStatus(ERR, "Flash Address is not setup for Request Download", 0);
+        queuedGUIFlashingLog(ERR, "Flash Address is not setup for Request Download");
         curr_state = IDLE;
-        return;
-    }
-
-    if(flashCurrentPackageCtr > 0 && flashContent.firstKey() == flashCurrentAdd){
-        emit updateStatus(INFO, "Request Download for Flash Address "+QString("0x%8").arg(flashCurrentAdd, 8, 16, QLatin1Char( '0' ))+" already done.", 0);
-        curr_state = TRANSFER_DATA;
         return;
     }
 
@@ -341,14 +496,25 @@ void FlashManager::requestDownload(){
     UDS::RESP resp = UDS::RESP::RX_NO_RESPONSE;
 
     QByteArray bytes = flashContent[flashCurrentAdd];
-    emit updateStatus(INFO, "Flashing "+QString::number(bytes.size())+" bytes to flash address "+QString("0x%8").arg(flashCurrentAdd, 8, 16, QLatin1Char( '0' )), 0);
+    queuedGUIFlashingLog(INFO, "Flashing "+QString::number(bytes.size())+" bytes to flash address "+QString("0x%8").arg(flashCurrentAdd, 8, 16, QLatin1Char( '0' )));
 
-    emit infoPrint("Requesting Download for flash address "+QString("0x%8").arg(flashCurrentAdd, 8, 16, QLatin1Char( '0' )));
+    //queuedGUIConsoleLog("Requesting Download for flash address "+QString("0x%8").arg(flashCurrentAdd, 8, 16, QLatin1Char( '0' )));
     resp = uds->requestDownload(ecu_id, flashCurrentAdd, bytes.size());
 
     if(resp != UDS::TX_RX_OK){
-        emit errorPrint("ERROR: Requesting Download failed");
+
+        // Check on response more detailed
+        if(uds->getECUNegativeResponse() > 0){
+            // Negative Response received, ECU is responding
+            // Strategy: Try again
+            return;
+        }
+
+        // No Response from ECU
+        curr_state = ERR_STATE;
+        emit errorPrint("No Response from selected ECU - Aborting.");
         return;
+
     }
 
     flashCurrentBufferSize = uds->getECUTransferDataBufferSize();
@@ -359,10 +525,9 @@ void FlashManager::requestDownload(){
 
     // Calculate the packages
     flashCurrentPackages = bytes.size() % flashCurrentBufferSize > 0 ? bytes.size() / flashCurrentBufferSize + 1 : bytes.size() / flashCurrentBufferSize;
-    QString info = "Requesting Download OK. According to the buffer size of the ECU the data need to be split into "+QString::number(flashCurrentPackages)+" packages";
-    emit infoPrint(info);
-    emit updateStatus(INFO, info, 0);
-
+    QString info = "Request Download OK for flash address "+QString("0x%8").arg(flashCurrentAdd, 8, 16, QLatin1Char( '0' ))+" (Buffer size="+QString::number(flashCurrentBufferSize)+", Packages="+QString::number(flashCurrentPackages)+")";
+    queuedGUIConsoleLog(info);
+    qInfo() << info;
 
     // Prepare the flashed bytes map
     flashedBytes[flashCurrentAdd] = 0;
@@ -404,13 +569,20 @@ void FlashManager::transferData(){
         else
             curr_flash_bytes = flashCurrentAdd + flashContent[flashCurrentAdd].size() - curr_flash_add; // Last Packages
 
-        emit infoPrint("Package "+QString::number(package+1)+"/"+QString::number(flashCurrentPackages)+": Transfer Data for flash address "+QString("0x%8").arg(curr_flash_add, 8, 16, QLatin1Char( '0' ))+ " ("+QString::number(curr_flash_bytes)+" bytes)");
+        //queuedGUIConsoleLog("Package "+QString::number(package+1)+"/"+QString::number(flashCurrentPackages)+": Transfer Data for flash address "+QString("0x%8").arg(curr_flash_add, 8, 16, QLatin1Char( '0' ))+ " ("+QString::number(curr_flash_bytes)+" bytes)");
         resp = uds->transferData(ecu_id, curr_flash_add, data+curr_flash_byte_ptr, curr_flash_bytes);
 
-        //own_sleep(200); // TODO: REMOVE AFTER DEBUGGING
-
         if(resp != UDS::TX_RX_OK){
-            emit errorPrint("ERROR: Transfer Data failed");
+            // Check on response more detailed
+            if(uds->getECUNegativeResponse() > 0){
+                // Negative Response received, ECU is responding
+                // Strategy: Try again
+                return;
+            }
+
+            // No Response from ECU
+            curr_state = ERR_STATE;
+            emit errorPrint("No Response from selected ECU - Aborting.");
             return;
         }
 
@@ -429,6 +601,9 @@ void FlashManager::transferData(){
         if(abort)
             return;
 
+        // Check the print queues
+        queuedGUIConsoleLog("");
+        queuedGUIFlashingLog(INFO, "");
     }
 
     resp = uds->requestTransferExit(ecu_id, flashCurrentAdd);
@@ -450,7 +625,7 @@ void FlashManager::transferData(){
         return;
     }
 
-    emit updateStatus(INFO, "Flash file fully transmitted.", 0);
+    queuedGUIFlashingLog(INFO, "Flash file fully transmitted.");
 
     QThread::msleep(2000);
     curr_state = VALIDATE;
@@ -489,7 +664,7 @@ void FlashManager::validateFlashing(){
 
 void FlashManager::finishFlashing(){
 
-    emit infoPrint("###############################\nFlashManager: Finish Flashing Process\n###############################\n");
+    queuedGUIConsoleLog("###############################\nFlashManager: Finish Flashing Process\n###############################\n");
 
     // =========================================================================
     // Update Programming Date
@@ -497,10 +672,9 @@ void FlashManager::finishFlashing(){
     uint8_t *data = (uint8_t*)flashdate.data();
     uds->writeDataByIdentifier(ecu_id, FBL_DID_PROGRAMMING_DATE, data, flashdate.size());
 
-
     // =========================================================================
     // Update GUI
-    emit updateStatus(INFO, "Flashing finished!", 0);
+    queuedGUIFlashingLog(INFO, "Flashing finished!");
 
     curr_state = IDLE;
 }
@@ -515,5 +689,5 @@ void FlashManager::runThread(){
 
 
 void FlashManager::forwardToConsole(const QString &text){
-    emit infoPrint(text);
+    queuedGUIConsoleLog(text);
 }

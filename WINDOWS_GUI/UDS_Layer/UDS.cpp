@@ -51,6 +51,10 @@ void UDS::setSyncMode(bool synchronized){
     synchronized_rx_tx = synchronized;
 }
 
+uint8_t UDS::getECUNegativeResponse(){
+    return ecu_rec_nrc;
+}
+
 uint32_t UDS::getECUTransferDataBufferSize(){
     return ecu_rec_buffer_size;
 }
@@ -89,6 +93,7 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
     // Initialize the Msg flags
     rx_msg_valid = false;
     rx_msg_neg_resp = false;
+    ecu_rec_nrc = 0;
 
     QString s;
     QTextStream out(&s);
@@ -106,6 +111,7 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
     if(SID == FBL_NEGATIVE_RESPONSE && no_bytes >= 3) {
         neg_resp = true;
         rx_msg_neg_resp = true;
+        ecu_rec_nrc = data[2];
         SID = data[1];
         neg_resp_code = translateNegResp(data[2]);
         out << "Negative Response (Negative Response Code:" << neg_resp_code << ")\n";
