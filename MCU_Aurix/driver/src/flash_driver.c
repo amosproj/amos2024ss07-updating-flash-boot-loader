@@ -324,15 +324,15 @@ uint8_t *flashRead(uint32_t flashStartAddr, size_t dataBytesToRead){
 
 /**  
  * Calculates Checksum for the given part of memory used to verify flash after flashing 
- *   only works if enough RAM is available to put put entire memorycontent into RAM
+ * Caution: CRC-Calculation is based on ASCII not Hex-number
  */
 
 uint32_t flashCalculateChecksum(uint32_t flashStartAddr, uint32_t length) {
+
     char flashContent[3];
     flashContent[2] = '\0';
     uint32_t addr = flashStartAddr;
     uint32_t endAddr = flashStartAddr + length;
-    char characters[] = "0123456789ABCDEF";
 
     crc_t crc = crc_init();
 
@@ -343,14 +343,15 @@ uint32_t flashCalculateChecksum(uint32_t flashStartAddr, uint32_t length) {
             if (addr + i >= endAddr) {
                 break;
             }
-            uint8_t lower = nextFourBytes % 0x10;
-            nextFourBytes /= 0x10;
-            //uint8_t lower = nextChar % 0x10;
-            uint8_t higher = nextFourBytes % 0x10;
-            nextFourBytes /= 0x10;
+            uint8_t lower = nextFourBytes & 0x0000000F;
+            lower += lower > 9 ? 0x37 : 0x30;
+            nextFourBytes = nextFourBytes >> 4;
+            uint8_t higher = nextFourBytes & 0x0000000F;
+            higher += higher > 9 ? 0x37 : 0x30;
+            nextFourBytes = nextFourBytes >> 4;
 
-            flashContent[0] = characters[higher];
-            flashContent[1] = characters[lower];
+            flashContent[0] = higher;
+            flashContent[1] = lower;
 
             crc = crc_update(crc, (const char *) flashContent, strlen(flashContent));
         }
