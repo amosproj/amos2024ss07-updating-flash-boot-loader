@@ -12,13 +12,16 @@
 
 #include <string.h>
 #include <stdlib.h> /* calloc, exit, free */
+#include <stdio.h>
 
 #include "IfxCpu.h"
 
 #include "flash_driver.h"
 #include "flash_driver_TC375_LK.h"
+#include "memory.h"
+#include "uds_comm_spec.h"
 
-#define PMU_FLASH_MODULE                0               /* Macro to select the flash (PMU) module           */
+#define PMU_FLASH_MODULE             0               /* Macro to select the flash (PMU) module           */
 
 /* Reserved space for erase and program routines in bytes */
 #define ERASESECTOR_LEN             (100)
@@ -40,6 +43,11 @@
 
 #define MEM(address)                *((uint32_t *)(address))      /* Macro to simplify the access to a memory address */
 
+/*********************************************************************************************************************/
+/*--------------------------------------------Private Variables/Constants--------------------------------------------*/
+/*********************************************************************************************************************/
+
+
 typedef struct
 {
     void (*eraseSectors)(uint32 sectorAddr, uint32 numSector);
@@ -52,6 +60,62 @@ typedef struct
 } Flash_Function;
 
 Flash_Function g_functionsFromPSPR;
+
+uint32_t flash_driver_last_flashpage[PFLASH_LAST_PAGE_SIZE];
+
+typedef struct
+{
+        uint32_t init;
+        uint32_t core0_start_addr;
+        uint32_t core0_end_addr;
+        uint32_t core0_erased_sections;
+        uint32_t core1_start_addr;
+        uint32_t core1_end_addr;
+        uint32_t core1_erased_sections;
+        uint32_t core2_start_addr;
+        uint32_t core2_end_addr;
+        uint32_t core2_erased_sections;
+} Flash_Eraser;
+
+Flash_Eraser pflash_eraser;
+
+/*********************************************************************************************************************/
+/*--------------------------------------------Private Helper Functions-----------------------------------------------*/
+/*********************************************************************************************************************/
+
+static uint32_t flashGetDIDData(uint16_t DID){
+    uint32_t data = 0;
+
+    uint8_t len, nrc;
+    uint8_t *read = readData(DID, &len, &nrc);
+    if(!nrc){
+        if(len == 4){ // uint32_t
+            data |= (read[0] << 24);
+            data |= (read[1] << 16);
+            data |= (read[2] << 8);
+            data |= read[3];
+        }
+    }
+    free(read);
+    return data;
+}
+
+static void createLastFlashPage(uint32_t last_page_addr, uint32_t *data, size_t dataSize){
+
+    /* Write 32 bytes (8 double words) into the last page buffer */
+    for(uint32_t index = 0; index < PFLASH_LAST_PAGE_SIZE; index++)
+    {
+        // Use given data
+        if(index < dataSize){
+            flash_driver_last_flashpage[index] = *(data+index);
+        }
+
+        // fill the rest of the last page with zeros
+        else {
+            flash_driver_last_flashpage[index] = 0;
+        }
+    }
+}
 
 /* This function erases a given sector of the Program Flash memory. The function is copied in the PSPR through
  * copyFunctionsToPSPR(). Because of this, inside the function, only routines from the PSPR or inline functions
@@ -93,15 +157,17 @@ static void writePFlash(IfxFlash_FlashType flashModule, uint32_t startingAddr, u
         /* Wait until page mode is entered */
         g_functionsFromPSPR.waitUnbusy(PMU_FLASH_MODULE, flashModule);
 
+        index = 0;
         /* Write 32 bytes (8 double words) into the assembly buffer */
         for(offset = 0; (offset * sizeof(uint32)) < PFLASH_PAGE_LENGTH; offset += 2)
         {
-            g_functionsFromPSPR.load2X32bits(pageAddr, data_for_page[offset], data_for_page[offset + 1]); /* Load 2 words of 32 bits each */
+
+            if(page < numPages-1)
+                g_functionsFromPSPR.load2X32bits(pageAddr, data_for_page[offset], data_for_page[offset + 1]); // Load 2 words of 32 bits each
+            else // Act different for last page
+                g_functionsFromPSPR.load2X32bits(pageAddr, flash_driver_last_flashpage[index], flash_driver_last_flashpage[index + 1]); // Load 2 words of 32 bits each
+
             index += 2;
-            if (index >= dataSize)
-            {
-                break;
-            }
         }
 
         /* Write the page */
@@ -173,34 +239,69 @@ static uint32_t getPFlashNumSectors(size_t dataSize)
     return getNumPerSize(PFLASH_SECTOR_LENGTH, dataSize);
 }
 
-/* This function verifies that the data at the given address matches the data of the array data*/
-bool flashVerify(uint32_t flashStartAddr, uint32_t data[], size_t dataSize)
-{
-    uint32_t dataIndex = 0;
+static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashStartAddr, size_t dataSize){
+    uint32_t num_sectors = 0;
+    uint32_t num_sectors_delta = 0;
+    uint32_t erase_start_addr = 0;
 
-    for (uint32_t address = flashStartAddr; address < flashStartAddr + dataSize * sizeof(uint32); address += sizeof(uint32))
-    {
-        if (MEM(address) != data[dataIndex])
-        {
-            return false;
+    // Address belongs to core 0
+    if(flashStartAddr >= pflash_eraser.core0_start_addr && flashStartAddr < pflash_eraser.core0_end_addr){
+        num_sectors = getPFlashNumSectors((flashStartAddr + dataSize) - pflash_eraser.core0_start_addr);
+        num_sectors_delta = num_sectors - pflash_eraser.core0_erased_sections;
+
+        if(num_sectors_delta > 0){
+            erase_start_addr = pflash_eraser.core0_start_addr + (pflash_eraser.core0_erased_sections * PFLASH_SECTOR_LENGTH);
+            g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_delta);
+            pflash_eraser.core0_erased_sections += num_sectors_delta;
         }
-        dataIndex++;
     }
-    return true;
+
+    // Address belongs to core 1
+    if(flashStartAddr >= pflash_eraser.core1_start_addr && flashStartAddr < pflash_eraser.core1_end_addr){
+        num_sectors = getPFlashNumSectors((flashStartAddr + dataSize) - pflash_eraser.core1_start_addr);
+        num_sectors_delta = num_sectors - pflash_eraser.core1_erased_sections;
+
+        if(num_sectors_delta > 0){
+            erase_start_addr = pflash_eraser.core1_start_addr + (pflash_eraser.core1_erased_sections * PFLASH_SECTOR_LENGTH);
+            g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_delta);
+            pflash_eraser.core1_erased_sections += num_sectors_delta;
+        }
+    }
+
+    // Address belongs to core 2
+    if(flashStartAddr >= pflash_eraser.core2_start_addr && flashStartAddr < pflash_eraser.core2_end_addr){
+        num_sectors = getPFlashNumSectors((flashStartAddr + dataSize) - pflash_eraser.core2_start_addr);
+        num_sectors_delta = num_sectors - pflash_eraser.core2_erased_sections;
+
+        if(num_sectors_delta > 0){
+            erase_start_addr = pflash_eraser.core2_start_addr + (pflash_eraser.core2_erased_sections * PFLASH_SECTOR_LENGTH);
+            g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_delta);
+            pflash_eraser.core2_erased_sections += num_sectors_delta;
+        }
+    }
 }
 
 /* This function flashes the Program Flash memory calling the routines from the PSPR */
 static bool flashWriteProgram(IfxFlash_FlashType flashModule, uint32_t flashStartAddr, uint32_t data[], size_t dataSize)
 {
-    uint32_t num_sectors = getPFlashNumSectors(dataSize);
+    if(pflash_eraser.init == 0){
+        flashDriverInit();
+        if(pflash_eraser.init == 0) // Init was not successful
+            return false;
+    }
+
     uint32_t num_pages = getPFlashNumPages(dataSize);
+
+    // Check for full pages and prepare last flash page, always use buffered last page for flashing to make sure full pages are written
+    uint32_t last_page_addr = flashStartAddr + (num_pages-1) * PFLASH_PAGE_LENGTH;
+    uint32_t *data_for_last_page = (uint32_t*) (((uint8*) data) + ((num_pages-1) * PFLASH_PAGE_LENGTH));
+    createLastFlashPage(last_page_addr, data_for_last_page, dataSize%PFLASH_LAST_PAGE_SIZE == 0 ? PFLASH_LAST_PAGE_SIZE : dataSize%PFLASH_LAST_PAGE_SIZE);
 
     boolean interruptState = IfxCpu_disableInterrupts();
 
     copyFunctionsToPSPR(); // avoid overwriting functions while writing flash by copying them into PSPR
 
-    g_functionsFromPSPR.erasePFlash(flashModule, flashStartAddr, num_sectors);
-
+    erasePFlashSectors(flashModule, flashStartAddr, dataSize);
     g_functionsFromPSPR.writePFlash(flashModule, flashStartAddr, num_pages, data, dataSize);
 
     IfxCpu_restoreInterrupts(interruptState);
@@ -255,6 +356,54 @@ static bool flashWriteData(IfxFlash_FlashType flashModule, uint32_t flashStartAd
     return true;
 }
 
+/*********************************************************************************************************************/
+/*------------------------------------------------Function Prototypes------------------------------------------------*/
+/*********************************************************************************************************************/
+
+/* This function inits the flash driver and makes sure that the CORE addresses are correctly setup for flashing into PFLASH */
+void flashDriverInit(void){
+
+    pflash_eraser.init = 0;
+    pflash_eraser.core0_start_addr = flashGetDIDData(FBL_DID_BL_WRITE_START_ADD_CORE0);
+    pflash_eraser.core0_end_addr = flashGetDIDData(FBL_DID_BL_WRITE_END_ADD_CORE0);
+    pflash_eraser.core1_start_addr = flashGetDIDData(FBL_DID_BL_WRITE_START_ADD_CORE1);
+    pflash_eraser.core1_end_addr = flashGetDIDData(FBL_DID_BL_WRITE_END_ADD_CORE1);
+    pflash_eraser.core2_start_addr = flashGetDIDData(FBL_DID_BL_WRITE_START_ADD_CORE2);
+    pflash_eraser.core2_end_addr = flashGetDIDData(FBL_DID_BL_WRITE_END_ADD_CORE2);
+    flashResetErasedSectionsCtr();
+
+    // First order conditions
+    if((pflash_eraser.core0_start_addr <= pflash_eraser.core0_end_addr) &&
+        (pflash_eraser.core1_start_addr <= pflash_eraser.core1_end_addr) &&
+        (pflash_eraser.core2_start_addr <= pflash_eraser.core2_end_addr)){
+
+        // Second order conditions
+        if((pflash_eraser.core0_end_addr - pflash_eraser.core0_start_addr + 1) % PFLASH_SECTOR_LENGTH != 0){
+            if(pflash_eraser.core0_start_addr != pflash_eraser.core0_end_addr)
+                return;
+        }
+
+        if((pflash_eraser.core1_end_addr - pflash_eraser.core1_start_addr + 1) % PFLASH_SECTOR_LENGTH != 0){
+            if(pflash_eraser.core1_start_addr != pflash_eraser.core1_end_addr)
+                return;
+        }
+
+        if((pflash_eraser.core2_end_addr - pflash_eraser.core2_start_addr + 1) % PFLASH_SECTOR_LENGTH != 0){
+            if(pflash_eraser.core2_start_addr != pflash_eraser.core2_end_addr)
+                return;
+        }
+
+        pflash_eraser.init = 1;
+    }
+}
+
+/* This function resets the erased sections counters for the PFLASH */
+void flashResetErasedSectionsCtr(void){
+    pflash_eraser.core0_erased_sections = 0;
+    pflash_eraser.core1_erased_sections = 0;
+    pflash_eraser.core2_erased_sections = 0;
+}
+
 /* This function calls the correct writing function, either flashWriteProgramm or flashWriteData, depending on flashStartAddr,
  * so the programmer doesn't have to differentiate between writing pflash and dflash */
 bool flashWrite(uint32_t flashStartAddr, uint32_t data[], size_t dataSize) {
@@ -290,6 +439,22 @@ bool flashWrite(uint32_t flashStartAddr, uint32_t data[], size_t dataSize) {
     }
     return false;
 } 
+
+/* This function verifies that the data at the given address matches the data of the array data*/
+bool flashVerify(uint32_t flashStartAddr, uint32_t data[], size_t dataSize)
+{
+    uint32_t dataIndex = 0;
+
+    for (uint32_t address = flashStartAddr; address < flashStartAddr + dataSize * sizeof(uint32); address += sizeof(uint32))
+    {
+        if (MEM(address) != data[dataIndex])
+        {
+            return false;
+        }
+        dataIndex++;
+    }
+    return true;
+}
 
 /**
  * This function reads the given number of bytes into the dataReadFromFlash buffer. The caller need to make sure to free the buffer.
