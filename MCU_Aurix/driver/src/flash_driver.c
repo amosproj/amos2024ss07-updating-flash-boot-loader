@@ -499,18 +499,22 @@ uint32_t flashCalculateChecksum(uint32_t flashStartAddr, uint32_t length) {
     uint32_t endAddr = flashStartAddr + length;
 
     crc_t crc = crc_init();
-
+    uint32_t nextFourBytes = 0;
     while (addr < endAddr) {
-        uint32_t nextFourBytes = MEM(addr);
+        // For Debugging
+        //if(addr >= 0xA04F8000)
+        //    __nop();
+
+        nextFourBytes = MEM(addr);
 
         for (int i = 0; i < 4; i++) {
             if (addr + i >= endAddr) {
                 break;
             }
-            uint8_t lower = nextFourBytes & 0x0000000F;
+            uint8_t lower = (uint8_t)(nextFourBytes & 0x0000000F);
             lower += lower > 9 ? 0x37 : 0x30;
             nextFourBytes = nextFourBytes >> 4;
-            uint8_t higher = nextFourBytes & 0x0000000F;
+            uint8_t higher = (uint8_t)(nextFourBytes & 0x0000000F);
             higher += higher > 9 ? 0x37 : 0x30;
             nextFourBytes = nextFourBytes >> 4;
 
