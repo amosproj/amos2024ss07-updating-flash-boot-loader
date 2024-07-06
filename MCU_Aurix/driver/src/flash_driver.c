@@ -12,22 +12,15 @@
 
 #include <string.h>
 #include <stdlib.h> /* calloc, exit, free */
-<<<<<<< HEAD
-#include <stdio.h> /* snprintf */
-=======
 #include <stdio.h>
->>>>>>> 131-testing_refactoring_bugfixing
 
 #include "IfxCpu.h"
 
 #include "flash_driver.h"
 #include "flash_driver_TC375_LK.h"
-<<<<<<< HEAD
 #include "crc.h"
-=======
 #include "memory.h"
 #include "uds_comm_spec.h"
->>>>>>> 131-testing_refactoring_bugfixing
 
 #define PMU_FLASH_MODULE             0               /* Macro to select the flash (PMU) module           */
 
