@@ -135,11 +135,15 @@ public:
 
 
         // Comm RX Signal to UDS RX Slot
-        disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
+        if(comm != nullptr){
+            disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
+        }
 
         // UDS TX Signals to Comm TX Slots
-        disconnect(uds, SIGNAL(setID(uint32_t)), 0, 0);
-        disconnect(uds, SIGNAL(txData(QByteArray)), 0, 0);
+        if(uds != nullptr){
+            disconnect(uds, SIGNAL(setID(uint32_t)), 0, 0);
+            disconnect(uds, SIGNAL(txData(QByteArray)), 0, 0);
+        }
 
         qInfo() << "FlashManager: Stopping Flashing Thread";
         emit flashingStopThreadRequested();
