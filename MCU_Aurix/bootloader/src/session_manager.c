@@ -15,6 +15,7 @@
 #include "session_manager.h"
 #include "uds_comm_spec.h"
 #include "reset.h"
+#include "flash_driver.h"
 
 uint8_t session;
 boolean authenticated;
@@ -47,6 +48,10 @@ uint8_t setSession(uint8_t session_to_set){
 
     if(session != FBL_DIAG_SESSION_DEFAULT && session != FBL_DIAG_SESSION_PROGRAMMING)
         return FBL_RC_SUB_FUNC_NOT_SUPPORTED;
+
+    if(session == FBL_DIAG_SESSION_PROGRAMMING){
+        flashResetErasedSectionsCtr();
+    }
 
     session = session_to_set;
     return 0;

@@ -323,12 +323,18 @@ uint8_t writeData(uint16_t identifier, uint8_t* data, uint8_t len){
             if(len != FBL_DID_BL_WRITE_START_ADD_CORE0_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
             write_to_variable(len, data, memData.did_bl_write_start_add_core0);
+
+            // Update the flash driver
+            flashDriverInit();
             break;
 
         case FBL_DID_BL_WRITE_END_ADD_CORE0:
             if(len != FBL_DID_BL_WRITE_END_ADD_CORE0_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
             write_to_variable(len, data, memData.did_bl_write_end_add_core0);
+
+            // Update the flash driver
+            flashDriverInit();
             break;
 
 
@@ -336,12 +342,18 @@ uint8_t writeData(uint16_t identifier, uint8_t* data, uint8_t len){
             if(len != FBL_DID_BL_WRITE_START_ADD_CORE1_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
             write_to_variable(len, data, memData.did_bl_write_start_add_core1);
+
+            // Update the flash driver
+            flashDriverInit();
             break;
 
         case FBL_DID_BL_WRITE_END_ADD_CORE1:
             if(len != FBL_DID_BL_WRITE_END_ADD_CORE1_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
             write_to_variable(len, data, memData.did_bl_write_end_add_core1);
+
+            // Update the flash driver
+            flashDriverInit();
             break;
 
 
@@ -349,12 +361,18 @@ uint8_t writeData(uint16_t identifier, uint8_t* data, uint8_t len){
             if(len != FBL_DID_BL_WRITE_START_ADD_CORE2_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
             write_to_variable(len, data, memData.did_bl_write_start_add_core2);
+
+            // Update the flash driver
+            flashDriverInit();
             break;
 
         case FBL_DID_BL_WRITE_END_ADD_CORE2:
             if(len != FBL_DID_BL_WRITE_END_ADD_CORE2_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
             write_to_variable(len, data, memData.did_bl_write_end_add_core2);
+
+            // Update the flash driver
+            flashDriverInit();
             break;
 
         default: // Negative Response Code

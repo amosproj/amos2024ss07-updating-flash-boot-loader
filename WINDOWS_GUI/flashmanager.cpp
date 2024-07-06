@@ -288,7 +288,7 @@ void FlashManager::queuedGUIFlashingLog(FlashManager::STATUS s, QString info, bo
         while(!queueGUIFlashingLog.isEmpty()){
             QPair<STATUS, QString> queueVal = queueGUIFlashingLog.dequeue();
             if(queueVal.first == tempStatus){
-                updateString.append(queueVal.second + "\n");
+                updateString.prepend(queueVal.second + "\n");
             }
             else{
                 // Detected change in status, send out to GUI flashing log
@@ -296,7 +296,7 @@ void FlashManager::queuedGUIFlashingLog(FlashManager::STATUS s, QString info, bo
 
                 updateString = "";
                 tempStatus = queueVal.first;
-                updateString.append(queueVal.second);
+                updateString.prepend(queueVal.second);
             }
         }
 

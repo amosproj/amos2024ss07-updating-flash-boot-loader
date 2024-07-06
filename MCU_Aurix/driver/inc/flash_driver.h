@@ -41,6 +41,8 @@
 /*********************************************************************************************************************/
 /*------------------------------------------------Function Prototypes------------------------------------------------*/
 /*********************************************************************************************************************/
+void flashDriverInit(void);
+void flashResetErasedSectionsCtr(void);
 
 bool flashWrite(uint32_t flashStartAddr, uint32_t data[], size_t dataSize);
 bool flashVerify(uint32_t flashStartAddr, uint32_t data[], size_t dataSize);
