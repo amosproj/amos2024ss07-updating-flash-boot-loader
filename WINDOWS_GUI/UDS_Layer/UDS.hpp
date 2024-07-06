@@ -40,6 +40,7 @@ private:
     uint32_t rx_max_waittime_general    = 1000;  // ms - Wait time before RX aborts
     uint32_t rx_max_waittime_long       = 2000; // ms - Long wait time before RX aborts
     uint32_t rx_max_waittime_flashing   = 1000; // ms - Flashing wait time before RX aborts TODO: change to Default: 2000
+    uint32_t rx_max_waittime_validation = 10000; // ms - Flashing wait time before RX aborts TODO: change to Default: 2000
 
     bool _comm;                                 // For communication usage, only synchronized TX+RX is possible
     QMutex comm_mutex;                          // Protects _comm

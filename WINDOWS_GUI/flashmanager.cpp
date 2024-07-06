@@ -674,11 +674,14 @@ void FlashManager::validateFlashing(){
         qInfo() << "Block with address 0x" + QString::number(key, 16) + " and length: "  + QString::number(addressToLength.value(key));
 
         if (ecuChecksum != value) {
-            emit errorPrint("FlashManager: ERROR in Block with address 0x" + QString::number(key, 16) + " and length: "  + QString::number(addressToLength.value(key)) + " - Calculated checksums didn't match.");
+            queuedGUIConsoleLog("FlashManager: ERROR in Block with address 0x" + QString::number(key, 16) + " and length: "  + QString::number(addressToLength.value(key)) + " - Calculated checksums didn't match.");
             qInfo() << "FlashManager: ERROR in Block with address 0x" + QString::number(key, 16) + " and length: "  + QString::number(addressToLength.value(key)) + " - Calculated checksums didn't match.";
-            emit errorPrint("Should be: 0x" + QString::number(value, 16) + ", but was: 0x" + QString::number(ecuChecksum, 16) + "\n");
+            queuedGUIConsoleLog("Should be: 0x" + QString::number(value, 16) + ", but was: 0x" + QString::number(ecuChecksum, 16) + "\n");
             qInfo() << "Should be: 0x" + QString::number(value, 16) + ", but was: 0x" + QString::number(ecuChecksum, 16) + "\n";
             curr_state = ERR_STATE;
+        }
+        else {
+             qInfo() << "IO - Should be: 0x" + QString::number(value, 16) + ", was: 0x" + QString::number(ecuChecksum, 16) + "\n";
         }
     }
 
