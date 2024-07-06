@@ -137,7 +137,7 @@ void MainWindow::connectSignalSlots() {
 
                 // Validate file, result is already prepared for furhter calculations
                 validMan->data = validMan->validateFile(data);
-                validMan->checksums = validMan->calculateFileChecksums(validMan->data);
+                validMan->checksums = validMan->calculateFileChecksums();
 
                 //dummy_function(data);
                 file.close();
@@ -225,8 +225,13 @@ void MainWindow::setupFlashPopup() {
                 flashMan->setLengths(validMan->calculateAddressLengths(validMan->data));
             } else {
                 flashMan->setTestFile();
-                flashMan->setFileChecksums(validMan->calculateFileChecksums(flashMan->getFlashContent()));
-                flashMan->setLengths(validMan->calculateAddressLengths(flashMan->getFlashContent()));
+                QMap<uint32_t, QByteArray> content = flashMan->getFlashContent();
+                QMap<uint32_t, QByteArray> extractedData = flashMan->extractDataFromTestFile(content);
+                validMan->uncompressedData = extractedData;
+                QMap<uint32_t, uint32_t> testFileChecksums = validMan->calculateFileChecksums();
+                flashMan->setFileChecksums(testFileChecksums);
+                QMap<uint32_t, uint32_t> lengths = validMan->calculateAddressLengths(content);
+                flashMan->setLengths(lengths);
                 this->ui->textBrowser_flash_status->setText("No valid Flash File selected. Demo Mode triggered");
             }
             

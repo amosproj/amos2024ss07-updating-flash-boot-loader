@@ -89,6 +89,7 @@ public:
     void setFileChecksums(QMap<uint32_t, uint32_t> checksums);
     void setLengths(QMap<uint32_t, uint32_t> lengths);
     QMap<uint32_t, QByteArray> getFlashContent(void);
+    QMap<uint32_t, QByteArray> extractDataFromTestFile(QMap<uint32_t, QByteArray> compressedData);
 
     void startFlashing(uint32_t ecu_id, uint32_t gui_id, Communication* comm){
 

@@ -169,6 +169,32 @@ QMap<uint32_t, QByteArray> FlashManager::getFlashContent(void) {
     return flashContent;
 }
 
+QMap<uint32_t, QByteArray> FlashManager::extractDataFromTestFile(QMap<uint32_t, QByteArray> compressedData) {
+    QMap<uint32_t, QByteArray> result;
+
+    for (auto [key, value] : compressedData.asKeyValueRange()) {
+        QByteArray splitBytes;
+        splitBytes.resize(2 * value.size());
+
+        for (uint32_t i = 0; i < value.size(); i++) {
+            int byte = value[i];
+            uint32_t lower = byte & 0x0000000F;
+            lower += lower > 9 ? 0x37 : 0x30;
+            byte = byte >> 4;
+            uint32_t higher = byte & 0x0000000F;
+            higher += higher > 9 ?  0x37 : 0x30;
+            splitBytes[2 * i] = (char) higher;
+            splitBytes[2 * i + 1] = (char) lower;
+        }
+
+        result.insert(key, splitBytes);
+    }
+
+
+
+    return result;
+}
+
 //============================================================================
 // Private Helper Method
 //============================================================================

@@ -248,6 +248,38 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
     return block_result;
 }
 
+QMap<uint32_t, uint32_t> ValidateManager::calculateFileChecksums(void)
+{
+    QMap<uint32_t, uint32_t> result;
+
+    for (auto [key, value] : uncompressedData.asKeyValueRange()) {
+        CCRC32 crc;
+        crc.Initialize();
+
+        QByteArray line = value;
+
+        char *nextLine = line.data();
+
+        QString str = QString(nextLine);
+
+        uint32_t checksum = (uint32_t) crc.FullCRC((const unsigned char *) nextLine, strlen(nextLine));
+        result.insert(key, checksum);
+    }
+
+    return result;
+}
+
+QMap<uint32_t, uint32_t> ValidateManager::calculateAddressLengths(QMap<uint32_t, QByteArray> data) {
+
+    QMap<uint32_t, uint32_t> result;
+
+    for (auto [key, value] : data.asKeyValueRange()) {
+        result.insert(key, value.length());
+    }
+
+    return result;
+}
+
 //============================================================================
 // Private Method
 //============================================================================
@@ -323,59 +355,6 @@ QByteArray ValidateManager::extractData(QByteArray line, char record_type)
 
     return trimmed_line;
 }
-
-QMap<uint32_t, uint32_t> ValidateManager::calculateFileChecksums(QMap<uint32_t, QByteArray> data)
-{   /*
-    int numEntries = data.size();
-    const char *dataCharP;
-    QString dataString = "";
-
-    for (int index = 0; index < numEntries; index++) {
-        QByteArray nextLine = data.value(index);
-        nextLine.remove(0, 8); //removes address from entry
-        QString newData = QString(nextLine);
-        dataString += newData;
-    }
-
-    QByteArray conversion = dataString.toLocal8Bit();
-
-    dataCharP = conversion.data();
-
-    CCRC32 crc;
-	crc.Initialize();
-    
-    return crc.FullCRC((const unsigned char *)dataCharP, strlen(dataCharP));*/
-    
-    QMap<uint32_t, uint32_t> result;
-
-    for (auto [key, value] : uncompressedData.asKeyValueRange()) {
-        CCRC32 crc;
-        crc.Initialize();
-
-        QByteArray line = value;
-
-        char *nextLine = line.data();
-
-        QString str = QString(nextLine);
-
-        uint32_t checksum = (uint32_t) crc.FullCRC((const unsigned char *) nextLine, strlen(nextLine));
-        result.insert(key, checksum);
-    }
-
-    return result;
-}
-
-QMap<uint32_t, uint32_t> ValidateManager::calculateAddressLengths(QMap<uint32_t, QByteArray> data) {
-
-    QMap<uint32_t, uint32_t> result;
-
-    for (auto [key, value] : data.asKeyValueRange()) {
-        result.insert(key, value.length());
-    }
-
-    return result;
-}
-
 
 bool ValidateManager::addrInCoreRange(uint32_t addr, uint32_t data_len,  uint16_t core, bool* supported){
 

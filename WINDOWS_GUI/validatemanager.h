@@ -28,16 +28,16 @@ public:
 
 public:
 
+    QMap<uint32_t, QByteArray> uncompressedData;
+
     ValidateManager();
     virtual ~ValidateManager();
 
     QMap<uint32_t, QByteArray> validateFile(QByteArray data);
-    QMap<uint32_t, uint32_t> calculateFileChecksums(QMap<uint32_t, QByteArray> data);
+    QMap<uint32_t, uint32_t> calculateFileChecksums(void);
     QMap<uint32_t, uint32_t> calculateAddressLengths(QMap<uint32_t, QByteArray> data); 
 
 private:
-
-    QMap<uint32_t, QByteArray> uncompressedData;
 
     bool validateLine(QByteArray line);
     QByteArray extractData(QByteArray line, char record_type);
