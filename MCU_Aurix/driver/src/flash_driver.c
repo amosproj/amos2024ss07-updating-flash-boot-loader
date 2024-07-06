@@ -208,9 +208,10 @@ static void copyFunctionsToPSPR(void)
     g_functionsFromPSPR.writePFlash = (void *)WRITEPFLASH_ADDR;
 }
 
-static uint32_t getNumPerSize(size_t sectionLength, size_t dataSize)
+static uint32_t getNumPerSize(size_t sectionLength, size_t dataSize, bool upscale_to_byte)
 {
-    dataSize *= sizeof(uint32_t); // dataSize is in uint32_t values, but bytes needed
+    if(upscale_to_byte)
+        dataSize *= sizeof(uint32_t); // dataSize is in uint32_t values, but bytes needed
     uint32_t num_pages = dataSize / sectionLength;
     if (dataSize % sectionLength) // we need a page more because there is data left that does not fill a full page
     {
@@ -221,22 +222,22 @@ static uint32_t getNumPerSize(size_t sectionLength, size_t dataSize)
 
 static uint32_t getDFlashNumPages(size_t dataSize)
 {
-    return getNumPerSize(DFLASH_PAGE_LENGTH, dataSize);
+    return getNumPerSize(DFLASH_PAGE_LENGTH, dataSize, 1);
 }
 
 static uint32_t getDFlashNumSectors(size_t dataSize)
 {
-    return getNumPerSize(DFLASH_SECTOR_LENGTH, dataSize);
+    return getNumPerSize(DFLASH_SECTOR_LENGTH, dataSize, 1);
 }
 
 static uint32_t getPFlashNumPages(size_t dataSize)
 {
-    return getNumPerSize(PFLASH_PAGE_LENGTH, dataSize);
+    return getNumPerSize(PFLASH_PAGE_LENGTH, dataSize, 1);
 }
 
 static uint32_t getPFlashNumSectors(size_t dataSize)
 {
-    return getNumPerSize(PFLASH_SECTOR_LENGTH, dataSize);
+    return getNumPerSize(PFLASH_SECTOR_LENGTH, dataSize, 0);
 }
 
 static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashStartAddr, size_t dataSize){
@@ -246,7 +247,7 @@ static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashSta
 
     // Address belongs to core 0
     if(flashStartAddr >= pflash_eraser.core0_start_addr && flashStartAddr < pflash_eraser.core0_end_addr){
-        num_sectors = getPFlashNumSectors((flashStartAddr + dataSize) - pflash_eraser.core0_start_addr);
+        num_sectors = getPFlashNumSectors((flashStartAddr + dataSize*sizeof(uint32_t)) - pflash_eraser.core0_start_addr);
         num_sectors_delta = num_sectors - pflash_eraser.core0_erased_sections;
 
         if(num_sectors_delta > 0){
@@ -258,7 +259,7 @@ static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashSta
 
     // Address belongs to core 1
     if(flashStartAddr >= pflash_eraser.core1_start_addr && flashStartAddr < pflash_eraser.core1_end_addr){
-        num_sectors = getPFlashNumSectors((flashStartAddr + dataSize) - pflash_eraser.core1_start_addr);
+        num_sectors = getPFlashNumSectors((flashStartAddr + dataSize*sizeof(uint32_t)) - pflash_eraser.core1_start_addr);
         num_sectors_delta = num_sectors - pflash_eraser.core1_erased_sections;
 
         if(num_sectors_delta > 0){
@@ -270,7 +271,7 @@ static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashSta
 
     // Address belongs to core 2
     if(flashStartAddr >= pflash_eraser.core2_start_addr && flashStartAddr < pflash_eraser.core2_end_addr){
-        num_sectors = getPFlashNumSectors((flashStartAddr + dataSize) - pflash_eraser.core2_start_addr);
+        num_sectors = getPFlashNumSectors((flashStartAddr + dataSize*sizeof(uint32_t)) - pflash_eraser.core2_start_addr);
         num_sectors_delta = num_sectors - pflash_eraser.core2_erased_sections;
 
         if(num_sectors_delta > 0){
