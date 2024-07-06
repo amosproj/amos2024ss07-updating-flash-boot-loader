@@ -73,7 +73,7 @@ uint32_t UDS::getECUTransferDataBufferSize(){
 static inline const bool rxMsgValid(const bool neg_resp, const bool eq, const uint32_t rx_no_bytes, const uint32_t no_bytes,  const uint8_t* const rx_exp_data,const uint8_t* const data, const size_t n) {
     bool ans = !neg_resp;
     ans &= eq ? rx_no_bytes == no_bytes : rx_no_bytes < no_bytes;
-    for(size_t i = 1; i < n + 1; ++i) 
+    for(size_t i = 1; ans && i < n + 1; ++i) 
         ans &= rx_exp_data[i] == data[i];
     return ans;
 }
@@ -96,7 +96,8 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
 
     if(no_bytes == 0) {
         out << "UDS: No data passed\n";
-        emit toConsole(*out.string());
+        QString infoString = out.readAll();
+        emit toConsole(infoString);
         return;
     }
 
@@ -235,8 +236,9 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
             break;
     }
 
-    qInfo() << *out.string();
-    emit toConsole(*out.string());
+    QString infoString = out.readAll();
+    qInfo() << infoString;
+    emit toConsole(infoString);
 
     // Only release
     if (rx_msg_valid) {
