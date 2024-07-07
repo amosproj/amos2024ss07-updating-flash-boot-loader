@@ -31,6 +31,7 @@ public:
     virtual ~ValidateManager();
 
     QMap<uint32_t, QByteArray> validateFile(QByteArray data);
+    void validateFileAsync(const QByteArray &data);
 
     bool checkBlockAddressRange(QMap<uint32_t, QByteArray> blocks);
 
@@ -68,12 +69,18 @@ signals:
     void errorPrint(const QString &text);
 
     /**
-     * @brief Signals that the text for flashing need to be changed (Mainwindow GUI)
+     * @brief Signals that the text for validation need to be changed (Mainwindow GUI)
      * @param s Status to be used
      * @param str Text to be printed
      * @param percent 0..100 to be set as bar value
      */
     void updateLabel(ValidateManager::LABEL s, const QString &str);
+
+    /**
+     * @brief Signals that ERROR text is available for printing to console
+     * @param text To be printed
+     */
+    //void validationDone(const QString &text);
 
 
 };

@@ -59,8 +59,9 @@ public:
 private:
     void set_uds_connection(enum UDS_CONN);
     void connectSignalSlots();
-    void updateECUList();
+    void setupFlashPopup();
 
+    void updateECUList();
     void clearECUTableView();
     void updateECUTableView(QMap<QString, QMap<QString, QString>> eculist);
 
@@ -68,29 +69,34 @@ private:
     QString getECUHEXID();
     bool ECUSelected();
 
-    void updateValidManager();
+    void setFlashButton(FLASH_BTN m);
 
     void udsUpdateVersion(uint32_t id, uint8_t *data, uint8_t data_size);
 
-    void setupFlashPopup();
-    void setFlashButton(FLASH_BTN m);
+    void updateValidManager();
 
 private slots:
     void startUDSUsage();
     void stopUDSUsage();
 
     void updateStatusSlot(FlashManager::STATUS s, const QString &str, int percent);
+    void updateLabelSlot(ValidateManager::LABEL s, const QString &str);
 
     void comboBoxIndexChanged(int index);
+
+    void setBaudrate();
+
     void appendTextToConsole(const QString &text);
 
-    void updateLabelSlot(ValidateManager::LABEL s, const QString &str);
+
 
     void ecuResponseSlot(const QMap<QString, QString> &data);
     void on_pushButton_ECU_refresh_clicked();
     void on_clearConsoleButton_clicked();
     void checkECUconnectivity();
-    void setBaudrate();
+
+
+    //void onValidationDone(const QByteArray &result);
 
 signals:
     void baudrateSignal(unsigned int baudrate, unsigned int commType);

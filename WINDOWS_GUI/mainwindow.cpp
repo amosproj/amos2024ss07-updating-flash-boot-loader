@@ -263,6 +263,10 @@ void MainWindow::setupFlashPopup() {
     flashPopup.setLayout(layout);
 }
 
+//============================================================================
+// Constructor
+//============================================================================
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -342,6 +346,9 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+//============================================================================
+// Public Method
+//============================================================================
 
 void MainWindow::updateStatus(FlashManager::STATUS s, QString str, int percent) {
     QString status = "";
@@ -398,49 +405,9 @@ void MainWindow::updateLabel(ValidateManager::LABEL s, QString str) {
     }
 }
 
-void MainWindow::updateValidManager() {
-
-    uint32_t ecu_id = getECUID();
-
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
-
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
-
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
-
-    validMan->core_addr.clear();
-
-    // Short break to process the incoming signals
-    QTimer::singleShot(25, [this]{
-
-        QString ID_HEX = getECUHEXID();
-
-        QString core0_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
-        QString core0_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
-
-        QString core1_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
-        QString core1_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
-
-        QString core2_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
-        QString core2_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
-
-
-        validMan->core_addr[0]["start"] = eculist[ID_HEX][core0_start];
-        validMan->core_addr[0]["end"] = eculist[ID_HEX][core0_end];
-
-        validMan->core_addr[1]["start"] = eculist[ID_HEX][core1_start];
-        validMan->core_addr[1]["end"] = eculist[ID_HEX][core1_end];
-
-        validMan->core_addr[2]["start"] = eculist[ID_HEX][core2_start];
-        validMan->core_addr[2]["end"] = eculist[ID_HEX][core2_end];
-    });
-}
-
-
-
+//============================================================================
+// Private Method
+//============================================================================
 
 void MainWindow::updateECUList(){
     qInfo() << "Updating ECU List";
@@ -549,6 +516,47 @@ void MainWindow::setFlashButton(FLASH_BTN m){
 
 void MainWindow::udsUpdateVersion(uint32_t id, uint8_t *data, uint8_t data_size) {
     uds->writeDataByIdentifier(id, FBL_DID_APP_ID, data, data_size);
+}
+
+void MainWindow::updateValidManager() {
+
+    uint32_t ecu_id = getECUID();
+
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
+
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
+
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
+
+    validMan->core_addr.clear();
+
+    // Short break to process the incoming signals
+    QTimer::singleShot(25, [this]{
+
+        QString ID_HEX = getECUHEXID();
+
+        QString core0_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
+        QString core0_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
+
+        QString core1_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
+        QString core1_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
+
+        QString core2_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
+        QString core2_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
+
+
+        validMan->core_addr[0]["start"] = eculist[ID_HEX][core0_start];
+        validMan->core_addr[0]["end"] = eculist[ID_HEX][core0_end];
+
+        validMan->core_addr[1]["start"] = eculist[ID_HEX][core1_start];
+        validMan->core_addr[1]["end"] = eculist[ID_HEX][core1_end];
+
+        validMan->core_addr[2]["start"] = eculist[ID_HEX][core2_start];
+        validMan->core_addr[2]["end"] = eculist[ID_HEX][core2_end];
+    });
 }
 
 //=============================================================================
@@ -705,6 +713,10 @@ void MainWindow::checkECUconnectivity() {
     }
     ui->label_ECU_status->setStyleSheet("QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color: " + color + "}");
 }
+
+//=============================================================================
+// Protected
+//=============================================================================
 
 void MainWindow::closeEvent(QCloseEvent *event) {
     QSettings settings("AMOS", "FBL");

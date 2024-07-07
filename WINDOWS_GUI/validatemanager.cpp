@@ -12,6 +12,8 @@
 #include "validatemanager.h"
 
 #include <QDebug>
+#include <QThread>
+#include <QMutex>
 
 
 //============================================================================
@@ -239,6 +241,12 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
     }
 
     return block_result;
+}
+
+void ValidateManager::validateFileAsync(const QByteArray &data){
+
+
+
 }
 
 bool ValidateManager::checkBlockAddressRange(const QMap<uint32_t, QByteArray> blocks){
