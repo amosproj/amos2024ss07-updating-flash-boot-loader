@@ -32,19 +32,20 @@ public:
 
     QMap<uint32_t, QByteArray> validateFile(QByteArray data);
 
+    bool checkBlockAddressRange(QMap<uint32_t, QByteArray> blocks);
+
 private:
 
     bool validateLine(QByteArray line);
     QByteArray extractData(QByteArray line, char record_type);
+    QMap<uint32_t, QByteArray> combineSortedQMap(QMap<uint32_t, QByteArray> blocks);
 
     bool addrInCoreRange(uint32_t addr, uint32_t data_len,  uint16_t core, bool* supported);
     bool addrInRange(uint32_t address, uint32_t data_len);
 
-    uint32_t getAddr(uint32_t addr);
+
     QByteArray getData(QByteArray tempData);
-
-    QMap<uint32_t, QByteArray> combineSortedQMap(QMap<uint32_t, QByteArray> & blocks);
-
+    uint32_t getAddr(uint32_t addr);
 
 signals:
 

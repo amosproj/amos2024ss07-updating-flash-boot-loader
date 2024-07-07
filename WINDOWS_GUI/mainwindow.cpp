@@ -113,7 +113,6 @@ void MainWindow::connectSignalSlots() {
     connect(ui->button_file, &QPushButton::clicked, this, [=]() {
         if(ECUSelected()){
 
-            updateValidManager();
             if(!QFileInfo::exists(rootDir))
                 rootDir = defaultRootDir;
             qDebug() << "Choosing the file - root directory: " + rootDir;;
@@ -153,6 +152,26 @@ void MainWindow::connectSignalSlots() {
         if(ECUSelected()) {
             QTableWidgetItem *item = ui->table_ECU->selectedItems().at(0);
             ui->label_selected_ECU->setText("Selected: " + item->text());
+            updateValidManager();
+
+            if(!validMan->data.isEmpty()){
+
+                QTimer::singleShot(25,this,[this]{
+
+                    if(validMan->checkBlockAddressRange(validMan->data)){
+
+                        updateLabel(ValidateManager::VALID, "File validity:  Valid");
+
+                    }
+                    else {
+
+                        updateLabel(ValidateManager::VALID, "File validity:  Not Valid");
+                    }
+
+
+                });
+            }
+
         } else { 
             ui->label_selected_ECU->setText("");
         }

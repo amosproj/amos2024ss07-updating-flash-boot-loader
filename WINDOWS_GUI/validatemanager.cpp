@@ -21,11 +21,12 @@
 ValidateManager::ValidateManager() {
 
     data.clear();
-
+    core_addr.clear();
 }
 
 ValidateManager::~ValidateManager(){
     data.clear();
+    core_addr.clear();
 }
 
 //============================================================================
@@ -205,24 +206,13 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
     block_result = combineSortedQMap(merged_blocks);
 
+    //TODO: remove
+
     if(file_validity){
 
-        for (auto iterator = block_result.constBegin(); iterator != block_result.constEnd(); ++iterator) {
-
-            uint32_t addr = iterator.key();
-
-            QByteArray block = block_result[addr];
-            uint32_t data_len = block.size();
-
-            if(!addrInRange(addr, data_len)){
-
-                emit infoPrint("INFO: File not Valid! Data with len "+QString("0x%1").arg(data_len, 2, 16, QLatin1Char( '0' ))+" would be written into reserved memory. -> Address: "+ QString("0x%1").arg(addr, 2, 16, QLatin1Char( '0' ))+"\n");
-                file_validity = false;
-                break;
-            }
-
-        }
+        file_validity = checkBlockAddressRange(block_result);
     }
+
 
     if(!file_header){
 
@@ -249,6 +239,26 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
     }
 
     return block_result;
+}
+
+bool ValidateManager::checkBlockAddressRange(QMap<uint32_t, QByteArray> blocks){
+
+    for (auto iterator = blocks.constBegin(); iterator != blocks.constEnd(); ++iterator) {
+
+        uint32_t addr = iterator.key();
+
+        QByteArray block = blocks[addr];
+        uint32_t data_len = block.size();
+
+        if(!addrInRange(addr, data_len)){
+
+            emit infoPrint("INFO: File not Valid! Data with len "+QString("0x%1").arg(data_len, 2, 16, QLatin1Char( '0' ))+" would be written into reserved memory. -> Address: "+ QString("0x%1").arg(addr, 2, 16, QLatin1Char( '0' ))+"\n");
+            return false;
+        }
+
+    }
+
+    return true;
 }
 
 //============================================================================
@@ -327,6 +337,45 @@ QByteArray ValidateManager::extractData(QByteArray line, char record_type)
     return trimmed_line;
 }
 
+
+QMap<uint32_t, QByteArray> ValidateManager::combineSortedQMap(QMap<uint32_t, QByteArray> blocks){
+
+    QMap<uint32_t, QByteArray> merged_blocks;
+
+    if (blocks.isEmpty()) {
+        return merged_blocks;
+    }
+
+    QByteArray line_buffer;
+
+    uint32_t new_start_addr = blocks.firstKey();
+    uint32_t addr_end = 0;
+
+    for (auto iterator = blocks.constBegin(); iterator != blocks.constEnd(); ++iterator){
+
+        uint32_t addr_start = iterator.key();
+
+        if(addr_start == addr_end){
+
+            line_buffer.append(blocks[addr_start]);
+        }
+        else{
+
+            merged_blocks.insert(new_start_addr, line_buffer);
+            line_buffer.clear();
+
+            new_start_addr = addr_start;
+            line_buffer.append(blocks[addr_start]);
+        }
+
+        addr_end = addr_start + blocks[addr_start].size();
+    }
+
+    merged_blocks.insert(new_start_addr, line_buffer);
+
+    return merged_blocks;
+}
+
 bool ValidateManager::addrInCoreRange(uint32_t addr, uint32_t data_len,  uint16_t core, bool* supported){
 
     QString core_start_add_string = core_addr[core]["start"];
@@ -374,44 +423,6 @@ bool ValidateManager::addrInRange(uint32_t address, uint32_t data_len){
     }
 
     return false;
-}
-
-QMap<uint32_t, QByteArray> ValidateManager::combineSortedQMap(QMap<uint32_t, QByteArray> & blocks){
-
-    QMap<uint32_t, QByteArray> merged_blocks;
-
-    if (blocks.isEmpty()) {
-        return merged_blocks;
-    }
-
-    QByteArray line_buffer;
-
-    uint32_t new_start_addr = blocks.firstKey();
-    uint32_t addr_end = 0;
-
-    for (auto iterator = blocks.constBegin(); iterator != blocks.constEnd(); ++iterator){
-
-        uint32_t addr_start = iterator.key();
-
-        if(addr_start == addr_end){
-
-            line_buffer.append(blocks[addr_start]);
-        }
-        else{
-
-            merged_blocks.insert(new_start_addr, line_buffer);
-            line_buffer.clear();
-
-            new_start_addr = addr_start;
-            line_buffer.append(blocks[addr_start]);
-        }
-
-        addr_end = addr_start + blocks[addr_start].size();
-    }
-
-    merged_blocks.insert(new_start_addr, line_buffer);
-
-    return merged_blocks;
 }
 
 //============================================================================
