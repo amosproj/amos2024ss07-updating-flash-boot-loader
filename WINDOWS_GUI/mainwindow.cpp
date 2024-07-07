@@ -30,6 +30,11 @@ void MainWindow::set_uds_connection(enum UDS_CONN conn){
     switch(conn){
         case GUI:
             qDebug("MainWindow: Call of set_uds_connection for GUI");
+
+            // GUI Console Print
+            disconnect(uds, SIGNAL(toConsole(QString)), 0, 0);
+            disconnect(comm, SIGNAL(toConsole(QString)), 0, 0);
+
             // Comm RX Signal to UDS RX Slot
             disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
 
@@ -41,6 +46,10 @@ void MainWindow::set_uds_connection(enum UDS_CONN conn){
             disconnect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), 0, 0);
 
             // ####################################################################################
+
+            // GUI Console Print
+            connect(uds, SIGNAL(toConsole(QString)), this, SLOT(appendTextToConsole(QString)), Qt::DirectConnection);
+            connect(comm, SIGNAL(toConsole(QString)), this, SLOT(appendTextToConsole(QString)), Qt::DirectConnection);
 
             // Comm RX Signal to UDS RX Slot
             connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
@@ -82,10 +91,6 @@ void MainWindow::connectSignalSlots() {
     // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
     connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
             &MainWindow::comboBoxIndexChanged);
-
-    // GUI Console Print
-    connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)), Qt::DirectConnection);
-    connect(comm, SIGNAL(toConsole(QString)), this, SLOT(appendTextToConsole(QString)), Qt::DirectConnection);
 
     // GUI menu bar
     connect(ui->menuLicenseQT, &QAction::triggered, this, [=]() {
@@ -220,7 +225,7 @@ void MainWindow::setupFlashPopup() {
         else{
             if(validMan != nullptr && validMan->data.size() > 0){
                 flashMan->setFlashFile(validMan->data);
-            } else {
+           } else {
                 flashMan->setTestFile();
                 this->ui->textBrowser_flash_status->setText("No valid Flash File selected. Demo Mode triggered");
             }
