@@ -636,7 +636,8 @@ void MainWindow::setBaudrate() {
 
 // Will write Text to console
 void MainWindow::appendTextToConsole(const QString &text){
-    ui->Console->appendPlainText(text);
+    if(text != nullptr && !text.isEmpty())
+        ui->Console->appendPlainText(text);
 }
 
 

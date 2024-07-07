@@ -10,6 +10,8 @@
 // Description : Flash wrapper for Bootloader
 //============================================================================
 
+#pragma optimize R
+
 #include <string.h>
 #include <stdlib.h> /* calloc, exit, free */
 #include <stdio.h>
@@ -241,44 +243,81 @@ static uint32_t getPFlashNumSectors(size_t dataSize)
     return getNumPerSize(PFLASH_SECTOR_LENGTH, dataSize, 0);
 }
 
+static uint32_t getPFlashNumPhySectors()
+{
+    return getNumPerSize(PFLASH_SECTOR_LENGTH, PFLASH_PHY_SECTOR_LENGTH, 0);
+}
+
 static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashStartAddr, size_t dataSize){
+    uint32_t num_loc_per_phy = getPFlashNumPhySectors(PFLASH_SECTOR_LENGTH);
+
+    uint32_t num_bytes = 0;
     uint32_t num_sectors = 0;
+
+    uint32_t num_sectors_to_erase = 0;
     uint32_t num_sectors_delta = 0;
     uint32_t erase_start_addr = 0;
 
     // Address belongs to core 0
     if(flashStartAddr >= pflash_eraser.core0_start_addr && flashStartAddr < pflash_eraser.core0_end_addr){
-        num_sectors = getPFlashNumSectors((flashStartAddr + dataSize*sizeof(uint32_t)) - pflash_eraser.core0_start_addr);
-        num_sectors_delta = num_sectors - pflash_eraser.core0_erased_sections;
+        num_bytes = (flashStartAddr + dataSize*sizeof(uint32_t)) - pflash_eraser.core0_start_addr;
+        num_sectors = getPFlashNumSectors(num_bytes);
 
-        if(num_sectors_delta > 0){
+        num_sectors_delta = num_sectors - pflash_eraser.core0_erased_sections;
+        while(num_sectors_delta > 0){
             erase_start_addr = pflash_eraser.core0_start_addr + (pflash_eraser.core0_erased_sections * PFLASH_SECTOR_LENGTH);
-            g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_delta);
-            pflash_eraser.core0_erased_sections += num_sectors_delta;
+            if(num_sectors_delta > num_loc_per_phy){
+                num_sectors_to_erase = num_loc_per_phy;
+            }
+            else {
+                num_sectors_to_erase = num_sectors_delta;
+            }
+            g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_to_erase);
+            pflash_eraser.core0_erased_sections += num_sectors_to_erase;
+
+            num_sectors_delta = num_sectors - pflash_eraser.core0_erased_sections;
         }
     }
 
     // Address belongs to core 1
     if(flashStartAddr >= pflash_eraser.core1_start_addr && flashStartAddr < pflash_eraser.core1_end_addr){
-        num_sectors = getPFlashNumSectors((flashStartAddr + dataSize*sizeof(uint32_t)) - pflash_eraser.core1_start_addr);
-        num_sectors_delta = num_sectors - pflash_eraser.core1_erased_sections;
+        num_bytes = (flashStartAddr + dataSize*sizeof(uint32_t)) - pflash_eraser.core1_start_addr;
+        num_sectors = getPFlashNumSectors(num_bytes);
 
-        if(num_sectors_delta > 0){
+        num_sectors_delta = num_sectors - pflash_eraser.core1_erased_sections;
+        while(num_sectors_delta > 0){
             erase_start_addr = pflash_eraser.core1_start_addr + (pflash_eraser.core1_erased_sections * PFLASH_SECTOR_LENGTH);
-            g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_delta);
-            pflash_eraser.core1_erased_sections += num_sectors_delta;
+            if(num_sectors_delta > num_loc_per_phy){
+                num_sectors_to_erase = num_loc_per_phy;
+            }
+            else {
+                num_sectors_to_erase = num_sectors_delta;
+            }
+            g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_to_erase);
+            pflash_eraser.core1_erased_sections += num_sectors_to_erase;
+
+            num_sectors_delta = num_sectors - pflash_eraser.core1_erased_sections;
         }
     }
 
     // Address belongs to core 2
     if(flashStartAddr >= pflash_eraser.core2_start_addr && flashStartAddr < pflash_eraser.core2_end_addr){
-        num_sectors = getPFlashNumSectors((flashStartAddr + dataSize*sizeof(uint32_t)) - pflash_eraser.core2_start_addr);
-        num_sectors_delta = num_sectors - pflash_eraser.core2_erased_sections;
+        num_bytes = (flashStartAddr + dataSize*sizeof(uint32_t)) - pflash_eraser.core2_start_addr;
+        num_sectors = getPFlashNumSectors(num_bytes);
 
-        if(num_sectors_delta > 0){
+        num_sectors_delta = num_sectors - pflash_eraser.core2_erased_sections;
+        while(num_sectors_delta > 0){
             erase_start_addr = pflash_eraser.core2_start_addr + (pflash_eraser.core2_erased_sections * PFLASH_SECTOR_LENGTH);
-            g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_delta);
-            pflash_eraser.core2_erased_sections += num_sectors_delta;
+            if(num_sectors_delta > num_loc_per_phy){
+                num_sectors_to_erase = num_loc_per_phy;
+            }
+            else {
+                num_sectors_to_erase = num_sectors_delta;
+            }
+            g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_to_erase);
+            pflash_eraser.core2_erased_sections += num_sectors_to_erase;
+
+            num_sectors_delta = num_sectors - pflash_eraser.core2_erased_sections;
         }
     }
 }

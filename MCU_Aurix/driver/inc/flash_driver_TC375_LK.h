@@ -54,7 +54,7 @@
 
 
 #define PFLASH_SECTOR_LENGTH        0x4000                       /* 16KB - logical sector length */
-
+#define PFLASH_PHY_SECTOR_LENGTH    0x100000                     /* 1MB - real physical sector length, here reduced to 16KB blocks */
 #define DFLASH_SECTOR_LENGTH        0xFFF                        /* 4KB - default sector length in single ended mode */
 /*********************************************************************************************************************/
 /*-------------------------------------------------Global variables--------------------------------------------------*/
