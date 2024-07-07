@@ -36,12 +36,14 @@ public:
     ValidateManager();
     virtual ~ValidateManager();
 
-    QMap<uint32_t, QByteArray> validateFile(QByteArray data);
+
     void validateFileAsync(QByteArray data);
 
     bool checkBlockAddressRange(QMap<uint32_t, QByteArray> blocks);
 
 private:
+
+    QMap<uint32_t, QByteArray> validateFile(QByteArray data);
 
     bool validateLine(QByteArray line);
     QByteArray extractData(QByteArray line, char record_type);

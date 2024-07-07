@@ -33,6 +33,66 @@ ValidateManager::~ValidateManager(){
 // Public Method
 //============================================================================
 
+
+
+void ValidateManager::validateFileAsync(QByteArray data){
+
+    // For Null pointer safety
+    QPointer<ValidateManager> self = this;
+
+    // Change cursor to loading state
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    // Create thread for validation
+    QThread* thread = QThread::create([self, data]() {
+
+        if (!self) {
+
+            return;
+        }
+
+        QMap<uint32_t, QByteArray> result;
+        {
+            QMutexLocker locker(&self->dataMutex);
+            result = self->validateFile(data);
+        }
+        emit self->validationDone(result);
+    });
+    thread->start();
+    connect(thread, &QThread::finished, thread, &QObject::deleteLater);
+
+    // Use a queued connection to restore the cursor in the main thread
+    connect(thread, &QThread::finished, []() {
+        QMetaObject::invokeMethod(qApp, []() {
+                QApplication::restoreOverrideCursor();
+            }, Qt::QueuedConnection);
+    });
+}
+
+bool ValidateManager::checkBlockAddressRange(const QMap<uint32_t, QByteArray> blocks){
+
+    for (QMap<uint32_t, QByteArray>::const_iterator iterator = blocks.constBegin(); iterator != blocks.constEnd(); ++iterator) {
+
+        uint32_t addr = iterator.key();
+
+        QByteArray block = blocks[addr];
+        uint32_t data_len = block.size();
+
+        if(!addrInRange(addr, data_len)){
+
+            emit infoPrint("INFO: File not Valid! Data with len "+QString("0x%1").arg(data_len, 2, 16, QLatin1Char( '0' ))+" would be written into reserved memory. -> Address: "+ QString("0x%1").arg(addr, 2, 16, QLatin1Char( '0' ))+"\n");
+            return false;
+        }
+
+    }
+
+    return true;
+}
+
+//============================================================================
+// Private Method
+//============================================================================
+
 QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 {
     QList<QByteArray> lines = data.split('\n');
@@ -240,61 +300,6 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
     return block_result;
 }
-
-void ValidateManager::validateFileAsync(QByteArray data){
-
-    //for Null pointer safety
-    QPointer<ValidateManager> self = this;
-
-    // Change cursor to loading state
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-
-    QThread* thread = QThread::create([self, data]() {
-
-        if (!self) {
-
-            return;
-        }
-
-        QMap<uint32_t, QByteArray> result;
-        {
-            QMutexLocker locker(&self->dataMutex);
-            result = self->validateFile(data);
-        }
-        emit self->validationDone(result);
-    });
-    thread->start();
-    connect(thread, &QThread::finished, thread, &QObject::deleteLater);
-
-    // Restore cursor to normal when the thread finishes
-    connect(thread, &QThread::finished, []() {
-        QApplication::restoreOverrideCursor();
-    });
-}
-
-bool ValidateManager::checkBlockAddressRange(const QMap<uint32_t, QByteArray> blocks){
-
-    for (QMap<uint32_t, QByteArray>::const_iterator iterator = blocks.constBegin(); iterator != blocks.constEnd(); ++iterator) {
-
-        uint32_t addr = iterator.key();
-
-        QByteArray block = blocks[addr];
-        uint32_t data_len = block.size();
-
-        if(!addrInRange(addr, data_len)){
-
-            emit infoPrint("INFO: File not Valid! Data with len "+QString("0x%1").arg(data_len, 2, 16, QLatin1Char( '0' ))+" would be written into reserved memory. -> Address: "+ QString("0x%1").arg(addr, 2, 16, QLatin1Char( '0' ))+"\n");
-            return false;
-        }
-
-    }
-
-    return true;
-}
-
-//============================================================================
-// Private Method
-//============================================================================
 
 bool ValidateManager::validateLine(QByteArray line)
 {
