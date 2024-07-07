@@ -30,6 +30,11 @@ void MainWindow::set_uds_connection(enum UDS_CONN conn){
     switch(conn){
         case GUI:
             qDebug("MainWindow: Call of set_uds_connection for GUI");
+
+            // GUI Console Print
+            disconnect(uds, SIGNAL(toConsole(QString)), 0, 0);
+            disconnect(comm, SIGNAL(toConsole(QString)), 0, 0);
+
             // Comm RX Signal to UDS RX Slot
             disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
 
@@ -40,7 +45,14 @@ void MainWindow::set_uds_connection(enum UDS_CONN conn){
             // UDS Receive Signals to GUI Slots
             disconnect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), 0, 0);
 
+            // ECU Connectivity timer
+            disconnect(ecuConnectivityTimer, SIGNAL(timeout()), 0, 0);
+
             // ####################################################################################
+
+            // GUI Console Print
+            connect(uds, SIGNAL(toConsole(QString)), this, SLOT(appendTextToConsole(QString)), Qt::DirectConnection);
+            connect(comm, SIGNAL(toConsole(QString)), this, SLOT(appendTextToConsole(QString)), Qt::DirectConnection);
 
             // Comm RX Signal to UDS RX Slot
             connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
@@ -51,9 +63,14 @@ void MainWindow::set_uds_connection(enum UDS_CONN conn){
 
             // UDS Receive Signals to GUI Slots
             connect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), this, SLOT(ecuResponseSlot(QMap<QString,QString>)), Qt::DirectConnection);
+
+            // ECU Connectivity timer
+            connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
             break;
 
         default:
+            // ECU Connectivity timer
+            disconnect(ecuConnectivityTimer, SIGNAL(timeout()), 0, 0);
             break;
     }
 }
@@ -83,10 +100,6 @@ void MainWindow::connectSignalSlots() {
     // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
     connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
             &MainWindow::comboBoxIndexChanged);
-
-    // GUI Console Print
-    connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)), Qt::DirectConnection);
-    connect(comm, SIGNAL(toConsole(QString)), this, SLOT(appendTextToConsole(QString)), Qt::DirectConnection);
 
     // GUI menu bar
     connect(ui->menuLicenseQT, &QAction::triggered, this, [=]() {
@@ -208,14 +221,12 @@ void MainWindow::connectSignalSlots() {
         }
     });
 
-    // GUI connectivity indicator
-    ecuConnectivityTimer = new QTimer(this);
-    connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
-    ecuConnectivityTimer->start(ECU_CONNECTIVITY_TIMER);
-
     //Set baudrate
     connect(this, SIGNAL(baudrateSignal(uint, uint)), comm, SLOT(setBaudrate(uint, uint)), Qt::DirectConnection);
 
+    ecuListUpdateMutex.lock();
+    ecuListUpdateInProgess = false;
+    ecuListUpdateMutex.unlock();
 }
 
 void MainWindow::setupFlashPopup() {
@@ -240,7 +251,7 @@ void MainWindow::setupFlashPopup() {
         else{
             if(validMan != nullptr && validMan->data.size() > 0){
                 flashMan->setFlashFile(validMan->data);
-            } else {
+           } else {
                 flashMan->setTestFile();
                 this->ui->textBrowser_flash_status->setText("No valid Flash File selected. Demo Mode triggered");
             }
@@ -275,7 +286,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     this->setFixedSize(this->geometry().width(),this->geometry().height());
 
-
     defaultRootDir = QCoreApplication::applicationDirPath();
     QSettings settings("AMOS", "FBL");
     ui->groupBox_console->setVisible(!settings.value("savedMode", defaultRootDir).toBool());
@@ -302,6 +312,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     qInfo("Main: Create the ValidateManager");
     validMan = new ValidateManager();
+
+    // GUI connectivity indicator
+    ecuConnectivityTimer = new QTimer(this);
+    ecuConnectivityTimer->start(ECU_CONNECTIVITY_TIMER);
 
     ui->table_ECU->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->table_ECU->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -414,6 +428,11 @@ void MainWindow::updateECUList(){
     qInfo() << "Updating ECU List";
     //this->ui->table_ECU->clearContents();
     //this->ui->table_ECU->setRowCount(0);
+
+    ecuListUpdateMutex.lock();
+    ecuListUpdateInProgess = true;
+    ecuListUpdateMutex.unlock();
+
     eculist.clear();
     clearECUTableView();
     uds->reqIdentification();
@@ -476,6 +495,10 @@ void MainWindow::updateECUTableView(QMap<QString, QMap<QString, QString>> eculis
             break;
         }
     }
+
+    ecuListUpdateMutex.lock();
+    ecuListUpdateInProgess = false;
+    ecuListUpdateMutex.unlock();
 }
 
 uint32_t MainWindow::getECUID() {
@@ -497,7 +520,18 @@ QString MainWindow::getECUHEXID() {
 }
 
 bool MainWindow::ECUSelected() {
-    return !ui->table_ECU->selectedItems().empty() && !ui->table_ECU->selectedItems().at(0)->text().isEmpty();
+    if(ui->table_ECU != nullptr){
+        bool isEmpty = ui->table_ECU->selectedItems().empty();
+        if(isEmpty){
+            return !isEmpty;
+        }
+
+        QTableWidgetItem* item = ui->table_ECU->selectedItems().at(0);
+        if (item != nullptr){
+            return !item->text().isEmpty();
+        }
+    }
+    return false;
 }
 
 void MainWindow::setFlashButton(FLASH_BTN m){
@@ -565,11 +599,11 @@ void MainWindow::updateValidManager() {
 //=============================================================================
 
 void MainWindow::startUDSUsage(){
-    // Connect UDS and Comm Layer
+    // Connect Signals and Slots
     set_uds_connection(GUI);
 
     // Connect the Connectivity Timer
-    connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
+    ecuConnectivityTimer->start(ECU_CONNECTIVITY_TIMER);
 
     // Enable all buttons with UDS messages
     ui->button_reset->setDisabled(false);
@@ -587,8 +621,11 @@ void MainWindow::startUDSUsage(){
  * This is necessary to make sure FlashManager and MainWindow are not using UDS communication at the same time. (Can cause conflicts because of different Threads)
  */
 void MainWindow::stopUDSUsage(){
+    // Connect Signals and Slots
+    set_uds_connection(FLASHING);
+
     // Disconnect the Connectivity Timer
-    disconnect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
+    ecuConnectivityTimer->stop();
 
     // Disable all buttons with UDS messages
     ui->button_reset->setDisabled(true);

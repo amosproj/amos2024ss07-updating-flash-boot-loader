@@ -99,6 +99,10 @@ public:
 
         // Disconnect everything from comm
         disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
+        disconnect(comm, SIGNAL(toConsole(QString)), 0, 0); // disconnect everything connect to toConsole
+
+        // GUI Console Print
+        connect(this->comm, SIGNAL(toConsole(QString)), this, SLOT(forwardToConsole(QString)), Qt::DirectConnection);
 
         // Comm RX Signal to UDS RX Slot
         connect(this->comm, SIGNAL(rxDataReceived(uint, QByteArray)), this->uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
@@ -106,9 +110,6 @@ public:
         // UDS TX Signals to Comm TX Slots
         connect(this->uds, SIGNAL(setID(uint32_t)),    this->comm, SLOT(setIDSlot(uint32_t)), Qt::DirectConnection);
         connect(this->uds, SIGNAL(txData(QByteArray)), this->comm, SLOT(txDataSlot(QByteArray)), Qt::DirectConnection);
-
-        // GUI Console Print
-        connect(this->comm, SIGNAL(toConsole(QString)), this, SLOT(forwardToConsole(QString)), Qt::DirectConnection);
 
         state_attempt_ctr = 0;
         curr_state = PREPARE;
@@ -137,6 +138,7 @@ public:
         // Comm RX Signal to UDS RX Slot
         if(comm != nullptr){
             disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
+            disconnect(comm, SIGNAL(toConsole(QString)), 0, 0);
         }
 
         // UDS TX Signals to Comm TX Slots

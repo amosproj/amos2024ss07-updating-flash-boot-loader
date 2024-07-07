@@ -7,6 +7,7 @@
 #define ECU_CONNECTIVITY_TIMER      (1000) // ms between UDS tester present msg -> Default: 1000
 
 #include <QMainWindow>
+#include <QMutex>
 #include "editableComboBox.h"
 
 #include "UDS_Layer/UDS.hpp"
@@ -41,6 +42,8 @@ private:
     UDS *uds;
     QThread *threadFlashing;
     FlashManager *flashMan;
+    QMutex ecuListUpdateMutex;
+    bool ecuListUpdateInProgess;
     QMap<QString, QMap<QString, QString>> eculist;
     ValidateManager *validMan;
     QTimer *ecuConnectivityTimer;
