@@ -21,9 +21,9 @@
 
 #define TESTFILE_PADDING_BYTES      7           // Padding between test data
 #define TESTFILE_CORE0_START_ADD    0xA0090000  // Start Address for flashing Core 0
-#define TESTFILE_CORE0_BYTES        0x00000000  // ~1.5 MB
+#define TESTFILE_CORE0_BYTES        0x0016FFFF  // ~1.5 MB
 #define TESTFILE_CORE1_START_ADD    0xA0304000  // Start Address for flashing Core 1
-#define TESTFILE_CORE1_BYTES        0x00000000  // ~2 MB
+#define TESTFILE_CORE1_BYTES        0x001F3FFF  // ~2 MB
 #define TESTFILE_ASW_KEY_START_ADD  0xA04F8000  // Start Address for flashing ASW Key
 #define TESTFILE_ASW_KEY_BYTES      0x00003FFF  // ~16 KB
 #define TESTFILE_CAL_DATA_START_ADD 0xA04FC000  // Start Address for flashing Calibration data
