@@ -43,6 +43,8 @@ private:
     uint32_t getAddr(uint32_t addr);
     QByteArray getData(QByteArray tempData);
 
+    QMap<uint32_t, QByteArray> combineSortedQMap(QMap<uint32_t, QByteArray> & blocks);
+
 
 signals:
 
