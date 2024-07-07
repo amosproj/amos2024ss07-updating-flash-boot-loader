@@ -241,9 +241,9 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
     return block_result;
 }
 
-bool ValidateManager::checkBlockAddressRange(QMap<uint32_t, QByteArray> blocks){
+bool ValidateManager::checkBlockAddressRange(const QMap<uint32_t, QByteArray> blocks){
 
-    for (auto iterator = blocks.constBegin(); iterator != blocks.constEnd(); ++iterator) {
+    for (QMap<uint32_t, QByteArray>::const_iterator iterator = blocks.constBegin(); iterator != blocks.constEnd(); ++iterator) {
 
         uint32_t addr = iterator.key();
 
@@ -338,7 +338,7 @@ QByteArray ValidateManager::extractData(QByteArray line, char record_type)
 }
 
 
-QMap<uint32_t, QByteArray> ValidateManager::combineSortedQMap(QMap<uint32_t, QByteArray> blocks){
+QMap<uint32_t, QByteArray> ValidateManager::combineSortedQMap(const QMap<uint32_t, QByteArray> blocks){
 
     QMap<uint32_t, QByteArray> merged_blocks;
 
@@ -351,7 +351,7 @@ QMap<uint32_t, QByteArray> ValidateManager::combineSortedQMap(QMap<uint32_t, QBy
     uint32_t new_start_addr = blocks.firstKey();
     uint32_t addr_end = 0;
 
-    for (auto iterator = blocks.constBegin(); iterator != blocks.constEnd(); ++iterator){
+    for (QMap<uint32_t, QByteArray>::const_iterator iterator = blocks.constBegin(); iterator != blocks.constEnd(); ++iterator){
 
         uint32_t addr_start = iterator.key();
 
