@@ -45,6 +45,9 @@ void MainWindow::set_uds_connection(enum UDS_CONN conn){
             // UDS Receive Signals to GUI Slots
             disconnect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), 0, 0);
 
+            // ECU Connectivity timer
+            disconnect(ecuConnectivityTimer, SIGNAL(timeout()), 0, 0);
+
             // ####################################################################################
 
             // GUI Console Print
@@ -60,9 +63,14 @@ void MainWindow::set_uds_connection(enum UDS_CONN conn){
 
             // UDS Receive Signals to GUI Slots
             connect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), this, SLOT(ecuResponseSlot(QMap<QString,QString>)), Qt::DirectConnection);
+
+            // ECU Connectivity timer
+            connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
             break;
 
         default:
+            // ECU Connectivity timer
+            disconnect(ecuConnectivityTimer, SIGNAL(timeout()), 0, 0);
             break;
     }
 }
@@ -193,14 +201,12 @@ void MainWindow::connectSignalSlots() {
         }
     });
 
-    // GUI connectivity indicator
-    ecuConnectivityTimer = new QTimer(this);
-    connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
-    ecuConnectivityTimer->start(ECU_CONNECTIVITY_TIMER);
-
     //Set baudrate
     connect(this, SIGNAL(baudrateSignal(uint, uint)), comm, SLOT(setBaudrate(uint, uint)), Qt::DirectConnection);
 
+    ecuListUpdateMutex.lock();
+    ecuListUpdateInProgess = false;
+    ecuListUpdateMutex.unlock();
 }
 
 void MainWindow::setupFlashPopup() {
@@ -256,7 +262,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     this->setFixedSize(this->geometry().width(),this->geometry().height());
 
-
     defaultRootDir = QCoreApplication::applicationDirPath();
     QSettings settings("AMOS", "FBL");
     ui->groupBox_console->setVisible(!settings.value("savedMode", defaultRootDir).toBool());
@@ -283,6 +288,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     qInfo("Main: Create the ValidateManager");
     validMan = new ValidateManager();
+
+    // GUI connectivity indicator
+    ecuConnectivityTimer = new QTimer(this);
+    ecuConnectivityTimer->start(ECU_CONNECTIVITY_TIMER);
 
     ui->table_ECU->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->table_ECU->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -432,6 +441,11 @@ void MainWindow::updateECUList(){
     qInfo() << "Updating ECU List";
     //this->ui->table_ECU->clearContents();
     //this->ui->table_ECU->setRowCount(0);
+
+    ecuListUpdateMutex.lock();
+    ecuListUpdateInProgess = true;
+    ecuListUpdateMutex.unlock();
+
     eculist.clear();
     clearECUTableView();
     uds->reqIdentification();
@@ -494,6 +508,10 @@ void MainWindow::updateECUTableView(QMap<QString, QMap<QString, QString>> eculis
             break;
         }
     }
+
+    ecuListUpdateMutex.lock();
+    ecuListUpdateInProgess = false;
+    ecuListUpdateMutex.unlock();
 }
 
 uint32_t MainWindow::getECUID() {
@@ -515,7 +533,18 @@ QString MainWindow::getECUHEXID() {
 }
 
 bool MainWindow::ECUSelected() {
-    return !ui->table_ECU->selectedItems().empty() && !ui->table_ECU->selectedItems().at(0)->text().isEmpty();
+    if(ui->table_ECU != nullptr){
+        bool isEmpty = ui->table_ECU->selectedItems().empty();
+        if(isEmpty){
+            return !isEmpty;
+        }
+
+        QTableWidgetItem* item = ui->table_ECU->selectedItems().at(0);
+        if (item != nullptr){
+            return !item->text().isEmpty();
+        }
+    }
+    return false;
 }
 
 void MainWindow::setFlashButton(FLASH_BTN m){
@@ -542,11 +571,11 @@ void MainWindow::udsUpdateVersion(uint32_t id, uint8_t *data, uint8_t data_size)
 //=============================================================================
 
 void MainWindow::startUDSUsage(){
-    // Connect UDS and Comm Layer
+    // Connect Signals and Slots
     set_uds_connection(GUI);
 
     // Connect the Connectivity Timer
-    connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
+    ecuConnectivityTimer->start(ECU_CONNECTIVITY_TIMER);
 
     // Enable all buttons with UDS messages
     ui->button_reset->setDisabled(false);
@@ -564,8 +593,11 @@ void MainWindow::startUDSUsage(){
  * This is necessary to make sure FlashManager and MainWindow are not using UDS communication at the same time. (Can cause conflicts because of different Threads)
  */
 void MainWindow::stopUDSUsage(){
+    // Connect Signals and Slots
+    set_uds_connection(FLASHING);
+
     // Disconnect the Connectivity Timer
-    disconnect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
+    ecuConnectivityTimer->stop();
 
     // Disable all buttons with UDS messages
     ui->button_reset->setDisabled(true);
