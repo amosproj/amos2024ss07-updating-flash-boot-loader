@@ -11,9 +11,7 @@
 
 #include "validatemanager.h"
 
-#include <QDebug>
-#include <QThread>
-#include <QMutex>
+
 
 
 //============================================================================
@@ -245,6 +243,16 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
 void ValidateManager::validateFileAsync(const QByteArray &data){
 
+    QThread* thread = QThread::create([this, data]() {
+        QMap<uint32_t, QByteArray> result;
+        {
+            QMutexLocker locker(&dataMutex);
+            result = validateFile(data);
+        }
+        emit validationDone(result);
+    });
+    thread->start();
+    connect(thread, &QThread::finished, thread, &QObject::deleteLater);
 
 
 }

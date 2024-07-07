@@ -96,7 +96,7 @@ private slots:
     void checkECUconnectivity();
 
 
-    //void onValidationDone(const QByteArray &result);
+    void onValidationDone(const QMap<uint32_t, QByteArray> result);
 
 signals:
     void baudrateSignal(unsigned int baudrate, unsigned int commType);

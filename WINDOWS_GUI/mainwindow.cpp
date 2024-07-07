@@ -63,6 +63,7 @@ void MainWindow::connectSignalSlots() {
     set_uds_connection(GUI);
 
     // ValidateManager Signals
+    connect(validMan, SIGNAL(validationDone(const QMap<uint32_t, QByteArray>)), this, SLOT(onValidationDone(const QMap<uint32_t, QByteArray>)));
     connect(validMan, SIGNAL(infoPrint(QString)), this, SLOT(appendTextToConsole(QString)));
     connect(validMan, SIGNAL(debugPrint(QString)), this, SLOT(appendTextToConsole(QString)));
     connect(validMan, SIGNAL(errorPrint(QString)), this, SLOT(appendTextToConsole(QString)));
@@ -135,7 +136,7 @@ void MainWindow::connectSignalSlots() {
                 rootDir = fileInfo.absolutePath();
 
                 // Validate file, result is already prepared for furhter calculations
-                validMan->data = validMan->validateFile(data);
+                validMan->validateFileAsync(data);
 
                 //dummy_function(data);
                 file.close();
@@ -712,6 +713,13 @@ void MainWindow::checkECUconnectivity() {
             color = "red";
     }
     ui->label_ECU_status->setStyleSheet("QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color: " + color + "}");
+}
+
+void MainWindow::onValidationDone(const QMap<uint32_t, QByteArray> result){
+
+    // Handle the result of validation here
+    validMan->data = result; // Or use the result directly
+
 }
 
 //=============================================================================

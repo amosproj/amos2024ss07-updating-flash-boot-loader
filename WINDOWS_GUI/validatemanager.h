@@ -13,6 +13,8 @@
 #include <QDebug>
 #include <QMap>
 #include <QByteArray>
+#include <QThread>
+#include <QMutex>
 
 class ValidateManager : public QObject {
 
@@ -24,6 +26,10 @@ public:
 
     QMap<uint32_t, QByteArray> data;
     QMap<uint16_t, QMap<QString, QString>> core_addr;
+
+private:
+
+    QMutex dataMutex;
 
 public:
 
@@ -80,7 +86,7 @@ signals:
      * @brief Signals that ERROR text is available for printing to console
      * @param text To be printed
      */
-    //void validationDone(const QString &text);
+    void validationDone(const QMap<uint32_t, QByteArray> result);
 
 
 };
