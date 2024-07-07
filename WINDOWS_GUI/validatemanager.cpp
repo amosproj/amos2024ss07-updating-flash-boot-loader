@@ -10,8 +10,8 @@
 //============================================================================
 
 #include "validatemanager.h"
-
-
+#include <QPointer>
+#include <QApplication>
 
 
 //============================================================================
@@ -241,20 +241,35 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
     return block_result;
 }
 
-void ValidateManager::validateFileAsync(const QByteArray &data){
+void ValidateManager::validateFileAsync(QByteArray data){
 
-    QThread* thread = QThread::create([this, data]() {
+    //for Null pointer safety
+    QPointer<ValidateManager> self = this;
+
+    // Change cursor to loading state
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    QThread* thread = QThread::create([self, data]() {
+
+        if (!self) {
+
+            return;
+        }
+
         QMap<uint32_t, QByteArray> result;
         {
-            QMutexLocker locker(&dataMutex);
-            result = validateFile(data);
+            QMutexLocker locker(&self->dataMutex);
+            result = self->validateFile(data);
         }
-        emit validationDone(result);
+        emit self->validationDone(result);
     });
     thread->start();
     connect(thread, &QThread::finished, thread, &QObject::deleteLater);
 
-
+    // Restore cursor to normal when the thread finishes
+    connect(thread, &QThread::finished, []() {
+        QApplication::restoreOverrideCursor();
+    });
 }
 
 bool ValidateManager::checkBlockAddressRange(const QMap<uint32_t, QByteArray> blocks){
