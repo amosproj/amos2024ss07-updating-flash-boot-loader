@@ -114,7 +114,9 @@ uint8_t flashingRequestDownload(uint32_t address, uint32_t data_len){
     // Check on Flash Memory to accept download
     if(!addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE0, FBL_DID_BL_WRITE_END_ADD_CORE0) &&
        !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE1, FBL_DID_BL_WRITE_END_ADD_CORE1) &&
-       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE2, FBL_DID_BL_WRITE_END_ADD_CORE2))
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE2, FBL_DID_BL_WRITE_END_ADD_CORE2) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_ASW_KEY, FBL_DID_BL_WRITE_END_ADD_ASW_KEY) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CAL_DATA, FBL_DID_BL_WRITE_END_ADD_CAL_DATA))
     {
         flashing_int_data.state = IDLE;
         return FBL_RC_REQUEST_OUT_OF_RANGE;

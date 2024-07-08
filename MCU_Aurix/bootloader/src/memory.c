@@ -19,6 +19,7 @@
 #include "flash_driver.h"
 
 typedef struct {
+        uint8_t did_structure_version[FBL_STRUCTURE_VERSION];
         uint8_t did_app_id[FBL_DID_APP_ID_BYTES_SIZE];
         uint8_t did_system_name[FBL_DID_SYSTEM_NAME_BYTES_SIZE];
         uint8_t did_programming_date[FBL_DID_PROGRAMMING_DATE_BYTES_SIZE];
@@ -32,6 +33,10 @@ typedef struct {
         uint8_t did_bl_write_end_add_core1[FBL_DID_BL_WRITE_END_ADD_CORE1_BYTES_SIZE];
         uint8_t did_bl_write_start_add_core2[FBL_DID_BL_WRITE_START_ADD_CORE2_BYTES_SIZE];
         uint8_t did_bl_write_end_add_core2[FBL_DID_BL_WRITE_END_ADD_CORE2_BYTES_SIZE];
+        uint8_t did_bl_write_start_add_asw_key[FBL_DID_BL_WRITE_START_ADD_ASW_KEY_BYTES_SIZE];
+        uint8_t did_bl_write_end_add_asw_key[FBL_DID_BL_WRITE_END_ADD_ASW_KEY_BYTES_SIZE];
+        uint8_t did_bl_write_start_add_cal_data[FBL_DID_BL_WRITE_START_ADD_CAL_DATA_BYTES_SIZE];
+        uint8_t did_bl_write_end_add_cal_data[FBL_DID_BL_WRITE_END_ADD_CAL_DATA_BYTES_SIZE];
 } Memory_Data;
 
 boolean init = FALSE;
@@ -64,6 +69,19 @@ static inline uint8_t *prepare_name_message(uint8_t *len, uint8_t *data){
     return prepare_message(len, data);
 }
 
+static inline boolean validateStructureVersion(uint8_t *data, uint32_t len){
+    if(len == FBL_STRUCTURE_VERSION){
+        uint8_t did_structure_version[] = FBL_STRUCTURE_DATA_FLASH_STRUCTURE_VERSION;
+        for(int i = 0; i < FBL_STRUCTURE_VERSION; i++){
+            if (data[i] != did_structure_version[i]){
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
 static inline boolean validateName(uint8_t *data, uint32_t len, uint32_t maxLen){
     if (len > maxLen)
         return false;
@@ -82,6 +100,9 @@ static inline boolean validateName(uint8_t *data, uint32_t len, uint32_t maxLen)
 
 static boolean validateMemory(){
     boolean valid = true;
+
+    if(!validateStructureVersion(memData.did_structure_version, FBL_STRUCTURE_VERSION))
+        valid = false;
 
     // Check on the application version
     if(!validateName(memData.did_app_id, FBL_DID_APP_ID_BYTES_SIZE, FBL_DID_APP_ID_BYTES_SIZE))
@@ -126,6 +147,9 @@ void init_memory(void){
     // Check Init
     if(!init){
         
+        uint8_t did_structure_version[] = FBL_STRUCTURE_DATA_FLASH_STRUCTURE_VERSION;
+        write_to_variable(FBL_STRUCTURE_VERSION, did_structure_version, memData.did_structure_version);
+
         uint8_t did_app_id[] = FBL_DID_APP_ID_DEFAULT;
         write_to_variable(sizeof(did_app_id), did_app_id, memData.did_app_id);
 
@@ -165,6 +189,21 @@ void init_memory(void){
 
         uint8_t did_bl_write_end_add_core2[] = FBL_DID_BL_WRITE_END_ADD_CORE2_DEFAULT;
         write_to_variable(FBL_DID_BL_WRITE_END_ADD_CORE2_BYTES_SIZE, did_bl_write_end_add_core2, memData.did_bl_write_end_add_core2);
+
+        uint8_t did_bl_write_start_add_asw_key[] = FBL_DID_BL_WRITE_START_ADD_ASW_KEY_DEFAULT;
+        write_to_variable(FBL_DID_BL_WRITE_START_ADD_ASW_KEY_BYTES_SIZE, did_bl_write_start_add_asw_key, memData.did_bl_write_start_add_asw_key);
+
+        uint8_t did_bl_write_end_add_asw_key[] = FBL_DID_BL_WRITE_END_ADD_ASW_KEY_DEFAULT;
+        write_to_variable(FBL_DID_BL_WRITE_END_ADD_ASW_KEY_BYTES_SIZE, did_bl_write_end_add_asw_key, memData.did_bl_write_end_add_asw_key);
+
+
+        uint8_t did_bl_write_start_add_cal_data[] = FBL_DID_BL_WRITE_START_ADD_CAL_DATA_DEFAULT;
+        write_to_variable(FBL_DID_BL_WRITE_START_ADD_CAL_DATA_BYTES_SIZE, did_bl_write_start_add_cal_data, memData.did_bl_write_start_add_cal_data);
+
+        uint8_t did_bl_write_end_add_cal_data[] = FBL_DID_BL_WRITE_END_ADD_CAL_DATA_DEFAULT;
+        write_to_variable(FBL_DID_BL_WRITE_END_ADD_CAL_DATA_BYTES_SIZE, did_bl_write_end_add_cal_data, memData.did_bl_write_end_add_cal_data);
+
+
     }
 }
 
@@ -252,6 +291,22 @@ uint8_t* readData(uint16_t identifier, uint8_t* len, uint8_t* nrc){
         case FBL_DID_BL_WRITE_END_ADD_CORE2:
             *len = FBL_DID_BL_WRITE_END_ADD_CORE2_BYTES_SIZE;
             return prepare_message(len, memData.did_bl_write_end_add_core2);
+
+        case FBL_DID_BL_WRITE_START_ADD_ASW_KEY:
+            *len = FBL_DID_BL_WRITE_START_ADD_ASW_KEY_BYTES_SIZE;
+            return prepare_message(len, memData.did_bl_write_start_add_asw_key);
+
+        case FBL_DID_BL_WRITE_END_ADD_ASW_KEY:
+            *len = FBL_DID_BL_WRITE_END_ADD_ASW_KEY_BYTES_SIZE;
+            return prepare_message(len, memData.did_bl_write_end_add_asw_key);
+
+        case FBL_DID_BL_WRITE_START_ADD_CAL_DATA:
+            *len = FBL_DID_BL_WRITE_START_ADD_CAL_DATA_BYTES_SIZE;
+            return prepare_message(len, memData.did_bl_write_start_add_cal_data);
+
+        case FBL_DID_BL_WRITE_END_ADD_CAL_DATA:
+            *len = FBL_DID_BL_WRITE_END_ADD_CAL_DATA_BYTES_SIZE;
+            return prepare_message(len, memData.did_bl_write_end_add_cal_data);
 
         default:
             break;
@@ -370,6 +425,42 @@ uint8_t writeData(uint16_t identifier, uint8_t* data, uint8_t len){
             if(len != FBL_DID_BL_WRITE_END_ADD_CORE2_BYTES_SIZE)
                 return FBL_RC_REQUEST_OUT_OF_RANGE;
             write_to_variable(len, data, memData.did_bl_write_end_add_core2);
+
+            // Update the flash driver
+            flashDriverInit();
+            break;
+
+        case FBL_DID_BL_WRITE_START_ADD_ASW_KEY:
+            if(len != FBL_DID_BL_WRITE_START_ADD_ASW_KEY_BYTES_SIZE)
+                return FBL_RC_REQUEST_OUT_OF_RANGE;
+            write_to_variable(len, data, memData.did_bl_write_start_add_asw_key);
+
+            // Update the flash driver
+            flashDriverInit();
+            break;
+
+        case FBL_DID_BL_WRITE_END_ADD_ASW_KEY:
+            if(len != FBL_DID_BL_WRITE_END_ADD_ASW_KEY_BYTES_SIZE)
+                return FBL_RC_REQUEST_OUT_OF_RANGE;
+            write_to_variable(len, data, memData.did_bl_write_end_add_asw_key);
+
+            // Update the flash driver
+            flashDriverInit();
+            break;
+
+        case FBL_DID_BL_WRITE_START_ADD_CAL_DATA:
+            if(len != FBL_DID_BL_WRITE_START_ADD_CAL_DATA_BYTES_SIZE)
+                return FBL_RC_REQUEST_OUT_OF_RANGE;
+            write_to_variable(len, data, memData.did_bl_write_start_add_cal_data);
+
+            // Update the flash driver
+            flashDriverInit();
+            break;
+
+        case FBL_DID_BL_WRITE_END_ADD_CAL_DATA:
+            if(len != FBL_DID_BL_WRITE_END_ADD_CAL_DATA_BYTES_SIZE)
+                return FBL_RC_REQUEST_OUT_OF_RANGE;
+            write_to_variable(len, data, memData.did_bl_write_end_add_cal_data);
 
             // Update the flash driver
             flashDriverInit();

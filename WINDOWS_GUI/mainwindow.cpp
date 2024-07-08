@@ -333,12 +333,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     setupFlashPopup();
 
-    connectSignalSlots();
-
     // Init the Communication - Need to be after connectSignalsSlots to directly print to console
     comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
-    comm->init(Communication::CAN_DRIVER); // Set to CAN
     comm->moveToThread(threadComm);
+
+    connectSignalSlots();
+    comm->init(Communication::CAN_DRIVER); // Set to CAN
 
     // Create both QComboBoxes for later
     editComboBox_speed = new EditableComboBox(this);
@@ -576,10 +576,16 @@ void MainWindow::updateValidManager() {
     uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
     uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
 
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_ASW_KEY);
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_ASW_KEY);
+
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CAL_DATA);
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CAL_DATA);
+
     validMan->core_addr.clear();
 
     // Short break to process the incoming signals
-    QTimer::singleShot(25, [this]{
+    QTimer::singleShot(50, [this]{
 
         QString ID_HEX = getECUHEXID();
 
@@ -592,6 +598,12 @@ void MainWindow::updateValidManager() {
         QString core2_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
         QString core2_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
 
+        QString asw_key_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_ASW_KEY);
+        QString asw_key_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_ASW_KEY);
+
+        QString cal_data_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CAL_DATA);
+        QString cal_data_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CAL_DATA);
+
 
         validMan->core_addr[0]["start"] = eculist[ID_HEX][core0_start];
         validMan->core_addr[0]["end"] = eculist[ID_HEX][core0_end];
@@ -601,6 +613,12 @@ void MainWindow::updateValidManager() {
 
         validMan->core_addr[2]["start"] = eculist[ID_HEX][core2_start];
         validMan->core_addr[2]["end"] = eculist[ID_HEX][core2_end];
+
+        validMan->core_addr[3]["start"] = eculist[ID_HEX][asw_key_start];
+        validMan->core_addr[3]["end"] = eculist[ID_HEX][asw_key_end];
+
+        validMan->core_addr[4]["start"] = eculist[ID_HEX][cal_data_start];
+        validMan->core_addr[4]["end"] = eculist[ID_HEX][cal_data_end];
     });
 }
 

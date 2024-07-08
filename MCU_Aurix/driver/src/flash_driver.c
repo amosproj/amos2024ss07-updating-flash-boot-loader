@@ -78,6 +78,12 @@ typedef struct
         uint32_t core2_start_addr;
         uint32_t core2_end_addr;
         uint32_t core2_erased_sections;
+        uint32_t asw_key_start_addr;
+        uint32_t asw_key_end_addr;
+        uint32_t asw_key_erased_sections;
+        uint32_t cal_data_start_addr;
+        uint32_t cal_data_end_addr;
+        uint32_t cal_data_erased_sections;
 } Flash_Eraser;
 
 Flash_Eraser pflash_eraser;
@@ -320,6 +326,48 @@ static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashSta
             num_sectors_delta = num_sectors - pflash_eraser.core2_erased_sections;
         }
     }
+
+    // Address belongs to asw key
+    if(flashStartAddr >= pflash_eraser.asw_key_start_addr && flashStartAddr < pflash_eraser.asw_key_end_addr){
+        num_bytes = (flashStartAddr + dataSize*sizeof(uint32_t)) - pflash_eraser.asw_key_start_addr;
+        num_sectors = getPFlashNumSectors(num_bytes);
+
+        num_sectors_delta = num_sectors - pflash_eraser.asw_key_erased_sections;
+        while(num_sectors_delta > 0){
+            erase_start_addr = pflash_eraser.asw_key_start_addr + (pflash_eraser.asw_key_erased_sections * PFLASH_SECTOR_LENGTH);
+            if(num_sectors_delta > num_loc_per_phy){
+                num_sectors_to_erase = num_loc_per_phy;
+            }
+            else {
+                num_sectors_to_erase = num_sectors_delta;
+            }
+            g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_to_erase);
+            pflash_eraser.asw_key_erased_sections += num_sectors_to_erase;
+
+            num_sectors_delta = num_sectors - pflash_eraser.asw_key_erased_sections;
+        }
+    }
+
+    // Address belongs to cal data
+    if(flashStartAddr >= pflash_eraser.cal_data_start_addr && flashStartAddr < pflash_eraser.cal_data_end_addr){
+        num_bytes = (flashStartAddr + dataSize*sizeof(uint32_t)) - pflash_eraser.cal_data_start_addr;
+        num_sectors = getPFlashNumSectors(num_bytes);
+
+        num_sectors_delta = num_sectors - pflash_eraser.cal_data_erased_sections;
+        while(num_sectors_delta > 0){
+            erase_start_addr = pflash_eraser.cal_data_start_addr + (pflash_eraser.cal_data_erased_sections * PFLASH_SECTOR_LENGTH);
+            if(num_sectors_delta > num_loc_per_phy){
+                num_sectors_to_erase = num_loc_per_phy;
+            }
+            else {
+                num_sectors_to_erase = num_sectors_delta;
+            }
+            g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_to_erase);
+            pflash_eraser.cal_data_erased_sections += num_sectors_to_erase;
+
+            num_sectors_delta = num_sectors - pflash_eraser.cal_data_erased_sections;
+        }
+    }
 }
 
 /* This function flashes the Program Flash memory calling the routines from the PSPR */
@@ -411,12 +459,18 @@ void flashDriverInit(void){
     pflash_eraser.core1_end_addr = flashGetDIDData(FBL_DID_BL_WRITE_END_ADD_CORE1);
     pflash_eraser.core2_start_addr = flashGetDIDData(FBL_DID_BL_WRITE_START_ADD_CORE2);
     pflash_eraser.core2_end_addr = flashGetDIDData(FBL_DID_BL_WRITE_END_ADD_CORE2);
+    pflash_eraser.asw_key_start_addr = flashGetDIDData(FBL_DID_BL_WRITE_START_ADD_ASW_KEY);
+    pflash_eraser.asw_key_end_addr = flashGetDIDData(FBL_DID_BL_WRITE_END_ADD_ASW_KEY);
+    pflash_eraser.cal_data_start_addr = flashGetDIDData(FBL_DID_BL_WRITE_START_ADD_CAL_DATA);
+    pflash_eraser.cal_data_end_addr = flashGetDIDData(FBL_DID_BL_WRITE_END_ADD_CAL_DATA);
     flashResetErasedSectionsCtr();
 
     // First order conditions
-    if((pflash_eraser.core0_start_addr <= pflash_eraser.core0_end_addr) &&
+    if( (pflash_eraser.core0_start_addr <= pflash_eraser.core0_end_addr) &&
         (pflash_eraser.core1_start_addr <= pflash_eraser.core1_end_addr) &&
-        (pflash_eraser.core2_start_addr <= pflash_eraser.core2_end_addr)){
+        (pflash_eraser.core2_start_addr <= pflash_eraser.core2_end_addr) &&
+        (pflash_eraser.asw_key_start_addr <= pflash_eraser.asw_key_end_addr) &&
+        (pflash_eraser.cal_data_start_addr <= pflash_eraser.cal_data_end_addr)){
 
         // Second order conditions
         if((pflash_eraser.core0_end_addr - pflash_eraser.core0_start_addr + 1) % PFLASH_SECTOR_LENGTH != 0){
@@ -434,6 +488,16 @@ void flashDriverInit(void){
                 return;
         }
 
+        if((pflash_eraser.asw_key_end_addr - pflash_eraser.asw_key_start_addr + 1) % PFLASH_SECTOR_LENGTH != 0){
+            if(pflash_eraser.asw_key_start_addr != pflash_eraser.asw_key_end_addr)
+                return;
+        }
+
+        if((pflash_eraser.cal_data_end_addr - pflash_eraser.cal_data_start_addr + 1) % PFLASH_SECTOR_LENGTH != 0){
+            if(pflash_eraser.cal_data_start_addr != pflash_eraser.cal_data_end_addr)
+                return;
+        }
+
         pflash_eraser.init = 1;
     }
 }
@@ -443,6 +507,8 @@ void flashResetErasedSectionsCtr(void){
     pflash_eraser.core0_erased_sections = 0;
     pflash_eraser.core1_erased_sections = 0;
     pflash_eraser.core2_erased_sections = 0;
+    pflash_eraser.asw_key_erased_sections = 0;
+    pflash_eraser.cal_data_erased_sections = 0;
 }
 
 /* This function calls the correct writing function, either flashWriteProgramm or flashWriteData, depending on flashStartAddr,

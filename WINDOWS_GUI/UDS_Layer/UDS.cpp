@@ -911,6 +911,14 @@ QString UDS::translateDID(uint16_t DID){
             return QString("Write Start Address Core 2"); break;
         case FBL_DID_BL_WRITE_END_ADD_CORE2:
             return QString("Write End Address Core 2"); break;
+        case FBL_DID_BL_WRITE_START_ADD_ASW_KEY:
+            return QString("Write Start Address ASW Key"); break;
+        case FBL_DID_BL_WRITE_END_ADD_ASW_KEY:
+            return QString("Write End Address ASW Key"); break;
+        case FBL_DID_BL_WRITE_START_ADD_CAL_DATA:
+            return QString("Write Start Address Calibration Data"); break;
+        case FBL_DID_BL_WRITE_END_ADD_CAL_DATA:
+            return QString("Write End Address Calibration Data"); break;
         default:
             return QString("Data Identifier unknown");
     }
@@ -984,6 +992,22 @@ QString UDS::readDIDData(uint16_t DID, uint8_t* data, uint32_t no_bytes){
                 retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
             return retText; break;
         case FBL_DID_BL_WRITE_END_ADD_CORE2:
+            for(int i=0; i < no_bytes; i++)
+                retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+            return retText; break;
+        case FBL_DID_BL_WRITE_START_ADD_ASW_KEY:
+            for(int i=0; i < no_bytes; i++)
+                retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+            return retText; break;
+        case FBL_DID_BL_WRITE_END_ADD_ASW_KEY:
+            for(int i=0; i < no_bytes; i++)
+                retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+            return retText; break;
+        case FBL_DID_BL_WRITE_START_ADD_CAL_DATA:
+            for(int i=0; i < no_bytes; i++)
+                retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
+            return retText; break;
+        case FBL_DID_BL_WRITE_END_ADD_CAL_DATA:
             for(int i=0; i < no_bytes; i++)
                 retText.append(QString("%1").arg(data[i], 2, 16, QLatin1Char( '0' )));
             return retText; break;

@@ -493,7 +493,9 @@ bool ValidateManager::addrInRange(uint32_t address, uint32_t data_len){
 
     if( addrInCoreRange(address, data_len, 0, &supported) ||
         addrInCoreRange(address, data_len, 1, &supported) ||
-        addrInCoreRange(address, data_len, 2, &supported))
+        addrInCoreRange(address, data_len, 2, &supported) ||
+        addrInCoreRange(address, data_len, 3, &supported) ||
+        addrInCoreRange(address, data_len, 4, &supported))
     {
 
         return true;
