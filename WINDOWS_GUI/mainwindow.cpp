@@ -323,12 +323,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     setupFlashPopup();
 
-    connectSignalSlots();
-
     // Init the Communication - Need to be after connectSignalsSlots to directly print to console
     comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
-    comm->init(Communication::CAN_DRIVER); // Set to CAN
     comm->moveToThread(threadComm);
+
+    connectSignalSlots();
+    comm->init(Communication::CAN_DRIVER); // Set to CAN
 
     // Create both QComboBoxes for later
     editComboBox_speed = new EditableComboBox(this);
