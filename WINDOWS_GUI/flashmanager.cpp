@@ -34,6 +34,10 @@ FlashManager::FlashManager(QObject *parent): QObject(parent){
     // Flashing Thread is stopped by default
     this->_working =false;
     this->_abort = false;
+
+    // Initialize pointers
+    this->uds = nullptr;
+    this->comm = nullptr;
 }
 
 FlashManager::~FlashManager(){

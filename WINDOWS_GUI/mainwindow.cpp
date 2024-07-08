@@ -30,6 +30,11 @@ void MainWindow::set_uds_connection(enum UDS_CONN conn){
     switch(conn){
         case GUI:
             qDebug("MainWindow: Call of set_uds_connection for GUI");
+
+            // GUI Console Print
+            disconnect(uds, SIGNAL(toConsole(QString)), 0, 0);
+            disconnect(comm, SIGNAL(toConsole(QString)), 0, 0);
+
             // Comm RX Signal to UDS RX Slot
             disconnect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), 0, 0); // disconnect everything connect to rxDataReived
 
@@ -40,7 +45,14 @@ void MainWindow::set_uds_connection(enum UDS_CONN conn){
             // UDS Receive Signals to GUI Slots
             disconnect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), 0, 0);
 
+            // ECU Connectivity timer
+            disconnect(ecuConnectivityTimer, SIGNAL(timeout()), 0, 0);
+
             // ####################################################################################
+
+            // GUI Console Print
+            connect(uds, SIGNAL(toConsole(QString)), this, SLOT(appendTextToConsole(QString)), Qt::DirectConnection);
+            connect(comm, SIGNAL(toConsole(QString)), this, SLOT(appendTextToConsole(QString)), Qt::DirectConnection);
 
             // Comm RX Signal to UDS RX Slot
             connect(comm, SIGNAL(rxDataReceived(uint, QByteArray)), uds, SLOT(rxDataReceiverSlot(uint, QByteArray)), Qt::DirectConnection);
@@ -51,9 +63,14 @@ void MainWindow::set_uds_connection(enum UDS_CONN conn){
 
             // UDS Receive Signals to GUI Slots
             connect(uds, SIGNAL(ecuResponse(QMap<QString,QString>)), this, SLOT(ecuResponseSlot(QMap<QString,QString>)), Qt::DirectConnection);
+
+            // ECU Connectivity timer
+            connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
             break;
 
         default:
+            // ECU Connectivity timer
+            disconnect(ecuConnectivityTimer, SIGNAL(timeout()), 0, 0);
             break;
     }
 }
@@ -63,6 +80,7 @@ void MainWindow::connectSignalSlots() {
     set_uds_connection(GUI);
 
     // ValidateManager Signals
+    connect(validMan, SIGNAL(validationDone(const QMap<uint32_t, QByteArray>)), this, SLOT(onValidationDone(const QMap<uint32_t, QByteArray>)));
     connect(validMan, SIGNAL(infoPrint(QString)), this, SLOT(appendTextToConsole(QString)));
     connect(validMan, SIGNAL(debugPrint(QString)), this, SLOT(appendTextToConsole(QString)));
     connect(validMan, SIGNAL(errorPrint(QString)), this, SLOT(appendTextToConsole(QString)));
@@ -82,10 +100,6 @@ void MainWindow::connectSignalSlots() {
     // Connect the currentIndexChanged signal of the first QComboBox to the slot comboBoxIndexChanged
     connect(ui->comboBox_channel, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
             &MainWindow::comboBoxIndexChanged);
-
-    // GUI Console Print
-    connect(uds, SIGNAL(toConsole(QString)), this->ui->Console, SLOT(appendPlainText(QString)), Qt::DirectConnection);
-    connect(comm, SIGNAL(toConsole(QString)), this, SLOT(appendTextToConsole(QString)), Qt::DirectConnection);
 
     // GUI menu bar
     connect(ui->menuLicenseQT, &QAction::triggered, this, [=]() {
@@ -113,7 +127,6 @@ void MainWindow::connectSignalSlots() {
     connect(ui->button_file, &QPushButton::clicked, this, [=]() {
         if(ECUSelected()){
 
-            updateValidManager();
             if(!QFileInfo::exists(rootDir))
                 rootDir = defaultRootDir;
             qDebug() << "Choosing the file - root directory: " + rootDir;;
@@ -136,7 +149,7 @@ void MainWindow::connectSignalSlots() {
                 rootDir = fileInfo.absolutePath();
 
                 // Validate file, result is already prepared for furhter calculations
-                validMan->data = validMan->validateFile(data);
+                validMan->data = validMan->validateFileAsync(data);
                 validMan->checksums = validMan->calculateFileChecksums();
 
                 //dummy_function(data);
@@ -154,6 +167,26 @@ void MainWindow::connectSignalSlots() {
         if(ECUSelected()) {
             QTableWidgetItem *item = ui->table_ECU->selectedItems().at(0);
             ui->label_selected_ECU->setText("Selected: " + item->text());
+            updateValidManager();
+
+            if(!validMan->data.isEmpty()){
+
+                QTimer::singleShot(25,this,[this]{
+
+                    if(validMan->checkBlockAddressRange(validMan->data)){
+
+                        updateLabel(ValidateManager::VALID, "File validity:  Valid");
+
+                    }
+                    else {
+
+                        updateLabel(ValidateManager::VALID, "File validity:  Not Valid");
+                    }
+
+
+                });
+            }
+
         } else { 
             ui->label_selected_ECU->setText("");
         }
@@ -189,14 +222,12 @@ void MainWindow::connectSignalSlots() {
         }
     });
 
-    // GUI connectivity indicator
-    ecuConnectivityTimer = new QTimer(this);
-    connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
-    ecuConnectivityTimer->start(ECU_CONNECTIVITY_TIMER);
-
     //Set baudrate
     connect(this, SIGNAL(baudrateSignal(uint, uint)), comm, SLOT(setBaudrate(uint, uint)), Qt::DirectConnection);
 
+    ecuListUpdateMutex.lock();
+    ecuListUpdateInProgess = false;
+    ecuListUpdateMutex.unlock();
 }
 
 void MainWindow::setupFlashPopup() {
@@ -254,13 +285,16 @@ void MainWindow::setupFlashPopup() {
     flashPopup.setLayout(layout);
 }
 
+//============================================================================
+// Constructor
+//============================================================================
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     this->setFixedSize(this->geometry().width(),this->geometry().height());
-
 
     defaultRootDir = QCoreApplication::applicationDirPath();
     QSettings settings("AMOS", "FBL");
@@ -288,6 +322,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     qInfo("Main: Create the ValidateManager");
     validMan = new ValidateManager();
+
+    // GUI connectivity indicator
+    ecuConnectivityTimer = new QTimer(this);
+    ecuConnectivityTimer->start(ECU_CONNECTIVITY_TIMER);
 
     ui->table_ECU->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->table_ECU->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -333,6 +371,9 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+//============================================================================
+// Public Method
+//============================================================================
 
 void MainWindow::updateStatus(FlashManager::STATUS s, QString str, int percent) {
     QString status = "";
@@ -389,54 +430,19 @@ void MainWindow::updateLabel(ValidateManager::LABEL s, QString str) {
     }
 }
 
-void MainWindow::updateValidManager() {
-
-    uint32_t ecu_id = getECUID();
-
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
-
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
-
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
-
-    validMan->core_addr.clear();
-
-    // Short break to process the incoming signals
-    QTimer::singleShot(25, [this]{
-
-        QString ID_HEX = getECUHEXID();
-
-        QString core0_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
-        QString core0_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
-
-        QString core1_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
-        QString core1_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
-
-        QString core2_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
-        QString core2_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
-
-
-        validMan->core_addr[0]["start"] = eculist[ID_HEX][core0_start];
-        validMan->core_addr[0]["end"] = eculist[ID_HEX][core0_end];
-
-        validMan->core_addr[1]["start"] = eculist[ID_HEX][core1_start];
-        validMan->core_addr[1]["end"] = eculist[ID_HEX][core1_end];
-
-        validMan->core_addr[2]["start"] = eculist[ID_HEX][core2_start];
-        validMan->core_addr[2]["end"] = eculist[ID_HEX][core2_end];
-    });
-}
-
-
-
+//============================================================================
+// Private Method
+//============================================================================
 
 void MainWindow::updateECUList(){
     qInfo() << "Updating ECU List";
     //this->ui->table_ECU->clearContents();
     //this->ui->table_ECU->setRowCount(0);
+
+    ecuListUpdateMutex.lock();
+    ecuListUpdateInProgess = true;
+    ecuListUpdateMutex.unlock();
+
     eculist.clear();
     clearECUTableView();
     uds->reqIdentification();
@@ -499,6 +505,10 @@ void MainWindow::updateECUTableView(QMap<QString, QMap<QString, QString>> eculis
             break;
         }
     }
+
+    ecuListUpdateMutex.lock();
+    ecuListUpdateInProgess = false;
+    ecuListUpdateMutex.unlock();
 }
 
 uint32_t MainWindow::getECUID() {
@@ -520,7 +530,18 @@ QString MainWindow::getECUHEXID() {
 }
 
 bool MainWindow::ECUSelected() {
-    return !ui->table_ECU->selectedItems().empty() && !ui->table_ECU->selectedItems().at(0)->text().isEmpty();
+    if(ui->table_ECU != nullptr){
+        bool isEmpty = ui->table_ECU->selectedItems().empty();
+        if(isEmpty){
+            return !isEmpty;
+        }
+
+        QTableWidgetItem* item = ui->table_ECU->selectedItems().at(0);
+        if (item != nullptr){
+            return !item->text().isEmpty();
+        }
+    }
+    return false;
 }
 
 void MainWindow::setFlashButton(FLASH_BTN m){
@@ -542,16 +563,57 @@ void MainWindow::udsUpdateVersion(uint32_t id, uint8_t *data, uint8_t data_size)
     uds->writeDataByIdentifier(id, FBL_DID_APP_ID, data, data_size);
 }
 
+void MainWindow::updateValidManager() {
+
+    uint32_t ecu_id = getECUID();
+
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
+
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
+
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
+
+    validMan->core_addr.clear();
+
+    // Short break to process the incoming signals
+    QTimer::singleShot(25, [this]{
+
+        QString ID_HEX = getECUHEXID();
+
+        QString core0_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
+        QString core0_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
+
+        QString core1_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
+        QString core1_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
+
+        QString core2_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
+        QString core2_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
+
+
+        validMan->core_addr[0]["start"] = eculist[ID_HEX][core0_start];
+        validMan->core_addr[0]["end"] = eculist[ID_HEX][core0_end];
+
+        validMan->core_addr[1]["start"] = eculist[ID_HEX][core1_start];
+        validMan->core_addr[1]["end"] = eculist[ID_HEX][core1_end];
+
+        validMan->core_addr[2]["start"] = eculist[ID_HEX][core2_start];
+        validMan->core_addr[2]["end"] = eculist[ID_HEX][core2_end];
+    });
+}
+
 //=============================================================================
 // Slots
 //=============================================================================
 
 void MainWindow::startUDSUsage(){
-    // Connect UDS and Comm Layer
+    // Connect Signals and Slots
     set_uds_connection(GUI);
 
     // Connect the Connectivity Timer
-    connect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
+    ecuConnectivityTimer->start(ECU_CONNECTIVITY_TIMER);
 
     // Enable all buttons with UDS messages
     ui->button_reset->setDisabled(false);
@@ -569,8 +631,11 @@ void MainWindow::startUDSUsage(){
  * This is necessary to make sure FlashManager and MainWindow are not using UDS communication at the same time. (Can cause conflicts because of different Threads)
  */
 void MainWindow::stopUDSUsage(){
+    // Connect Signals and Slots
+    set_uds_connection(FLASHING);
+
     // Disconnect the Connectivity Timer
-    disconnect(ecuConnectivityTimer, SIGNAL(timeout()), this, SLOT(checkECUconnectivity()));
+    ecuConnectivityTimer->stop();
 
     // Disable all buttons with UDS messages
     ui->button_reset->setDisabled(true);
@@ -696,6 +761,17 @@ void MainWindow::checkECUconnectivity() {
     }
     ui->label_ECU_status->setStyleSheet("QLabel {border-radius: 5px;  max-width: 10px; max-height: 10px; background-color: " + color + "}");
 }
+
+void MainWindow::onValidationDone(const QMap<uint32_t, QByteArray> result){
+
+    // Handle the result of validation here
+    validMan->data = result; // Or use the result directly
+
+}
+
+//=============================================================================
+// Protected
+//=============================================================================
 
 void MainWindow::closeEvent(QCloseEvent *event) {
     QSettings settings("AMOS", "FBL");

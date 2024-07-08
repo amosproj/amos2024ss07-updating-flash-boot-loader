@@ -13,6 +13,8 @@
 #include <QDebug>
 #include <QMap>
 #include <QByteArray>
+#include <QThread>
+#include <QMutex>
 
 class ValidateManager : public QObject {
 
@@ -26,6 +28,10 @@ public:
     QMap<uint16_t, QMap<QString, QString>> core_addr;
     QMap<uint32_t, uint32_t> checksums;
 
+private:
+
+    QMutex dataMutex;
+
 public:
 
     QMap<uint32_t, QByteArray> uncompressedData;
@@ -33,21 +39,26 @@ public:
     ValidateManager();
     virtual ~ValidateManager();
 
-    QMap<uint32_t, QByteArray> validateFile(QByteArray data);
     QMap<uint32_t, uint32_t> calculateFileChecksums(void);
     QMap<uint32_t, uint32_t> calculateAddressLengths(QMap<uint32_t, QByteArray> data); 
+    void validateFileAsync(QByteArray data);
+
+    bool checkBlockAddressRange(QMap<uint32_t, QByteArray> blocks);
 
 private:
 
+    QMap<uint32_t, QByteArray> validateFile(QByteArray data);
+
     bool validateLine(QByteArray line);
     QByteArray extractData(QByteArray line, char record_type);
+    QMap<uint32_t, QByteArray> combineSortedQMap(QMap<uint32_t, QByteArray> blocks);
 
     bool addrInCoreRange(uint32_t addr, uint32_t data_len,  uint16_t core, bool* supported);
     bool addrInRange(uint32_t address, uint32_t data_len);
 
-    uint32_t getAddr(uint32_t addr);
-    QByteArray getData(QByteArray tempData);
 
+    QByteArray getData(QByteArray tempData);
+    uint32_t getAddr(uint32_t addr);
 
 signals:
 
@@ -70,12 +81,18 @@ signals:
     void errorPrint(const QString &text);
 
     /**
-     * @brief Signals that the text for flashing need to be changed (Mainwindow GUI)
+     * @brief Signals that the text for validation need to be changed (Mainwindow GUI)
      * @param s Status to be used
      * @param str Text to be printed
      * @param percent 0..100 to be set as bar value
      */
     void updateLabel(ValidateManager::LABEL s, const QString &str);
+
+    /**
+     * @brief Signals that ERROR text is available for printing to console
+     * @param text To be printed
+     */
+    void validationDone(const QMap<uint32_t, QByteArray> result);
 
 
 };
