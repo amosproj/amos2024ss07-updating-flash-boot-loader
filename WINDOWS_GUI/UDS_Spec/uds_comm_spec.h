@@ -132,6 +132,10 @@ extern "C" {
 #define FBL_DID_BL_WRITE_END_ADD_CORE1                              (0xFD13)
 #define FBL_DID_BL_WRITE_START_ADD_CORE2                            (0xFD14)
 #define FBL_DID_BL_WRITE_END_ADD_CORE2                              (0xFD15)
+#define FBL_DID_BL_WRITE_START_ADD_ASW_KEY                          (0xFD16)
+#define FBL_DID_BL_WRITE_END_ADD_ASW_KEY                            (0xFD17)
+#define FBL_DID_BL_WRITE_START_ADD_CAL_DATA                         (0xFD18)
+#define FBL_DID_BL_WRITE_END_ADD_CAL_DATA                           (0xFD19)
 
 //############################################################################
 
