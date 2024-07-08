@@ -10,6 +10,7 @@
 //============================================================================
 
 #include "flashmanager.h"
+#include "CCRC32.h"
 #include <QDate>
 #include <QTime>
 #include <QTimer>
@@ -157,6 +158,10 @@ void FlashManager::setTestFile(){
 void FlashManager::setFlashFile(QMap<uint32_t, QByteArray> data){
     flashContent.clear();
     flashContent = data;
+}
+
+QMap<uint32_t, QByteArray> FlashManager::getFlashContent(void) {
+    return flashContent;
 }
 
 //============================================================================
@@ -319,6 +324,10 @@ void FlashManager::doFlashing(){
                 transferData();
                 break;
 
+            case VALIDATE:
+                validateFlashing();
+                break; 
+
             case FINISH:
                 finishFlashing();
                 break;
@@ -431,6 +440,9 @@ void FlashManager::prepareFlashing(){
     flashedBytesCtr = 0;
     flashedBytes.clear();
     fillOverallByteSize();
+
+    QMap<uint32_t, QByteArray> uncompressedData = uncompressData(flashContent);
+    this->checksums = calculateFileChecksums(uncompressedData);
 
     curr_state = START_FLASHING;
 }
@@ -614,7 +626,96 @@ void FlashManager::transferData(){
     queuedGUIFlashingLog(INFO, "Flash file fully transmitted.");
 
     QThread::msleep(2000);
+    curr_state = VALIDATE;
+}
+
+void FlashManager::validateFlashing(){
+
+    queuedGUIConsoleLog("###############################\nFlashManager: Validating\n###############################\n");
+
+    int errorcount = 0;
+
+    for (auto [key, value] : checksums.asKeyValueRange()) {
+        
+        UDS::RESP resp = UDS::RESP::RX_NO_RESPONSE;
+
+        resp = uds->requestUpload(ecu_id, key, flashContentSize.value(key));
+
+        if (resp != UDS::TX_RX_OK) {
+            emit errorPrint("FlashManager: ERROR - Requesting upload failed");
+            errorcount++;
+            /*curr_state = ERR_STATE; //TODO vllt
+            return;*/
+        }
+
+        uint32_t ecuChecksum = uds->getECUChecksum();
+        qInfo() << "Block with address 0x" + QString::number(key, 16) + " and length: "  + QString::number(flashContentSize.value(key));
+
+        if (ecuChecksum != value) {
+            queuedGUIConsoleLog("FlashManager: ERROR in Block with address 0x" + QString::number(key, 16) + " and length: "  + QString::number(flashContentSize.value(key)) + " - Calculated checksums didn't match.");
+            qInfo() << "FlashManager: ERROR in Block with address 0x" + QString::number(key, 16) + " and length: "  + QString::number(flashContentSize.value(key)) + " - Calculated checksums didn't match.";
+            queuedGUIConsoleLog("Should be: 0x" + QString::number(value, 16) + ", but was: 0x" + QString::number(ecuChecksum, 16) + "\n");
+            qInfo() << "Should be: 0x" + QString::number(value, 16) + ", but was: 0x" + QString::number(ecuChecksum, 16) + "\n";
+            errorcount++;
+            /*curr_state = ERR_STATE;
+            return;*/
+        }
+        else {
+             qInfo() << "IO - Should be: 0x" + QString::number(value, 16) + ", was: 0x" + QString::number(ecuChecksum, 16) + "\n";
+        }
+    }
+    if (errorcount != 0) {
+        queuedGUIConsoleLog(QString::number(errorcount) + " checksums didn't match\n");
+        curr_state = ERR_STATE; //TODO vllt
+        return;
+    }
+    queuedGUIConsoleLog("FlashManager: Flashing successful\n");
+
     curr_state = FINISH;
+}
+
+QMap<uint32_t, QByteArray>FlashManager::uncompressData(QMap<uint32_t, QByteArray> compressedData) {
+    QMap<uint32_t, QByteArray> result;
+
+    for (auto [key, value] : compressedData.asKeyValueRange()) {
+        QByteArray splitBytes;
+        splitBytes.resize(2 * value.size());
+
+        for (uint32_t i = 0; i < value.size(); i++) {
+            int byte = value[i];
+            uint32_t lower = byte & 0x0000000F;
+            lower += lower > 9 ? 0x37 : 0x30;
+            byte = byte >> 4;
+            uint32_t higher = byte & 0x0000000F;
+            higher += higher > 9 ?  0x37 : 0x30;
+            splitBytes[2 * i] = (char) higher;
+            splitBytes[2 * i + 1] = (char) lower;
+        }
+
+        result.insert(key, splitBytes);
+    }
+
+    return result;
+}
+
+QMap<uint32_t, uint32_t> FlashManager::calculateFileChecksums(QMap<uint32_t, QByteArray> data) {
+    QMap<uint32_t, uint32_t> result;
+
+    for (auto [key, value] : data.asKeyValueRange()) {
+        CCRC32 crc;
+        crc.Initialize();
+
+        QByteArray line = value;
+
+        char *nextLine = line.data();
+
+        QString str = QString(nextLine);
+
+        uint32_t checksum = (uint32_t) crc.FullCRC((const unsigned char *) nextLine, strlen(nextLine));
+        result.insert(key, checksum);
+    }
+
+    return result;
 }
 
 void FlashManager::finishFlashing(){

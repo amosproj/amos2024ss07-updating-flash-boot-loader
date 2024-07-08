@@ -5,8 +5,8 @@
 
 //============================================================================
 // Name        : flash_driver.h
-// Author      : Dorothea Ehrl, Michael Bauer
-// Version     : 0.2
+// Author      : Dorothea Ehrl, Michael Bauer, Paul Roy
+// Version     : 0.3
 // Copyright   : MIT
 // Description : Flash wrapper for Bootloader
 //============================================================================
@@ -47,5 +47,6 @@ void flashResetErasedSectionsCtr(void);
 bool flashWrite(uint32_t flashStartAddr, uint32_t data[], size_t dataSize);
 bool flashVerify(uint32_t flashStartAddr, uint32_t data[], size_t dataSize);
 uint8_t *flashRead(uint32_t flashStartAddr, size_t dataBytesToRead);
+uint32_t flashCalculateChecksum(uint32_t flashStartAddr, uint32_t lengthInBytes);
 
 #endif /* FLASH_H_ */

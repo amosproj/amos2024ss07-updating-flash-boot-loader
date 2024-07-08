@@ -10,6 +10,9 @@
 //============================================================================
 
 #include "validatemanager.h"
+#include <string.h>
+
+#include <QDebug>
 #include <QPointer>
 #include <QApplication>
 
@@ -110,11 +113,11 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
     bool file_header = false;
 
     QByteArray new_line;
+    QByteArray result;
     QByteArray line_buffer;
 
     QMap<uint32_t, QByteArray> merged_blocks;
     QMap<uint32_t, QByteArray> block_result;
-
 
     // Print each line
     for (QByteArray& line : lines) {
@@ -259,11 +262,9 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
     }
 
     if(!line_buffer.isEmpty()){
-
         merged_blocks.insert(getAddr(line_buffer.left(8).toUInt(NULL, 16)), getData(line_buffer.right(line_buffer.size()-8)));
         line_buffer.clear();
     }
-
     block_result = combineSortedQMap(merged_blocks);
 
     //TODO: remove
@@ -297,7 +298,6 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
         emit updateLabel(ValidateManager::VALID, "File validity:  Not Valid");
     }
-
     return block_result;
 }
 

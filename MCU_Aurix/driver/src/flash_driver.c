@@ -4,8 +4,8 @@
 
 //============================================================================
 // Name        : flash_driver.c
-// Author      : Dorothea Ehrl, Michael Bauer
-// Version     : 0.2
+// Author      : Dorothea Ehrl, Michael Bauer, Paul Roy
+// Version     : 0.3
 // Copyright   : MIT
 // Description : Flash wrapper for Bootloader
 //============================================================================
@@ -20,6 +20,7 @@
 
 #include "flash_driver.h"
 #include "flash_driver_TC375_LK.h"
+#include "crc.h"
 #include "memory.h"
 #include "uds_comm_spec.h"
 
@@ -617,4 +618,50 @@ uint8_t *flashRead(uint32_t flashStartAddr, size_t dataBytesToRead){
         }
     }
     return data;
+}
+
+/**  
+ * Calculates Checksum for the given part of memory used to verify flash after flashing 
+ * Caution: CRC-Calculation is based on ASCII not Hex-number
+ */
+
+uint32_t flashCalculateChecksum(uint32_t flashStartAddr, uint32_t length) {
+
+    char flashContent[3];
+    flashContent[2] = '\0';
+    uint32_t addr = flashStartAddr;
+    uint32_t endAddr = flashStartAddr + length;
+
+    crc_t crc = crc_init();
+    uint32_t nextFourBytes = 0;
+    while (addr < endAddr) {
+        // For Debugging
+        //if(addr >= 0xA04F8000)
+        //    __nop();
+
+        nextFourBytes = MEM(addr);
+
+        for (int i = 0; i < 4; i++) {
+            if (addr + i >= endAddr) {
+                break;
+            }
+            uint8_t lower = (uint8_t)(nextFourBytes & 0x0000000F);
+            lower += lower > 9 ? 0x37 : 0x30;
+            nextFourBytes = nextFourBytes >> 4;
+            uint8_t higher = (uint8_t)(nextFourBytes & 0x0000000F);
+            higher += higher > 9 ? 0x37 : 0x30;
+            nextFourBytes = nextFourBytes >> 4;
+
+            flashContent[0] = higher;
+            flashContent[1] = lower;
+
+            crc = crc_update(crc, (const char *) flashContent, strlen(flashContent));
+        }
+
+        addr += 4;
+    }
+
+    crc = crc_finalize(crc);
+
+    return (uint32_t) crc;
 }

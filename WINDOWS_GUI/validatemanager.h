@@ -36,9 +36,7 @@ public:
     ValidateManager();
     virtual ~ValidateManager();
 
-
     void validateFileAsync(QByteArray data);
-
     bool checkBlockAddressRange(QMap<uint32_t, QByteArray> blocks);
 
 private:
@@ -89,7 +87,6 @@ signals:
      * @param text To be printed
      */
     void validationDone(const QMap<uint32_t, QByteArray> result);
-
 
 };
 

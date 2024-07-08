@@ -48,7 +48,7 @@ public:
     enum STATUS {UPDATE, INFO, ERR, RESET};
 
 private:
-    enum STATE_MACHINE {PREPARE, START_FLASHING, REQ_DOWNLOAD, TRANSFER_DATA, FINISH, IDLE, ERR_STATE};
+    enum STATE_MACHINE {PREPARE, START_FLASHING, REQ_DOWNLOAD, TRANSFER_DATA, VALIDATE, FINISH, IDLE, ERR_STATE};
     STATE_MACHINE curr_state, prev_state;                       // States
     uint8_t state_attempt_ctr;                                  // State attempt counter
     //uint8_t flash_add_attempt_ctr;                              // Flash address attempt counter
@@ -59,6 +59,7 @@ private:
     QMap<uint32_t, QByteArray> flashContent;                    // Map with Address -> continous byte array
     QMap<uint32_t, uint32_t> flashContentSize;                  // Map with total size of content for every address
     QMap<uint32_t, uint32_t> flashedBytes;                      // Map with sum of flashed bytes for every address
+    QMap<uint32_t, uint32_t> checksums;                         // Map of the checksums for every address
 
     size_t flashedBytesCtr;                                     // Counter for flashed bytes
     uint32_t flashCurrentAdd;                                   // Stores the current address to be flashed
@@ -84,6 +85,7 @@ public:
     void setECUID(uint32_t ecu_id);
     void setTestFile();
     void setFlashFile(QMap<uint32_t, QByteArray> data);
+    QMap<uint32_t, QByteArray> getFlashContent(void);
 
     void startFlashing(uint32_t ecu_id, uint32_t gui_id, Communication* comm){
 
@@ -158,12 +160,15 @@ private:
     void updateGUIProgressBar();
     void queuedGUIConsoleLog(QString info, bool forced=0);
     void queuedGUIFlashingLog(FlashManager::STATUS s, QString info, bool forced=0);
+    QMap<uint32_t, uint32_t> calculateFileChecksums(QMap<uint32_t, QByteArray> data);
+    QMap<uint32_t, QByteArray> uncompressData(QMap<uint32_t, QByteArray> compressedData);
 
     void doFlashing();
     void prepareFlashing();
     void startFlashing();
     void requestDownload();
     void transferData();
+    void validateFlashing();
     void finishFlashing();
 
 signals:

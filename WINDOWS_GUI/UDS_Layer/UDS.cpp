@@ -59,6 +59,10 @@ uint32_t UDS::getECUTransferDataBufferSize(){
     return ecu_rec_buffer_size;
 }
 
+uint32_t UDS::getECUChecksum() {
+    return ecu_rec_checksum;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // Private - Receiving UDS Messages
 //////////////////////////////////////////////////////////////////////////////
@@ -197,6 +201,7 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
             // Check on the relevant message - Adress is correct
             rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
             if(rx_msg_valid){
+                this->ecu_rec_buffer_size = 0;
                 this->ecu_rec_buffer_size |= (data[5] << 24);
                 this->ecu_rec_buffer_size |= (data[6] << 16);
                 this->ecu_rec_buffer_size |= (data[7] << 8);
@@ -214,6 +219,16 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
 
             // Check on the relevant message - Adress is correct
             rx_msg_valid = rxMsgValid(neg_resp, true, rx_no_bytes, no_bytes, rx_exp_data, data, 4);
+            if (rx_msg_valid) {
+                this->ecu_rec_checksum = 0;
+                this->ecu_rec_checksum |= (data[5] << 24);
+                this->ecu_rec_checksum |= (data[6] << 16);
+                this->ecu_rec_checksum |= (data[7] << 8);
+                this->ecu_rec_checksum |= data[8];
+            } else {
+                this->ecu_rec_checksum = 0;
+            }
+            //qInfo() << QString("0x%1").arg(ecu_rec_checksum, 2, 16, QLatin1Char( '0' ));
             break;
 
         case FBL_TRANSFER_DATA:
@@ -698,7 +713,7 @@ UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes) {
     free(temp_rx_exp_data);
 
     txMessageSend(send_id, msg, len);
-    return rxMessageValid(rx_max_waittime_general);
+    return rxMessageValid(rx_max_waittime_validation);
 }
 
 /**

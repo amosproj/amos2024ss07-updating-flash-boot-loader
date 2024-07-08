@@ -26,6 +26,7 @@ typedef struct {
     uint32_t startAddr;
     uint32_t endAddr;
     enum FLASHING_STATE state;
+    uint32_t checksum;
 } Flashing_Internal;
 
 Flashing_Internal flashing_int_data;
@@ -138,7 +139,19 @@ uint8_t flashingRequestDownload(uint32_t address, uint32_t data_len){
 }
 
 uint8_t flashingRequestUpload(uint32_t address, uint32_t data_len){
-    return FBL_RC_SERVICE_NOT_SUPPORTED;
+    
+    if(!addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE0, FBL_DID_BL_WRITE_END_ADD_CORE0) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE1, FBL_DID_BL_WRITE_END_ADD_CORE1) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE2, FBL_DID_BL_WRITE_END_ADD_CORE2) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_ASW_KEY, FBL_DID_BL_WRITE_END_ADD_ASW_KEY) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CAL_DATA, FBL_DID_BL_WRITE_END_ADD_CAL_DATA))
+    {
+        return FBL_RC_REQUEST_OUT_OF_RANGE;
+    }
+    
+    flashing_int_data.checksum = flashCalculateChecksum(address, data_len);
+    
+    return 0;
 }
 
 uint8_t flashingTransferData(uint32_t address, uint8_t* data, uint32_t data_len){
@@ -181,4 +194,8 @@ uint8_t flashingTransferExit(uint32_t address){
 
 uint32_t flashingGetFlashBufferSize(void){
     return flashing_int_data.buffer;
+}
+
+uint32_t flashingGetChecksum() {
+    return flashing_int_data.checksum;
 }
