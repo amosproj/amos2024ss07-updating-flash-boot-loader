@@ -253,6 +253,33 @@ static uint32_t getPFlashNumPhySectors()
     return getNumPerSize(PFLASH_SECTOR_LENGTH, PFLASH_PHY_SECTOR_LENGTH, 0);
 }
 
+static void readToVerifyPFlash(uint32 startAddr, uint32_t data[], size_t dataSize){
+
+    FILE *f3 = fopen("terminal window 3", "rw");
+
+    uint32_t dataIndex = 0;
+
+    fprintf(f3, "Reading %zu uint32_t from 0x%X\n", (unsigned long)dataSize, startAddr);
+    for (uint32_t address = startAddr; address < startAddr + dataSize * sizeof(uint32); address += sizeof(uint32))
+    {
+        uint32_t content = MEM(address);
+        if ( content > 0)
+        {
+            if (content != data[dataIndex]){
+                fprintf(f3, " -> Address 0x%X: Content is different Is: 0x%X, Should: 0x%X\n", address, content, data[dataIndex]);
+            } else{
+                //fprintf(f3, " -> Address 0x%X: Content is equal\n", address);
+            }
+        }
+        else {
+            //fprintf(f3, " -> Address 0x%X is 0\n", address);
+        }
+        dataIndex++;
+    }
+
+    fclose(f3);
+}
+
 static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashStartAddr, size_t dataSize){
     uint32_t num_loc_per_phy = getPFlashNumPhySectors(PFLASH_SECTOR_LENGTH);
 
@@ -278,8 +305,8 @@ static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashSta
                 num_sectors_to_erase = num_sectors_delta;
             }
             g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_to_erase);
-            pflash_eraser.core0_erased_sections += num_sectors_to_erase;
 
+            pflash_eraser.core0_erased_sections += num_sectors_to_erase;
             num_sectors_delta = num_sectors - pflash_eraser.core0_erased_sections;
         }
     }
@@ -299,8 +326,8 @@ static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashSta
                 num_sectors_to_erase = num_sectors_delta;
             }
             g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_to_erase);
-            pflash_eraser.core1_erased_sections += num_sectors_to_erase;
 
+            pflash_eraser.core1_erased_sections += num_sectors_to_erase;
             num_sectors_delta = num_sectors - pflash_eraser.core1_erased_sections;
         }
     }
@@ -320,8 +347,8 @@ static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashSta
                 num_sectors_to_erase = num_sectors_delta;
             }
             g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_to_erase);
-            pflash_eraser.core2_erased_sections += num_sectors_to_erase;
 
+            pflash_eraser.core2_erased_sections += num_sectors_to_erase;
             num_sectors_delta = num_sectors - pflash_eraser.core2_erased_sections;
         }
     }
@@ -341,8 +368,8 @@ static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashSta
                 num_sectors_to_erase = num_sectors_delta;
             }
             g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_to_erase);
-            pflash_eraser.asw_key_erased_sections += num_sectors_to_erase;
 
+            pflash_eraser.asw_key_erased_sections += num_sectors_to_erase;
             num_sectors_delta = num_sectors - pflash_eraser.asw_key_erased_sections;
         }
     }
@@ -362,8 +389,8 @@ static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashSta
                 num_sectors_to_erase = num_sectors_delta;
             }
             g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_to_erase);
-            pflash_eraser.cal_data_erased_sections += num_sectors_to_erase;
 
+            pflash_eraser.cal_data_erased_sections += num_sectors_to_erase;
             num_sectors_delta = num_sectors - pflash_eraser.cal_data_erased_sections;
         }
     }
@@ -391,6 +418,8 @@ static bool flashWriteProgram(IfxFlash_FlashType flashModule, uint32_t flashStar
 
     erasePFlashSectors(flashModule, flashStartAddr, dataSize);
     g_functionsFromPSPR.writePFlash(flashModule, flashStartAddr, num_pages, data, dataSize);
+
+    readToVerifyPFlash(flashStartAddr, data, dataSize);
 
     IfxCpu_restoreInterrupts(interruptState);
     return true;
