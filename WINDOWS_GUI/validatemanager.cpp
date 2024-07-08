@@ -10,7 +10,6 @@
 //============================================================================
 
 #include "validatemanager.h"
-#include "CCRC32.h"
 #include <string.h>
 
 #include <QDebug>
@@ -25,7 +24,6 @@
 ValidateManager::ValidateManager() {
 
     data.clear();
-    checksums.clear();
     core_addr.clear();
 }
 
@@ -116,12 +114,10 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
     QByteArray new_line;
     QByteArray result;
-    QMap<uint32_t, QByteArray> uncompressed_result;
     QByteArray line_buffer;
 
     QMap<uint32_t, QByteArray> merged_blocks;
     QMap<uint32_t, QByteArray> block_result;
-
 
     // Print each line
     for (QByteArray& line : lines) {
@@ -202,8 +198,6 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
                 count_lines += 1;
             }
             else{
-                uncompressed_result.insert(getAddr(line_buffer.left(8).toUInt(NULL, 16)), line_buffer.right(result.size()-8));
-                //block_result.insert(getAddr(result.left(8).toUInt(NULL, 16)), getData(result.right(result.size()-8)));
                 merged_blocks.insert(getAddr(line_buffer.left(8).toUInt(NULL, 16)), getData(line_buffer.right(line_buffer.size()-8)));
 
                 line_buffer.clear();
@@ -230,8 +224,6 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
             }
 
             if(current_index == (nlines - 1)){
-                uncompressed_result.insert(getAddr(line_buffer.left(8).toUInt(NULL, 16)), result.right(line_buffer.size()-8));
-                //block_result.insert(getAddr(result.left(8).toUInt(NULL, 16)), getData(result.right(result.size()-8)));
                 merged_blocks.insert(getAddr(line_buffer.left(8).toUInt(NULL, 16)), getData(line_buffer.right(line_buffer.size()-8)));
 
                 line_buffer.clear();
@@ -270,11 +262,9 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
     }
 
     if(!line_buffer.isEmpty()){
-        uncompressed_result.insert(getAddr(line_buffer.left(8).toUInt(NULL, 16)), line_buffer.right(result.size()-8));
         merged_blocks.insert(getAddr(line_buffer.left(8).toUInt(NULL, 16)), getData(line_buffer.right(line_buffer.size()-8)));
         line_buffer.clear();
     }
-
     block_result = combineSortedQMap(merged_blocks);
 
     //TODO: remove
@@ -308,45 +298,8 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
         emit updateLabel(ValidateManager::VALID, "File validity:  Not Valid");
     }
-    uncompressedData = uncompressed_result;
     return block_result;
 }
-
-QMap<uint32_t, uint32_t> ValidateManager::calculateFileChecksums(void)
-{
-    QMap<uint32_t, uint32_t> result;
-
-    for (auto [key, value] : uncompressedData.asKeyValueRange()) {
-        CCRC32 crc;
-        crc.Initialize();
-
-        QByteArray line = value;
-
-        char *nextLine = line.data();
-
-        QString str = QString(nextLine);
-
-        uint32_t checksum = (uint32_t) crc.FullCRC((const unsigned char *) nextLine, strlen(nextLine));
-        result.insert(key, checksum);
-    }
-
-    return result;
-}
-
-QMap<uint32_t, uint32_t> ValidateManager::calculateAddressLengths(QMap<uint32_t, QByteArray> data) {
-
-    QMap<uint32_t, uint32_t> result;
-
-    for (auto [key, value] : data.asKeyValueRange()) {
-        result.insert(key, value.length());
-    }
-
-    return result;
-}
-
-//============================================================================
-// Private Method
-//============================================================================
 
 bool ValidateManager::validateLine(QByteArray line)
 {

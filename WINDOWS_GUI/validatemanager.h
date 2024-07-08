@@ -26,7 +26,6 @@ public:
 
     QMap<uint32_t, QByteArray> data;
     QMap<uint16_t, QMap<QString, QString>> core_addr;
-    QMap<uint32_t, uint32_t> checksums;
 
 private:
 
@@ -34,15 +33,10 @@ private:
 
 public:
 
-    QMap<uint32_t, QByteArray> uncompressedData;
-
     ValidateManager();
     virtual ~ValidateManager();
 
-    QMap<uint32_t, uint32_t> calculateFileChecksums(void);
-    QMap<uint32_t, uint32_t> calculateAddressLengths(QMap<uint32_t, QByteArray> data); 
     void validateFileAsync(QByteArray data);
-
     bool checkBlockAddressRange(QMap<uint32_t, QByteArray> blocks);
 
 private:
@@ -93,7 +87,6 @@ signals:
      * @param text To be printed
      */
     void validationDone(const QMap<uint32_t, QByteArray> result);
-
 
 };
 

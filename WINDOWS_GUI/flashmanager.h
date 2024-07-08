@@ -57,10 +57,9 @@ private:
     Communication *comm;                                        // Reference to Comm Layer
     QString file;                                               // Reference to file for flashing
     QMap<uint32_t, QByteArray> flashContent;                    // Map with Address -> continous byte array
-    QMap<uint32_t, uint32_t> fileChecksums;
-    QMap<uint32_t, uint32_t> addressToLength;
     QMap<uint32_t, uint32_t> flashContentSize;                  // Map with total size of content for every address
     QMap<uint32_t, uint32_t> flashedBytes;                      // Map with sum of flashed bytes for every address
+    QMap<uint32_t, uint32_t> checksums;                         // Map of the checksums for every address
 
     size_t flashedBytesCtr;                                     // Counter for flashed bytes
     uint32_t flashCurrentAdd;                                   // Stores the current address to be flashed
@@ -86,10 +85,7 @@ public:
     void setECUID(uint32_t ecu_id);
     void setTestFile();
     void setFlashFile(QMap<uint32_t, QByteArray> data);
-    void setFileChecksums(QMap<uint32_t, uint32_t> checksums);
-    void setLengths(QMap<uint32_t, uint32_t> lengths);
     QMap<uint32_t, QByteArray> getFlashContent(void);
-    QMap<uint32_t, QByteArray> extractDataFromTestFile(QMap<uint32_t, QByteArray> compressedData);
 
     void startFlashing(uint32_t ecu_id, uint32_t gui_id, Communication* comm){
 
@@ -164,6 +160,8 @@ private:
     void updateGUIProgressBar();
     void queuedGUIConsoleLog(QString info, bool forced=0);
     void queuedGUIFlashingLog(FlashManager::STATUS s, QString info, bool forced=0);
+    QMap<uint32_t, uint32_t> calculateFileChecksums(QMap<uint32_t, QByteArray> data);
+    QMap<uint32_t, QByteArray> uncompressData(QMap<uint32_t, QByteArray> compressedData);
 
     void doFlashing();
     void prepareFlashing();
