@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Sebastian Rodriguez <r99@melao.de>
+
 
 //============================================================================
 // Name        : flashmanager.h
-// Author      : Michael Bauer
-// Version     : 0.1
+// Author      : Michael Bauer, Sebastian Rodriguez
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Flashmanger to flash ECUs
 //============================================================================
@@ -175,6 +177,7 @@ private:
     void transferData();
     void validateFlashing();
     void finishFlashing();
+    void writeKey(int keyType);
 
 signals:
 
