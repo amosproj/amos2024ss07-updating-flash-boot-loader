@@ -109,7 +109,10 @@ void cyclicProcessing (void){
     }
     
     //After 5 seconds without communication AND the right goodKey in the Key Address -> Jump
-    if (elapsed(time) > (5 * IfxStm_getFrequency(BSP_DEFAULT_TIMER)) && ) 
+    void* key = (void*)KEY_ADDRESS;
+    uint8_t good_key[4] = {0x93, 0x86, 0xC3, 0xA5};
+
+    if (elapsed(time) > (5 * IfxStm_getFrequency(BSP_DEFAULT_TIMER)) && memcmp(key, good_key, 4) == 0)
     {
         bootloaderJumpToASW();
     }

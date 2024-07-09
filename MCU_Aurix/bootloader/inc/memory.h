@@ -62,6 +62,9 @@
 #define FBL_DID_BL_WRITE_START_ADD_CAL_DATA_DEFAULT                 {0xA0, 0x4F, 0xC0, 0x00}
 #define FBL_DID_BL_WRITE_END_ADD_CAL_DATA_DEFAULT                   {0xA0, 0x4F, 0xFF, 0xFF}
 
+//KEY
+#define KEY_ADDRESS                                                 0xA04F8009
+#define KEY_GOOD_VALUE                                              0x9386C3A5
 //============================================================================
 // Init
 //============================================================================
