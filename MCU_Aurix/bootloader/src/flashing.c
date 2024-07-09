@@ -15,15 +15,18 @@
 #include "uds_comm_spec.h"
 #include "memory.h"
 #include "flash_driver.h"
+#include "flash_driver_TC375_LK.h"
 
 enum FLASHING_STATE {DOWNLOAD, UPLOAD, TRANSFER_DATA, IDLE};
 uint32_t flashBuffer[MAX_ISOTP_MESSAGE_LEN/4];
+uint32_t flashTransferDataCtr;
 
 typedef struct {
     uint32_t buffer;
     uint32_t startAddr;
     uint32_t endAddr;
     enum FLASHING_STATE state;
+    uint32_t checksum;
 } Flashing_Internal;
 
 Flashing_Internal flashing_int_data;
@@ -111,7 +114,9 @@ uint8_t flashingRequestDownload(uint32_t address, uint32_t data_len){
     // Check on Flash Memory to accept download
     if(!addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE0, FBL_DID_BL_WRITE_END_ADD_CORE0) &&
        !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE1, FBL_DID_BL_WRITE_END_ADD_CORE1) &&
-       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE2, FBL_DID_BL_WRITE_END_ADD_CORE2))
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE2, FBL_DID_BL_WRITE_END_ADD_CORE2) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_ASW_KEY, FBL_DID_BL_WRITE_END_ADD_ASW_KEY) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CAL_DATA, FBL_DID_BL_WRITE_END_ADD_CAL_DATA))
     {
         flashing_int_data.state = IDLE;
         return FBL_RC_REQUEST_OUT_OF_RANGE;
@@ -122,16 +127,31 @@ uint8_t flashingRequestDownload(uint32_t address, uint32_t data_len){
     flashing_int_data.endAddr = flashing_int_data.startAddr + data_len - 1; // Idx 0 also counts
 
     // Identify the max package size
-    flashing_int_data.buffer = MAX_ISOTP_MESSAGE_LEN - 8; // Excluding: SID + address (5 bytes), keep some buffer
+    flashing_int_data.buffer = MAX_ISOTP_MESSAGE_LEN - PFLASH_PAGE_LENGTH; // Excluding: SID + address (5 bytes), keep some buffer, try to keep pages
 
     // Setup Flashing Mode
     flashing_int_data.state = TRANSFER_DATA;
+
+    // Reset the TransferData counter
+    flashTransferDataCtr = 0;
 
     return 0;
 }
 
 uint8_t flashingRequestUpload(uint32_t address, uint32_t data_len){
-    return FBL_RC_SERVICE_NOT_SUPPORTED;
+    
+    if(!addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE0, FBL_DID_BL_WRITE_END_ADD_CORE0) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE1, FBL_DID_BL_WRITE_END_ADD_CORE1) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CORE2, FBL_DID_BL_WRITE_END_ADD_CORE2) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_ASW_KEY, FBL_DID_BL_WRITE_END_ADD_ASW_KEY) &&
+       !addrInCoreRangeCheck(address, data_len, FBL_DID_BL_WRITE_START_ADD_CAL_DATA, FBL_DID_BL_WRITE_END_ADD_CAL_DATA))
+    {
+        return FBL_RC_REQUEST_OUT_OF_RANGE;
+    }
+    
+    flashing_int_data.checksum = flashCalculateChecksum(address, data_len);
+    
+    return 0;
 }
 
 uint8_t flashingTransferData(uint32_t address, uint8_t* data, uint32_t data_len){
@@ -142,20 +162,20 @@ uint8_t flashingTransferData(uint32_t address, uint8_t* data, uint32_t data_len)
         return FBL_RC_REQUEST_OUT_OF_RANGE;
     }
 
-    // TODO: Erase Flash Necessary? See flashWrite internal
-    // TODO: Check Edge cases -> Decide what to do when data_len % size(uint32_t) > 0!
-
-    // Leads to CPU Trap
-    //uint32* data_input = (uint32*) data;
-    //bool flashed = flashWrite(address, data_input, (size_t)data_len / sizeof(uint32));
+    // Debugging
+    if(flashTransferDataCtr == 4){
+         __nop();
+    }
 
     // Store flash data to temp flash buffer
     size_t flashLen = insertDataForFlashing(data, data_len);
     bool flashed = flashWrite(address, flashBuffer, flashLen);
 
-    if(!flashed)
+    if(!flashed){
         return FBL_RC_FAILURE_PREVENTS_EXEC_OF_REQUESTED_ACTION;
+    }
 
+    flashTransferDataCtr++;
     return 0;
 }
 
@@ -166,6 +186,7 @@ uint8_t flashingTransferExit(uint32_t address){
     flashing_int_data.startAddr = 0;
     flashing_int_data.endAddr = 0;
     flashing_int_data.buffer = 0;
+    flashTransferDataCtr = 0;
 
     flashing_int_data.state = IDLE;
     return 0;
@@ -173,4 +194,8 @@ uint8_t flashingTransferExit(uint32_t address){
 
 uint32_t flashingGetFlashBufferSize(void){
     return flashing_int_data.buffer;
+}
+
+uint32_t flashingGetChecksum() {
+    return flashing_int_data.checksum;
 }

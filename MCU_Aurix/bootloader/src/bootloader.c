@@ -57,6 +57,7 @@ void init_bootloader(void){
     time = now();
 
     // Flashing
+    flashDriverInit();
     flashingInit();
 
     // Session Manager
@@ -78,8 +79,8 @@ void bootloaderJumpToASW(void){
     void (*asw_main) (int) = (void*) ASW_STADD;
     Ifx__non_return_call(asw_main);
 
-//    jumpToASW = 1;
-//    softReset(); //Startup
+    jumpToASW = 1;
+    softReset(); //Startup
 }
 
 /**
@@ -111,6 +112,8 @@ void cyclicProcessing (void){
     {
         bootloaderJumpToASW();
     }
+
+
 }
 
 /**

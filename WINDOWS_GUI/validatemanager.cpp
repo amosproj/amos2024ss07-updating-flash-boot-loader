@@ -1,17 +1,21 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Leon Wilms <leonwilms.wk@gmail.com>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
 
 //============================================================================
 // Name        : validatemanager.cpp
-// Author      : Leon Wilms
+// Author      : Leon Wilms, Michael Bauer
 // Version     : 0.1
 // Copyright   : MIT
 // Description : Validation Manager to validate selected files
 //============================================================================
 
 #include "validatemanager.h"
+#include <string.h>
 
 #include <QDebug>
+#include <QPointer>
+#include <QApplication>
 
 
 //============================================================================
@@ -21,15 +25,235 @@
 ValidateManager::ValidateManager() {
 
     data.clear();
-
+    core_addr.clear();
 }
 
 ValidateManager::~ValidateManager(){
     data.clear();
+    core_addr.clear();
 }
 
 //============================================================================
 // Public Method
+//============================================================================
+
+
+
+void ValidateManager::validateFileAsync(QByteArray data){
+
+    // For Null pointer safety
+    QPointer<ValidateManager> self = this;
+
+    // Change cursor to loading state
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    // Create thread for validation
+    QThread* thread = QThread::create([self, data]() {
+
+        if (!self) {
+
+            return;
+        }
+
+        QMap<uint32_t, QByteArray> result;
+        {
+            QMutexLocker locker(&self->dataMutex);
+            result = self->validateFile(data);
+        }
+
+        result = self->transformData(result);
+        emit self->validationDone(result);
+    });
+    thread->start();
+    connect(thread, &QThread::finished, thread, &QObject::deleteLater);
+
+    // Use a queued connection to restore the cursor in the main thread
+    connect(thread, &QThread::finished, []() {
+        QMetaObject::invokeMethod(qApp, []() {
+                QApplication::restoreOverrideCursor();
+            }, Qt::QueuedConnection);
+    });
+}
+
+bool ValidateManager::checkBlockAddressRange(const QMap<uint32_t, QByteArray> blocks){
+
+    for (QMap<uint32_t, QByteArray>::const_iterator iterator = blocks.constBegin(); iterator != blocks.constEnd(); ++iterator) {
+
+        uint32_t addr = iterator.key();
+
+        QByteArray block = blocks[addr];
+        uint32_t data_len = block.size();
+
+        if(!addrInRange(addr, data_len)){
+
+            emit infoPrint("INFO: File not Valid! Data with len "+QString("0x%1").arg(data_len, 2, 16, QLatin1Char( '0' ))+" would be written into reserved memory. -> Address: "+ QString("0x%1").arg(addr, 2, 16, QLatin1Char( '0' ))+"\n");
+            return false;
+        }
+
+    }
+
+    return true;
+}
+
+QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteArray> blocks){
+
+    qInfo() << "ValidateManager: Start to tranform the data";
+    QMap<uint32_t, QByteArray> pages;           // Content of the pages
+    QMap<uint32_t, QByteArray> writtenPages;    // Flags to show that any value (0..255) was written
+    uint8_t writtenPageIndicator = 1;
+
+    // Prepare the pages
+    for (int rangeCtr = 0; rangeCtr < core_addr.count(); rangeCtr++){
+        QString core_start_add_string = core_addr[rangeCtr]["start"];
+        QString core_end_add_string = core_addr[rangeCtr]["end"];
+        uint32_t core_start_add = core_start_add_string.toUInt(NULL, 16);
+        uint32_t core_end_add = core_end_add_string.toUInt(NULL, 16);
+
+        if(core_start_add > 0 && core_end_add > 0){
+            uint32_t sizeOfRange = core_end_add - core_start_add;
+            qInfo() << "Prepare pages for range from "+QString("0x%1").arg(core_start_add, 2, 16, QLatin1Char( '0' )) + " to " +QString("0x%1").arg(core_end_add, 2, 16, QLatin1Char( '0' ));
+            for(int addrOffset = 0; addrOffset < sizeOfRange; addrOffset = addrOffset + MINIMUM_BLOCK_SIZE){
+                uint32_t pageAddr = core_start_add + addrOffset;
+                QByteArray pageContent;
+                pageContent.fill(0, MINIMUM_BLOCK_SIZE);
+                pages[pageAddr] = pageContent;
+
+                QByteArray writtenPageContent;
+                writtenPageContent.fill(0, MINIMUM_BLOCK_SIZE);
+                writtenPages[pageAddr] = writtenPageContent;
+            }
+        }
+    }
+
+    // Preprocess the data: insert the data into the specific pages
+    for(uint32_t addr : blocks.keys()){
+        QByteArray block = blocks[addr];
+
+        //qInfo() << "Processing "+QString("0x%1").arg(addr, 2, 16, QLatin1Char( '0' ));
+        for(int valueAddrOffSet = 0; valueAddrOffSet <  block.size(); valueAddrOffSet++){
+            uint32_t valueAddr = addr+valueAddrOffSet;
+
+            bool supported = true;
+            if( addrInCoreRange(valueAddr, 1, 0, &supported) ||
+                addrInCoreRange(valueAddr, 1, 1, &supported) ||
+                addrInCoreRange(valueAddr, 1, 2, &supported) ||
+                addrInCoreRange(valueAddr, 1, 3, &supported) ||
+                addrInCoreRange(valueAddr, 1, 4, &supported))
+            {
+                uint8_t value = block[valueAddrOffSet];
+
+                // Search the pages for correct one..
+                QMap<uint32_t, QByteArray>::const_iterator it = pages.upperBound(valueAddr);
+                QMap<uint32_t, QByteArray>::const_iterator itWP = writtenPages.upperBound(valueAddr);
+
+                if(it != pages.begin() && it != pages.end()){
+                    it = std::prev(it);
+                    itWP = std::prev(itWP);
+                }
+
+                // Extract page
+                uint32_t foundAddr = it.key();
+                QByteArray foundPage = it.value();
+                QByteArray foundPageWP = itWP.value();
+
+                if(foundAddr + pages[foundAddr].size() >= valueAddr){
+
+                    // Calc the index + Insert data
+                    uint32_t index = valueAddr - foundAddr;
+                    foundPage[index] = value;
+                    foundPageWP[index] = writtenPageIndicator;
+
+                    // Store back into pages map
+                    pages[foundAddr] = foundPage;
+                    writtenPages[foundAddr] = foundPageWP;
+
+                }
+                else {
+                    emit errorPrint("ERROR: Searched Adress "+QString("0x%1").arg(valueAddr, 2, 16, QLatin1Char( '0' ))+" was ignored during transformation of data!\n");
+                    qInfo() << "Out of range - Ignoring address " + QString("0x%1").arg(valueAddr, 2, 16, QLatin1Char( '0' ));
+                }
+            }
+
+            else {
+                emit errorPrint("ERROR: Check for Adress "+QString("0x%1").arg(valueAddr, 2, 16, QLatin1Char( '0' ))+" failed! - No possible range\n");
+                qInfo() << "Out of range - Ignoring address " + QString("0x%1").arg(valueAddr, 2, 16, QLatin1Char( '0' ));
+            }
+
+        }
+    }
+
+    // Reduce the pages - remove empty pages and combine
+    QMap<uint32_t, QByteArray> transformedData;
+
+    bool combination = false;
+    bool combinationLast = false;
+    bool empty = false;
+    bool filling = false;
+
+    uint32_t combinationAddr = 0;
+    uint32_t lastAddr = 0;
+    uint32_t lastFillingAddr = 0;
+
+    for(uint32_t pageAddr : pages.keys()){
+        QByteArray content = pages[pageAddr];
+        QByteArray writtenPageIndicator = writtenPages[pageAddr];
+
+        // Check content - Is it empty?
+        empty = true;
+        for(int i = 0; i < writtenPageIndicator.size() && empty; i++){
+            if (writtenPageIndicator[i] != 0){
+                empty = false;
+            }
+        }
+
+        filling = false;
+        if((pageAddr - lastFillingAddr) >= 0x50000){
+            filling = true;
+        }
+
+        // If not empty it need to be included
+        combinationLast = combination;
+        if(!empty){
+            combination = true;
+
+            // Rising flag, first page to be inserted
+            if(combination == true && combinationLast == false){
+                combinationAddr = pageAddr;
+                transformedData[combinationAddr] = content;
+            }
+
+            // Consecutive pages
+            else {
+                // Bigger Gap between two pages, consider as new address
+                if(pageAddr - lastAddr > MINIMUM_BLOCK_SIZE){
+                    combinationAddr = pageAddr;
+                    transformedData[combinationAddr] = content;
+                }
+
+                // Normal append
+                else {
+                    QByteArray existingPages = transformedData[combinationAddr];
+                    existingPages = existingPages.append(content);
+                    transformedData[combinationAddr] = existingPages;
+                }
+            }
+
+        } else if (filling){
+            transformedData[pageAddr] = content;
+            lastFillingAddr = pageAddr;
+        }
+        else {
+            // Ignore page since it is empty
+            combination = false;
+        }
+
+        lastAddr = pageAddr;
+
+    }
+    return transformedData;
+}
+//============================================================================
+// Private Method
 //============================================================================
 
 QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
@@ -50,6 +274,9 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
     QByteArray new_line;
     QByteArray result;
+    QByteArray line_buffer;
+
+    QMap<uint32_t, QByteArray> merged_blocks;
     QMap<uint32_t, QByteArray> block_result;
 
     // Print each line
@@ -119,23 +346,23 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
             QString address_string = new_line.left(8);
             uint32_t address_start = address_string.toUInt(NULL, 16);
 
-            if(result.isEmpty()){
+            if(line_buffer.isEmpty()){
 
-                result.append(new_line.right(data_len + 8));
+                line_buffer.append(new_line.right(data_len + 8));
                 count_lines += 1;
 
             }
             else if(block_address_end == address_start){
 
-                result.append(new_line.right(data_len));
+                line_buffer.append(new_line.right(data_len));
                 count_lines += 1;
             }
             else{
-                block_result.insert(getAddr(result.left(8).toUInt(NULL, 16)), getData(result.right(result.size()-8)));
+                merged_blocks.insert(getAddr(line_buffer.left(8).toUInt(NULL, 16)), getData(line_buffer.right(line_buffer.size()-8)));
 
-                result.clear();
+                line_buffer.clear();
 
-                result.append(new_line.right(data_len + 8));
+                line_buffer.append(new_line.right(data_len + 8));
                 count_lines += 1;
             }
 
@@ -145,6 +372,8 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
         // preprocess data for flashing
         else if(record_type == '7' or record_type == '8' or record_type == '9'){
 
+            // TODO: How to handle jump addresses?
+            //currently deprecated.
             emit infoPrint("INFO: Jump addresses not supported!");
             continue;
             if(jump_record != -1){
@@ -155,15 +384,15 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
             }
 
             if(current_index == (nlines - 1)){
-                block_result.insert(getAddr(result.left(8).toUInt(NULL, 16)), getData(result.right(result.size()-8)));
+                merged_blocks.insert(getAddr(line_buffer.left(8).toUInt(NULL, 16)), getData(line_buffer.right(line_buffer.size()-8)));
 
-                result.clear();
+                line_buffer.clear();
             }
 
             new_line = extractData(line, record_type);
 
-            // TODO: How to handle jump addresses?
-            //block_result.insert(block_index, new_line);
+
+            //merged_blocks.insert(block_index, new_line);
         }
         // optional entry, can be used to validate file
         else if(record_type == '5' or record_type == '6'){
@@ -192,28 +421,19 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
         current_index += 1;
     }
 
-    if(!result.isEmpty()){
-
-        block_result.insert(getAddr(result.left(8).toUInt(NULL, 16)), getData(result.right(result.size()-8)));
-        result.clear();
+    if(!line_buffer.isEmpty()){
+        merged_blocks.insert(getAddr(line_buffer.left(8).toUInt(NULL, 16)), getData(line_buffer.right(line_buffer.size()-8)));
+        line_buffer.clear();
     }
+    block_result = combineSortedQMap(merged_blocks);
+
+    //TODO: remove
 
     if(file_validity){
 
-        for (uint32_t addr : block_result.keys()) {
-
-            QByteArray block = block_result[addr];
-            uint32_t data_len = block.size();
-
-            if(!addrInRange(addr, data_len)){
-
-                emit infoPrint("INFO: File not Valid! Data with len "+QString("0x%1").arg(data_len, 2, 16, QLatin1Char( '0' ))+" would be written into reserved memory. -> Address: "+ QString("0x%1").arg(addr, 2, 16, QLatin1Char( '0' ))+"\n");
-                file_validity = false;
-                break;
-            }
-
-        }
+        file_validity = checkBlockAddressRange(block_result);
     }
+
 
     if(!file_header){
 
@@ -238,13 +458,8 @@ QMap<uint32_t, QByteArray> ValidateManager::validateFile(QByteArray data)
 
         emit updateLabel(ValidateManager::VALID, "File validity:  Not Valid");
     }
-
     return block_result;
 }
-
-//============================================================================
-// Private Method
-//============================================================================
 
 bool ValidateManager::validateLine(QByteArray line)
 {
@@ -318,6 +533,45 @@ QByteArray ValidateManager::extractData(QByteArray line, char record_type)
     return trimmed_line;
 }
 
+
+QMap<uint32_t, QByteArray> ValidateManager::combineSortedQMap(const QMap<uint32_t, QByteArray> blocks){
+
+    QMap<uint32_t, QByteArray> merged_blocks;
+
+    if (blocks.isEmpty()) {
+        return merged_blocks;
+    }
+
+    QByteArray line_buffer;
+
+    uint32_t new_start_addr = blocks.firstKey();
+    uint32_t addr_end = 0;
+
+    for (QMap<uint32_t, QByteArray>::const_iterator iterator = blocks.constBegin(); iterator != blocks.constEnd(); ++iterator){
+
+        uint32_t addr_start = iterator.key();
+
+        if(addr_start == addr_end){
+
+            line_buffer.append(blocks[addr_start]);
+        }
+        else{
+
+            merged_blocks.insert(new_start_addr, line_buffer);
+            line_buffer.clear();
+
+            new_start_addr = addr_start;
+            line_buffer.append(blocks[addr_start]);
+        }
+
+        addr_end = addr_start + blocks[addr_start].size();
+    }
+
+    merged_blocks.insert(new_start_addr, line_buffer);
+
+    return merged_blocks;
+}
+
 bool ValidateManager::addrInCoreRange(uint32_t addr, uint32_t data_len,  uint16_t core, bool* supported){
 
     QString core_start_add_string = core_addr[core]["start"];
@@ -352,7 +606,9 @@ bool ValidateManager::addrInRange(uint32_t address, uint32_t data_len){
 
     if( addrInCoreRange(address, data_len, 0, &supported) ||
         addrInCoreRange(address, data_len, 1, &supported) ||
-        addrInCoreRange(address, data_len, 2, &supported))
+        addrInCoreRange(address, data_len, 2, &supported) ||
+        addrInCoreRange(address, data_len, 3, &supported) ||
+        addrInCoreRange(address, data_len, 4, &supported))
     {
 
         return true;

@@ -271,17 +271,19 @@ void ECU_Test::startTests(){
     emit toConsole("Start of TX Section");
 
     // Sending out broadcast for tester present
-    testReqIdentification();
+    //testReqIdentification();
 
     // Specification for Diagnostic and Communication Management
-    testEcuReset();
+    //testEcuReset();
     testDiagnosticSessionControl();
-    testTesterPresent();
+    //testTesterPresent();
 
     // Specification for Data Transmission
-    if(writing_test) // Test Writing - Programming session already activated
-        testWriteDataByIdentifier();
-    testReadDataByIdentifier();
+    //if(writing_test) // Test Writing - Programming session already activated
+    //    testWriteDataByIdentifier();
+    //testReadDataByIdentifier();
+
+    testRequestUpload();
 
     emit toConsole("End of TX Section\n");
 
@@ -448,4 +450,10 @@ void ECU_Test::testWriteDataByIdentifier()
     while(QDateTime::currentSecsSinceEpoch() - start <= 1){}
 }
 
+
+void ECU_Test::testRequestUpload()
+{
+    emit toConsole("ECU Test: TX Check Request Upload");
+    uds->requestUpload(this->ecu_id, 0xA0090000, 4096);
+}
 

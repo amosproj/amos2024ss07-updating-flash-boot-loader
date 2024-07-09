@@ -375,11 +375,11 @@ void uds_request_upload(uint32_t address, uint32_t data_len){
     iso->max_len_per_frame = MAX_FRAME_LEN_CAN;
 
     // Read out the flashing buffer size from flashing
-    uint32_t flashingBuffer = flashingGetFlashBufferSize();
+    uint32_t checksum = flashingGetChecksum();
 
     // Create msg
     int len;
-    uint8_t *msg = _create_request_upload(&len, RESPONSE, address, flashingBuffer);
+    uint8_t *msg = _create_request_upload(&len, RESPONSE, address, checksum);
     isotp_send(iso, msg, len);
     free(msg);
 }

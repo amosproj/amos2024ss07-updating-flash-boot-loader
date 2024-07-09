@@ -19,6 +19,8 @@
 #include "Ifx_Types.h"
 
 #define DID_DATA_FLASH_ADDR                                         0xAF000000
+#define FBL_STRUCTURE_VERSION                                       (4)
+#define FBL_STRUCTURE_DATA_FLASH_STRUCTURE_VERSION                  {0x00, 0x00, 0x00, 0x01} // INFO: Change if Structure or Default Data changed, forces loading of Default config
 
 // Size in uint8_t bytes
 // Info: Changing of size may effect other modules -> Flashing
@@ -35,6 +37,11 @@
 #define FBL_DID_BL_WRITE_END_ADD_CORE1_BYTES_SIZE                   (4)
 #define FBL_DID_BL_WRITE_START_ADD_CORE2_BYTES_SIZE                 (4)
 #define FBL_DID_BL_WRITE_END_ADD_CORE2_BYTES_SIZE                   (4)
+#define FBL_DID_BL_WRITE_START_ADD_ASW_KEY_BYTES_SIZE               (4)
+#define FBL_DID_BL_WRITE_END_ADD_ASW_KEY_BYTES_SIZE                 (4)
+#define FBL_DID_BL_WRITE_START_ADD_CAL_DATA_BYTES_SIZE              (4)
+#define FBL_DID_BL_WRITE_END_ADD_CAL_DATA_BYTES_SIZE                (4)
+
 
 // Size need to match above mentioned defines
 #define FBL_DID_APP_ID_DEFAULT                                      "amos basic"
@@ -47,9 +54,13 @@
 #define FBL_DID_BL_WRITE_START_ADD_CORE0_DEFAULT                    {0xA0, 0x09, 0x00, 0x00}
 #define FBL_DID_BL_WRITE_END_ADD_CORE0_DEFAULT                      {0xA0, 0x1F, 0xFF, 0xFF}
 #define FBL_DID_BL_WRITE_START_ADD_CORE1_DEFAULT                    {0xA0, 0x30, 0x40, 0x00}
-#define FBL_DID_BL_WRITE_END_ADD_CORE1_DEFAULT                      {0xA0, 0x4F, 0xFF, 0xFF}     // Includes ASW Core 1 + Key Data + Calibration Data
+#define FBL_DID_BL_WRITE_END_ADD_CORE1_DEFAULT                      {0xA0, 0x4F, 0x7F, 0xFF}
 #define FBL_DID_BL_WRITE_START_ADD_CORE2_DEFAULT                    {0xFF, 0xFF, 0xFF, 0xFF}
 #define FBL_DID_BL_WRITE_END_ADD_CORE2_DEFAULT                      {0xFF, 0xFF, 0xFF, 0xFF}
+#define FBL_DID_BL_WRITE_START_ADD_ASW_KEY_DEFAULT                  {0xA0, 0x4F, 0x80, 0x00}
+#define FBL_DID_BL_WRITE_END_ADD_ASW_KEY_DEFAULT                    {0xA0, 0x4F, 0xBF, 0xFF}
+#define FBL_DID_BL_WRITE_START_ADD_CAL_DATA_DEFAULT                 {0xA0, 0x4F, 0xC0, 0x00}
+#define FBL_DID_BL_WRITE_END_ADD_CAL_DATA_DEFAULT                   {0xA0, 0x4F, 0xFF, 0xFF}
 
 //============================================================================
 // Init
