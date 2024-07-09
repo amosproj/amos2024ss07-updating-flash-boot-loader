@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Sebastian Rodriguez <r99@melao.de>
 
 //============================================================================
 // Name        : flashmanager.cpp
-// Author      : Michael Bauer
-// Version     : 0.1
+// Author      : Michael Bauer, Sebastian Rodriguez
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Flashmanger to flash ECUs
 //============================================================================
@@ -455,7 +456,8 @@ void FlashManager::prepareFlashing(){
 void FlashManager::startFlashing(){
 
     queuedGUIConsoleLog("###############################\nFlashManager: Executing Flashing\n###############################\n");
-
+    queuedGUIConsoleLog("FlashManager: Write Bad Key to ECU\n")
+    writeKey(BAD);
     if(flashContent.isEmpty()){
         emit errorPrint("FlashManager: Provided flash file has no content");
         queuedGUIFlashingLog(ERR, "Provided flash file has no content");
@@ -741,12 +743,26 @@ void FlashManager::finishFlashing(){
     else{
         queuedGUIFlashingLog(INFO, "No Update Version Information available");
     }
-
+    // =========================================================================
+    // Write Good Key
+    writeKey(GOOD);
     // =========================================================================
     // Update GUI
     queuedGUIFlashingLog(INFO, "Flashing finished!");
 
     curr_state = IDLE;
+}
+
+void FlashManager::writeKey(int keyType){
+    if (keyType == GOOD)
+    {
+        /* code */
+    }
+    else if (keyType == BAD)
+    {
+        /* code */
+    }
+    
 }
 
 //============================================================================
@@ -761,3 +777,4 @@ void FlashManager::runThread(){
 void FlashManager::forwardToConsole(const QString &text){
     queuedGUIConsoleLog(text);
 }
+

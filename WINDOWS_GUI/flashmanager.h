@@ -29,6 +29,9 @@
 #define TESTFILE_CAL_DATA_START_ADD 0xA04FC000  // Start Address for flashing Calibration data
 #define TESTFILE_CAL_DATA_BYTES     0x00003FFF  // ~16 KB
 
+#define GOOD                        1
+#define BAD                         0
+
 #include <QObject>
 #include <QMutex>
 #include <QDebug>
