@@ -73,6 +73,8 @@ private:
     uint32_t flashCurrentBufferSize;                            // Stores the current buffer size per
     uint32_t flashCurrentPackageCtr;                            // Stores the current counter of the package
 
+    uint32_t aswKeyAdd;                                         // Stores the address of the ASW Key
+    uint32_t goodKeyValue;                                      // Stores the good key value which is stored in MCU
     size_t last_update_gui_progressbar;                         // Stores the last percent of the GUI progressbar
 
     QDateTime lastGUIUpdateConsoleLog;                          // Stores the last timestamp of Update of GUI Console

@@ -166,6 +166,11 @@ void FlashManager::setUpdateVersion(QByteArray version){
     updateVersion = updateVersion.append(version);
 }
 
+void FlashManager::setASWKeyContent(uint32_t add, uint32_t content){
+    aswKeyAdd = add;
+    goodKeyValue = content;
+}
+
 QMap<uint32_t, QByteArray> FlashManager::getFlashContent(void) {
     return flashContent;
 }
@@ -457,7 +462,7 @@ void FlashManager::startFlashing(){
 
     queuedGUIConsoleLog("###############################\nFlashManager: Executing Flashing\n###############################\n");
     queuedGUIConsoleLog("FlashManager: Write Bad Key to ECU\n")
-    writeKey(BAD);
+    
     if(flashContent.isEmpty()){
         emit errorPrint("FlashManager: Provided flash file has no content");
         queuedGUIFlashingLog(ERR, "Provided flash file has no content");
@@ -471,7 +476,7 @@ void FlashManager::startFlashing(){
 
     if(abort)
         return;
-
+    writeKey(BAD);
     queuedGUIFlashingLog(INFO, "Starting with flashing");
 
     // Setup the variables
@@ -756,22 +761,22 @@ void FlashManager::finishFlashing(){
 void FlashManager::writeKey(int keyType){
     if (keyType == GOOD)
     {
-        uds->readDataByIdentifier(ecu_id, FBL_DID_BL_KEY_ADDRESS); //Key Address
-        uds->readDataByIdentifier(ecu_id, FBL_DID_BL_KEY_GOOD_VALUE); //Key
-        uds->requestDownload(ecu_id, )
-        //Or Upload?
-        uds->transferData(ecu_id,key_adress,good_key_value,good_key_value.size());
-        uds->requestTransferExit(ecu_id, FBL_DID_BL_KEY_ADDRESS);
+    
+        uds->requestDownload(ecu_id, aswKeyAdd, 4)
+        //Response Typ überprüfen
+        uint8_t goodKeyValueArr[4];
+        uds->transferData(ecu_id,aswKeyAdd, goodKeyValue, good_key_value.size());
+        uds->requestTransferExit(ecu_id, aswKeyAdd);
         
     }
     else if (keyType == BAD)
     {
-        uds->readDataByIdentifier(ecu_id, FBL_DID_BL_KEY_ADDRESS); //Key Address
-        uds->requestDownload(ecu_id, )
+       
+         uds->requestDownload(ecu_id, aswKeyAdd, 4)
 
         //Bad Key
         uds->transferData();
-        uds->requestTransferExit(ecu_id, FBL_DID_BL_KEY_ADDRESS);
+        uds->requestTransferExit(ecu_id, aswKeyAdd);
     }
     
 }
