@@ -169,6 +169,8 @@ void FlashManager::setUpdateVersion(QByteArray version){
 void FlashManager::setASWKeyContent(uint32_t add, uint32_t content){
     aswKeyAdd = add;
     goodKeyValue = content;
+    queuedGUIConsoleLog(QString::number(add));
+    queuedGUIConsoleLog(QString::number(content));
 }
 
 QMap<uint32_t, QByteArray> FlashManager::getFlashContent(void) {
@@ -461,7 +463,7 @@ void FlashManager::prepareFlashing(){
 void FlashManager::startFlashing(){
 
     queuedGUIConsoleLog("###############################\nFlashManager: Executing Flashing\n###############################\n");
-    queuedGUIConsoleLog("FlashManager: Write Bad Key to ECU\n")
+    queuedGUIConsoleLog("FlashManager: Write Bad Key to ECU\n");
     
     if(flashContent.isEmpty()){
         emit errorPrint("FlashManager: Provided flash file has no content");
@@ -765,6 +767,7 @@ void FlashManager::writeKey(int keyType){
         if (uds->requestDownload(ecu_id, aswKeyAdd, 4) != UDS::TX_RX_OK)
         {
             //Response Typ überprüfen
+
            queuedGUIConsoleLog("FlashManager(Write good Key): ERROR - Requesting download failed");
         }
         

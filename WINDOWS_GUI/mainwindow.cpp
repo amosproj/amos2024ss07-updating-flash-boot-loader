@@ -608,8 +608,8 @@ void MainWindow::updateValidManager() {
 
         validMan->core_addr[4]["start"] = eculist[ID_HEX][cal_data_start];
         validMan->core_addr[4]["end"] = eculist[ID_HEX][cal_data_end];
-
-        flashMan->setASWKeyContent(eculist[ID_HEX][key_adress], eculist[ID_HEX][key_good_value]); //String -> uint32_t
+        qInfo() << key_address;
+        flashMan->setASWKeyContent(eculist[ID_HEX][key_address].toUInt(nullptr,16), eculist[ID_HEX][key_good_value].toUInt(nullptr,16)); //String -> uint32_t
     });
 }
 
