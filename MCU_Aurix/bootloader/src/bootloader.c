@@ -107,8 +107,9 @@ void cyclicProcessing (void){
         rx_reset_isotp_multi_buffer();
         time = now(); //Assumes no tester present was received
     }
-  
-    if (elapsed(time) > (5 * IfxStm_getFrequency(BSP_DEFAULT_TIMER)))
+    
+    //After 5 seconds without communication AND the right goodKey in the Key Address -> Jump
+    if (elapsed(time) > (5 * IfxStm_getFrequency(BSP_DEFAULT_TIMER)) && ) 
     {
         bootloaderJumpToASW();
     }
