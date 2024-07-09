@@ -94,6 +94,7 @@ public:
     void setTestFile();
     void setFlashFile(QMap<uint32_t, QByteArray> data);
     void setUpdateVersion(QByteArray version);
+    void setASWKeyContent(uint32_t add, uint32_t content);
     QMap<uint32_t, QByteArray> getFlashContent(void);
 
     void startFlashing(uint32_t ecu_id, uint32_t gui_id, Communication* comm){
