@@ -756,11 +756,22 @@ void FlashManager::finishFlashing(){
 void FlashManager::writeKey(int keyType){
     if (keyType == GOOD)
     {
-        /* code */
+        uds->readDataByIdentifier(ecu_id, FBL_DID_BL_KEY_ADDRESS); //Key Address
+        uds->readDataByIdentifier(ecu_id, FBL_DID_BL_KEY_GOOD_VALUE); //Key
+        uds->requestDownload(ecu_id, )
+        //Or Upload?
+        uds->transferData(ecu_id,key_adress,good_key_value,good_key_value.size());
+        uds->requestTransferExit(ecu_id, FBL_DID_BL_KEY_ADDRESS);
+        
     }
     else if (keyType == BAD)
     {
-        /* code */
+        uds->readDataByIdentifier(ecu_id, FBL_DID_BL_KEY_ADDRESS); //Key Address
+        uds->requestDownload(ecu_id, )
+
+        //Bad Key
+        uds->transferData();
+        uds->requestTransferExit(ecu_id, FBL_DID_BL_KEY_ADDRESS);
     }
     
 }
