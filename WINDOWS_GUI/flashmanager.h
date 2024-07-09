@@ -56,6 +56,7 @@ private:
     UDS *uds;                                                   // Reference to UDS Layer
     Communication *comm;                                        // Reference to Comm Layer
     QString file;                                               // Reference to file for flashing
+    QByteArray updateVersion;                                   // ByteArray with Update Version content, to be written after flashing is finished
     QMap<uint32_t, QByteArray> flashContent;                    // Map with Address -> continous byte array
     QMap<uint32_t, uint32_t> flashContentSize;                  // Map with total size of content for every address
     QMap<uint32_t, uint32_t> flashedBytes;                      // Map with sum of flashed bytes for every address
@@ -85,6 +86,7 @@ public:
     void setECUID(uint32_t ecu_id);
     void setTestFile();
     void setFlashFile(QMap<uint32_t, QByteArray> data);
+    void setUpdateVersion(QByteArray version);
     QMap<uint32_t, QByteArray> getFlashContent(void);
 
     void startFlashing(uint32_t ecu_id, uint32_t gui_id, Communication* comm){

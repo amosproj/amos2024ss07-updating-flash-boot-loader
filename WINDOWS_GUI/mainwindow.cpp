@@ -257,11 +257,8 @@ void MainWindow::setupFlashPopup() {
                 this->ui->textBrowser_flash_status->setText("No valid Flash File selected. Demo Mode triggered");
             }
             
+            flashMan->setUpdateVersion(ui->label_version->text().mid(14).toLocal8Bit());
             flashMan->startFlashing(selectedID, gui_id, comm);
-            QTimer::singleShot(500, [this]{
-                QByteArray arr = ui->label_version->text().mid(14).toLocal8Bit();
-                udsUpdateVersion(getECUID(), (uint8_t*)arr.data(), arr.size());
-            });
         }
     });
 
@@ -548,10 +545,6 @@ void MainWindow::setFlashButton(FLASH_BTN m){
             ui->button_flash->setText("Flash");
             break;
     }
-}
-
-void MainWindow::udsUpdateVersion(uint32_t id, uint8_t *data, uint8_t data_size) {
-    uds->writeDataByIdentifier(id, FBL_DID_APP_ID, data, data_size);
 }
 
 void MainWindow::updateValidManager() {

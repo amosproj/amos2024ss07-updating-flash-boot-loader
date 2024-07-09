@@ -160,6 +160,11 @@ void FlashManager::setFlashFile(QMap<uint32_t, QByteArray> data){
     flashContent = data;
 }
 
+void FlashManager::setUpdateVersion(QByteArray version){
+    updateVersion.clear();
+    updateVersion = updateVersion.append(version);
+}
+
 QMap<uint32_t, QByteArray> FlashManager::getFlashContent(void) {
     return flashContent;
 }
@@ -727,6 +732,15 @@ void FlashManager::finishFlashing(){
     QByteArray flashdate = getCurrentFlashDate();
     uint8_t *data = (uint8_t*)flashdate.data();
     uds->writeDataByIdentifier(ecu_id, FBL_DID_PROGRAMMING_DATE, data, flashdate.size());
+
+    // Update Programming Version
+    if (!updateVersion.isEmpty()){
+        uds->writeDataByIdentifier(ecu_id, FBL_DID_APP_ID, (uint8_t*)updateVersion.data(), updateVersion.size());
+        updateVersion.clear();
+    }
+    else{
+        queuedGUIFlashingLog(INFO, "No Update Version Information available");
+    }
 
     // =========================================================================
     // Update GUI

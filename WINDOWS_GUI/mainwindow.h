@@ -74,8 +74,6 @@ private:
 
     void setFlashButton(FLASH_BTN m);
 
-    void udsUpdateVersion(uint32_t id, uint8_t *data, uint8_t data_size);
-
     void updateValidManager();
 
 private slots:
