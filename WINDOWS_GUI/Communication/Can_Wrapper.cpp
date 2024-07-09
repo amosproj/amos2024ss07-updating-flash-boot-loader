@@ -357,6 +357,15 @@ XLstatus CAN_Wrapper::setBaudrate(unsigned int baudrate){
         status = XL_SUCCESS;
     }
 
+    if(status == XL_ERR_INVALID_HANDLE){
+        initDriver();
+
+        status = xlCanSetChannelBitrate(portHandle, channelMask, baudrate);
+        if (DEBUGGING_CAN_DRIVER) {
+            qInfo()<<"CAN_Wrapper: CanSetChannelBitrate to BaudRate="<<baudrate<<", Info:"<< xlGetErrorString(status);
+        }
+    }
+
     return status;
 
 }
@@ -394,7 +403,11 @@ void CAN_Wrapper::doRX(){
 				msgrx = RECEIVE_EVENT_SIZE;
                 status = xlReceive(this->portHandle, &msgrx, &event);
 
-				if(status != XL_ERR_QUEUE_IS_EMPTY){
+                if(status == XL_ERR_INVALID_HANDLE){
+                    emit errorPrint("Error: CAN Connection failed. Please connect again.");
+                }
+
+                else if(status != XL_ERR_QUEUE_IS_EMPTY){
 
                     if(event.tagData.msg.dlc == 0)
                         continue;

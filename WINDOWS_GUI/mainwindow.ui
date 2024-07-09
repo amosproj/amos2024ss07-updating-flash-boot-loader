@@ -20,7 +20,7 @@
       <x>20</x>
       <y>60</y>
       <width>1150</width>
-      <height>613</height>
+      <height>635</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -249,7 +249,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
           <item>
            <widget class="QLabel" name="label_valid">
             <property name="text">
-             <string>File validity</string>
+             <string>File validity:</string>
             </property>
            </widget>
           </item>

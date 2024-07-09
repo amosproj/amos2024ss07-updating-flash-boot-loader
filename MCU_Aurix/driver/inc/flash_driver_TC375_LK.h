@@ -48,12 +48,14 @@
 
 #define PFLASH_PAGE_LENGTH          IFXFLASH_PFLASH_PAGE_LENGTH /* 0x20 = 32 Bytes (smallest unit that can be
                                                                  * programmed in the Program Flash memory (PFLASH)) */
+#define PFLASH_LAST_PAGE_SIZE       (PFLASH_PAGE_LENGTH / 4)    /* 32 byte for 8 double words (uint32_t) */
 #define DFLASH_PAGE_LENGTH          IFXFLASH_DFLASH_PAGE_LENGTH /* 0x8 = 8 Bytes (smallest unit that can be
                                                                  * programmed in the Data Flash memory (DFLASH))    */
 
-#define PFLASH_SECTOR_LENGTH        16000                       /* logical sector length */
 
-#define DFLASH_SECTOR_LENGTH        4000                        /* default sector length in single ended mode */
+#define PFLASH_SECTOR_LENGTH        0x4000                       /* 16KB - logical sector length */
+#define PFLASH_PHY_SECTOR_LENGTH    0x100000                     /* 1MB - real physical sector length, here reduced to 16KB blocks */
+#define DFLASH_SECTOR_LENGTH        0xFFF                        /* 4KB - default sector length in single ended mode */
 /*********************************************************************************************************************/
 /*-------------------------------------------------Global variables--------------------------------------------------*/
 /*********************************************************************************************************************/
