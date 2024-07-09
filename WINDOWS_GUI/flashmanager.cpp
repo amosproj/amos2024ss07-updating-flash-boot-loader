@@ -762,21 +762,51 @@ void FlashManager::writeKey(int keyType){
     if (keyType == GOOD)
     {
     
-        uds->requestDownload(ecu_id, aswKeyAdd, 4)
-        //Response Typ überprüfen
+        if (uds->requestDownload(ecu_id, aswKeyAdd, 4) != UDS::TX_RX_OK)
+        {
+            //Response Typ überprüfen
+           queuedGUIConsoleLog("FlashManager(Write good Key): ERROR - Requesting download failed");
+        }
+        
         uint8_t goodKeyValueArr[4];
-        uds->transferData(ecu_id,aswKeyAdd, goodKeyValue, good_key_value.size());
-        uds->requestTransferExit(ecu_id, aswKeyAdd);
+        goodKeyValueArr[0] = (goodKeyValue >> 24) & 0xFF;
+        goodKeyValueArr[1] = (goodKeyValue >> 16) & 0xFF;
+        goodKeyValueArr[2] = (goodKeyValue >> 8) & 0xFF;
+        goodKeyValueArr[3] = goodKeyValue & 0xFF;
+        if (uds->transferData(ecu_id,aswKeyAdd, goodKeyValueArr, 4) != UDS::TX_RX_OK)
+        {
+            queuedGUIConsoleLog("FlashManager(Write good Key): ERROR - Transfer Data failed");
+        }
+        if (uds->requestTransferExit(ecu_id, aswKeyAdd) != UDS::TX_RX_OK)
+        {
+            queuedGUIConsoleLog("FlashManager(Write good Key): ERROR - Requesting Transfer Exit failed");
+        }
+        
         
     }
     else if (keyType == BAD)
     {
        
-         uds->requestDownload(ecu_id, aswKeyAdd, 4)
-
-        //Bad Key
-        uds->transferData();
-        uds->requestTransferExit(ecu_id, aswKeyAdd);
+        if (uds->requestDownload(ecu_id, aswKeyAdd, 4) != UDS::TX_RX_OK)
+        {
+            queuedGUIConsoleLog("FlashManager(Write bad Key): ERROR - Requesting download failed");
+        }
+        
+        uint8_t badKeyValueArr[4];
+        badKeyValueArr[0] = 0xBA;
+        badKeyValueArr[1] = 0xDB;
+        badKeyValueArr[2] = 0xAD;
+        badKeyValueArr[3] = 0xBA;
+        
+        if (uds->transferData(ecu_id,aswKeyAdd, badKeyValueArr, 4) != UDS::TX_RX_OK)
+        {
+            queuedGUIConsoleLog("FlashManager(Write bad Key): ERROR - Transfer Data failed");
+        }
+        if (uds->requestTransferExit(ecu_id, aswKeyAdd) != UDS::TX_RX_OK)
+        {
+            queuedGUIConsoleLog("FlashManager(Write bad Key): ERROR - Requesting Transfer Exit failed");
+        }
+        
     }
     
 }
