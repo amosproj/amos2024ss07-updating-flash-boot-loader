@@ -176,6 +176,7 @@ QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteAr
     bool empty = false;
 
     uint32_t combinationAddr = 0;
+    uint32_t lastAddr = 0;
 
     for(uint32_t pageAddr : pages.keys()){
         QByteArray content = pages[pageAddr];
@@ -201,15 +202,26 @@ QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteAr
 
             // Consecutive pages
             else {
-                QByteArray existingPages = transformedData[combinationAddr];
-                existingPages = existingPages.append(content);
-                transformedData[combinationAddr] = existingPages;
+                // Bigger Gap between two pages, consider as new address
+                if(pageAddr - lastAddr > MINIMUM_BLOCK_SIZE){
+                    combinationAddr = pageAddr;
+                    transformedData[combinationAddr] = content;
+                }
+
+                // Normal append
+                else {
+                    QByteArray existingPages = transformedData[combinationAddr];
+                    existingPages = existingPages.append(content);
+                    transformedData[combinationAddr] = existingPages;
+                }
             }
 
         } else {
             // Ignore page since it is empty
             combination = false;
         }
+
+        lastAddr = pageAddr;
 
     }
     return transformedData;
