@@ -369,9 +369,6 @@ static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashSta
 
             pflash_eraser.core1_erased_sections += num_sectors_to_erase;
             num_sectors_delta = num_sectors - pflash_eraser.core1_erased_sections;
-
-            if(num_sectors_to_erase > 60)
-                break;
         }
     }
 
