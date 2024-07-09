@@ -55,6 +55,11 @@ extern "C" {
 #define FBL_REQUEST_TRANSFER_EXIT                                   (0x37)
 
 /**
+ * Own
+ */
+#define FBL_RESET_TO_BOOTLOADER                                     (0xFF)
+
+/**
  * Negative Response
  */
 #define FBL_NEGATIVE_RESPONSE                                       (0x7F)
@@ -172,6 +177,9 @@ uint8_t *_create_request_download(int *len, uint8_t response, uint32_t add, uint
 uint8_t *_create_request_upload(int *len, uint8_t response, uint32_t add, uint32_t bytes_size);
 uint8_t *_create_transfer_data(int *len, uint8_t response, uint32_t add, uint8_t* data, uint32_t data_len);
 uint8_t *_create_request_transfer_exit(int *len, uint8_t response, uint32_t add);
+
+// Specification for own functionalities
+uint8_t *_create_reset_to_bootloader(int *len);
 
 // Supported Common Response Codes
 uint8_t *_create_neg_response(int *len, uint8_t rej_sid, uint8_t neg_resp_code);

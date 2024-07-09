@@ -222,7 +222,9 @@ void UDS::messageInterpreter(unsigned int id, uint8_t *data, uint32_t no_bytes){
             // Info: Response includes the end address. There is no content check here
             rx_msg_valid = true;
             break;
-
+        case FBL_RESET_TO_BOOTLOADER:
+            out << info + "ERROR - we should not receive RESET_TO_BOOTLOADER "<< SID_str << ID_str<<"\n";
+            break;        
         default:
             if(!neg_resp)
                 out << info << "ERROR UNRECOGNIZED SID "<< SID_str << ID_str<<"\n";
@@ -679,6 +681,36 @@ UDS::RESP UDS::requestUpload(uint32_t id, uint32_t address, uint32_t no_bytes) {
     rxMsgCopyToBuffer(temp_rx_exp_data, rx_no_bytes);
     free(temp_rx_exp_data);
     return rxMessageValid(rx_max_waittime_general);
+}
+
+/**
+ * @brief Method sends a message to reset from ASW to bootloader.
+ * @param id Target CAN ID
+ * @return UDS::RESP accordingly
+ */
+UDS::RESP UDS::resetToBootloader(uint32_t canID) {
+    UDS::RESP resp = txMessageStart();
+    if(resp != TX_OK){
+        return resp;
+    }
+
+	uint32_t send_id = ((uint32_t)FBLCAN_IDENTIFIER_MASK & canID);
+    QString id_str = " using ID "+ QString("0x%1").arg(send_id, 8, 16, QLatin1Char( '0' ));
+
+    // Info to Console
+    qInfo("<< UDS: Sending Reset to Bootloader \n");
+    emit toConsole("<< UDS: Sending Reset to Bootloader " + id_str);
+
+	int len = 0;
+    uint8_t *msg = _create_reset_to_bootloader(&len);
+    txMessageSend(send_id, msg, len); 
+
+    // Release the communication flag
+    comm_mutex.lock();
+    _comm = false;
+    comm_mutex.unlock(); 
+
+    return TX_OK;
 }
 
 /**

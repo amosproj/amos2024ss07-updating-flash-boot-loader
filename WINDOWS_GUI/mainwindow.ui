@@ -152,6 +152,13 @@
                </property>
               </widget>
              </item>
+             <item>
+              <widget class="QPushButton" name="button_reset_bootloader">
+               <property name="text">
+                <string>Reset to Bootloader</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </widget>
           </item>

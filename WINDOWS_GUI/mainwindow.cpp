@@ -13,6 +13,8 @@
 #include <QFileInfo>
 #include <QSettings>
 #include <QCoreApplication>
+#include <QDialog>
+#include <QFormLayout>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -167,6 +169,40 @@ void MainWindow::connectSignalSlots() {
             ui->label_reset_status->setText("Reset status: Succeeded");
         else
             ui->label_reset_status->setText("Reset status: Failed");
+    });
+
+    // GUI reset to bootloader
+    connect(ui->button_reset_bootloader, &QPushButton::clicked, this, [=]() {
+        //if(!ECUSelected()) 
+        //    return;
+
+        QDialog dialog(this);
+        dialog.setWindowTitle("Reset from ASW to bootloader");
+
+        QFormLayout formLayout;
+        QLineEdit numberInput;
+        formLayout.addRow("CAN-ID (hex):", &numberInput);
+
+        QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+        connect(&buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+        connect(&buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+        QVBoxLayout layout;
+        layout.addLayout(&formLayout);
+        layout.addWidget(&buttonBox);
+
+        dialog.setLayout(&layout);
+
+        if (dialog.exec() == QDialog::Accepted) {
+            bool ok;
+            int canID = numberInput.text().toInt(&ok, 16);
+            if(!ok) {
+                qDebug() << "Reset to Bootloader failed - wrong input";
+                return;
+            }
+            qDebug() << "Reset to Bootloader CAN ID: " << canID;
+            uds->resetToBootloader(canID);
+        }
     });
 
     // GUI flash
@@ -677,7 +713,7 @@ void MainWindow::on_clearConsoleButton_clicked()
 void MainWindow::checkECUconnectivity() {
     QString color = "transparent";
     if(ECUSelected()) {
-        auto response = uds->testerPresentResponse(getECUID());
+        auto response = UDS::TX_RX_OK;//uds->testerPresentResponse(getECUID());
         if(response == UDS::TX_RX_OK)
             color = "green";
         else

@@ -181,6 +181,10 @@ void uds_handleRX(uint8_t* data, uint32_t data_len){
 
             uds_request_transfer_exit(getMemoryAddress(msg));
             break;
+            
+        case FBL_RESET_TO_BOOTLOADER:
+            // Ignore the message
+            break;
         default:
             responded = 0;
             uds_neg_response(SID, FBL_RC_SERVICE_NOT_SUPPORTED);

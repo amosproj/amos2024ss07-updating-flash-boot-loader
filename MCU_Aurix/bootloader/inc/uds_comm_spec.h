@@ -55,6 +55,11 @@ extern "C" {
 #define FBL_REQUEST_TRANSFER_EXIT                                   (0x37)
 
 /**
+ * Own
+ */
+#define FBL_RESET_TO_BOOTLOADER                                     (0xFF)
+
+/**
  * Negative Response
  */
 #define FBL_NEGATIVE_RESPONSE                                       (0x7F)
