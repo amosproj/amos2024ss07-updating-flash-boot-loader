@@ -1,13 +1,19 @@
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2024 Leon Wilms <leonwilms.wk@gmail.com>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+
 //============================================================================
-// Name        : validatemanager.cpp
-// Author      : Leon Wilms
-// Version     : 0.1
+// Name        : validatemanager.h
+// Author      : Leon Wilms, Michael Bauer
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Validation Manager to validate selected files
 //============================================================================
 
 #ifndef VALIDATEMANAGER_H
 #define VALIDATEMANAGER_H
+
+#define MINIMUM_BLOCK_SIZE          (32)    // Bytes, Content of 1 Page
 
 #include <QObject>
 #include <QDebug>
@@ -38,6 +44,8 @@ public:
 
     void validateFileAsync(QByteArray data);
     bool checkBlockAddressRange(QMap<uint32_t, QByteArray> blocks);
+
+    QMap<uint32_t, QByteArray> transformData(QMap<uint32_t, QByteArray> blocks);
 
 private:
 

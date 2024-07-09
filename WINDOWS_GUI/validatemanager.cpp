@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Leon Wilms <leonwilms.wk@gmail.com>
+// SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
 
 //============================================================================
 // Name        : validatemanager.cpp
-// Author      : Leon Wilms
+// Author      : Leon Wilms, Michael Bauer
 // Version     : 0.1
 // Copyright   : MIT
 // Description : Validation Manager to validate selected files
@@ -59,6 +60,8 @@ void ValidateManager::validateFileAsync(QByteArray data){
             QMutexLocker locker(&self->dataMutex);
             result = self->validateFile(data);
         }
+
+        result = self->transformData(result);
         emit self->validationDone(result);
     });
     thread->start();
@@ -92,6 +95,110 @@ bool ValidateManager::checkBlockAddressRange(const QMap<uint32_t, QByteArray> bl
     return true;
 }
 
+QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteArray> blocks){
+
+    qInfo() << "ValidateManager: Start to tranform the data";
+    QMap<uint32_t, QByteArray> pages;
+
+    // Prepare the pages
+    for (int rangeCtr = 0; rangeCtr < core_addr.count(); rangeCtr++){
+        QString core_start_add_string = core_addr[rangeCtr]["start"];
+        QString core_end_add_string = core_addr[rangeCtr]["end"];
+        uint32_t core_start_add = core_start_add_string.toUInt(NULL, 16);
+        uint32_t core_end_add = core_end_add_string.toUInt(NULL, 16);
+
+        if(core_start_add > 0 && core_end_add > 0){
+            uint32_t sizeOfRange = core_end_add - core_start_add;
+            qInfo() << "Prepare pages for range from "+QString("0x%1").arg(core_start_add, 2, 16, QLatin1Char( '0' )) + " to " +QString("0x%1").arg(core_end_add, 2, 16, QLatin1Char( '0' ));
+            for(int addrOffset = 0; addrOffset < sizeOfRange; addrOffset = addrOffset + MINIMUM_BLOCK_SIZE){
+                uint32_t pageAddr = core_start_add + addrOffset;
+                QByteArray pageContent;
+                pageContent.fill(0, MINIMUM_BLOCK_SIZE);
+                pages[pageAddr] = pageContent;
+            }
+        }
+    }
+    // Preprocess the data: insert the data into the specific pages
+    for(uint32_t addr : blocks.keys()){
+        QByteArray block = blocks[addr];
+
+        //qInfo() << "Processing "+QString("0x%1").arg(addr, 2, 16, QLatin1Char( '0' ));
+        for(int valueAddrOffSet = 0; valueAddrOffSet <  block.size(); valueAddrOffSet++){
+            uint32_t valueAddr = addr+valueAddrOffSet;
+            uint8_t value = block[valueAddrOffSet];
+
+            // Search the pages for correct one..
+            auto it = pages.upperBound(valueAddr);
+            if(it != pages.begin() && it != pages.end())
+                it = std::prev(it);
+
+            // Extract page
+            uint32_t foundAddr = it.key();
+            QByteArray foundPage = it.value();
+
+            if(foundAddr + pages[foundAddr].size() >= valueAddr){
+
+                // Calc the index + Insert data
+                uint32_t index = valueAddr - foundAddr;
+                foundPage[index] = value;
+
+                // Store back into pages map
+                pages[foundAddr] = foundPage;
+
+            }
+            else {
+                emit errorPrint("ERROR: Adress "+QString("0x%1").arg(valueAddr, 2, 16, QLatin1Char( '0' ))+" was ignored during transformation of data!\n");
+                qInfo() << "Out of range - Ignoring address " + QString("0x%1").arg(valueAddr, 2, 16, QLatin1Char( '0' ));
+            }
+        }
+    }
+
+    // Reduce the pages - remove empty pages and combine
+    QMap<uint32_t, QByteArray> transformedData;
+
+    bool combination = false;
+    bool combinationLast = false;
+    bool empty = false;
+
+    uint32_t combinationAddr = 0;
+
+    for(uint32_t pageAddr : pages.keys()){
+        QByteArray content = pages[pageAddr];
+
+        // Check content - Is it empty?
+        empty = true;
+        for(int i = 0; i < content.size() && empty; i++){
+            if (content[i] != 0){
+                empty = false;
+            }
+        }
+
+        // If not empty it need to be included
+        combinationLast = combination;
+        if(!empty){
+            combination = true;
+
+            // Rising flag, first page to be inserted
+            if(combination == true && combinationLast == false){
+                combinationAddr = pageAddr;
+                transformedData[combinationAddr] = content;
+            }
+
+            // Consecutive pages
+            else {
+                QByteArray existingPages = transformedData[combinationAddr];
+                existingPages = existingPages.append(content);
+                transformedData[combinationAddr] = existingPages;
+            }
+
+        } else {
+            // Ignore page since it is empty
+            combination = false;
+        }
+
+    }
+    return transformedData;
+}
 //============================================================================
 // Private Method
 //============================================================================
