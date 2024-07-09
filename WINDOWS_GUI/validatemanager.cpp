@@ -125,31 +125,46 @@ QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteAr
         //qInfo() << "Processing "+QString("0x%1").arg(addr, 2, 16, QLatin1Char( '0' ));
         for(int valueAddrOffSet = 0; valueAddrOffSet <  block.size(); valueAddrOffSet++){
             uint32_t valueAddr = addr+valueAddrOffSet;
-            uint8_t value = block[valueAddrOffSet];
 
-            // Search the pages for correct one..
-            auto it = pages.upperBound(valueAddr);
-            if(it != pages.begin() && it != pages.end())
-                it = std::prev(it);
+            bool supported = true;
+            if( addrInCoreRange(valueAddr, 1, 0, &supported) ||
+                addrInCoreRange(valueAddr, 1, 1, &supported) ||
+                addrInCoreRange(valueAddr, 1, 2, &supported) ||
+                addrInCoreRange(valueAddr, 1, 3, &supported) ||
+                addrInCoreRange(valueAddr, 1, 4, &supported))
+            {
+                uint8_t value = block[valueAddrOffSet];
 
-            // Extract page
-            uint32_t foundAddr = it.key();
-            QByteArray foundPage = it.value();
+                // Search the pages for correct one..
+                auto it = pages.upperBound(valueAddr);
+                if(it != pages.begin() && it != pages.end())
+                    it = std::prev(it);
 
-            if(foundAddr + pages[foundAddr].size() >= valueAddr){
+                // Extract page
+                uint32_t foundAddr = it.key();
+                QByteArray foundPage = it.value();
 
-                // Calc the index + Insert data
-                uint32_t index = valueAddr - foundAddr;
-                foundPage[index] = value;
+                if(foundAddr + pages[foundAddr].size() >= valueAddr){
 
-                // Store back into pages map
-                pages[foundAddr] = foundPage;
+                    // Calc the index + Insert data
+                    uint32_t index = valueAddr - foundAddr;
+                    foundPage[index] = value;
 
+                    // Store back into pages map
+                    pages[foundAddr] = foundPage;
+
+                }
+                else {
+                    emit errorPrint("ERROR: Searched Adress "+QString("0x%1").arg(valueAddr, 2, 16, QLatin1Char( '0' ))+" was ignored during transformation of data!\n");
+                    qInfo() << "Out of range - Ignoring address " + QString("0x%1").arg(valueAddr, 2, 16, QLatin1Char( '0' ));
+                }
             }
+
             else {
-                emit errorPrint("ERROR: Adress "+QString("0x%1").arg(valueAddr, 2, 16, QLatin1Char( '0' ))+" was ignored during transformation of data!\n");
+                emit errorPrint("ERROR: Check for Adress "+QString("0x%1").arg(valueAddr, 2, 16, QLatin1Char( '0' ))+" failed! - No possible range\n");
                 qInfo() << "Out of range - Ignoring address " + QString("0x%1").arg(valueAddr, 2, 16, QLatin1Char( '0' ));
             }
+
         }
     }
 
