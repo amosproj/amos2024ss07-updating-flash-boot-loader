@@ -36,11 +36,12 @@ private:
     uint8_t init;                               // Init flag
 
     // Timeout control
-    uint32_t tx_max_waittime_free_tx    = 1000; // ms - Wait time before TX aborts
-    uint32_t rx_max_waittime_general    = 1000;  // ms - Wait time before RX aborts
-    uint32_t rx_max_waittime_long       = 2000; // ms - Long wait time before RX aborts
-    uint32_t rx_max_waittime_flashing   = 3000; // ms - Flashing wait time before RX aborts TODO: change to Default: 2000
-    uint32_t rx_max_waittime_validation = 10000; // ms - Flashing wait time before RX aborts TODO: change to Default: 2000
+    uint32_t tx_max_waittime_free_tx    = 1000;     // ms - Wait time before TX aborts
+    uint32_t rx_max_waittime_general    = 1000;     // ms - Wait time before RX aborts
+    uint32_t rx_max_waittime_long       = 2000;     // ms - Long wait time before RX aborts
+    uint32_t rx_max_waittime_flashing   = 3000;     // ms - Flashing wait time before RX aborts TODO: change to Default: 2000
+    uint32_t rx_max_waittime_validation = 10000;    // ms - Flashing wait time before RX aborts TODO: change to Default: 2000
+    uint32_t rx_max_waittime_short      = 100;      // ms - Wait time before RX aborts
 
     bool _comm;                                 // For communication usage, only synchronized TX+RX is possible
     QMutex comm_mutex;                          // Protects _comm

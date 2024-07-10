@@ -389,7 +389,7 @@ UDS::RESP UDS::diagnosticSessionControl(uint32_t id, uint8_t session) {
     free(temp_rx_exp_data);
 
     txMessageSend(send_id, msg, len);
-    return rxMessageValid(rx_max_waittime_general);
+    return rxMessageValid(rx_max_waittime_short);
 }
 
 /**
@@ -420,7 +420,7 @@ UDS::RESP UDS::ecuReset(uint32_t id, uint8_t reset_type) {
     free(temp_rx_exp_data);
 
     txMessageSend(send_id, msg, len);
-    return rxMessageValid(rx_max_waittime_general);
+    return rxMessageValid(rx_max_waittime_short);
 }
 
 /**
@@ -549,7 +549,7 @@ UDS::RESP UDS::testerPresentResponse(uint32_t id) {
     free(temp_rx_exp_data);
 
     txMessageSend(send_id, msg, len);
-    return rxMessageValid(rx_max_waittime_general);
+    return rxMessageValid(rx_max_waittime_short);
 }
 
 // Specification for Data Transmission
@@ -583,7 +583,7 @@ UDS::RESP UDS::readDataByIdentifier(uint32_t id, uint16_t identifier) {
     free(temp_rx_exp_data);
 
     txMessageSend(send_id, msg, len);
-    return rxMessageValid(rx_max_waittime_general);
+    return rxMessageValid(rx_max_waittime_short);
 }
 
 /**
