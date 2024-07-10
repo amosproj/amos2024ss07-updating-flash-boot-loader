@@ -521,7 +521,7 @@ uint8_t *_create_request_transfer_exit(int *len, uint8_t response, uint32_t addr
  * Own
  */
 
-//Diagnostic Session Control (0xFF)
+// Reset to bootloader (0xFF)
 uint8_t *_create_reset_to_bootloader(int *len) {
     uint8_t *msg = prepare_message(len, 0, FBL_RESET_TO_BOOTLOADER, 0, 7);
     for(int i = 1; i < *len; ++i)
