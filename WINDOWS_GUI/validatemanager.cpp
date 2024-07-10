@@ -107,7 +107,7 @@ QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteAr
     if(core_addr_processing.size() == 0){
         emit errorPrint("ERROR: Could not calculate the data for flashing since the range is missing. Click on the ECU again\n");
         QMap<uint32_t, QByteArray> empty_blocks;
-        return blocks;
+        return empty_blocks;
     }
 
     // -------------------------------------------------------------------------------------
@@ -166,12 +166,12 @@ QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteAr
                     uint32_t foundAddr = it.key();
                     QByteArray foundPage = it.value();
 
-                    // Create real page if it not already initialized properly before
-                    if(foundPage.size() < MINIMUM_BLOCK_SIZE){
-                        foundPage.fill(0, MINIMUM_BLOCK_SIZE);
-                    }
+                    if(foundAddr + foundPage.size() >= valueAddr){
 
-                    if(foundAddr + pages[foundAddr].size() >= valueAddr){
+                        // Create real page if it not already initialized properly before
+                        if(foundPage.size() < MINIMUM_BLOCK_SIZE){
+                            foundPage.fill(0, MINIMUM_BLOCK_SIZE);
+                        }
 
                         // Calc the index + Insert data
                         uint32_t index = valueAddr - foundAddr;
@@ -207,7 +207,7 @@ QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteAr
 
         // If not empty it need to be included
         combinationLast = combination;
-        if(!(content.size() < MINIMUM_BLOCK_SIZE)){ // There is content available for this page
+        if(content.size() == MINIMUM_BLOCK_SIZE){ // There is content available for this page
             combination = true;
 
             // Rising flag, first page to be inserted
@@ -255,7 +255,7 @@ QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteAr
 
                 while(upperAddr - lowerAddr > ADD_SUPPORTING_PAGES_EVERY){
                     // Found a bigger gap, filling with supporting 0-Pages
-                    lowerAddr += ADD_SUPPORTING_PAGES_EVERY;
+                    lowerAddr = lowerAddr + ADD_SUPPORTING_PAGES_EVERY - (lowerAddr % ADD_SUPPORTING_PAGES_EVERY);
 
                     QByteArray fillPage;
                     fillPage.fill(0, MINIMUM_BLOCK_SIZE);
