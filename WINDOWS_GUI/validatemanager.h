@@ -14,6 +14,7 @@
 #define VALIDATEMANAGER_H
 
 #define MINIMUM_BLOCK_SIZE          (32)    // Bytes, Content of 1 Page
+#define ADD_SUPPORTING_PAGES_EVERY  0x50000  // Number of bytes if there is a big gap between two addresses within range
 
 #include <QObject>
 #include <QDebug>
