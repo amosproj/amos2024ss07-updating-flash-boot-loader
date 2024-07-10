@@ -528,46 +528,6 @@ derivative tc37
             "__INTTAB_CPU1" = (LCF_INTVEC1_START);
             "__INTTAB_CPU2" = (LCF_INTVEC2_START);
         }
-        
-        /*Fixed memory Allocations for BMHD*/
-        group (ordered)
-        {
-            group  bmh_0_orig (run_addr=mem:ucb[0x0000])
-            {
-                select ".rodata.bmhd_0_orig";
-            }
-            group  bmh_1_orig (run_addr=mem:ucb[0x0200])
-            {
-                select ".rodata.bmhd_1_orig";
-            }
-            group  bmh_2_orig (run_addr=mem:ucb[0x0400])
-            {
-                select ".rodata.bmhd_2_orig";
-            }
-            group  bmh_3_orig (run_addr=mem:ucb[0x0600])
-            {
-                select ".rodata.bmhd_3_orig";
-            }
-            group  bmh_blank (run_addr=mem:ucb[0x0800])
-            {
-            }
-            group  bmh_0_copy (run_addr=mem:ucb[0x1000])
-            {
-                select ".rodata.bmhd_0_copy";
-            }
-            group  bmh_1_copy (run_addr=mem:ucb[0x1200])
-            {
-                select ".rodata.bmhd_1_copy";
-            }
-            group  bmh_2_copy (run_addr=mem:ucb[0x1400])
-            {
-                select ".rodata.bmhd_2_copy";
-            }
-            group  bmh_3_copy (run_addr=mem:ucb[0x1600])
-            {
-                select ".rodata.bmhd_3_copy";
-            }
-        }
     }
         
     /*Near Abbsolute Addressable Data Sections*/

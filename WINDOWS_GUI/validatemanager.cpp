@@ -98,7 +98,9 @@ bool ValidateManager::checkBlockAddressRange(const QMap<uint32_t, QByteArray> bl
 QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteArray> blocks){
 
     qInfo() << "ValidateManager: Start to tranform the data";
-    QMap<uint32_t, QByteArray> pages;
+    QMap<uint32_t, QByteArray> pages;           // Content of the pages
+    QMap<uint32_t, QByteArray> writtenPages;    // Flags to show that any value (0..255) was written
+    uint8_t writtenPageIndicator = 1;
 
     // Prepare the pages
     for (int rangeCtr = 0; rangeCtr < core_addr.count(); rangeCtr++){
@@ -115,9 +117,14 @@ QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteAr
                 QByteArray pageContent;
                 pageContent.fill(0, MINIMUM_BLOCK_SIZE);
                 pages[pageAddr] = pageContent;
+
+                QByteArray writtenPageContent;
+                writtenPageContent.fill(0, MINIMUM_BLOCK_SIZE);
+                writtenPages[pageAddr] = writtenPageContent;
             }
         }
     }
+
     // Preprocess the data: insert the data into the specific pages
     for(uint32_t addr : blocks.keys()){
         QByteArray block = blocks[addr];
@@ -136,22 +143,29 @@ QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteAr
                 uint8_t value = block[valueAddrOffSet];
 
                 // Search the pages for correct one..
-                auto it = pages.upperBound(valueAddr);
-                if(it != pages.begin() && it != pages.end())
+                QMap<uint32_t, QByteArray>::const_iterator it = pages.upperBound(valueAddr);
+                QMap<uint32_t, QByteArray>::const_iterator itWP = writtenPages.upperBound(valueAddr);
+
+                if(it != pages.begin() && it != pages.end()){
                     it = std::prev(it);
+                    itWP = std::prev(itWP);
+                }
 
                 // Extract page
                 uint32_t foundAddr = it.key();
                 QByteArray foundPage = it.value();
+                QByteArray foundPageWP = itWP.value();
 
                 if(foundAddr + pages[foundAddr].size() >= valueAddr){
 
                     // Calc the index + Insert data
                     uint32_t index = valueAddr - foundAddr;
                     foundPage[index] = value;
+                    foundPageWP[index] = writtenPageIndicator;
 
                     // Store back into pages map
                     pages[foundAddr] = foundPage;
+                    writtenPages[foundAddr] = foundPageWP;
 
                 }
                 else {
@@ -174,19 +188,27 @@ QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteAr
     bool combination = false;
     bool combinationLast = false;
     bool empty = false;
+    bool filling = false;
 
     uint32_t combinationAddr = 0;
     uint32_t lastAddr = 0;
+    uint32_t lastFillingAddr = 0;
 
     for(uint32_t pageAddr : pages.keys()){
         QByteArray content = pages[pageAddr];
+        QByteArray writtenPageIndicator = writtenPages[pageAddr];
 
         // Check content - Is it empty?
         empty = true;
-        for(int i = 0; i < content.size() && empty; i++){
-            if (content[i] != 0){
+        for(int i = 0; i < writtenPageIndicator.size() && empty; i++){
+            if (writtenPageIndicator[i] != 0){
                 empty = false;
             }
+        }
+
+        filling = false;
+        if((pageAddr - lastFillingAddr) >= 0x50000){
+            filling = true;
         }
 
         // If not empty it need to be included
@@ -216,7 +238,11 @@ QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteAr
                 }
             }
 
-        } else {
+        } else if (filling){
+            transformedData[pageAddr] = content;
+            lastFillingAddr = pageAddr;
+        }
+        else {
             // Ignore page since it is empty
             combination = false;
         }

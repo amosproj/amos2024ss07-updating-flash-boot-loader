@@ -66,6 +66,8 @@ Flash_Function g_functionsFromPSPR;
 
 uint32_t flash_driver_last_flashpage[PFLASH_LAST_PAGE_SIZE];
 
+
+
 typedef struct
 {
         uint32_t init;
@@ -87,7 +89,6 @@ typedef struct
 } Flash_Eraser;
 
 Flash_Eraser pflash_eraser;
-
 /*********************************************************************************************************************/
 /*--------------------------------------------Private Helper Functions-----------------------------------------------*/
 /*********************************************************************************************************************/
@@ -254,36 +255,74 @@ static uint32_t getPFlashNumPhySectors()
     return getNumPerSize(PFLASH_SECTOR_LENGTH, PFLASH_PHY_SECTOR_LENGTH, 0);
 }
 
-static void readToVerifyPFlash(uint32 startAddr, uint32_t data[], size_t dataSize){
+static uint32_t getPFlashLogSecWithinPhySectors(uint32_t eraseStartAddr, size_t numLogSectorsReqToErase){
 
-    FILE *f3 = fopen("terminal window 3", "rw");
+    // In general: logSectorAddr == eraseStartAddr -> Need to be the same if parameter is correctly used (calculation is done for safety reasons)
 
-    uint32_t dataIndex = 0;
+    // FILE * f3 = fopen("terminal window 3", "rw");
+    uint32_t withinLogSectorIdx = 0;
+    uint32_t logSectorAddr = 0;
+    uint32_t withinPhySectorIdx = 0;
+    uint32_t phySectorAddr = 0;
 
-    fprintf(f3, "Reading %zu uint32_t from 0x%X\n", (unsigned long)dataSize, startAddr);
-    for (uint32_t address = startAddr; address < startAddr + dataSize * sizeof(uint32); address += sizeof(uint32))
-    {
-        uint32_t content = MEM(address);
-        if ( content > 0)
-        {
-            if (content != data[dataIndex]){
-                fprintf(f3, " -> Address 0x%X: Content is different Is: 0x%X, Should: 0x%X\n", address, content, data[dataIndex]);
-            } else{
-                //fprintf(f3, " -> Address 0x%X: Content is equal\n", address);
-            }
+    uint32_t logSectorsToNextPhySec = 0;
+
+
+    // Check on address range - PFLASH 0
+    if(eraseStartAddr >= PROGRAM_FLASH_0_PHY_BASE_ADDR && eraseStartAddr <= PROGRAM_FLASH_0_PHY_END_ADDR){
+
+        withinLogSectorIdx =  (eraseStartAddr - PROGRAM_FLASH_0_PHY_BASE_ADDR) / PFLASH_SECTOR_LENGTH;
+        logSectorAddr = PROGRAM_FLASH_0_PHY_BASE_ADDR + (withinLogSectorIdx * PFLASH_SECTOR_LENGTH);
+        withinPhySectorIdx = (eraseStartAddr - PROGRAM_FLASH_0_PHY_BASE_ADDR) / PFLASH_PHY_SECTOR_LENGTH;
+        phySectorAddr = PROGRAM_FLASH_0_PHY_BASE_ADDR + (withinPhySectorIdx * PFLASH_PHY_SECTOR_LENGTH);
+
+        logSectorsToNextPhySec = ((phySectorAddr + PFLASH_PHY_SECTOR_LENGTH) - logSectorAddr) / PFLASH_SECTOR_LENGTH;
+
+
+        /*
+        fprintf(f3, "ER Add: 0x%X, WLogSecIdx: %u, LogSecAddr: 0x%X, \nwPhySectIdx: %u, PhySecAddr: 0x%X, \nlogSectorsToNextPhy: %u, ER Req: %u\n",
+                        eraseStartAddr, withinLogSectorIdx, logSectorAddr, withinPhySectorIdx, phySectorAddr, logSectorsToNextPhySec, numLogSectorsReqToErase);
+        fclose(f3);
+        */
+
+
+        if(logSectorsToNextPhySec < numLogSectorsReqToErase){
+            return logSectorsToNextPhySec;
+        }else{
+            return numLogSectorsReqToErase;
         }
-        else {
-            //fprintf(f3, " -> Address 0x%X is 0\n", address);
-        }
-        dataIndex++;
+
+
     }
 
-    fclose(f3);
+    // Check on address range - PFLASH 1
+    else if(eraseStartAddr >= PROGRAM_FLASH_1_PHY_BASE_ADDR && eraseStartAddr <= PROGRAM_FLASH_1_PHY_END_ADDR){
+        withinLogSectorIdx =  (eraseStartAddr - PROGRAM_FLASH_1_PHY_BASE_ADDR) / PFLASH_SECTOR_LENGTH;
+        logSectorAddr = PROGRAM_FLASH_1_PHY_BASE_ADDR + (withinLogSectorIdx * PFLASH_SECTOR_LENGTH);
+        withinPhySectorIdx = (eraseStartAddr - PROGRAM_FLASH_1_PHY_BASE_ADDR) / PFLASH_PHY_SECTOR_LENGTH;
+        phySectorAddr = PROGRAM_FLASH_1_PHY_BASE_ADDR + (withinPhySectorIdx * PFLASH_PHY_SECTOR_LENGTH);
+
+        logSectorsToNextPhySec = ((phySectorAddr + PFLASH_PHY_SECTOR_LENGTH) - logSectorAddr) / PFLASH_SECTOR_LENGTH;
+
+
+        /*
+        fprintf(f3, "ER Add: 0x%X, WLogSecIdx: %u, LogSecAddr: 0x%X, \nwPhySectIdx: %u, PhySecAddr: 0x%X, \nlogSectorsToNextPhy: %u, ER Req: %u\n\n",
+                        eraseStartAddr, withinLogSectorIdx, logSectorAddr, withinPhySectorIdx, phySectorAddr, logSectorsToNextPhySec, numLogSectorsReqToErase);
+        fclose(f3);
+        */
+
+
+        if(logSectorsToNextPhySec < numLogSectorsReqToErase){
+            return logSectorsToNextPhySec;
+        }else{
+            return numLogSectorsReqToErase;
+        }
+    }
+    return 0; // Address range not covered -> If 0 is returned, there is a if case missing!
+
 }
 
 static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashStartAddr, size_t dataSize){
-    uint32_t num_loc_per_phy = getPFlashNumPhySectors(PFLASH_SECTOR_LENGTH);
-
     uint32_t num_bytes = 0;
     uint32_t num_sectors = 0;
 
@@ -297,14 +336,14 @@ static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashSta
         num_sectors = getPFlashNumSectors(num_bytes);
 
         num_sectors_delta = num_sectors - pflash_eraser.core0_erased_sections;
-        while(num_sectors_delta > 0){
+        num_sectors_to_erase = num_sectors_delta;
+        while(num_sectors_delta > 0 && num_sectors_to_erase > 0){ // There went something wrong when num_sectors_to_erase == 0 -> Do not further try to erase
             erase_start_addr = pflash_eraser.core0_start_addr + (pflash_eraser.core0_erased_sections * PFLASH_SECTOR_LENGTH);
-            if(num_sectors_delta > num_loc_per_phy){
-                num_sectors_to_erase = num_loc_per_phy;
-            }
-            else {
-                num_sectors_to_erase = num_sectors_delta;
-            }
+            num_sectors_to_erase = getPFlashLogSecWithinPhySectors(erase_start_addr, num_sectors_delta);
+
+            if(num_sectors_to_erase == 0)
+                break;
+
             g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_to_erase);
 
             pflash_eraser.core0_erased_sections += num_sectors_to_erase;
@@ -318,14 +357,14 @@ static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashSta
         num_sectors = getPFlashNumSectors(num_bytes);
 
         num_sectors_delta = num_sectors - pflash_eraser.core1_erased_sections;
-        while(num_sectors_delta > 0){
+        num_sectors_to_erase = num_sectors_delta;
+        while(num_sectors_delta > 0 && num_sectors_to_erase > 0){ // There went something wrong when num_sectors_to_erase == 0 -> Do not further try to erase
             erase_start_addr = pflash_eraser.core1_start_addr + (pflash_eraser.core1_erased_sections * PFLASH_SECTOR_LENGTH);
-            if(num_sectors_delta > num_loc_per_phy){
-                num_sectors_to_erase = num_loc_per_phy;
-            }
-            else {
-                num_sectors_to_erase = num_sectors_delta;
-            }
+            num_sectors_to_erase = getPFlashLogSecWithinPhySectors(erase_start_addr, num_sectors_delta);
+
+            if(num_sectors_to_erase == 0)
+                break;
+
             g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_to_erase);
 
             pflash_eraser.core1_erased_sections += num_sectors_to_erase;
@@ -339,14 +378,14 @@ static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashSta
         num_sectors = getPFlashNumSectors(num_bytes);
 
         num_sectors_delta = num_sectors - pflash_eraser.core2_erased_sections;
-        while(num_sectors_delta > 0){
+        num_sectors_to_erase = num_sectors_delta;
+        while(num_sectors_delta > 0 && num_sectors_to_erase > 0){ // There went something wrong when num_sectors_to_erase == 0 -> Do not further try to erase
             erase_start_addr = pflash_eraser.core2_start_addr + (pflash_eraser.core2_erased_sections * PFLASH_SECTOR_LENGTH);
-            if(num_sectors_delta > num_loc_per_phy){
-                num_sectors_to_erase = num_loc_per_phy;
-            }
-            else {
-                num_sectors_to_erase = num_sectors_delta;
-            }
+            num_sectors_to_erase = getPFlashLogSecWithinPhySectors(erase_start_addr, num_sectors_delta);
+
+            if(num_sectors_to_erase == 0)
+                break;
+
             g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_to_erase);
 
             pflash_eraser.core2_erased_sections += num_sectors_to_erase;
@@ -360,14 +399,14 @@ static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashSta
         num_sectors = getPFlashNumSectors(num_bytes);
 
         num_sectors_delta = num_sectors - pflash_eraser.asw_key_erased_sections;
-        while(num_sectors_delta > 0){
+        num_sectors_to_erase = num_sectors_delta;
+        while(num_sectors_delta > 0 && num_sectors_to_erase > 0){ // There went something wrong when num_sectors_to_erase == 0 -> Do not further try to erase
             erase_start_addr = pflash_eraser.asw_key_start_addr + (pflash_eraser.asw_key_erased_sections * PFLASH_SECTOR_LENGTH);
-            if(num_sectors_delta > num_loc_per_phy){
-                num_sectors_to_erase = num_loc_per_phy;
-            }
-            else {
-                num_sectors_to_erase = num_sectors_delta;
-            }
+            num_sectors_to_erase = getPFlashLogSecWithinPhySectors(erase_start_addr, num_sectors_delta);
+
+            if(num_sectors_to_erase == 0)
+                break;
+
             g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_to_erase);
 
             pflash_eraser.asw_key_erased_sections += num_sectors_to_erase;
@@ -381,14 +420,14 @@ static void erasePFlashSectors(IfxFlash_FlashType flashModule, uint32_t flashSta
         num_sectors = getPFlashNumSectors(num_bytes);
 
         num_sectors_delta = num_sectors - pflash_eraser.cal_data_erased_sections;
-        while(num_sectors_delta > 0){
+        num_sectors_to_erase = num_sectors_delta;
+        while(num_sectors_delta > 0 && num_sectors_to_erase > 0){ // There went something wrong when num_sectors_to_erase == 0 -> Do not further try to erase
             erase_start_addr = pflash_eraser.cal_data_start_addr + (pflash_eraser.cal_data_erased_sections * PFLASH_SECTOR_LENGTH);
-            if(num_sectors_delta > num_loc_per_phy){
-                num_sectors_to_erase = num_loc_per_phy;
-            }
-            else {
-                num_sectors_to_erase = num_sectors_delta;
-            }
+            num_sectors_to_erase = getPFlashLogSecWithinPhySectors(erase_start_addr, num_sectors_delta);
+
+            if(num_sectors_to_erase == 0)
+                break;
+
             g_functionsFromPSPR.erasePFlash(flashModule, erase_start_addr, num_sectors_to_erase);
 
             pflash_eraser.cal_data_erased_sections += num_sectors_to_erase;
@@ -419,8 +458,6 @@ static bool flashWriteProgram(IfxFlash_FlashType flashModule, uint32_t flashStar
 
     erasePFlashSectors(flashModule, flashStartAddr, dataSize);
     g_functionsFromPSPR.writePFlash(flashModule, flashStartAddr, num_pages, data, dataSize);
-
-    readToVerifyPFlash(flashStartAddr, data, dataSize);
 
     IfxCpu_restoreInterrupts(interruptState);
     return true;
@@ -635,10 +672,6 @@ uint32_t flashCalculateChecksum(uint32_t flashStartAddr, uint32_t length) {
     crc_t crc = crc_init();
     uint32_t nextFourBytes = 0;
     while (addr < endAddr) {
-        // For Debugging
-        //if(addr >= 0xA04F8000)
-        //    __nop();
-
         nextFourBytes = MEM(addr);
 
         for (int i = 0; i < 4; i++) {

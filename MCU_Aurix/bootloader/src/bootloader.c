@@ -76,11 +76,11 @@ void init_bootloader(void){
 void bootloaderJumpToASW(void){
     //Write Flag
 
-    //void (*asw_main) (int) = (void*) ASW_STADD;
-    //Ifx__non_return_call(asw_main);
+    void (*asw_main) (int) = (void*) ASW_STADD;
+    Ifx__non_return_call(asw_main);
 
-//    jumpToASW = 1;
-//    softReset(); //Startup
+    jumpToASW = 1;
+    softReset(); //Startup
 }
 
 /**
