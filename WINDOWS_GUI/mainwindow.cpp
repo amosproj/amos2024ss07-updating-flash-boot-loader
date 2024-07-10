@@ -794,7 +794,7 @@ void MainWindow::on_clearConsoleButton_clicked()
 void MainWindow::checkECUconnectivity() {
     QString color = "transparent";
     if(ECUSelected()) {
-        auto response = UDS::TX_RX_OK;//uds->testerPresentResponse(getECUID());
+        auto response = uds->testerPresentResponse(getECUID());
         if(response == UDS::TX_RX_OK)
             color = "green";
         else
