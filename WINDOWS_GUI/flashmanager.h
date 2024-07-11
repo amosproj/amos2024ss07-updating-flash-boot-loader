@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Sebastian Rodriguez <r99@melao.de>
+
 
 //============================================================================
 // Name        : flashmanager.h
-// Author      : Michael Bauer
-// Version     : 0.1
+// Author      : Michael Bauer, Sebastian Rodriguez
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Flashmanger to flash ECUs
 //============================================================================
@@ -28,6 +30,9 @@
 #define TESTFILE_ASW_KEY_BYTES      0x00003FFF  // ~16 KB
 #define TESTFILE_CAL_DATA_START_ADD 0xA04FC000  // Start Address for flashing Calibration data
 #define TESTFILE_CAL_DATA_BYTES     0x00003FFF  // ~16 KB
+
+#define GOOD                        1
+#define BAD                         0
 
 #include <QObject>
 #include <QMutex>
@@ -68,6 +73,8 @@ private:
     uint32_t flashCurrentBufferSize;                            // Stores the current buffer size per
     uint32_t flashCurrentPackageCtr;                            // Stores the current counter of the package
 
+    uint32_t aswKeyAdd;                                         // Stores the address of the ASW Key
+    uint32_t goodKeyValue;                                      // Stores the good key value which is stored in MCU
     size_t last_update_gui_progressbar;                         // Stores the last percent of the GUI progressbar
 
     QDateTime lastGUIUpdateConsoleLog;                          // Stores the last timestamp of Update of GUI Console
@@ -87,6 +94,7 @@ public:
     void setTestFile();
     void setFlashFile(QMap<uint32_t, QByteArray> data);
     void setUpdateVersion(QByteArray version);
+    void setASWKeyContent(uint32_t add, uint32_t content);
     QMap<uint32_t, QByteArray> getFlashContent(void);
 
     void startFlashing(uint32_t ecu_id, uint32_t gui_id, Communication* comm){
@@ -162,6 +170,7 @@ private:
     void updateGUIProgressBar();
     void queuedGUIConsoleLog(QString info, bool forced=0);
     void queuedGUIFlashingLog(FlashManager::STATUS s, QString info, bool forced=0);
+    void changeSessionAndLogin();
     QMap<uint32_t, uint32_t> calculateFileChecksums(QMap<uint32_t, QByteArray> data);
     QMap<uint32_t, QByteArray> uncompressData(QMap<uint32_t, QByteArray> compressedData);
 
@@ -172,6 +181,7 @@ private:
     void transferData();
     void validateFlashing();
     void finishFlashing();
+    void writeKey(int keyType);
 
 signals:
 

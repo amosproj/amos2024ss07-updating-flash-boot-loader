@@ -13,6 +13,7 @@
 #include <QFileInfo>
 #include <QSettings>
 #include <QCoreApplication>
+#include <QFormLayout>
 
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
@@ -202,6 +203,11 @@ void MainWindow::connectSignalSlots() {
             ui->label_reset_status->setText("Reset status: Failed");
     });
 
+    // GUI reset to bootloader
+    connect(ui->button_reset_bootloader, &QPushButton::clicked, this, [=]() {
+       this->resetToBootloaderPopup.show();
+    });
+
     // GUI flash
     connect(ui->button_flash, &QPushButton::clicked, this, [=]() {
         this->ui->textBrowser_flash_status->clear();
@@ -273,6 +279,38 @@ void MainWindow::setupFlashPopup() {
     flashPopup.setLayout(layout);
 }
 
+void MainWindow::setupResetToBootloaderPopup() {
+    QVBoxLayout *layout = new QVBoxLayout;
+
+    QLineEdit *numberInput = new QLineEdit;
+    resetToBootloaderPopup.setProperty("input", QVariant::fromValue(static_cast<QObject*>(numberInput)));
+
+    QPushButton *buttonYes = new QPushButton("Yes");
+    QPushButton *buttonNo = new QPushButton("No");
+
+    
+    QObject::connect(buttonYes, &QPushButton::clicked, this, [&]() {
+        bool ok;
+        uint32_t canID = qobject_cast<QLineEdit*>(resetToBootloaderPopup.property("input").value<QObject*>())->text().toInt(&ok, 16);
+        resetToBootloaderPopup.close();
+        if(!ok)
+            return;
+        uds->resetToBootloader(canID);
+    });
+
+    QObject::connect(buttonNo, &QPushButton::clicked, [&]() {
+        resetToBootloaderPopup.close();
+    });
+
+    QFormLayout *formLayout = new QFormLayout;
+    formLayout->addRow("CAN-ID (hex):", numberInput);
+    layout->addLayout(formLayout);
+    layout->addWidget(buttonYes);
+    layout->addWidget(buttonNo);
+
+    resetToBootloaderPopup.setLayout(layout);
+}
+
 //============================================================================
 // Constructor
 //============================================================================
@@ -320,6 +358,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->table_ECU->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     setupFlashPopup();
+    setupResetToBootloaderPopup();
 
     // Init the Communication - Need to be after connectSignalsSlots to directly print to console
     comm->setCommunicationType(Communication::CAN_DRIVER); // Set to CAN
@@ -566,10 +605,13 @@ void MainWindow::updateValidManager() {
     uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CAL_DATA);
     uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CAL_DATA);
 
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_KEY_ADDRESS);
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_KEY_GOOD_VALUE);
+
     validMan->core_addr.clear();
 
     // Short break to process the incoming signals
-    QTimer::singleShot(50, [this]{
+    QTimer::singleShot(60, [this]{
 
         QString ID_HEX = getECUHEXID();
 
@@ -588,6 +630,8 @@ void MainWindow::updateValidManager() {
         QString cal_data_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CAL_DATA);
         QString cal_data_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CAL_DATA);
 
+        QString key_address = QString::number((uint16_t)FBL_DID_BL_KEY_ADDRESS);
+        QString key_good_value = QString::number((uint16_t)FBL_DID_BL_KEY_GOOD_VALUE);
 
         validMan->core_addr[0]["start"] = eculist[ID_HEX][core0_start];
         validMan->core_addr[0]["end"] = eculist[ID_HEX][core0_end];
@@ -603,6 +647,8 @@ void MainWindow::updateValidManager() {
 
         validMan->core_addr[4]["start"] = eculist[ID_HEX][cal_data_start];
         validMan->core_addr[4]["end"] = eculist[ID_HEX][cal_data_end];
+        qInfo() << key_address;
+        flashMan->setASWKeyContent(eculist[ID_HEX][key_address].toUInt(nullptr,16), eculist[ID_HEX][key_good_value].toUInt(nullptr,16)); //String -> uint32_t
     });
 }
 
