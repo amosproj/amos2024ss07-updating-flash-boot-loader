@@ -93,6 +93,9 @@ public:
     RESP transferData(uint32_t id, uint32_t address, uint8_t* data, uint32_t data_len);
     RESP requestTransferExit(uint32_t id, uint32_t address);
 
+    // Specification for Own functionalities
+    RESP resetToBootloader(uint32_t CANid);
+
 	// Supported Common Response Codes
     RESP negativeResponse(uint32_t id, uint8_t rej_sid, uint8_t neg_resp_code);
 
