@@ -13,7 +13,8 @@
 #ifndef BOOTLOADER_INC_FLASHING_H_
 #define BOOTLOADER_INC_FLASHING_H_
 
-#define FLASHING_FLASHING_ENDIANNESS    (0)     // 0 = Big-endian, 1=Little-endian; // TODO: Other format necessary? Big vs. Little Endian
+#define FLASHING_FLASHING_ENDIANNESS            (0)     // 0 = Big-endian, 1=Little-endian; // TODO: Other format necessary? Big vs. Little Endian
+#define FLASHING_GOOD_KEY_STORED_ENDIANNESS     (1)     // 0 = Big-endian, 1=Little-endian; // TODO: Other format necessary? Big vs. Little Endian
 
 #include "Ifx_Types.h"
 #include <stdint.h>
@@ -24,9 +25,11 @@ uint8_t flashingRequestDownload(uint32_t address, uint32_t data_len);
 uint8_t flashingRequestUpload(uint32_t address, uint32_t data_len);
 uint8_t flashingTransferData(uint32_t address, uint8_t* data, uint32_t data_len);
 uint8_t flashingTransferExit(uint32_t address);
-uint32_t flashingGetChecksum();
 
 uint32_t flashingGetFlashBufferSize(void);
+uint32_t flashingGetChecksum();
+uint32_t flashingGetGoodKey(void);
+uint32_t flashingGetGoodKeyStored(void);
 
 // TODO not all of them should return void
 void getFlashConfiguration();

@@ -11,7 +11,6 @@
 // Description : Loader initial file
 //============================================================================
 
-
 #include <stdlib.h>
 
 #include "bootloader.h"
@@ -76,11 +75,11 @@ void init_bootloader(void){
 void bootloaderJumpToASW(void){
     //Write Flag
 
-    //void (*asw_main) (int) = (void*) ASW_STADD;
-    //Ifx__non_return_call(asw_main);
+    void (*asw_main) (int) = (void*) ASW_STADD;
+    Ifx__non_return_call(asw_main);
 
-//    jumpToASW = 1;
-//    softReset(); //Startup
+    jumpToASW = 1;
+    softReset(); //Startup
 }
 
 /**
@@ -108,16 +107,14 @@ void cyclicProcessing (void){
         time = now(); //Assumes no tester present was received
     }
     
-    //After 5 seconds without communication AND the right goodKey in the Key Address -> Jump
-    void* key = (void*)KEY_ADDRESS;
-    uint8_t good_key[4] = {0x93, 0x86, 0xC3, 0xA5};
-
-    if (elapsed(time) > (5 * IfxStm_getFrequency(BSP_DEFAULT_TIMER)) && memcmp(key, good_key, 4) == 0)
+    //After 5 seconds without communication AND Default Session AND the right goodKey in the Key Address -> Jump
+    if (elapsed(time) > (5 * IfxStm_getFrequency(BSP_DEFAULT_TIMER)) &&
+            getSession() == FBL_DIAG_SESSION_DEFAULT)
     {
-        bootloaderJumpToASW();
+        if(flashingGetGoodKey() == flashingGetGoodKeyStored()){
+            bootloaderJumpToASW();
+        }
     }
-
-
 }
 
 /**
