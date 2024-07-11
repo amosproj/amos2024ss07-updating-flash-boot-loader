@@ -605,10 +605,13 @@ void MainWindow::updateValidManager() {
     uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CAL_DATA);
     uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CAL_DATA);
 
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_KEY_ADDRESS);
+    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_KEY_GOOD_VALUE);
+
     validMan->core_addr.clear();
 
     // Short break to process the incoming signals
-    QTimer::singleShot(50, [this]{
+    QTimer::singleShot(60, [this]{
 
         QString ID_HEX = getECUHEXID();
 
@@ -627,6 +630,8 @@ void MainWindow::updateValidManager() {
         QString cal_data_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CAL_DATA);
         QString cal_data_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CAL_DATA);
 
+        QString key_address = QString::number((uint16_t)FBL_DID_BL_KEY_ADDRESS);
+        QString key_good_value = QString::number((uint16_t)FBL_DID_BL_KEY_GOOD_VALUE);
 
         validMan->core_addr[0]["start"] = eculist[ID_HEX][core0_start];
         validMan->core_addr[0]["end"] = eculist[ID_HEX][core0_end];
@@ -642,6 +647,8 @@ void MainWindow::updateValidManager() {
 
         validMan->core_addr[4]["start"] = eculist[ID_HEX][cal_data_start];
         validMan->core_addr[4]["end"] = eculist[ID_HEX][cal_data_end];
+        qInfo() << key_address;
+        flashMan->setASWKeyContent(eculist[ID_HEX][key_address].toUInt(nullptr,16), eculist[ID_HEX][key_good_value].toUInt(nullptr,16)); //String -> uint32_t
     });
 }
 

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // SPDX-FileCopyrightText: 2024 Michael Bauer <mike.bauer@fau.de>
+// SPDX-FileCopyrightText: 2024 Sebastian Rodriguez <r99@melao.de>
 
 //============================================================================
 // Name        : flashmanager.cpp
-// Author      : Michael Bauer
-// Version     : 0.1
+// Author      : Michael Bauer, Sebastian Rodriguez
+// Version     : 0.2
 // Copyright   : MIT
 // Description : Flashmanger to flash ECUs
 //============================================================================
@@ -165,6 +166,13 @@ void FlashManager::setUpdateVersion(QByteArray version){
     updateVersion = updateVersion.append(version);
 }
 
+void FlashManager::setASWKeyContent(uint32_t add, uint32_t content){
+    aswKeyAdd = add;
+    goodKeyValue = content;
+    queuedGUIConsoleLog(QString::number(add));
+    queuedGUIConsoleLog(QString::number(content));
+}
+
 QMap<uint32_t, QByteArray> FlashManager::getFlashContent(void) {
     return flashContent;
 }
@@ -280,6 +288,76 @@ void FlashManager::queuedGUIFlashingLog(FlashManager::STATUS s, QString info, bo
             lastGUIUpdateFlashingLog = QDateTime::currentDateTime();
         }
     }
+}
+
+void FlashManager::changeSessionAndLogin(){
+
+    UDS::RESP resp = UDS::RESP::RX_NO_RESPONSE;
+
+    queuedGUIConsoleLog("Change Session to Programming Session for selected ECU");
+    resp = uds->diagnosticSessionControl(ecu_id, FBL_DIAG_SESSION_PROGRAMMING);
+
+    if(resp != UDS::TX_RX_OK){
+        // Check on response more detailed
+        if(uds->getECUNegativeResponse() > 0){
+            // Negative Response received, ECU is responding
+            // Strategy: Try again
+            return;
+        }
+
+        // No Response from ECU
+        curr_state = ERR_STATE;
+        emit errorPrint("No Response from selected ECU - Aborting.");
+        return;
+    }
+
+    //queuedGUIConsoleLog("TODO: Add Security Access once activated");
+    //resp = uds->securityAccessRequestSEED(ecu_id);
+
+}
+
+QMap<uint32_t, QByteArray>FlashManager::uncompressData(QMap<uint32_t, QByteArray> compressedData) {
+    QMap<uint32_t, QByteArray> result;
+
+    for (auto [key, value] : compressedData.asKeyValueRange()) {
+        QByteArray splitBytes;
+        splitBytes.resize(2 * value.size());
+
+        for (uint32_t i = 0; i < value.size(); i++) {
+            int byte = value[i];
+            uint32_t lower = byte & 0x0000000F;
+            lower += lower > 9 ? 0x37 : 0x30;
+            byte = byte >> 4;
+            uint32_t higher = byte & 0x0000000F;
+            higher += higher > 9 ?  0x37 : 0x30;
+            splitBytes[2 * i] = (char) higher;
+            splitBytes[2 * i + 1] = (char) lower;
+        }
+
+        result.insert(key, splitBytes);
+    }
+
+    return result;
+}
+
+QMap<uint32_t, uint32_t> FlashManager::calculateFileChecksums(QMap<uint32_t, QByteArray> data) {
+    QMap<uint32_t, uint32_t> result;
+
+    for (auto [key, value] : data.asKeyValueRange()) {
+        CCRC32 crc;
+        crc.Initialize();
+
+        QByteArray line = value;
+
+        char *nextLine = line.data();
+
+        QString str = QString(nextLine);
+
+        uint32_t checksum = (uint32_t) crc.FullCRC((const unsigned char *) nextLine, strlen(nextLine));
+        result.insert(key, checksum);
+    }
+
+    return result;
 }
 
 //============================================================================
@@ -400,6 +478,7 @@ void FlashManager::doFlashing(){
 
     qInfo() << "FlashManager: Stopped flashing.\n";
     queuedGUIConsoleLog("###############################################\nFlashManager: Stopped flashing.\n###############################################\n");
+    queuedGUIConsoleLog("", 1);
     emit flashingThreadFinished();
 }
 
@@ -419,27 +498,7 @@ void FlashManager::prepareFlashing(){
 
     // =========================================================================
     // Prepare ECU
-    UDS::RESP resp = UDS::RESP::RX_NO_RESPONSE;
-
-    queuedGUIConsoleLog("Change Session to Programming Session for selected ECU");
-    resp = uds->diagnosticSessionControl(ecu_id, FBL_DIAG_SESSION_PROGRAMMING);
-
-    if(resp != UDS::TX_RX_OK){
-        // Check on response more detailed
-        if(uds->getECUNegativeResponse() > 0){
-            // Negative Response received, ECU is responding
-            // Strategy: Try again
-            return;
-        }
-
-        // No Response from ECU
-        curr_state = ERR_STATE;
-        emit errorPrint("No Response from selected ECU - Aborting.");
-        return;
-    }
-
-    //queuedGUIConsoleLog("TODO: Add Security Access once activated");
-    //resp = uds->securityAccessRequestSEED(ecu_id);
+    changeSessionAndLogin();
 
     // Reset the counter for flashed bytes
     flashedBytesCtr = 0;
@@ -455,7 +514,8 @@ void FlashManager::prepareFlashing(){
 void FlashManager::startFlashing(){
 
     queuedGUIConsoleLog("###############################\nFlashManager: Executing Flashing\n###############################\n");
-
+    queuedGUIConsoleLog("FlashManager: Write Bad Key to ECU\n");
+    
     if(flashContent.isEmpty()){
         emit errorPrint("FlashManager: Provided flash file has no content");
         queuedGUIFlashingLog(ERR, "Provided flash file has no content");
@@ -469,6 +529,10 @@ void FlashManager::startFlashing(){
 
     if(abort)
         return;
+    writeKey(BAD);
+
+    // Change session again to ensure that ASW could also write into Key Address Range (should not do it, but could)
+    changeSessionAndLogin();
 
     queuedGUIFlashingLog(INFO, "Starting with flashing");
 
@@ -679,50 +743,6 @@ void FlashManager::validateFlashing(){
     curr_state = FINISH;
 }
 
-QMap<uint32_t, QByteArray>FlashManager::uncompressData(QMap<uint32_t, QByteArray> compressedData) {
-    QMap<uint32_t, QByteArray> result;
-
-    for (auto [key, value] : compressedData.asKeyValueRange()) {
-        QByteArray splitBytes;
-        splitBytes.resize(2 * value.size());
-
-        for (uint32_t i = 0; i < value.size(); i++) {
-            int byte = value[i];
-            uint32_t lower = byte & 0x0000000F;
-            lower += lower > 9 ? 0x37 : 0x30;
-            byte = byte >> 4;
-            uint32_t higher = byte & 0x0000000F;
-            higher += higher > 9 ?  0x37 : 0x30;
-            splitBytes[2 * i] = (char) higher;
-            splitBytes[2 * i + 1] = (char) lower;
-        }
-
-        result.insert(key, splitBytes);
-    }
-
-    return result;
-}
-
-QMap<uint32_t, uint32_t> FlashManager::calculateFileChecksums(QMap<uint32_t, QByteArray> data) {
-    QMap<uint32_t, uint32_t> result;
-
-    for (auto [key, value] : data.asKeyValueRange()) {
-        CCRC32 crc;
-        crc.Initialize();
-
-        QByteArray line = value;
-
-        char *nextLine = line.data();
-
-        QString str = QString(nextLine);
-
-        uint32_t checksum = (uint32_t) crc.FullCRC((const unsigned char *) nextLine, strlen(nextLine));
-        result.insert(key, checksum);
-    }
-
-    return result;
-}
-
 void FlashManager::finishFlashing(){
 
     queuedGUIConsoleLog("###############################\nFlashManager: Finish Flashing Process\n###############################\n");
@@ -741,12 +761,94 @@ void FlashManager::finishFlashing(){
     else{
         queuedGUIFlashingLog(INFO, "No Update Version Information available");
     }
+    // =========================================================================
+    // Write Good Key
+
+    // Change Session to make sure that key can always be written
+    changeSessionAndLogin();
+    writeKey(GOOD);
+
+    // =========================================================================
+    // Set to Default Session
+
+    UDS::RESP resp = UDS::RESP::RX_NO_RESPONSE;
+
+    queuedGUIConsoleLog("Change Session to Default Session for selected ECU");
+    resp = uds->diagnosticSessionControl(ecu_id, FBL_DIAG_SESSION_DEFAULT);
+
+    if(resp != UDS::TX_RX_OK){
+        // Check on response more detailed
+        if(uds->getECUNegativeResponse() > 0){
+            // Negative Response received, ECU is responding
+            // Strategy: Try again
+            return;
+        }
+
+        // No Response from ECU
+        curr_state = ERR_STATE;
+        emit errorPrint("No Response from selected ECU - Aborting.");
+        return;
+    }
 
     // =========================================================================
     // Update GUI
     queuedGUIFlashingLog(INFO, "Flashing finished!");
 
     curr_state = IDLE;
+}
+
+void FlashManager::writeKey(int keyType){
+    if (keyType == GOOD)
+    {
+    
+        if (uds->requestDownload(ecu_id, aswKeyAdd, 4) != UDS::TX_RX_OK)
+        {
+            //Response Typ überprüfen
+
+           queuedGUIConsoleLog("FlashManager(Write good Key): ERROR - Requesting download failed");
+        }
+        
+        uint8_t goodKeyValueArr[4];
+        goodKeyValueArr[0] = (goodKeyValue >> 24) & 0xFF;
+        goodKeyValueArr[1] = (goodKeyValue >> 16) & 0xFF;
+        goodKeyValueArr[2] = (goodKeyValue >> 8) & 0xFF;
+        goodKeyValueArr[3] = goodKeyValue & 0xFF;
+        if (uds->transferData(ecu_id,aswKeyAdd, goodKeyValueArr, 4) != UDS::TX_RX_OK)
+        {
+            queuedGUIConsoleLog("FlashManager(Write good Key): ERROR - Transfer Data failed");
+        }
+        if (uds->requestTransferExit(ecu_id, aswKeyAdd) != UDS::TX_RX_OK)
+        {
+            queuedGUIConsoleLog("FlashManager(Write good Key): ERROR - Requesting Transfer Exit failed");
+        }
+        
+        
+    }
+    else if (keyType == BAD)
+    {
+       
+        if (uds->requestDownload(ecu_id, aswKeyAdd, 4) != UDS::TX_RX_OK)
+        {
+            queuedGUIConsoleLog("FlashManager(Write bad Key): ERROR - Requesting download failed");
+        }
+        
+        uint8_t badKeyValueArr[4];
+        badKeyValueArr[0] = 0xBA;
+        badKeyValueArr[1] = 0xDB;
+        badKeyValueArr[2] = 0xAD;
+        badKeyValueArr[3] = 0xBA;
+        
+        if (uds->transferData(ecu_id,aswKeyAdd, badKeyValueArr, 4) != UDS::TX_RX_OK)
+        {
+            queuedGUIConsoleLog("FlashManager(Write bad Key): ERROR - Transfer Data failed");
+        }
+        if (uds->requestTransferExit(ecu_id, aswKeyAdd) != UDS::TX_RX_OK)
+        {
+            queuedGUIConsoleLog("FlashManager(Write bad Key): ERROR - Requesting Transfer Exit failed");
+        }
+        
+    }
+    
 }
 
 //============================================================================
@@ -761,3 +863,4 @@ void FlashManager::runThread(){
 void FlashManager::forwardToConsole(const QString &text){
     queuedGUIConsoleLog(text);
 }
+

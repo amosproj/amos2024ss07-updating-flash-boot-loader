@@ -11,6 +11,8 @@
 // Description : Manages flash data
 //============================================================================
 
+#define MEM(address)                *((uint32_t *)(address))      /* Macro to simplify the access to a memory address */
+
 #include "flashing.h"
 #include "uds_comm_spec.h"
 #include "memory.h"
@@ -196,6 +198,23 @@ uint32_t flashingGetFlashBufferSize(void){
     return flashing_int_data.buffer;
 }
 
-uint32_t flashingGetChecksum() {
+uint32_t flashingGetChecksum(void) {
     return flashing_int_data.checksum;
+}
+
+uint32_t flashingGetGoodKey(void){
+    return flashingGetDIDData(FBL_DID_BL_KEY_GOOD_VALUE);
+}
+
+uint32_t flashingGetGoodKeyStored(void){
+    uint32_t goodKeyAddr = flashingGetDIDData(FBL_DID_BL_KEY_ADDRESS);
+
+    uint32_t goodKeyStored = MEM(goodKeyAddr);
+    if(FLASHING_GOOD_KEY_STORED_ENDIANNESS){
+        goodKeyStored = ((goodKeyStored>>24)  & 0x000000ff) |  // move byte 3 to byte 0
+                        ((goodKeyStored<<8)   & 0x00ff0000) |  // move byte 1 to byte 2
+                        ((goodKeyStored>>8)   & 0x0000ff00) |  // move byte 2 to byte 1
+                        ((goodKeyStored<<24)  & 0xff000000);   // byte 0 to byte 3
+    }
+    return goodKeyStored;
 }
