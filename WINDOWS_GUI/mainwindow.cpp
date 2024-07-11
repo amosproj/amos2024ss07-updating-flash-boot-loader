@@ -248,23 +248,28 @@ void MainWindow::setupFlashPopup() {
     QObject::connect(buttonYes, &QPushButton::clicked, this, [&]() {
         flashPopup.close();
         
-        uint32_t selectedID = getECUID();
+        if(ECUSelected()) {
+            uint32_t selectedID = getECUID();
 
-        if(ui->button_flash->text().contains("Stop")){
-            flashMan->stopFlashing();
-            threadFlashing->wait();
-        }
-        else{
-            if(validMan != nullptr && validMan->data.size() > 0){
-                flashMan->setFlashFile(validMan->data);
-                //flashMan->setLengths(validMan->calculateAddressLengths(validMan->data));
-            } else {
-                flashMan->setTestFile();
-                this->ui->textBrowser_flash_status->setText("No valid Flash File selected. Demo Mode triggered");
+            if(ui->button_flash->text().contains("Stop")){
+                flashMan->stopFlashing();
+                threadFlashing->wait();
             }
-            
-            flashMan->setUpdateVersion(ui->label_version->text().mid(14).toLocal8Bit());
-            flashMan->startFlashing(selectedID, gui_id, comm);
+            else{
+                if(validMan != nullptr && validMan->data.size() > 0){
+                    flashMan->setFlashFile(validMan->data);
+                    //flashMan->setLengths(validMan->calculateAddressLengths(validMan->data));
+                } else {
+                    flashMan->setTestFile();
+                    this->ui->textBrowser_flash_status->setText("No valid Flash File selected. Demo Mode triggered");
+                }
+
+                flashMan->setUpdateVersion(ui->label_version->text().mid(14).toLocal8Bit());
+                flashMan->startFlashing(selectedID, gui_id, comm);
+            }
+        }
+        else {
+            this->ui->textBrowser_flash_status->setText("No valid ECU selected");
         }
     });
 
@@ -539,21 +544,33 @@ void MainWindow::updateECUTableView(QMap<QString, QMap<QString, QString>> eculis
 }
 
 uint32_t MainWindow::getECUID() {
-    QStringList separated = ui->label_selected_ECU->text().split(": 0x");
-    QString ID_HEX = separated[1];
-    bool ok;
-    return (0xFFF0 & ID_HEX.toUInt(&ok, 16)) >> 4;
+
+    if(ui->table_ECU != nullptr && !ui->table_ECU->selectedItems().empty()){
+        QStringList separated = ui->label_selected_ECU->text().split(": 0x");
+        if (separated.size() > 1){
+            QString ID_HEX = separated[1];
+            bool ok;
+            return (0xFFF0 & ID_HEX.toUInt(&ok, 16)) >> 4;
+        }
+    }
+    return 0;
 }
 
 QString MainWindow::getECUHEXID() {
-    QStringList separated = ui->label_selected_ECU->text().split(": 0x");
-    QString ID_HEX = separated[1];
 
-    // Convert hex string to integer
-    bool ok;
-    int ID_INT = ID_HEX.toInt(&ok, 16);
+    if(ui->table_ECU != nullptr && !ui->table_ECU->selectedItems().empty()){
+        QStringList separated = ui->label_selected_ECU->text().split(": 0x");
+        if (separated.size() > 1){
+            QString ID_HEX = separated[1];
 
-    return QString::number(ID_INT);
+            // Convert hex string to integer
+            bool ok;
+            int ID_INT = ID_HEX.toInt(&ok, 16);
+
+            return QString::number(ID_INT);
+        }
+    }
+    return 0;
 }
 
 bool MainWindow::ECUSelected() {
@@ -588,68 +605,77 @@ void MainWindow::setFlashButton(FLASH_BTN m){
 
 void MainWindow::updateValidManager() {
 
-    uint32_t ecu_id = getECUID();
+    if(ECUSelected()) {
 
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
+        uint32_t ecu_id = getECUID();
 
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
+        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
+        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
 
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
+        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
+        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
 
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_ASW_KEY);
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_ASW_KEY);
+        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
+        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
 
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CAL_DATA);
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CAL_DATA);
+        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_ASW_KEY);
+        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_ASW_KEY);
 
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_KEY_ADDRESS);
-    uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_KEY_GOOD_VALUE);
+        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CAL_DATA);
+        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CAL_DATA);
 
-    validMan->core_addr.clear();
+        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_KEY_ADDRESS);
+        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_KEY_GOOD_VALUE);
 
-    // Short break to process the incoming signals
-    QTimer::singleShot(60, [this]{
+        validMan->core_addr.clear();
 
-        QString ID_HEX = getECUHEXID();
+        // Short break to process the incoming signals
+        QTimer::singleShot(60, [this]{
 
-        QString core0_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
-        QString core0_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
+            QString ID_HEX = getECUHEXID();
 
-        QString core1_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
-        QString core1_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
+            QString core0_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
+            QString core0_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
 
-        QString core2_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
-        QString core2_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
+            QString core1_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
+            QString core1_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
 
-        QString asw_key_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_ASW_KEY);
-        QString asw_key_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_ASW_KEY);
+            QString core2_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
+            QString core2_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
 
-        QString cal_data_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CAL_DATA);
-        QString cal_data_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CAL_DATA);
+            QString asw_key_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_ASW_KEY);
+            QString asw_key_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_ASW_KEY);
 
-        QString key_address = QString::number((uint16_t)FBL_DID_BL_KEY_ADDRESS);
-        QString key_good_value = QString::number((uint16_t)FBL_DID_BL_KEY_GOOD_VALUE);
+            QString cal_data_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CAL_DATA);
+            QString cal_data_end = QString::number((uint16_t)FBL_DID_BL_WRITE_END_ADD_CAL_DATA);
 
-        validMan->core_addr[0]["start"] = eculist[ID_HEX][core0_start];
-        validMan->core_addr[0]["end"] = eculist[ID_HEX][core0_end];
+            QString key_address = QString::number((uint16_t)FBL_DID_BL_KEY_ADDRESS);
+            QString key_good_value = QString::number((uint16_t)FBL_DID_BL_KEY_GOOD_VALUE);
 
-        validMan->core_addr[1]["start"] = eculist[ID_HEX][core1_start];
-        validMan->core_addr[1]["end"] = eculist[ID_HEX][core1_end];
+            validMan->core_addr[0]["start"] = eculist[ID_HEX][core0_start];
+            validMan->core_addr[0]["end"] = eculist[ID_HEX][core0_end];
 
-        validMan->core_addr[2]["start"] = eculist[ID_HEX][core2_start];
-        validMan->core_addr[2]["end"] = eculist[ID_HEX][core2_end];
+            validMan->core_addr[1]["start"] = eculist[ID_HEX][core1_start];
+            validMan->core_addr[1]["end"] = eculist[ID_HEX][core1_end];
 
-        validMan->core_addr[3]["start"] = eculist[ID_HEX][asw_key_start];
-        validMan->core_addr[3]["end"] = eculist[ID_HEX][asw_key_end];
+            validMan->core_addr[2]["start"] = eculist[ID_HEX][core2_start];
+            validMan->core_addr[2]["end"] = eculist[ID_HEX][core2_end];
 
-        validMan->core_addr[4]["start"] = eculist[ID_HEX][cal_data_start];
-        validMan->core_addr[4]["end"] = eculist[ID_HEX][cal_data_end];
-        qInfo() << key_address;
-        flashMan->setASWKeyContent(eculist[ID_HEX][key_address].toUInt(nullptr,16), eculist[ID_HEX][key_good_value].toUInt(nullptr,16)); //String -> uint32_t
-    });
+            validMan->core_addr[3]["start"] = eculist[ID_HEX][asw_key_start];
+            validMan->core_addr[3]["end"] = eculist[ID_HEX][asw_key_end];
+
+            validMan->core_addr[4]["start"] = eculist[ID_HEX][cal_data_start];
+            validMan->core_addr[4]["end"] = eculist[ID_HEX][cal_data_end];
+            qInfo() << key_address;
+            flashMan->setASWKeyContent(eculist[ID_HEX][key_address].toUInt(nullptr,16), eculist[ID_HEX][key_good_value].toUInt(nullptr,16)); //String -> uint32_t
+        });
+
+    }
+    else {
+        QMessageBox::about(nullptr, "WARNING!",
+                           "Please select an ECU in the table on the left first!  \n\n");
+    }
+
 }
 
 //=============================================================================
