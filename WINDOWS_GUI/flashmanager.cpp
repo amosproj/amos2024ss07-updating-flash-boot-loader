@@ -290,6 +290,76 @@ void FlashManager::queuedGUIFlashingLog(FlashManager::STATUS s, QString info, bo
     }
 }
 
+void FlashManager::changeSessionAndLogin(){
+
+    UDS::RESP resp = UDS::RESP::RX_NO_RESPONSE;
+
+    queuedGUIConsoleLog("Change Session to Programming Session for selected ECU");
+    resp = uds->diagnosticSessionControl(ecu_id, FBL_DIAG_SESSION_PROGRAMMING);
+
+    if(resp != UDS::TX_RX_OK){
+        // Check on response more detailed
+        if(uds->getECUNegativeResponse() > 0){
+            // Negative Response received, ECU is responding
+            // Strategy: Try again
+            return;
+        }
+
+        // No Response from ECU
+        curr_state = ERR_STATE;
+        emit errorPrint("No Response from selected ECU - Aborting.");
+        return;
+    }
+
+    //queuedGUIConsoleLog("TODO: Add Security Access once activated");
+    //resp = uds->securityAccessRequestSEED(ecu_id);
+
+}
+
+QMap<uint32_t, QByteArray>FlashManager::uncompressData(QMap<uint32_t, QByteArray> compressedData) {
+    QMap<uint32_t, QByteArray> result;
+
+    for (auto [key, value] : compressedData.asKeyValueRange()) {
+        QByteArray splitBytes;
+        splitBytes.resize(2 * value.size());
+
+        for (uint32_t i = 0; i < value.size(); i++) {
+            int byte = value[i];
+            uint32_t lower = byte & 0x0000000F;
+            lower += lower > 9 ? 0x37 : 0x30;
+            byte = byte >> 4;
+            uint32_t higher = byte & 0x0000000F;
+            higher += higher > 9 ?  0x37 : 0x30;
+            splitBytes[2 * i] = (char) higher;
+            splitBytes[2 * i + 1] = (char) lower;
+        }
+
+        result.insert(key, splitBytes);
+    }
+
+    return result;
+}
+
+QMap<uint32_t, uint32_t> FlashManager::calculateFileChecksums(QMap<uint32_t, QByteArray> data) {
+    QMap<uint32_t, uint32_t> result;
+
+    for (auto [key, value] : data.asKeyValueRange()) {
+        CCRC32 crc;
+        crc.Initialize();
+
+        QByteArray line = value;
+
+        char *nextLine = line.data();
+
+        QString str = QString(nextLine);
+
+        uint32_t checksum = (uint32_t) crc.FullCRC((const unsigned char *) nextLine, strlen(nextLine));
+        result.insert(key, checksum);
+    }
+
+    return result;
+}
+
 //============================================================================
 // Private Method
 //============================================================================
@@ -408,6 +478,7 @@ void FlashManager::doFlashing(){
 
     qInfo() << "FlashManager: Stopped flashing.\n";
     queuedGUIConsoleLog("###############################################\nFlashManager: Stopped flashing.\n###############################################\n");
+    queuedGUIConsoleLog("", 1);
     emit flashingThreadFinished();
 }
 
@@ -427,27 +498,7 @@ void FlashManager::prepareFlashing(){
 
     // =========================================================================
     // Prepare ECU
-    UDS::RESP resp = UDS::RESP::RX_NO_RESPONSE;
-
-    queuedGUIConsoleLog("Change Session to Programming Session for selected ECU");
-    resp = uds->diagnosticSessionControl(ecu_id, FBL_DIAG_SESSION_PROGRAMMING);
-
-    if(resp != UDS::TX_RX_OK){
-        // Check on response more detailed
-        if(uds->getECUNegativeResponse() > 0){
-            // Negative Response received, ECU is responding
-            // Strategy: Try again
-            return;
-        }
-
-        // No Response from ECU
-        curr_state = ERR_STATE;
-        emit errorPrint("No Response from selected ECU - Aborting.");
-        return;
-    }
-
-    //queuedGUIConsoleLog("TODO: Add Security Access once activated");
-    //resp = uds->securityAccessRequestSEED(ecu_id);
+    changeSessionAndLogin();
 
     // Reset the counter for flashed bytes
     flashedBytesCtr = 0;
@@ -479,6 +530,10 @@ void FlashManager::startFlashing(){
     if(abort)
         return;
     writeKey(BAD);
+
+    // Change session again to ensure that ASW could also write into Key Address Range (should not do it, but could)
+    changeSessionAndLogin();
+
     queuedGUIFlashingLog(INFO, "Starting with flashing");
 
     // Setup the variables
@@ -688,50 +743,6 @@ void FlashManager::validateFlashing(){
     curr_state = FINISH;
 }
 
-QMap<uint32_t, QByteArray>FlashManager::uncompressData(QMap<uint32_t, QByteArray> compressedData) {
-    QMap<uint32_t, QByteArray> result;
-
-    for (auto [key, value] : compressedData.asKeyValueRange()) {
-        QByteArray splitBytes;
-        splitBytes.resize(2 * value.size());
-
-        for (uint32_t i = 0; i < value.size(); i++) {
-            int byte = value[i];
-            uint32_t lower = byte & 0x0000000F;
-            lower += lower > 9 ? 0x37 : 0x30;
-            byte = byte >> 4;
-            uint32_t higher = byte & 0x0000000F;
-            higher += higher > 9 ?  0x37 : 0x30;
-            splitBytes[2 * i] = (char) higher;
-            splitBytes[2 * i + 1] = (char) lower;
-        }
-
-        result.insert(key, splitBytes);
-    }
-
-    return result;
-}
-
-QMap<uint32_t, uint32_t> FlashManager::calculateFileChecksums(QMap<uint32_t, QByteArray> data) {
-    QMap<uint32_t, uint32_t> result;
-
-    for (auto [key, value] : data.asKeyValueRange()) {
-        CCRC32 crc;
-        crc.Initialize();
-
-        QByteArray line = value;
-
-        char *nextLine = line.data();
-
-        QString str = QString(nextLine);
-
-        uint32_t checksum = (uint32_t) crc.FullCRC((const unsigned char *) nextLine, strlen(nextLine));
-        result.insert(key, checksum);
-    }
-
-    return result;
-}
-
 void FlashManager::finishFlashing(){
 
     queuedGUIConsoleLog("###############################\nFlashManager: Finish Flashing Process\n###############################\n");
@@ -752,7 +763,33 @@ void FlashManager::finishFlashing(){
     }
     // =========================================================================
     // Write Good Key
+
+    // Change Session to make sure that key can always be written
+    changeSessionAndLogin();
     writeKey(GOOD);
+
+    // =========================================================================
+    // Set to Default Session
+
+    UDS::RESP resp = UDS::RESP::RX_NO_RESPONSE;
+
+    queuedGUIConsoleLog("Change Session to Default Session for selected ECU");
+    resp = uds->diagnosticSessionControl(ecu_id, FBL_DIAG_SESSION_DEFAULT);
+
+    if(resp != UDS::TX_RX_OK){
+        // Check on response more detailed
+        if(uds->getECUNegativeResponse() > 0){
+            // Negative Response received, ECU is responding
+            // Strategy: Try again
+            return;
+        }
+
+        // No Response from ECU
+        curr_state = ERR_STATE;
+        emit errorPrint("No Response from selected ECU - Aborting.");
+        return;
+    }
+
     // =========================================================================
     // Update GUI
     queuedGUIFlashingLog(INFO, "Flashing finished!");

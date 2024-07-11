@@ -170,6 +170,7 @@ private:
     void updateGUIProgressBar();
     void queuedGUIConsoleLog(QString info, bool forced=0);
     void queuedGUIFlashingLog(FlashManager::STATUS s, QString info, bool forced=0);
+    void changeSessionAndLogin();
     QMap<uint32_t, uint32_t> calculateFileChecksums(QMap<uint32_t, QByteArray> data);
     QMap<uint32_t, QByteArray> uncompressData(QMap<uint32_t, QByteArray> compressedData);
 
