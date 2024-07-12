@@ -32,16 +32,18 @@ public:
     enum LABEL {HEADER, VALID, CONTENT, SIZE, TYPE};
 
     QMap<uint32_t, QByteArray> data;
-    QMap<uint16_t, QMap<QString, QString>> core_addr;
 
 private:
 
     QMutex dataMutex;
+    QMap<uint16_t, QMap<QString, QString>> core_addr;
 
 public:
 
     ValidateManager();
     virtual ~ValidateManager();
+
+    void setCoreAddr(QMap<uint16_t, QMap<QString, QString>> new_core_addr);
 
     void validateFileAsync(QByteArray data);
     bool checkBlockAddressRange(QMap<uint32_t, QByteArray> blocks);

@@ -46,6 +46,7 @@ private:
     QMutex ecuListUpdateMutex;
     bool ecuListUpdateInProgess;
     QMap<QString, QMap<QString, QString>> eculist;
+    bool validManagerValuesAvailable;
     ValidateManager *validMan;
     QTimer *ecuConnectivityTimer;
 
@@ -76,7 +77,7 @@ private:
 
     void setFlashButton(FLASH_BTN m);
 
-    void updateValidManager();
+    bool updateValidManager();
 
 private slots:
     void startUDSUsage();

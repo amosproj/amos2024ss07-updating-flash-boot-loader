@@ -149,7 +149,7 @@ void MainWindow::connectSignalSlots() {
 
                 rootDir = fileInfo.absolutePath();
 
-                // Validate file, result is already prepared for furhter calculations
+                // Validate file, result is already prepared for further calculations
                 validMan->validateFileAsync(data);
 
                 //dummy_function(data);
@@ -167,9 +167,8 @@ void MainWindow::connectSignalSlots() {
         if(ECUSelected()) {
             QTableWidgetItem *item = ui->table_ECU->selectedItems().at(0);
             ui->label_selected_ECU->setText("Selected: " + item->text());
-            updateValidManager();
 
-            if(!validMan->data.isEmpty()){
+            if(updateValidManager() && !validMan->data.isEmpty()){
 
                 QTimer::singleShot(25,this,[this]{
 
@@ -185,6 +184,9 @@ void MainWindow::connectSignalSlots() {
 
 
                 });
+            }
+            else {
+                updateLabel(ValidateManager::VALID, "File validity:  No valid response from ECU. Is it running properly?");
             }
 
         } else { 
@@ -570,7 +572,7 @@ QString MainWindow::getECUHEXID() {
             return QString::number(ID_INT);
         }
     }
-    return 0;
+    return "";
 }
 
 bool MainWindow::ECUSelected() {
@@ -603,35 +605,94 @@ void MainWindow::setFlashButton(FLASH_BTN m){
     }
 }
 
-void MainWindow::updateValidManager() {
+bool MainWindow::updateValidManager() {
 
     if(ECUSelected()) {
 
+        updateLabel(ValidateManager::VALID, "File validity:  Reading from ECU");
+        validManagerValuesAvailable = false;
+        bool updateInProgess = false;
+        do{
+            ecuListUpdateMutex.lock();
+            updateInProgess = ecuListUpdateInProgess;
+            ecuListUpdateMutex.unlock();
+        } while(updateInProgess);
+
         uint32_t ecu_id = getECUID();
+        UDS::RESP resp = UDS::RX_NO_RESPONSE;
 
-        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
-        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
+        resp = uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
+        if(resp != UDS::TX_RX_OK){
+            updateLabel(ValidateManager::VALID, "File validity:  Reading from ECU failed. Is it running properly?");
+            return false;
+        }
 
-        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
-        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
+        resp = uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE0);
+        if(resp != UDS::TX_RX_OK){
+            updateLabel(ValidateManager::VALID, "File validity:  Reading from ECU failed. Is it running properly?");
+            return false;
+        }
+        resp = uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE1);
+        if(resp != UDS::TX_RX_OK){
+            updateLabel(ValidateManager::VALID, "File validity:  Reading from ECU failed. Is it running properly?");
+            return false;
+        }
 
-        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
-        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
+        resp = uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE1);
+        if(resp != UDS::TX_RX_OK){
+            updateLabel(ValidateManager::VALID, "File validity:  Reading from ECU failed. Is it running properly?");
+            return false;
+        }
 
-        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_ASW_KEY);
-        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_ASW_KEY);
+        resp = uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE2);
+        if(resp != UDS::TX_RX_OK){
+            updateLabel(ValidateManager::VALID, "File validity:  Reading from ECU failed. Is it running properly?");
+            return false;
+        }
 
-        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CAL_DATA);
-        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CAL_DATA);
+        resp = uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CORE2);
+        if(resp != UDS::TX_RX_OK){
+            updateLabel(ValidateManager::VALID, "File validity:  Reading from ECU failed. Is it running properly?");
+            return false;
+        }
 
-        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_KEY_ADDRESS);
-        uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_KEY_GOOD_VALUE);
+        resp = uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_ASW_KEY);
+        if(resp != UDS::TX_RX_OK){
+            updateLabel(ValidateManager::VALID, "File validity:  Reading from ECU failed. Is it running properly?");
+            return false;
+        }
 
-        validMan->core_addr.clear();
+        resp = uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_ASW_KEY);
+        if(resp != UDS::TX_RX_OK){
+            updateLabel(ValidateManager::VALID, "File validity:  Reading from ECU failed. Is it running properly?");
+            return false;
+        }
 
-        // Short break to process the incoming signals
-        QTimer::singleShot(60, [this]{
+        resp = uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_START_ADD_CAL_DATA);
+        if(resp != UDS::TX_RX_OK){
+            updateLabel(ValidateManager::VALID, "File validity:  Reading from ECU failed. Is it running properly?");
+            return false;
+        }
 
+        resp = uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_WRITE_END_ADD_CAL_DATA);
+        if(resp != UDS::TX_RX_OK){
+            updateLabel(ValidateManager::VALID, "File validity:  Reading from ECU failed. Is it running properly?");
+            return false;
+        }
+
+        resp = uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_KEY_ADDRESS);
+        if(resp != UDS::TX_RX_OK){
+            updateLabel(ValidateManager::VALID, "File validity:  Reading from ECU failed. Is it running properly?");
+            return false;
+        }
+
+        resp = uds->readDataByIdentifier(ecu_id, (uint16_t)FBL_DID_BL_KEY_GOOD_VALUE);
+        if(resp != UDS::TX_RX_OK){
+            updateLabel(ValidateManager::VALID, "File validity:  Reading from ECU failed. Is it running properly?");
+            return false;
+        }
+
+        QTimer::singleShot(250, [this]{
             QString ID_HEX = getECUHEXID();
 
             QString core0_start = QString::number((uint16_t)FBL_DID_BL_WRITE_START_ADD_CORE0);
@@ -652,29 +713,36 @@ void MainWindow::updateValidManager() {
             QString key_address = QString::number((uint16_t)FBL_DID_BL_KEY_ADDRESS);
             QString key_good_value = QString::number((uint16_t)FBL_DID_BL_KEY_GOOD_VALUE);
 
-            validMan->core_addr[0]["start"] = eculist[ID_HEX][core0_start];
-            validMan->core_addr[0]["end"] = eculist[ID_HEX][core0_end];
+            QMap<uint16_t, QMap<QString, QString>> core_addr;
 
-            validMan->core_addr[1]["start"] = eculist[ID_HEX][core1_start];
-            validMan->core_addr[1]["end"] = eculist[ID_HEX][core1_end];
+            core_addr[0]["start"] = eculist[ID_HEX][core0_start];
+            core_addr[0]["end"] = eculist[ID_HEX][core0_end];
 
-            validMan->core_addr[2]["start"] = eculist[ID_HEX][core2_start];
-            validMan->core_addr[2]["end"] = eculist[ID_HEX][core2_end];
+            core_addr[1]["start"] = eculist[ID_HEX][core1_start];
+            core_addr[1]["end"] = eculist[ID_HEX][core1_end];
 
-            validMan->core_addr[3]["start"] = eculist[ID_HEX][asw_key_start];
-            validMan->core_addr[3]["end"] = eculist[ID_HEX][asw_key_end];
+            core_addr[2]["start"] = eculist[ID_HEX][core2_start];
+            core_addr[2]["end"] = eculist[ID_HEX][core2_end];
 
-            validMan->core_addr[4]["start"] = eculist[ID_HEX][cal_data_start];
-            validMan->core_addr[4]["end"] = eculist[ID_HEX][cal_data_end];
-            qInfo() << key_address;
+            core_addr[3]["start"] = eculist[ID_HEX][asw_key_start];
+            core_addr[3]["end"] = eculist[ID_HEX][asw_key_end];
+
+            core_addr[4]["start"] = eculist[ID_HEX][cal_data_start];
+            core_addr[4]["end"] = eculist[ID_HEX][cal_data_end];
+
+            validMan->setCoreAddr(core_addr);
+
             flashMan->setASWKeyContent(eculist[ID_HEX][key_address].toUInt(nullptr,16), eculist[ID_HEX][key_good_value].toUInt(nullptr,16)); //String -> uint32_t
-        });
 
+            updateLabel(ValidateManager::VALID, "File validity:  Reading ECU finished. You can select a file now");
+            validManagerValuesAvailable = true;
+        });
     }
     else {
         QMessageBox::about(nullptr, "WARNING!",
                            "Please select an ECU in the table on the left first!  \n\n");
     }
+    return false;
 
 }
 

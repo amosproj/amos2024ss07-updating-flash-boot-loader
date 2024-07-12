@@ -25,7 +25,7 @@
 ValidateManager::ValidateManager() {
 
     data.clear();
-    core_addr.clear();
+    core_addr = QMap<uint16_t, QMap<QString, QString>>();
 }
 
 ValidateManager::~ValidateManager(){
@@ -37,12 +37,26 @@ ValidateManager::~ValidateManager(){
 // Public Method
 //============================================================================
 
+void ValidateManager::setCoreAddr(QMap<uint16_t, QMap<QString, QString>> new_core_addr){
 
+    emit infoPrint("INFO: Updated the Address Ranges of the ECU for File Validation\n");
+
+    core_addr.clear();
+    for(uint16_t core : new_core_addr.keys()){
+        core_addr[core] = new_core_addr[core];
+    }
+    return;
+}
 
 void ValidateManager::validateFileAsync(QByteArray data){
 
     // For Null pointer safety
     QPointer<ValidateManager> self = this;
+
+    if(core_addr.size()==0){
+        emit updateLabel(ValidateManager::VALID, "File validity:  No information from ECU about address ranges received. Was reading finished?");
+        return;
+    }
 
     // Change cursor to loading state
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -51,7 +65,6 @@ void ValidateManager::validateFileAsync(QByteArray data){
     QThread* thread = QThread::create([self, data]() {
 
         if (!self) {
-
             return;
         }
 
@@ -101,6 +114,8 @@ QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteAr
     if(blocks.size() == 0)
         return blocks;
 
+    emit infoPrint("INFO: File is being prepared for flashing (Flash alignment)! \n");
+
     QMap<uint16_t, QMap<QString, QString>> core_addr_processing = core_addr;
     core_addr_processing.detach(); // Copy to own variable
 
@@ -136,8 +151,18 @@ QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteAr
         }
     }
 
+    if(pages.size() == 0){
+        emit errorPrint("ERROR: Could not calculate the data for flashing since the information about the core ranges is missing. Click on the ECU again\n");
+        QMap<uint32_t, QByteArray> empty_blocks;
+        return empty_blocks;
+    }
+
     // -------------------------------------------------------------------------------------
     // Preprocess the data: insert the data into the specific pages
+    uint32_t foundAddr = pages.firstKey();
+    uint32_t foundAddrIdx = 0;
+
+    // Consider: Blocks are already sorted, storing of foundAddr therefore possible
     for(uint32_t addr : blocks.keys()){ // Go through all the addresses
         QByteArray block = blocks[addr];
 
@@ -182,6 +207,7 @@ QMap<uint32_t, QByteArray> ValidateManager::transformData(QMap<uint32_t, QByteAr
 
                         // At least one Value was added
                         added = true;
+                        break;
                     }
                 }
             }
@@ -600,16 +626,26 @@ QMap<uint32_t, QByteArray> ValidateManager::combineSortedQMap(const QMap<uint32_
 
 bool ValidateManager::addrInCoreRange(uint32_t addr, uint32_t data_len,  uint16_t core, bool* supported){
 
+    if(core_addr.size() == 0){
+        emit infoPrint("INFO: No address range information from ECU available \n");
+        return false;
+    }
+
     QString core_start_add_string = core_addr[core]["start"];
     QString core_end_add_string = core_addr[core]["end"];
 
-    if(core_start_add_string == "Not yet supported" || core_end_add_string == "Not yet supported" || core_start_add_string == "" || core_end_add_string == ""){
+    if(core_start_add_string == "Not yet supported" || core_end_add_string == "Not yet supported"){
 
         if(supported != nullptr)
             *supported = false;
         //qDebug() << "INFO: Address Validation not supported for core" << core << "!";
 
         return true;
+    }
+
+    if(core_start_add_string == "" || core_end_add_string == ""){
+        emit infoPrint("INFO: No address range information from ECU available \n");
+        return false;
     }
 
     uint32_t core_start_add = core_start_add_string.toUInt(NULL, 16);
