@@ -766,6 +766,8 @@ void FlashManager::finishFlashing(){
 
     // Change Session to make sure that key can always be written
     changeSessionAndLogin();
+
+    queuedGUIConsoleLog("FlashManager: Write Good Key to ECU\n");
     writeKey(GOOD);
 
     // =========================================================================
