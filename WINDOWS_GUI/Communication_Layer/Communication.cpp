@@ -61,7 +61,7 @@ void Communication::init(INTERFACE comm_interface_type){
 
 	uint8_t init_status = 0;
 
-    if(comm_interface_type == COMM_INTERFACE_CAN){ // Init CanDriver
+    if(comm_interface_type == CAN_DRIVER){ // Init CanDriver
         init_status = canDriver->initDriver();
         // Connect CAN Driver RX with Communication RX
         connect(canDriver, SIGNAL(rxDataReceived(unsigned int, QByteArray)), this, SLOT(rxCANDataSlot(unsigned int, QByteArray)), Qt::DirectConnection);

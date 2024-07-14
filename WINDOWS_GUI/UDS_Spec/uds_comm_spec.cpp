@@ -517,6 +517,18 @@ uint8_t *_create_request_transfer_exit(int *len, uint8_t response, uint32_t addr
     return msg;
 }
 
+/**
+ * Value for our test ASW
+ */
+
+// Reset to bootloader (0xFF)
+uint8_t *_create_reset_to_bootloader(int *len) {
+    uint8_t *msg = prepare_message(len, 0, FBL_RESET_TO_BOOTLOADER, 0, 7);
+    for(int i = 1; i < *len; ++i)
+        msg[i] = 0xFF;
+    return msg;
+
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // Supported Common Response Codes

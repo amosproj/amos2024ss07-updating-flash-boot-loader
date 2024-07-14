@@ -34,6 +34,7 @@ private:
     EditableComboBox *editComboBox_speed;
     QComboBox *comboBox_speedUnit;
     QWidget flashPopup;
+    QWidget resetToBootloaderPopup;
     QString rootDir;
     QString defaultRootDir;
 
@@ -63,6 +64,7 @@ private:
     void set_uds_connection(enum UDS_CONN);
     void connectSignalSlots();
     void setupFlashPopup();
+    void setupResetToBootloaderPopup();
 
     void updateECUList();
     void clearECUTableView();
