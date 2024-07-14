@@ -47,7 +47,7 @@ void process_can(uint32_t* rxData, IfxCan_DataLengthCode dlc){
 
     uint8_t* data_ptr = (uint8_t*)rxData;
 
-    // check if every byte equals the reset msg byte
+    // check if every byte equals the reset msg byte (the first one is omitted - part of message header)
     uint8_t reset_msg_byte = 0xFF;
     for (int i = 1; i < dlc; i++)
     {

@@ -55,7 +55,7 @@ extern "C" {
 #define FBL_REQUEST_TRANSFER_EXIT                                   (0x37)
 
 /**
- * Own
+ * Value for our test ASW
  */
 #define FBL_RESET_TO_BOOTLOADER                                     (0xFF)
 

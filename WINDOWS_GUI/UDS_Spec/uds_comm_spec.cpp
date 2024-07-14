@@ -518,7 +518,7 @@ uint8_t *_create_request_transfer_exit(int *len, uint8_t response, uint32_t addr
 }
 
 /**
- * Own
+ * Value for our test ASW
  */
 
 // Reset to bootloader (0xFF)
