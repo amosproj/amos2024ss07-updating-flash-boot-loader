@@ -20,10 +20,6 @@
 #include "./UDS_Spec/uds_comm_spec.h"
 #include "editableComboBox.h"
 
-static inline void dummy_function(QByteArray data) {
-    qDebug() << "Received " << data;
-}
-
 void MainWindow::set_uds_connection(enum UDS_CONN conn){
 
 
@@ -152,7 +148,6 @@ void MainWindow::connectSignalSlots() {
                 // Validate file, result is already prepared for further calculations
                 validMan->validateFileAsync(data);
 
-                //dummy_function(data);
                 file.close();
             }
         }
