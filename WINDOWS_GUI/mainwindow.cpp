@@ -262,8 +262,8 @@ void MainWindow::setupFlashPopup() {
                     flashMan->setFlashFile(validMan->data);
                     //flashMan->setLengths(validMan->calculateAddressLengths(validMan->data));
                 } else {
-                    flashMan->setTestFile();
-                    this->ui->textBrowser_flash_status->setText("No valid Flash File selected. Demo Mode triggered");
+                    //flashMan->setTestFile();
+                    this->ui->textBrowser_flash_status->setText("Please select a valid file for flashing");
                 }
 
                 flashMan->setUpdateVersion(ui->label_version->text().mid(14).toLocal8Bit());
