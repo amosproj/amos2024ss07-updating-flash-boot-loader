@@ -67,132 +67,135 @@ void uds_handleRX(uint8_t* data, uint32_t data_len){
     // parse incoming data by SID and call function for SID
     uint8_t SID = getSID(msg);
 
+    uint8_t neg_code = FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT;
+
     // Directly check if SID is allowed in current session, 0 = is allowed
     uint8_t nrc = SIDallowedInCurrentSession(SID);
     if(nrc){
-        uds_neg_response(SID, nrc);
-        return;
-    }
+        responded = 0;
+        neg_code = nrc;
+    } else {
+        // Check on the different SIDs
+        switch (SID)
+        {
+            case FBL_DIAGNOSTIC_SESSION_CONTROL:
+                if(msg->len != 2){
+                    responded = 0;
+                    break;
+                }
+                uds_diagnostic_session_control(msg->data[1]);
+                break;
 
-    // Check on the different SIDs
-    switch (SID)
-    {
-        case FBL_DIAGNOSTIC_SESSION_CONTROL:
-            if(msg->len != 2){
-                uds_neg_response(SID, FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT);
-                return;
-            }
+            case FBL_ECU_RESET:
+                if(msg->len != 2){
+                    responded = 0;
+                    break;
+                }
 
-            uds_diagnostic_session_control(msg->data[1]);
-            break;
+                uint8_t reset_type = msg->data[1];
+                uds_ecu_reset(reset_type);
+                break;
 
-        case FBL_ECU_RESET:
-            if(msg->len != 2){
-                uds_neg_response(SID, FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT);
-                return;
-            }
+            case FBL_SECURITY_ACCESS:
+                if(msg->len < 2){ // TODO: Need to be adjusted based on key
+                    responded = 0;
+                    break;
+                }
 
-            uint8_t reset_type = msg->data[1];
-            uds_ecu_reset(reset_type);
-            break;
-
-        case FBL_SECURITY_ACCESS:
-            if(msg->len < 2){ // TODO: Need to be adjusted based on key
-                uds_neg_response(SID, FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT);
-                return;
-            }
-
-            if(msg->data[1] == FBL_SEC_ACCESS_SEED){
-                uint8_t seed[SEED_LENGTH];
-                generateSeed(seed); //TODO implement getKey or is it Authenticate()?
-                uds_security_access(msg->data[1], seed, SEED_LENGTH);
-            }
-            else if (msg->data[1] == FBL_SEC_ACCESS_VERIFY_KEY)
-            {
-                uint8_t access_granted = verifyKey(msg->data + 2, msg->len - 2); //TODO implement verifyKey
-                if (access_granted)
+                if(msg->data[1] == FBL_SEC_ACCESS_SEED){
+                    uint8_t seed[SEED_LENGTH];
+                    generateSeed(seed); //TODO implement getKey or is it Authenticate()?
+                    uds_security_access(msg->data[1], seed, SEED_LENGTH);
+                }
+                else if (msg->data[1] == FBL_SEC_ACCESS_VERIFY_KEY)
                 {
-                    uds_security_access(msg->data[1], NULL, 0);
+                    uint8_t access_granted = verifyKey(msg->data + 2, msg->len - 2); //TODO implement verifyKey
+                    if (access_granted)
+                    {
+                        uds_security_access(msg->data[1], NULL, 0);
+                    }
+                    else
+                    {
+                        uds_neg_response(FBL_SECURITY_ACCESS, FBL_RC_INVALID_KEY);
+                    }
                 }
                 else
                 {
-                    uds_neg_response(FBL_SECURITY_ACCESS, FBL_RC_INVALID_KEY);
+                    uds_neg_response(FBL_SECURITY_ACCESS, FBL_NEGATIVE_RESPONSE);
                 }
-            }
-            else
-            {
-                uds_neg_response(FBL_SECURITY_ACCESS, FBL_NEGATIVE_RESPONSE);
-            }
-            break;
+                break;
 
-        case FBL_TESTER_PRESENT:
-            if (msg->data[1] == FBL_TESTER_PRES_WITH_RESPONSE){
-                uds_tester_present();
-            }
-            else if (msg->data[1] == FBL_TESTER_PRES_WITHOUT_RESPONSE){
-                // Just ignore the tester present
-            }
-            else
-            {
-                uds_neg_response(FBL_TESTER_PRESENT, FBL_NEGATIVE_RESPONSE);
-            }
+            case FBL_TESTER_PRESENT:
+                if (msg->data[1] == FBL_TESTER_PRES_WITH_RESPONSE){
+                    uds_tester_present();
+                }
+                else if (msg->data[1] == FBL_TESTER_PRES_WITHOUT_RESPONSE){
+                    // Just ignore the tester present
+                }
+                else
+                {
+                    uds_neg_response(FBL_TESTER_PRESENT, FBL_NEGATIVE_RESPONSE);
+                }
 
-            break;
-        case FBL_READ_DATA_BY_IDENTIFIER:
-            did = getDID(msg);
-            uds_read_data_by_identifier(did);
-            break;
-        case FBL_READ_MEMORY_BY_ADDRESS:
-            uds_read_memory_by_address(getMemoryAddress(msg), getNoBytes(msg));
-            break;
-        case FBL_WRITE_DATA_BY_IDENTIFIER:
-            did = getDID(msg);
-            uds_write_data_by_identifier(did, msg->data + 3, msg->len - 3);
-            break;
-        case FBL_REQUEST_DOWNLOAD:
-            if(msg->len != 9){
-                uds_neg_response(SID, FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT);
-                return;
-            }
+                break;
+            case FBL_READ_DATA_BY_IDENTIFIER:
+                did = getDID(msg);
+                uds_read_data_by_identifier(did);
+                break;
+            case FBL_READ_MEMORY_BY_ADDRESS:
+                uds_read_memory_by_address(getMemoryAddress(msg), getNoBytes(msg));
+                break;
+            case FBL_WRITE_DATA_BY_IDENTIFIER:
+                did = getDID(msg);
+                uds_write_data_by_identifier(did, msg->data + 3, msg->len - 3);
+                break;
+            case FBL_REQUEST_DOWNLOAD:
+                if(msg->len != 9){
+                    responded = 0;
+                    break;
+                }
 
-            uds_request_download(getMemoryAddress(msg), getFlashingBytes(msg));
-            break;
-        case FBL_REQUEST_UPLOAD:
-            if(msg->len != 9){
-                uds_neg_response(SID, FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT);
-                return;
-            }
+                uds_request_download(getMemoryAddress(msg), getFlashingBytes(msg));
+                break;
+            case FBL_REQUEST_UPLOAD:
+                if(msg->len != 9){
+                    responded = 0;
+                    break;
+                }
 
-            uds_request_upload(getMemoryAddress(msg), getFlashingBytes(msg));
-            break;
-        case FBL_TRANSFER_DATA:
-            if(msg->len < 5){
-                uds_neg_response(SID, FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT);
-                return;
-            }
+                uds_request_upload(getMemoryAddress(msg), getFlashingBytes(msg));
+                break;
+            case FBL_TRANSFER_DATA:
+                if(msg->len < 5){
+                    responded = 0;
+                    break;
+                }
 
-            uds_transfer_data(getMemoryAddress(msg), msg->data + 5, msg->len - 5);
-            break;
-        case FBL_REQUEST_TRANSFER_EXIT:
-            if(msg->len != 5){
-                uds_neg_response(SID, FBL_RC_INCORRECT_MSG_LEN_OR_INV_FORMAT);
-                return;
-            }
+                uds_transfer_data(getMemoryAddress(msg), msg->data + 5, msg->len - 5);
+                break;
+            case FBL_REQUEST_TRANSFER_EXIT:
+                if(msg->len != 5){
+                    responded = 0;
+                    break;
+                }
 
-            uds_request_transfer_exit(getMemoryAddress(msg));
-            break;
-            
-        case FBL_RESET_TO_BOOTLOADER:
-            // Ignore the message
-            break;
-        default:
-            responded = 0;
-            uds_neg_response(SID, FBL_RC_SERVICE_NOT_SUPPORTED);
+                uds_request_transfer_exit(getMemoryAddress(msg));
+                break;
+                
+            case FBL_RESET_TO_BOOTLOADER:
+                // Ignore the message
+                break;
+            default:
+                responded = 0;
+                neg_code = FBL_RC_SERVICE_NOT_SUPPORTED;
+        }
     }
 
     if(responded){
         // Call session control to indicate that valid communication was received
         sessionControl();
+    } else {
+        uds_neg_response(SID, nrc);
     }
 
     // Important: Free the UDS msg variable

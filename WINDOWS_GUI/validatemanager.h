@@ -14,6 +14,7 @@
 #define VALIDATEMANAGER_H
 
 #define MINIMUM_BLOCK_SIZE          (32)    // Bytes, Content of 1 Page
+#define ADD_SUPPORTING_PAGES_EVERY  0x50000  // Number of bytes if there is a big gap between two addresses within range
 
 #include <QObject>
 #include <QDebug>
@@ -31,16 +32,18 @@ public:
     enum LABEL {HEADER, VALID, CONTENT, SIZE, TYPE};
 
     QMap<uint32_t, QByteArray> data;
-    QMap<uint16_t, QMap<QString, QString>> core_addr;
 
 private:
 
     QMutex dataMutex;
+    QMap<uint16_t, QMap<QString, QString>> core_addr;
 
 public:
 
     ValidateManager();
     virtual ~ValidateManager();
+
+    void setCoreAddr(QMap<uint16_t, QMap<QString, QString>> new_core_addr);
 
     void validateFileAsync(QByteArray data);
     bool checkBlockAddressRange(QMap<uint32_t, QByteArray> blocks);
