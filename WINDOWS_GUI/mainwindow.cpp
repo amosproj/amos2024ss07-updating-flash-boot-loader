@@ -379,11 +379,10 @@ MainWindow::MainWindow(QWidget *parent)
     comboBox_speedUnit = new QComboBox(this);
 
     // Call comboBoxIndexChanged to set up editComboBox_speed initially
+    ui->comboBox_channel->setCurrentIndex(1);
     comboBoxIndexChanged(ui->comboBox_channel->currentIndex());
+    editComboBox_speed->setCurrentIndex(6);
 
-    // Initially hide the other QComboBoxes
-    editComboBox_speed->hide();
-    comboBox_speedUnit->hide();
 
     connect(editComboBox_speed, QOverload<int>::of(&QComboBox::activated), this, &MainWindow::setBaudrate);
 
