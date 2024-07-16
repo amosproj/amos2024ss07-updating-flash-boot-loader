@@ -379,9 +379,9 @@ MainWindow::MainWindow(QWidget *parent)
     comboBox_speedUnit = new QComboBox(this);
 
     // Call comboBoxIndexChanged to set up editComboBox_speed initially
-    ui->comboBox_channel->setCurrentIndex(1);
+    ui->comboBox_channel->setCurrentIndex(ui->comboBox_channel->findText("CAN"));
     comboBoxIndexChanged(ui->comboBox_channel->currentIndex());
-    editComboBox_speed->setCurrentIndex(6);
+    editComboBox_speed->setCurrentIndex(editComboBox_speed->findText("500"));
 
 
     connect(editComboBox_speed, QOverload<int>::of(&QComboBox::activated), this, &MainWindow::setBaudrate);
