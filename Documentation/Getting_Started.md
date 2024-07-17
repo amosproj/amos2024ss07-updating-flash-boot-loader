@@ -55,6 +55,7 @@ C:\Infineon\AURIX-Studio-1.9.20\tools\AurixFlasherSoftwareTool_v1.0.8\AurixFlash
 ## GUI Walkthrough
 
 - the Licences can be found in the upper left corner
+- in `Settings` you can switch between normal and rpofessional mode, to hide or show the log
 - the GUI is separated in different sections: ECU, File and Communication
 
 ### ECU
@@ -63,6 +64,8 @@ C:\Infineon\AURIX-Studio-1.9.20\tools\AurixFlasherSoftwareTool_v1.0.8\AurixFlash
 - to refresh the currently connected microcontrollers, press the `refresh` button
 - by selecting a row in the table a microcontroller is selected to perform all operations with
 - for a selected microcontroller the current status is shown below the table: green means connected and red connection lost
+- if a microcontroller can not be found, it may be because it is currently running the application software
+- the `reset to bootloader` button resets the MCU to the bootloader, if the application supports this feature 
 - to reset the selected MCU press the `reset` button
 - for flashing a file must be choosed through the Flash File section
 - to flash the file to the selected MCU press the `flash` button
@@ -71,6 +74,8 @@ C:\Infineon\AURIX-Studio-1.9.20\tools\AurixFlasherSoftwareTool_v1.0.8\AurixFlash
 
 - press choose file and select a file for flashing in the file explorer
 - the metada of the file are listed underneath, like version, validity, extension, etc.
+- for validity the file is checked to only contain addresses that the MCU allows
+
 
 ### Communication
 
